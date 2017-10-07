@@ -15,9 +15,11 @@ An opensource extension of Django framework
 
    wget http://petshop.djangoplus.net/media/petshop.zip
    
-   gunzip pethsop.zip
+   unzip pethsop.zip -d petshop
    
    cd petshop
+
+   pip install -Ur requirements.txt
    
    runserver
    
@@ -36,7 +38,7 @@ An opensource extension of Django framework
  
    vim project/models.py
 
-3. Syncronize code and database
+3. Syncronize model with database
 
    sync
    
