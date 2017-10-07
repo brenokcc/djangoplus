@@ -1,0 +1,15 @@
+{% if self.items %}
+    <div class="shortcut-wrapper">
+        {% for item in self.items %}
+            <a href="{{ item.url }}" class="shortcut-link {{ item.style }}">
+                <span class="shortcut-icon">
+                    <i class="fa {{ item.icon }}"></i>
+                    {% if item.count %}
+                        <span class="shortcut-alert">{{ item.count }}</span>
+                    {% endif %}
+                </span>
+                <span>{{ item.description }}</span>
+            </a>
+        {% endfor %}
+    </div>
+{% endif %}

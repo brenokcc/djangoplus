@@ -1,0 +1,263 @@
+{% load i18n %}
+{% if self.as_pdf %}
+    {% with queryset=self.get_queryset %}
+    <h2>{{ self.title }}</h2>
+    {% if queryset.exists %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th width="30px">#</th>
+                {% for column_name, lookup, sortable, to in self.column_names %}
+                    <th style="vertical-align: middle">{{ column_name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in queryset %}
+                <tr>
+                    <td align="center">{{ forloop.counter }}</td>
+                    {% for column_name, lookup, sortable, to in self.column_names %}
+                        {% with value=obj|getattr:lookup %}
+                        <td align="{{ value|align }}">{{ value|print_format|safe }}</td>
+                        {% endwith %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div align="center">{% trans "No records found" %}</div>
+    {% endif %}
+    {% endwith %}
+{% else %}
+
+<div id="table{{ self.id }}" class="paginator paginator-{% if self.is_list_view %}admin{% endif %}">
+
+    {% with queryset=self.get_queryset %}
+            {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
+            <div class="action-bar">
+                {% if self.is_list_view %}
+                <div class="pull-left">
+                    <h2>{% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}{{ self.title }} ({{ self.qs.count }})</h2>
+                </div>
+                {% endif %}
+                <div class="pull-right">
+                    {% if not self.request.GET.popup %}
+                        {{ self.subset_dropdown }}
+                        {{ self.paginator_dropdown }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div {% if not self.is_list_view %}class="panel panel-default"{% endif %}>
+                {% if not self.is_list_view %}
+                <div class="panel-heading">{{ self.title }}</div>
+
+                {% endif %}
+                <div class="panel-body">
+                    {% if self.tabs|length > 1 and not self.readonly %}
+                        <ul class="paginator-tabs">
+                            {% for tab in self.tabs %}
+                                <li>
+                                <a href="javascript:" onclick="$('#tab{{ self.id }}').val('{{ tab.0 }}');$('#{{ self.id }}').submit();">{{ tab.1 }}</a>
+                                <span class="badge {% if tab.3 %}badge-primary{% endif %}">{{ tab.2.count }}</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if self.form %}
+                        {{ self.form }}
+                    {% endif %}
+
+                    {% if self.list_total %}
+                        {% with total=self.get_total %}
+                        {% if total %}
+                        <div class="paginator-total">
+                            {{ total|format }}
+                        </div>
+                        {% else %}
+                            <br/>
+                        {% endif %}
+                        {% endwith %}
+                    {% endif %}
+
+                    <form method="get" class="table-form form-horizontal no-margin form-border" id="{{ self.id }}" action="{{ self.request.get_full_path }}">
+                    <input name="tid" type="hidden" value="{{ self.id }}"/>
+                    <input name="q{{ self.id }}" id="q{{ self.id }}" type="hidden" value="{{ self.get_q }}"/>
+                    <input name="order_by{{ self.id }}" id="order_by{{ self.id }}" type="hidden" value="{{ self.get_order_by }}"/>
+                    <input name="page{{ self.id }}" id="page{{ self.id }}" type="hidden" value="{{ self.get_page }}"/>
+                    <input name="tab{{ self.id }}" id="tab{{ self.id }}" type="hidden" value="{{ self.get_tab }}"/>
+                    <input name="{{ self.id }}" type="hidden" value="1"/>
+                    {% with list_filter=self.get_list_filter search_fields=self.get_search_fields %}
+                    {% if list_filter or search_fields %}
+                    <div>
+                    {% with filter_form=self.get_filter_form %}
+                        {{ filter_form.media }}
+                        {% if search_fields or list_filter %}
+                            <div class="filter-container">
+                            {% if search_fields %}
+                            <label>
+                                <div class="input-group">
+                                    <input id="search{{ self.id }}" style="height: 34px;" type="text" class="form-control input-sm" placeholder='{% trans "Keywords" %}...' aria-controls="dataTable" value="{{ self.get_q }}" onkeyup="$('#q{{ self.id }}').val(this.value)">
+                                    <span class="input-group-btn">
+                                        <button style="height: 34px;margin-left: -2px;" class="btn btn-default btn-sm" type="button" onclick="$('#page{{ self.id }}').val(1);$('#{{ self.id }}').submit();">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </span>
+                                    <script>
+                                    $('#search{{ self.id }}').keypress(function (e) {
+                                      if (e.which == 13) {
+                                        $('#{{ self.id }}').submit();
+                                        return false;
+                                      }
+                                    });
+                                    </script>
+                                </div>
+                            </label>
+                            {% endif %}
+
+                            {% for field in filter_form  %}
+                                {{ field }}
+                            {% endfor %}
+
+                            <script>$('#table{{ self.id }}').find('select, input[data-type=\'hidden_daterange\']').on('change', function(e) {$('#{{ self.id }}').submit();});</script>
+
+                            </div>
+                        {% endif %}
+
+                        {% if list_filter1 %}
+                            <div class="pull-right">
+                                <a data-modal-id="#filter_modal{{ self.id }}" href="#" role="button" data-toggle="modal" class="btn btn-default" style="height: 30px;"><i class="fa fa-filter"></i><span class="link-text"> {% trans "Filter" %}...</span></a>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    </form>
+                    <div style="clear:both"></div>
+                    {% if queryset.exists %}
+                        {% if self.has_customized_template %}
+                            {{ self|render_paginator }}
+                        {% else %}
+                            {% if self.mobile %}
+                                <ul class="list-group collapse in" id="feedList">
+                                {% for obj in queryset %}
+                                    {% set_request obj self.request %}
+                                    <li class="list-group-item clearfix">
+                                        <div class="pull-left m-left-sm">
+                                            <strong>{{ obj }}</strong>
+                                            {% for column_name, lookup, sortable, to in self.column_names %}
+                                                {% with value=obj|getattr:lookup %}
+                                                    {% if value|displayable %}
+                                                        <br>
+                                                        <small class="text-muted"><i class="fa fa-angle-double-right"></i> <strong>{{ column_name }}</strong>: {{ value|format|safe }}</small>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                            <br><br>
+                                            {% obj_icons self.request obj %}
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+
+                                <table class="table table-hover {% if self.qs.model.get_parent_field %}tree{% endif %}" id="dataTable">
+                                    <thead>
+                                        <tr>
+                                            {% if self.is_list_view and self.subset_dropdown.has_items %}
+                                            <th style="vertical-align: top" width="5px"><label class="label-checkbox"><input name="pk" type="checkbox" value="0" onclick="$('input[name=\'pk\']').prop('checked', this.checked);check{{ self.id }}();"><span class="custom-checkbox"></span></label></th>
+                                            {% endif %}
+                                            {% if self.can_show_actions and not self.request.GET.popup %}
+                                            <th style="vertical-align: top" width="50px">{% trans "Options" %}</th>
+                                            {% endif %}
+                                            {% for column_name, lookup, sortable, to in self.column_names %}
+                                            <th style="vertical-align: top">
+                                                {% if sortable %}<a href="javascript:" onclick="$('#order_by{{ self.id }}').val('0{{ lookup }}');$('#{{ self.id }}').submit();" class="default-color"><i class="fa fa-sort fa-lg"></i>{% endif %}
+                                                {{ column_name|normalyze }}
+                                                {% if sortable %}</a>{% endif %}
+
+                                            {% if self.order_by == lookup and sortable %} <i class="mdi-hardware-keyboard-arrow-down"></i> {% endif %} </th>
+                                            {% endfor %}
+                                            {% if self.drop_down.has_inline_action and not self.readonly and not self.request.GET.popup %}
+                                            <th class="action-column">{% trans "Actions" %}</th>
+                                            {% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for obj in queryset %}
+                                            {% set_request obj self.request %}
+                                            <tr class="{% tree_info obj queryset %}">
+                                                {% if self.is_list_view and self.subset_dropdown.has_items %}
+                                                <td style="vertical-align: middle"><label class="label-checkbox"><input type="checkbox" name="pk" value="{{ obj.pk }}" onclick="check{{ self.id }}();"><span class="custom-checkbox"></span></label></td>
+                                                {% endif %}
+                                                {% if self.can_show_actions and not self.request.GET.popup %}
+                                                <td style="vertical-align: middle" nowrap class="action-links">
+                                                    {% paginator_icons self obj %}
+                                                </td>
+                                                {% endif %}
+                                                {% for column_name, lookup, sortable, to in self.column_names %}
+                                                    {% with value=obj|getattr:lookup %}
+                                                    <td style="text-align: {{ value|align }};vertical-align: middle">{{ value|format|safe }}</td>
+                                                    {% endwith %}
+                                                {% endfor %}
+                                                {% if self.drop_down.has_inline_action and not self.readonly and not self.request.GET.popup %}
+                                                <td class="action-column" align="center"> {{ self|add_actions:obj }}
+                                                {{ self.drop_down }} </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-warning">{% trans "No records found" %}.</div>
+                    {% endif %}
+
+                    {% if self.subset_dropdown.actions and not self.request.GET.popup %}
+                        <div class="col s12 disabled" id="subset-actions-btn{{ self.id }}">
+
+                            <div class="pull-left">
+                                {{ self.subset_dropdown }}
+                            </div>
+
+                        </div>
+                    {% endif %}
+                    <div class="col s12" id="paginator{{ self.id }}">
+                        {{ self.pagination|safe }}
+                    </div>
+                </div>
+                {% if not self.is_list_view %}
+
+                {% endif %}
+            </div>
+
+    {% endwith %}
+    <script>
+        if($('#table{{ self.id }} .action-column .btn').length == 0) $('#table{{ self.id }} .action-column').hide();
+        function check{{ self.id }}(){
+            if($('input[name=\'pk\']:checked').length>0){
+                $('.action-column a, .global-action').addClass('disabled');
+                $('.subset-action').removeClass('disabled');
+                $('#subset-actions-btn{{ self.id }}').removeClass('disabled');
+                $('#paginator{{ self.id }}').addClass('disabled');
+            } else {
+                $('#paginator{{ self.id }}').removeClass('disabled');
+                $('#subset-actions-btn{{ self.id }}').addClass('disabled')
+                $('.action-column a, .global-action').removeClass('disabled');
+                $('.global-action').removeClass('disabled');
+                $('.subset-action').addClass('disabled');
+            }
+        }
+        $('#table{{ self.id }}').find('a.subset-action').click(function (e) {
+            var url = this.href.split('&ids=')[0];
+            url+='&ids='+$('input:checked[name=\'pk\']').map(function(){return $(this).attr('value');}).get().join(',');
+            this.href = url;
+        });
+    </script>
+</div>
+{% endif %}

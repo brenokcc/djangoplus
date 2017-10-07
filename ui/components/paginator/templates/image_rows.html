@@ -1,0 +1,43 @@
+<div class="paginator-image-rows">
+    {% for obj in paginator.get_queryset %}
+        <div class="col-lg-12" style="padding-left:0">
+            <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px; overflow: auto">
+                <div style="vertical-align: top; margin-left: 10px;">
+                    <div style="float:left;">
+                        <div style="margin-right: 20px">
+                            {{ obj|getattr:paginator.list_display.0|format }}
+                        </div>
+                    </div>
+                    <div>
+                        <p style="font-size: 130%; font-weight: bold">
+                            {{ obj|getattr:paginator.list_display.1|format|format }}
+                        </p>
+                        <div>
+                            {% paginator_icons paginator obj %}
+                        </div>
+                        {% if paginator.list_display|length > 2 %}
+                            <p>{{ obj|getattr:paginator.list_display.2|format }}</p>
+                        {% endif %}
+                        {% if paginator.list_display|length > 3 %}
+                            <p>{{ obj|getattr:paginator.list_display.3|format }}</p>
+                        {% endif %}
+                        {% if paginator.list_display|length > 4 %}
+                            <p>{{ obj|getattr:paginator.list_display.4|format }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div style="text-align: right">
+                            {{ paginator|add_actions:obj }}
+                            {{ paginator.drop_down }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<style>
+    .paginator-image-rows img {
+        width: 150px;
+    }
+</style>

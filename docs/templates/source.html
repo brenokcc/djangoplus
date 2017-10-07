@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <body>
+    <div style="margin: 20px">
+        <h1>{{ title }}</h1>
+        {% for src in src %}
+            <h3>{{ src.file }}</h3>
+            <pre class="language-{{ src.language }}">
+            <code class="language-{{ src.language }}">{{ src.content }}</code>
+            </pre>
+        {% endfor %}
+    </div>
+    </body>
+{% endblock %}

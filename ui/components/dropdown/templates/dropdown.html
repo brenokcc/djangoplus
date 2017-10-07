@@ -1,0 +1,32 @@
+{% for group in self.actions %}
+    {% with actions=self.actions|get_item:group %}
+        {% if actions %}
+            {% if self.mobile or actions|length > 1 %}
+                <div class="btn-group">
+                    <!-- Dropdown Trigger -->
+                    {% if self.mobile %}
+                        <button style="background-color: inherit" class="btn dropdown-toggle" data-toggle="dropdown"><span class="fa fa-ellipsis-h fa-2x"></span></button>
+                    {% else %}
+                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">{{ group }} <span class="caret"></span></button>
+                    {% endif %}
+                    <!-- Dropdown Structure -->
+                    <ul class="dropdown-menu slidedown">
+                        {% for item in actions %}
+                            <li>
+                                <a id="{{ url|slugify }}" href="{{ item.url }}{% if self.obj %}{{ self.obj.pk }}/{% endif %}" class="{{ item.css }}">{{ item.label }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                {% with item=actions.0 %}
+                    <a id="{{ url|slugify }}" href="{{ item.url }}{% if self.obj %}{{ self.obj.pk }}/{% endif %}" class="btn btn-default {{ item.css }}">{% if item.icon %}<i class="fa {{ item.icon }}"></i>{% endif %} {{ item.label }}</a>
+                {% endwith %}
+            {% endif %}
+        {% else %}
+            {% if self.inline and forloop.first %}
+                <div class="center"></div>
+            {% endif %}
+        {% endif %}
+    {% endwith %}
+{% endfor %}

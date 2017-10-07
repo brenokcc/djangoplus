@@ -1,0 +1,21 @@
+<div id="breadcrumb">
+    <ul class="breadcrumb">
+        <li><a href="/admin/" class="ajax"> Principal</a></li>
+        {% if self.request.session.stack %}
+            {% for title, url in self.request.session.stack %}
+                {% if not forloop.first %}
+                    {% if not forloop.last %}
+                        <li><a href="{{ url }}" class="ajax"> {{ title }}</a></li>
+                    {% else %}
+                        <li class="active">{{ title }}</li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </ul>
+</div><!-- /breadcrumb-->
+{% if self.referrer %}
+<script>
+    $(".referrer-link").prop("href", "{{ self.referrer }}");
+</script>
+{% endif %}

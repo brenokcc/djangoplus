@@ -1,0 +1,28 @@
+{% load i18n %}
+
+<h2><i class="fa fa-file-text-o"></i> {{ self.title }}</h2>
+
+{{ self.form }}
+
+<div class="seperator"></div>
+
+{% if self.components %}
+    <ul class="nav nav-tabs">
+        <li class="active"
+            onclick="$('.tab-statistics, .tab-data').toggle(); $('.nav-tabs > li').toggleClass('active')"><a href="javascript:">Estatística</a></li>
+        <li onclick="$('.tab-statistics, .tab-data').toggle(); $('.nav-tabs > li').toggleClass('active')"><a href="javascript:">Dados</a></li>
+    </ul>
+{% endif %}
+
+</br>
+
+<div class="tab-data" style="{% if self.components %}display: none{% endif %}">
+    {{ self.table }}
+</div>
+
+<div class="tab-statistics" style="display: block">
+    {% for component in self.components %}
+        {{ component }}
+        <div class="seperator"></div>
+    {% endfor %}
+</div>

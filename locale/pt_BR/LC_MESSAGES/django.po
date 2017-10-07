@@ -1,0 +1,172 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ui/components/forms/templates/form.html:5
+msgid "Note"
+msgstr ""
+
+#: ui/components/forms/templates/form.html:32
+msgid "Please correct the errors below"
+msgstr "Por favor, corrija os erros abaixo"
+
+#: ui/components/forms/templates/form.html:139
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: ui/components/paginator/templates/paginator.html:29
+#: ui/components/paginator/templates/paginator.html:218
+#: ui/components/report/templates/table.html:73
+msgid "No records found"
+msgstr "Nenhum registro encontrado"
+
+#: ui/components/paginator/templates/paginator.html:103
+msgid "Keywords"
+msgstr "Palavras-chaves"
+
+#: ui/components/paginator/templates/paginator.html:132
+msgid "Filter"
+msgstr "Filtrar"
+
+#: ui/components/paginator/templates/paginator.html:175
+msgid "Options"
+msgstr "Opções"
+
+#: ui/components/paginator/templates/paginator.html:186
+msgid "Actions"
+msgstr "Ações"
+
+#: ui/components/report/templates/report.html:139
+msgid "E-mail"
+msgstr "E-mail"
+
+#: ui/components/report/templates/report.html:142
+msgid "Phones"
+msgstr "Telefones"
+
+#: ui/components/report/templates/report.html:145
+msgid "Address"
+msgstr "Endereço"
+
+#: ui/components/report/templates/report.html:160
+msgid "Page"
+msgstr "Página"
+
+#: ui/components/report/templates/report.html:160
+msgid "of"
+msgstr "de"
+
+#: ui/components/report/templates/timeline.html:21
+msgid "Not completed"
+msgstr ""
+
+#~ msgid "Edit Profile"
+#~ msgstr "Editar Perfil"
+
+#~ msgid "Change Password"
+#~ msgstr "Alterar Senha"
+
+#~ msgid "Settings"
+#~ msgstr "Configuração"
+
+#~ msgid "Logout"
+#~ msgstr "Sair"
+
+#~ msgid ""
+#~ "Deleting this record will cause the exclusion of the following related "
+#~ "items:"
+#~ msgstr ""
+#~ "A exclusão desse registro acarretará também na exclusão dos seguintes "
+#~ "itens relacionados:"
+
+#~ msgid "Deleting this record will:"
+#~ msgstr "A exclusão desse registro"
+
+#~ msgid "NÃO"
+#~ msgstr "NOT"
+
+#~ msgid "result in the exclusion of any other information in the system."
+#~ msgstr "acarretará na exclusão de nehuma outra informação no sistema"
+
+#~ msgid "Group"
+#~ msgstr "Grupo"
+
+#~ msgid "Nota"
+#~ msgstr "Note"
+
+#~ msgid "Systemic Users"
+#~ msgstr "Usuários Sistêmicos"
+
+#~ msgid "Username"
+#~ msgstr "Login"
+
+#~ msgid "Organization's Users"
+#~ msgstr "Usuários da Organização"
+
+#~ msgid "Sign-in Form"
+#~ msgstr "Acesso ao Sistema"
+
+#, fuzzy
+#~| msgid "Change Password"
+#~ msgid "Password"
+#~ msgstr "Alterar Senha"
+
+#~ msgid "Remember"
+#~ msgstr "Lembre-se"
+
+#~ msgid "Sign-in"
+#~ msgstr "Acessar"
+
+#~ msgid "Register"
+#~ msgstr "Cadastrar-se"
+
+#~ msgid "Total"
+#~ msgstr "Total"
+
+#~ msgid "Your have"
+#~ msgstr "Você tem"
+
+#~ msgid "alerts"
+#~ msgstr "alertas"
+
+#~ msgid "Close alert panel"
+#~ msgstr "Fechar painel de alerta"
+
+#~ msgid "Photo"
+#~ msgstr "Foto"
+
+#, fuzzy
+#~| msgid "Group"
+#~ msgid "My Groups"
+#~ msgstr "Meus Grupos"
+
+#~ msgid "Search in menu"
+#~ msgstr "Buscar no menu"
+
+#~ msgid "record"
+#~ msgstr "registro"
+
+#~ msgid "Skin Color"
+#~ msgstr "Tema"
+
+#~ msgid "Sidebar Menu"
+#~ msgstr "Menu Leteral"
+
+#~ msgid "Fixed Sidebar"
+#~ msgstr "Menu Fixo"

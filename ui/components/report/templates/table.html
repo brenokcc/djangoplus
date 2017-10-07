@@ -1,0 +1,77 @@
+{% load i18n %}
+{% if self.as_pdf %}
+    <h2>{{ self.description }}</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                {% if self.enumerable %}
+                    <th width="30px">#</th>
+                {% endif %}
+                {% for value in self.header %}
+                    <th style="vertical-align: middle">{{ value }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in self.rows %}
+                <tr>
+                    {% if self.enumerable %}
+                        <td align="center">{{ forloop.counter }}</td>
+                    {% endif %}
+                    {% for value in row %}
+                        <td align="{{ value|align }}">{{ value|print_format }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+        {% if self.footer %}
+        <tfoot>
+            <tr>
+                {% for value in self.footer %}
+                    <th align="{{ value|align }}">{{ value }}</th>
+                {% endfor %}
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+{% else %}
+    <div class="panel panel-default table-responsive">
+        <div class="panel-heading">
+            <i class="fa fa-table fa-fw"></i>
+            {{ self.title }}
+        </div>
+        <div class="panel-body">
+            {% if self.rows %}
+            <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                    {% for value in self.header %}
+                        <th style="text-align:center;vertical-align: middle">{{ value }}</th>
+                    {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in self.rows %}
+                        <tr>
+                            {% for value in row %}
+                                <td style="text-align:{{ value|align }}">{{ value|format }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                {% if self.footer %}
+                <tfoot>
+                    <tr>
+                        {% for value in self.footer %}
+                            <th style="text-align:{{ value|align }}">{{ value }}</th>
+                        {% endfor %}
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+            {% else %}
+                <div class="alert alert-warning">{% trans "No records found" %}.</div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

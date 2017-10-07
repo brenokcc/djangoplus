@@ -1,0 +1,26 @@
+{% extends "admin.html" %}
+{% load i18n %}
+{% block content %}
+<div class="content">
+    <div class="padding-md">
+
+        <h2>{{ title }}</h2>
+
+        <div>
+            {% if form.related_objects %}
+                    {% trans "Deleting this record will cause the exclusion of the following related items:" %}
+                <ul style="margin-left: 40px">
+                    {% for related_object in form.related_objects %}
+                        <li><strong>{{ related_object.verbose_name }}</strong>: {{ related_object.count }}</li>
+                    {% endfor %}
+                 </ul>
+                 {% else %}
+                    {% trans "Deleting this record will" %} <strong>{% trans "NOT" %}</strong> {% trans "result in the exclusion of any other information in the system." %}.
+             {% endif %}
+
+            {{ form|safe }}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

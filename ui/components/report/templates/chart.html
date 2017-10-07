@@ -1,0 +1,122 @@
+<link href="/static/css/chartist.min.css" rel="stylesheet">
+<script src="/static/js/chartist.min.js"></script>
+<style>
+    .ct-chart{{ self.id }} { height: 300px; padding: 0px }
+    .ct-label { font-size: 1.25rem }
+    {% include "chart_colors.css" %}
+</style>
+<div class="panel panel-default">
+    <div class="panel-heading bg-info">
+        <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
+    </div>
+    <div class="panel-body">
+        <div class="ct-chart{{ self.id }}" style="width: 100%; position: relative"></div>
+    </div>
+</div>
+{% if self.series %}
+<script>
+    var charts = {pie : Chartist.Pie, donut: Chartist.Pie, bar:Chartist.Bar, horizontalbar: Chartist.Bar, stack:Chartist.Bar, horizontalstack: Chartist.Bar, line:Chartist.Line, area:Chartist.Line}
+
+    var type{{ self.id }} = '{{ self.type }}';
+    var labels{{ self.id }} = {{ self.labels|tojson|safe }};
+    var series{{ self.id }} = {{ self.series|tojson|safe }};
+    var groups{{ self.id }} = {{ self.groups|tojson|safe }};
+    var symbol{{ self.id }} = '{{ self.symbol }}';
+
+    var low{{ self.id }} = 0;
+    var heigh{{ self.id }} = null;
+
+    var sum = function (a, b) {
+        return a + b
+    };
+    function toSeries{{ self.id }}(matrix) {
+        var data = [];
+        for (var i = 0; i < matrix.length; i++) {
+            var serie = [];
+            for (var j = 0; j < matrix[i].length; j++) {
+                var value = matrix[i][j];
+                var formated = value;
+                if(Number(value) === value && value % 1 !== 0) formated = value.toFixed(2).replace('.', ',');
+                var meta = labels{{ self.id }}[j] + ': ' + formated;
+                if(groups{{ self.id }}.length > 0){
+                    meta = groups{{ self.id }}[i] + ': ' + formated;
+                }
+                serie.push({value: value, meta: meta})
+                if (value < low{{ self.id }}) low{{ self.id }} = value;
+                if (heigh{{ self.id }} == null || value > heigh{{ self.id }}) heigh{{ self.id }} = value;
+            }
+            data.push(serie)
+        }
+        if(type{{ self.id }}=='pie' || type{{ self.id }}=='donut') return data[0];
+        else return data;
+    }
+    var options = [];
+    if(type{{ self.id }}=='area') options['showArea'] = true;
+    if(type{{ self.id }}=='stack' || type{{ self.id }}=='horizontalstack') {
+        options['seriesBarDistance'] = 30;
+        options['stackBars'] = true;
+    }
+    options['reverseData'] = false;
+    if(type{{ self.id }}=='line' || type{{ self.id }}=='area') options['fullWidth'] = true;
+    if(type{{ self.id }}.indexOf('horizontal')>-1) options['horizontalBars'] = true;
+    options['axisX'] = {
+        offset: 50,
+        labelInterpolationFnc: function (value) {
+            if (Number(value) === value && value % 1 !== 0) value = value.toFixed(2).replace('.', ',');
+            return value
+        }
+    };
+    options['axisY'] = {
+        offset: type{{ self.id }}.indexOf('horizontal') > -1 ? 100 : 25,
+        labelInterpolationFnc: function (value) {
+            if(Number(value) === value && value % 1 !== 0) value = value.toFixed(2).replace('.', ',');
+            if(symbol{{ self.id }}) return value + ' '+ symbol{{ self.id }};
+            else return value;
+        },
+        scaleMinSpace: 50,
+        onlyInteger: true,
+        divisor : 1
+    };
+    //tooltip
+    options['plugins'] = [
+        Chartist.plugins.tooltip({
+            transformTooltipTextFnc: function (text) {
+                return '';
+            }
+        })
+    ];
+
+    var data = {labels: labels{{ self.id }},  series: toSeries{{ self.id }}(series{{ self.id }}) };
+
+    options['low{{ self.id }}'] = low{{ self.id }};
+    if(type{{ self.id }}.indexOf('stack')==-1) {
+        options['high'] = heigh{{ self.id }};
+    }
+    options['divisor'] = 2;
+    if(type{{ self.id }}=='donut' || type{{ self.id }}=='pie') {
+        if(type{{ self.id }}=='donut') {
+            options['donut'] = true;
+            options['chartPadding'] = 10;
+            options['labelOffset'] = 35;
+            options['labelDirection'] = 'explode';
+        }
+        options['donutWidth'] = 50;
+        options['startAngle'] = 270;
+        options['showLabel'] = true;
+        options['labelDirection'] = 'explode';
+        options['labelInterpolationFnc'] = function (value, i) {
+            return Math.round(series{{ self.id }}[0][i] / series{{ self.id }}[0].reduce(sum) * 100) + '%';
+        };
+    }
+    new charts[type{{ self.id }}]('.ct-chart{{ self.id }}', data, options).on('draw', function (data) {
+        if (data.type === 'bar' && type{{ self.id }}.indexOf('stack') > -1) {
+            data.element.attr({
+                style: 'stroke-width: 25px'
+            });
+        }
+    });
+
+</script>
+{% endif %}
+
+

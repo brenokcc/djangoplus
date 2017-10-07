@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+
+if [[ "$1" != "" ]]; then
+    PROJECT_NAME=$1
+	mkdir -p $1
+	cd $1
+else
+    PROJECT_NAME=${PWD##*/}
+fi
+
+printf "import os
+import sys
+
+if __name__ == \"__main__\":
+    os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"$PROJECT_NAME.settings\")
+
+    from django.core.management import execute_from_command_line
+
+    execute_from_command_line(sys.argv)
+
+" > manage.py
+
+mkdir -p $PROJECT_NAME
+mkdir -p $PROJECT_NAME/templates
+mkdir -p $PROJECT_NAME/static/css
+mkdir -p $PROJECT_NAME/static/js
+mkdir -p $PROJECT_NAME/static/images
+
+printf "<!DOCTYPE html>
+<html lang=\"en\" class=\" js csstransforms csstransforms3d csstransitions\">
+    <head>
+        <title>Sistema Online</title>
+        <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">
+        <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">
+        <meta name=\"viewport\" content=\"minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0\"/>
+        <meta name=\"apple-mobile-web-app-capable\" content=\"yes\"/>
+        <meta name=\"description\" content=\"\">
+        <meta name=\"keywords\" content=\"\">
+
+        <script src=\"/static/js/jquery-3.2.1.min.js\"></script>
+        <script src=\"/static/js/jquery.toast.min.js\"></script>
+        <link href=\"/static/css/jquery.toast.min.css\" rel=\"stylesheet\"/>
+        <link href=\"/static/css/public.css\" rel=\"stylesheet\">
+
+    </head>
+
+    <body class=\"sticky-nav transparent-nav\">
+        <header class=\"site-header color-alt overlay-black size-full text-center\"
+                style=\"background-image: url({%% if settings.background %%}/media/{{ settings.background }}{%% else %%}/static/images/project.jpg{%% endif %%})\">
+            <div class=\"container\">
+                <h1><strong>{{ settings.initials }}</strong> Online</h1>
+                <h4>{{ settings.name }}</h4>
+                <br><br><br>
+                <a class=\"btn btn-lg btn-white btn-outline btn-round\" href=\"/admin/\"><span style=\"padding: 0 30px;\">Acessar</span></a>
+            </div>
+        </header>
+
+        {%% if messages %%}
+            {%% for message in messages %%}
+                {{ message|toast }}
+            {%% endfor %%}
+        {%% endif %%}
+
+    </body>
+</html>" > $PROJECT_NAME/templates/public.html
+
+printf "function admin__login(){
+    //\$(\"#id_username\").mask(\"000.000.000-00\", {clearIfNotMatch: true});
+}" > $PROJECT_NAME/static/js/$PROJECT_NAME.js
+
+printf "" > $PROJECT_NAME/static/css/$PROJECT_NAME.css
+
+printf "" > $PROJECT_NAME/__init__.py
+
+printf "# -*- coding: utf-8 -*-
+from djangoplus.ui.components import forms
+from djangoplus.decorators import action
+
+" > $PROJECT_NAME/forms.py
+
+printf "# -*- coding: utf-8 -*-
+from djangoplus.db import models
+from django.core.exceptions import ValidationError
+from djangoplus.decorators import meta, action, subset
+
+" > $PROJECT_NAME/models.py
+
+printf "# -*- coding: utf-8 -*-
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', '$PROJECT_NAME.settings')
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+
+" > $PROJECT_NAME/wsgi.py
+
+
+printf "# -*- coding: utf-8 -*-
+from $PROJECT_NAME.models import *
+from $PROJECT_NAME.forms import *
+from djangoplus.decorators.views import view, action, dashboard
+
+
+
+" > $PROJECT_NAME/views.py
+
+printf "# -*- coding: utf-8 -*-
+from djangoplus.admin.models import User
+from djangoplus.test import TestCase
+from django.conf import settings
+
+
+class AppTestCase(TestCase):
+
+    def test_app(self):
+
+        User.objects.create_superuser('admin', None, settings.DEFAULT_PASSWORD)
+
+        self.login(u'admin', settings.DEFAULT_PASSWORD)
+" > $PROJECT_NAME/tests.py
+
+printf "Django==1.11
+pycrypto==2.6.1
+Pillow==3.2.0
+xhtml2pdf==0.0.6
+python-dateutil==2.5.3
+gunicorn==19.5.0
+selenium==2.53.2
+xlwt==1.0.0
+xlrd==0.9.4
+unicodecsv==0.14.1
+dropbox==6.5.0
+html5lib==1.0b8
+" > requirements.txt
+
+printf "# -*- coding: utf-8 -*-
+from django.conf.urls import url, include
+from djangoplus.admin.views import public, index
+
+urlpatterns = [
+    url(r'^$', public),
+    url(r'^admin/$', index),
+    url(r'', include('djangoplus.admin.urls')),
+]
+
+
+" > $PROJECT_NAME/urls.py
+
+printf "# -*- coding: utf-8 -*-
+
+def h1(value):
+    return u'<h1></h1>' %% value
+
+" > $PROJECT_NAME/formatters.py
+
+printf "# -*- coding: utf-8 -*-
+from os import sep
+from djangoplus.conf.base_settings import *
+from os.path import abspath, dirname, join, exists
+
+BASE_DIR = abspath(dirname(dirname(__file__)))
+PROJECT_NAME = __file__.split(sep)[-2]
+
+STATIC_ROOT = join(BASE_DIR, 'static')
+MEDIA_ROOT = join(BASE_DIR, 'media')
+
+DROPBOX_TOKEN = '' # disponível em https://www.dropbox.com/developers/apps
+DROPBOX_LOCALDIR = MEDIA_ROOT
+DROPBOX_REMOTEDIR = '/'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': join(BASE_DIR, 'sqlite.db'),
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
+    }
+}
+
+WSGI_APPLICATION = '%%s.wsgi.application' %% PROJECT_NAME
+
+INSTALLED_APPS += (
+    PROJECT_NAME,
+    'djangoplus.ui.themes.default',
+)
+
+ROOT_URLCONF = '%%s.urls' %% PROJECT_NAME
+
+if exists(join(BASE_DIR, 'logs')):
+    DEBUG = False
+    ALLOWED_HOSTS = ['*']
+
+    HOST_NAME = ''
+    DIGITAL_OCEAN_TOKEN = ''
+
+    SERVER_EMAIL = 'root@djangoplus.net'
+    ADMINS = [('Admin', 'root@djangoplus.net')]
+
+    DROPBOX_TOKEN = ''
+    BACKUP_FILES = ['media', 'sqlite.db']
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = join(BASE_DIR, 'mail')
+
+
+EXTRA_JS = ['/static/js/$PROJECT_NAME.js']
+EXTRA_CSS = ['/static/css/$PROJECT_NAME.css']
+
+" > $PROJECT_NAME/settings.py
+
+printf "from djangoplus.fabric.digitalocean.fabfile import *
+from djangoplus.fabric.tests.fabfile import *
+" > fabfile.py
+
+python manage.py sync
+echo ""
+echo ""
+echo ""
+echo "Congratulations!! The project was successfully started and configured. =)"
+echo "A superuser named 'admin' with password 'senha' was created"
+echo "Type 'cd $PROJECT_NAME' to get into the project's root directory"
+echo "Afterwards, type 'runserver' and access 'http://localhost:800' on your browser"
+echo "Type 'runtests' to execute the automatic tests"
+echo "After creating the models, type 'sync' for code and database syncronization"
+

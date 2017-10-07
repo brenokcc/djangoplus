@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+#This script create a virtualenv called  "djangoplus" with all necessary python packages
+
+source /usr/local/bin/virtualenvwrapper.sh
+
+SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+echo $SCRIPT
+BIN_DIR=$(dirname "$SCRIPT")
+echo $BIN_DIR
+BASE_DIR=$(dirname "$BIN_DIR")
+echo $BASE_DIR
+
+if [ ! -z "$WORKON_HOME" ]; then
+    if [ ! -d "$WORKON_HOME/djangoplus" ]; then
+        echo "Creating virtualenv djangoplus..."
+        mkvirtualenv djangoplus;
+        workon djangoplus;
+        if [ -x "$(command -v apt-get)" ]; then
+            sudo apt-get -y install libopenjpeg-dev libfreetype6-dev libtiff5-dev liblcms2-dev libwebp-dev tk8.6-dev libjpeg-dev --assume-yes;
+            sudo apt-get install chromium-chromedriver --assume-yes;
+            sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver;
+        fi
+        if [ -d "$VIRTUAL_ENV/lib/python2.7/site-packages" ]; then
+            echo "Installing python packages..."
+            pip install -r $BASE_DIR/requirements.txt;
+            ln -s $(dirname "$BIN_DIR") $VIRTUAL_ENV/lib/python2.7/site-packages/djangoplus;
+            cp $BIN_DIR/startproject $VIRTUAL_ENV/bin/
+            cp $BIN_DIR/sync $VIRTUAL_ENV/bin/
+            cp $BIN_DIR/runserver $VIRTUAL_ENV/bin/
+            cp $BIN_DIR/runtests $VIRTUAL_ENV/bin/
+            echo ""
+            echo ""
+            echo ""
+            echo "Congratulations!! Your env was successfully created. =)"
+            echo "Type 'workon djangoplus' to activate it."
+            echo "Type 'startproject <project_name>' to start a new project".
+        fi
+    fi;
+else
+    echo 'Virtualenv wrapper is not properly configured!';
+fi
+
+
+

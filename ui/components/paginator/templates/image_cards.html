@@ -1,0 +1,38 @@
+<div class="paginator-image-cards">
+    {% for obj in paginator.get_queryset %}
+        <div class="col-lg-3 col-md-4 col-sm-6" align="center" style="padding-left:0">
+            <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px;overflow: hidden; height:280px">
+                <div>
+                    <p style="font-size: 110%; font-weight: bold">
+                        {{ obj|getattr:paginator.list_display.1|format|format }}
+                    </p>
+                    <div>
+                        {{ obj|getattr:paginator.list_display.0|format }}
+                    </div>
+                    <div>
+                        {% paginator_icons paginator obj %}
+                        {% if paginator.list_display|length > 2 %}
+                            <p>{{ obj|getattr:paginator.list_display.2|format }}</p>
+                        {% endif %}
+                        {% if paginator.list_display|length > 3 %}
+                            <p>{{ obj|getattr:paginator.list_display.3|format }}</p>
+                        {% endif %}
+                        {% if paginator.list_display|length > 4 %}
+                            <p>{{ obj|getattr:paginator.list_display.4|format }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ paginator|add_actions:obj }}
+                        {{ paginator.drop_down }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<style>
+    .paginator-image-cards img {
+        width: 100px;
+    }
+</style>
+

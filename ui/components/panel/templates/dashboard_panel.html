@@ -1,0 +1,38 @@
+
+<div class="dashboard-wrapper">
+{% if self.top %}
+  <div class="dashboard-header">
+      {% for item in self.top %}
+            {{ item|safe }}
+      {% endfor %}
+  </div>
+{% endif %}
+{% if self.left %}
+  <div class="dashboard-aside dashboard-aside-1">
+      {% for item in self.left %}
+            {{ item|safe }}
+      {% endfor %}
+  </div>
+{% endif %}
+{% if self.right %}
+  <div class="dashboard-aside dashboard-aside-2">
+      {% for item in self.right %}
+            {{ item|safe }}
+      {% endfor %}
+  </div>
+{% endif %}
+{% if self.center %}
+  <div class="dashboard-main">
+      {% for item in self.center %}
+            {{ item|safe }}
+      {% endfor %}
+  </div>
+{% endif %}
+{% if self.bottom %}
+  <div class="dashboard-footer">
+      {% for item in self.bottom %}
+            {{ item|safe }}
+      {% endfor %}
+  </div>
+{% endif %}
+</div>

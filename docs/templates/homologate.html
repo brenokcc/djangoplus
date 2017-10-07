@@ -1,0 +1,126 @@
+{% extends "admin.html" %}
+{% load i18n %}
+{% block body %}
+<body>
+
+    <div class="padding-md">
+        <h2>{{ title }}</h2>
+
+    {% if groups or organizations %}
+        {% if groups %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                {% trans "Systemic Users" %}
+            </div>
+            <div class="panel-body no-padding">
+                <div class="padding-md">
+
+                    <p><strong>Login URL: </strong><a href="/admin/login/" target="_blank">http://{{ http_host }}/admin/login/</a></p>
+                    <p>
+                        Para acessa o sistema com um determinado usuário, clique sobre o link com o <i>username</i> do usuário e informe a senha padrão ("senha") no formulário de autenticação.
+                    </p>
+
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Group" %}</th>
+                            <th>{% trans "Username" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for group in groups %}
+                            {% if group.user_set.exists %}
+                                <tr>
+                                    <td>{{ group }}</td>
+                                    <td>
+                                        {% for user in group.user_set.all %}
+                                            <a target="_blank"
+                                               href="/admin/login/?username={{ user.username }}">{{ user.username }}
+                                            </a> &nbsp;
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for organization in organizations %}
+            <h3>{{ organization }}</h3>
+            <p><strong>Login URL: </strong><a href="/admin/login/{{ organization_model_name }}/{{ organization.pk }}/" target="_blank">http://{{ http_host }}/admin/login/{{ organization_model_name }}/{{ organization.pk }}/</a></p>
+            {% if organization.users %}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        {% trans "Organization's Users" %}
+                    </div>
+                    <div class="panel-body no-padding">
+                        <div class="padding-md">
+                            <table class="table table-striped table-bordered table-hover">
+                                <thead>
+                                <tr>
+                                    {% for group in organization_groups %}
+                                        <th>{{ group }}</th>
+                                    {% endfor %}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    {% for user_set in organization.users %}
+                                        <td>
+                                            {% for user in user_set.all %}
+                                                <a target="_blank"
+                                                   href="/admin/login/organization/{{ organization.pk }}/?username={{ user.username }}">{{ user.username }}</a>
+                                                &nbsp;&nbsp;&nbsp;
+                                            {% endfor %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            {% for unit in organization.units %}
+                                {% if unit.users %}
+                                    <h4>{{ unit }}</h4>
+
+                                    <table class="table table-striped table-bordered table-hover">
+                                        <thead>
+                                        <tr>
+                                            {% for group in unit_groups %}
+                                                <th>{{ group }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            {% for user_set in unit.users %}
+                                                <td>
+                                                    {% for user in user_set.all %}
+                                                        <a target="_blank"
+                                                           href="/admin/login/unit/{{ organization.pk }}/{{ unit.pk }}/?username={{ user.username }}">{{ user.username }}</a>
+                                                        &nbsp;&nbsp;&nbsp;
+                                                    {% endfor %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-warning">Nenhum usuário cadastrado para homologação.</div>
+    {% endif %}
+    </div>
+
+</body>
+{% endblock %}

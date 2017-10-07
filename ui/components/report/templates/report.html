@@ -1,0 +1,164 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-br" xml:lang="pt-br">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="robots" content="NONE,NOARCHIVE">
+    <style type="text/css">
+        @page {
+            margin: 1.0cm;
+            margin-bottom: 2.0cm;
+            size: a4 portrait;
+            @frame footer {
+                -pdf-frame-content: footer;
+                bottom: 0.3cm;
+                left: 0.5cm;
+                height: 1.3cm;
+            }
+        }
+        * {
+            background: transparent;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-size: 8pt;
+            line-height: 1.4em;
+        }
+        dd {
+            border-bottom: 1px dashed #ccc;
+            font-size: 9pt;
+            font-weight: bold;
+            margin-right: 5px;
+            padding: 3px 0 10px;
+        }
+        dt {
+            color: #666;
+            font-size: 7pt;
+            padding: 10px 0 0;
+        }
+        dt::after {
+            content: ":";
+        }
+        footer {
+            margin-top: 10px;
+        }
+        h1 {
+            font-size: 16pt;
+            margin: 5px 0;
+        }
+        h2 {
+            font-size: 14pt;
+            text-align: right;
+            text-transform: uppercase;
+            vertical-align: bottom;
+        }
+        h3 {
+            font-size: 12pt;
+            line-height: 1em;
+            margin: 20px 0 0;
+            padding: 10px 0;
+        }
+        h4 {
+            font-size: 11pt;
+            font-weight: 400;
+            margin: 20px 0 0;
+            padding: 10px 0 0;
+        }
+        header {
+            border-bottom: 1px solid #ccc;
+            margin: 0.5cm;
+            padding: 0 0 15px;
+        }
+        header td{
+            padding: 5px;
+            line-height: 2rem;
+        }
+        hr {
+            border-top: 1px dotted #8c8b8b;
+        }
+        p {
+            line-height: 20px;
+            padding: 0 !important;
+        }
+        section {
+            margin: 0.5cm; 
+        }
+        table {
+            border: 0 none;
+            border-collapse: collapse;
+            padding: 0;
+            vertical-align: middle;
+            width: 100%;
+        }
+        tfoot {
+            font-weight: bold;
+            text-align: right;
+        }
+        th {
+            background: #ddd;
+        }
+        .align-center {
+            text-align: center;
+        }
+        .align-left {
+            text-align: left;
+        }
+        .align-right {
+            text-align: right;
+        }
+        .table td,
+        .table th {
+            border: 1px solid #ccc;
+            line-height: 1em;
+            padding: 5px;
+        }
+        {% block style %}
+        {% endblock %}
+    </style>
+</head>
+
+<body>
+
+<header>
+{% block cabecalho %}
+    <table>
+        <tr>
+            {% if settings.logo_pdf %}
+                <td rowspan="4"><img src="{{ settings.logo_pdf }}" style="height:50px; margin-right:20px;" /></td>
+            {% elif settings.logo %}
+                <td rowspan="4"><img src="{{ settings.logo }}" style="height:50px; margin-right:20px;" /></td>
+            {% endif %}
+            <td><h1>{% block title %}{{ settings.name }}{% endblock %}</h1></td>
+            <td rowspan="4"><h2>{{ title }}</h2></td>
+        </tr>
+        <tr>
+            <td>{% trans "E-mail" %}: {{ settings.email }}</td>
+        </tr>
+        <tr>
+            <td>{% trans "Phones" %}: {{ settings.phone_1 }} {{ settings.phone_2 }}</td>
+        </tr>
+        <tr>
+            <td>{% trans "Address" %}: {{ settings.address }}</td>
+        </tr>
+    </table>
+{% endblock %}
+</header> 
+
+<section>
+{% block content %}
+    {% for obj in objects %}
+        {{ obj }}
+    {% endfor %}
+{% endblock %}
+</section>
+
+<footer>
+<div id="footer" class="align-center">{% trans "Page" %} <pdf:pagenumber> {% trans "of" %} <pdf:pagecount> </div>
+</footer>
+
+</body>
+</html>

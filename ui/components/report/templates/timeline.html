@@ -1,0 +1,36 @@
+{% load i18n %}
+{% if self.items %}
+<div class="panel panel-default">
+    {% if self.description %}
+    <div class="panel-heading clearfix">
+        {{ self.description }}
+    </div>
+    {% endif %}
+    <div class="panel-body no-padding">
+        <div class="padding-md">
+
+            <ol class="timeline">
+                {% for item in self.items %}
+                <li class="timeline__step {% if  item.1 %}done{% endif %}" style="width:{{ self.width }}%;">
+                    <input class="timeline__step-radio" id="trigger{{ forloop.counter }}{{identifier}}" name="trigger{{identifier}}" type="radio">
+
+                    <label class="timeline__step-label" for="trigger{{ forloop.counter }}{{identifier}}">
+                        {% if item.1 %}
+                            <span class="timeline__step-content">{{ item.1|format }}</span>
+                        {% else %}
+                            <span class="timeline__step-content">{% trans "Not completed" %}</span>
+                        {% endif %}
+                    </label>
+
+                    <span class="timeline__step-title">{{ item.0 }}</span>
+
+                    <i class="timeline__step-marker">{{ forloop.counter }}</i>
+                </li>
+                {% endfor %}
+            </ol>
+
+        </div>
+    </div>
+    <br/><br/>
+</div>
+{% endif %}

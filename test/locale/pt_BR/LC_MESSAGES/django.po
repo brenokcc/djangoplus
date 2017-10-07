@@ -1,0 +1,63 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: test/__init__.py:164
+msgid "Username"
+msgstr "Login"
+
+#: test/__init__.py:165
+msgid "Password"
+msgstr "Senha"
+
+#: test/utils.py:107
+msgid "The user chooses"
+msgstr "O usuário seleciona"
+
+#: test/utils.py:113
+msgid "The user enters"
+msgstr "O usuário informa"
+
+#: test/utils.py:125
+msgid "The user access the menu"
+msgstr "O usuário acessa o menu"
+
+#: test/utils.py:139
+msgid "The user access the system as"
+msgstr "O usuário acessa o sistema como"
+
+#: test/utils.py:141
+msgid "The system displays the main page"
+msgstr "O sistema exibe a página principal"
+
+#: test/utils.py:161
+msgid "The system displays previous registered records"
+msgstr "O sistema exibe os registros previamente cadastrados"
+
+#: test/utils.py:163 test/utils.py:170
+msgid "The user clicks the button"
+msgstr "O usuário clica no botão"
+
+#: test/utils.py:164
+msgid "on the right-side of the action bar"
+msgstr "no canto superior direito da tela"
+
+#: test/utils.py:166
+msgid "The system displays the input form"
+msgstr "O sistema exibe o formulário de cadastro"

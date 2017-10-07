@@ -1,0 +1,50 @@
+<div class="flex-container p-l-1">
+{% for item in self.items %}
+<div class="card-panel">
+    {% if item.url %}<a class="ajax" href="{{ item.url }}">{% endif %}
+    {% if item.icon %}
+        <div class="panel panel-default card-panel-item {{ item.css }}">
+
+                <span class="stat-icon">
+                    <i class="fa {{ item.icon }}"></i>
+                </span>
+                <div class="text-right pull-right" style="margin-top: -30px;">
+                    <div class="value">{% if not item.count == None %}{{ item.count|format }}{% else %}&nbsp;{% endif %}</div>
+                    <div class="title">
+                        {% if not item.count == None %}
+                            <div style="font-size: 20px; margin-top:10px">{{ item.title }}</div>
+                        {% else %}
+                            <div style="font-size: 20px;">{{ item.title }}</div>
+                        {% endif %}
+                        {% if item.description %}
+                            <div>{{ item.description }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+        </div>
+    {% else %}
+        <div class="panel panel-default card-panel-item {{ item.css }}">
+
+            <div class="text-right pull-right">
+                <div class="value">{% if not item.count == None %}{{ item.count|format }}{% else %}&nbsp;{% endif %}</div>
+                <div class="title">
+                    {% if not item.count == None %}
+                            {{ item.title }}
+                    {% else %}
+                        <div style="font-size: 20px">{{ item.title }}</div>
+                    {% endif %}
+                    {% if item.description %}
+                        <div>{{ item.description }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+    </div>
+    {% endif %}
+    </a>
+</div>
+{% endfor %}
+</div>
+
+

@@ -1,0 +1,12 @@
+<div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            {% if self.icon %}<span><i class="fa {{ self.icon }}"></i></span>{% endif %}
+            <span>{{ self.title }}</span>
+        </div>
+
+    <div class="panel-body" align="center">
+        <p style="font-size: 80px;text-align: center">{{ self.number|format }}</p>
+        <p>{{ self.description }}</p>
+    </div>
+
+</div>

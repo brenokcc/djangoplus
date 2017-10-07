@@ -1,0 +1,117 @@
+<!-- Full Calender -->
+<script src='/static/js/moment.min.js'></script>
+<script src='/static/js/fullcalendar.min-3.3.1.js'></script>
+<script src='/static/js/pt-br.js'></script>
+<!-- Full Calendar -->
+<link href='/static/css/fullcalendar.min-3.3.1.css' rel='stylesheet'/>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <i class="fa fa-calendar fa-lg"></i>
+        {{ self.title }}
+    </div>
+    <div class="panel-body">
+        <div id="{{ self.id }}" class="fc fc-ltr"></div>
+    </div>
+</div>
+<script>
+    $(function() {
+
+        var calendar = $('#{{ self.id }}').fullCalendar({
+            header : {
+                left : 'prev,next',
+                center : 'title',
+                right : 'month,agendaWeek,agendaDay'
+            },
+            defaultDate : '{{ self.default_date|date:"Y-m-d" }}',
+            lang : 'pt',
+            timeFormat: 'h:mm',
+            selectable : true,
+            selectHelper : true,
+            editable : false,
+            {% if self.lazy %}
+                eventSources: [
+                    {% for item in self.items %}
+                    {
+                        url: '/calendar/populate/',
+                        type: 'POST',
+                        data: {
+                            queryset: '{{ item.queryset }}',
+                            start_field: '{{ item.start_field }}',
+                            end_field: '{{ item.end_field|default:"" }}',
+                            action_names: '{{ item.action_names }}',
+                        },
+                        error: function() {
+                            alert('there was an error while fetching events!');
+                        },
+                        success: function(items){
+                            for(var i=0; i<items.length; i++) {
+                                var item = items[0]
+                                //console.log(item.popover);
+                            }
+                        },
+                        {% if item.color %}
+                            color: '{{ item.color }}',   // a non-ajax option
+                            textColor: 'white' // a non-ajax option
+                        {% endif %}
+                    },
+                    {% endfor %}
+                ],
+                {% if self.editable %}
+                eventRender: function(event, element) {
+                    $(element).popover({
+                        html: true,
+                        placement: 'bottom',
+                        title: event.title,
+                        container: 'body',
+                        content: function() {
+                            $(".popover").popover("hide");
+                            return event.html;
+                        }
+                    });
+                    $(element).popover("show");
+                },
+                dayClick: function(date, jsEvent, view) {
+                    $(this).popover({
+                        html: true,
+                        placement: 'top',
+                        title: 'Adicionar...',
+                        container: 'body',
+                        content: function() {
+                            var formatedDate = date.format('DD/MM/YYYY');
+                            var html = '';
+                            {% for link in self.links %}
+                            html+= '<p><a href="javascript:" onclick="popup(\'{{ link.url }}'+formatedDate+'\');">{{ link.label }}</a></p>';
+                            {% endfor %}
+                            return html;
+                        }
+                    });
+                    $(this).popover("toggle");
+                },
+                {% endif %}
+            {% else %}
+                events : [
+                    {% for item in self.items %}
+                         {
+                            title : '{{ item.description }}',
+                            start : new Date({{ item.start.year }}, {{ item.start.month }}-1, {{ item.start.day }}),
+
+                            {% if item.end %}
+                            end : new Date({{ item.end.year }}, {{ item.end.month }}-1, {{ item.end.day }}),
+                            {% endif %}
+
+                            {% if item.allday %}
+                            allDay : true,
+                            {% else %}
+                            allDay : false,
+                            {% endif %}
+
+                            {% if item.url %}
+                                url : '{{ item.url }}',
+                            {% endif %}
+                        },
+                    {% endfor %}
+                ],
+            {% endif %}
+        });
+    });
+</script>

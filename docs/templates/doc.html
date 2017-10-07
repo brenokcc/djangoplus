@@ -1,0 +1,189 @@
+{% extends "admin.html" %}
+{% load i18n %}
+{% block extra_admin_head %}
+    <link href="/static/css/joint.css" rel="stylesheet" />
+    <script src="/static/js/lodash.js"></script>
+    <script src="/static/js/backbone.js"></script>
+    <script src="/static/js/joint.js"></script>
+    <style>
+        ol{
+             padding-left:20px;
+        }
+        ol li{
+            list-style-type:decimal;
+        }
+        ol {
+            counter-reset: item;
+        }
+
+        ol > li {
+            counter-increment: item;
+        }
+
+        ol ol > li {
+            display: block;
+        }
+
+        ol ol > li:before {
+            content: counters(item, ".") ". ";
+            margin-left: -20px;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+<body id="body" style="background-color: white">
+        <div class="padding-md">
+            <h1>{% trans "Documentation" %}</h1>
+            <p>{% trans "This document describes the actors and funcionalities of the system" %} {{ settings.initials }}.</p>
+            {% if documentation.modules or workflow_data %}
+            <h2>Índice</h2>
+            <table>
+                <tbody>
+                    <ul>
+
+                    {% for module in documentation.modules %}
+                        <li>{{ module.name }}</li>
+                        <ol>
+                            <li>Atores
+                                <ol>
+                                    {% for actor in module.actors %}
+                                        <li><a href="#actors">{{ actor.name }}</a></li>
+                                    {% endfor %}
+                                </ol>
+                            </li>
+                            <li><a href="#fluxograma">Fluxograma</a></li>
+                            {% if class_diagrams %}
+                            <li>Diagrama de Classes</li>
+                                <ol>
+                                    {% for class_diagram_name, class_digram_data in class_diagrams %}
+                                        <li><a href="#diagram-{{ class_diagram_name|slugify }}">{{ class_diagram_name }}</a></li>
+                                    {% endfor %}
+                                </ol>
+                            {% endif %}
+                            <li>Funcionalidades
+                                <ol>
+                                    {% for model, data in module.models.items %}
+                                        <li>{{ data.name }}
+                                            <ol>
+                                                {% for funcionality in data.functionalities %}
+                                                    <li><a href="javascript:$('#{{ funcionality.name|slugify }}tab').tab('show');$('html, body').animate({scrollTop: $('#{{ funcionality.name|slugify }}tab').offset().top }, 2000);">{{ funcionality.name }}</a></li>
+                                                {% endfor %}
+                                            </ol>
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                            </li>
+                        </ol>
+                    {% endfor %}
+                    </ul>
+                </tbody>
+            </table>
+
+            {% for module in documentation.modules %}
+                <h2>{{ module.name }}</h2>
+                {% if module.description %}
+                    <p>{{ module.description|linebreaks }}</p>
+                {% endif %}
+
+                <h3 id="actors">{% trans "Actors" %}</h3>
+                {% if module.actors %}
+                <table class="table table-striped table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Group" %}</th>
+                            <th>{% trans "Description" %}</th>
+                            {% if documentation.organization_name %}
+                            <th>{% trans "Scope" %}</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for actor in module.actors %}
+                        <tr>
+                            <td width="30%" align="center">
+                                <img width="50px" src="/static/images/actor.png"/><br/>
+                                {{ actor.name }}
+                            </td>
+                            <td>{{ actor.description|format }}</td>
+                            {% if documentation.organization_name %}
+                            <td>{{ actor.scope }}</td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                            {% trans "Superuser" %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <div class="alert alert-warning">Nenhum ator envolvido.</div>
+                {% endif %}
+
+                <h3 id="fluxograma">Fluxograma</h3>
+                {% if workflow_data != '[]' %}
+                    <div id="workflow"></div>
+                    <script src="/static/js/workflow.js"></script>
+                    <script>
+                        workflow('workflow', {{ workflow_data|safe }});
+                    </script>
+                {% else %}
+                    <div class="alert alert-warning">Nenhum fluxo foi definido.</div>
+                {% endif %}
+
+                {% if class_diagrams %}
+                <h3>Diagrama de Classes</h3>
+                <script src="/static/js/classes.js"></script>
+                {% for class_diagram_name, class_digram_data in class_diagrams %}
+                    <h4 align="center" id="diagram-{{ class_diagram_name|slugify }}">{{ class_diagram_name }}</h4>
+                    <div id="class-diagram{{ class_diagram_name|slugify }}"></div>
+                <script>
+                    classDiagram('class-diagram{{ class_diagram_name|slugify }}', {{ class_digram_data|safe }});
+                </script>
+                {% endfor %}
+                {% endif %}
+
+                <h3>{% trans "Functionalities" %}</h3>
+                    {% for model, data in module.models.items %}
+                        <h4>{{ data.name }}</h4>
+                        {% if data.description %}
+                        <p>{{ data.description }}</p>
+                        {% endif %}
+
+                        <ul class="nav nav-tabs" role="tablist">
+                        {% for funcionality in data.functionalities %}
+                          <li class="nav-item {% if forloop.first %}active{% endif %}">
+                            <a class="nav-link" data-toggle="tab" id="{{ funcionality.name|slugify }}tab" href="#{{ funcionality.name|slugify }}" role="tab">{{ funcionality.name }}</a>
+                          </li>
+                        {% endfor %}
+                        </ul>
+
+                        <div class="tab-content">
+                        {% for funcionality in data.functionalities %}
+                            <div class="tab-pane {% if forloop.first %}active{% endif %}" id="{{ funcionality.name|slugify }}" role="tabpanel">
+                            <h5>UC-{{ funcionality.name|slugify|upper }}</h5>
+                            {% include 'usecase.html' %}
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% if module.views %}
+                <h3>{% trans "Other Functionalities" %}</h3>
+                    {% for funcionality in module.views %}
+                        <h5 id="{{ funcionality.name|slugify }}">{{ funcionality.name }}</h5>
+                        {% include 'usecase.html' %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% else %}
+                <div class="alert alert-warning">Nenhum módulo foi documentado.</div>
+            {% endif %}
+        </div>
+        <a href="" id="scroll-to-top" class="hidden-print"><i class="fa fa-chevron-up"></i></a>
+</body>
+    <script>
+        $("#x").click(function() {
+            $('html, body').animate({
+                scrollTop: $("#actors").offset().top
+            }, 2000);
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,146 @@
+
+{% extends "base.html" %}
+{% load breadcrumbs %}
+{% load i18n %}
+{% if not request.GET.popup %}
+{% block extra_head %}
+    <!-- Metis Menu -->
+    <link href="/static/css/metisMenu.min.css" rel="stylesheet">
+    <script src="/static/js/metisMenu.min.js"></script>
+    <!-- Djangoplus -->
+    <link href="/static/css/djangoplus.min.css" rel="stylesheet"/>
+    <script>
+        (function($){
+            var loadOnPush = true;
+          $(function(){
+            window.addEventListener("popstate", function(e) {
+                if(document.location.href.indexOf('#')==-1) {
+                    if(loadOnPush) loadUrl(document.location.href);
+                    loadOnPush = true;
+                } else {
+                    loadOnPush = false;
+                }
+            });
+          }); // end of document ready
+        })(jQuery); // end of jQuery name space
+    </script>
+    {% block extra_admin_head %}
+
+    {% endblock %}
+{% endblock %}
+{% endif %}
+
+
+{% block body %}
+{% if not request.GET.popup %}
+<body id="admin-body">
+
+<div id="wrapper" class="{% if request.session.hidden_menu or not request.session.side_menu_size %}hidden-menu{% endif %}">
+
+    <!-- Navigation -->
+    <header class="navbar navbar-fixed-top">
+        {% if request.session.side_menu_size %}
+        <button id="menu-toggle" type="button" class="navbar-toggle" onclick="$('#wrapper').toggleClass('hidden-menu')">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+
+        <button id="menu-toggle-compact" type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        {% endif %}
+        <h1 class="navbar-header">
+            <a href="/admin/" class="navbar-brand ajax" title="{{ settings.initials }}">
+                {% if settings.logo %}<img height="30px" src="/media/{{ settings.logo }}" alt="Logotipo de {{ settings.initials }}" />{% else %}{{ settings.initials|truncatechars:17 }}{% endif %}
+            </a>
+        </h1>
+
+        <!-- Top Navigation: Left Menu -->
+        {% if request.user.is_authenticated %}
+        <ul class="nav navbar-nav navbar-left navbar-top-links">
+            <li><a class="ajax" href="/admin/" title="Principal"><i class="fa fa-home fa-fw"></i></a></li>
+            <li><a class="ajax referrer-link" href="#" title="Voltar"><i class="fa fa-arrow-left fa-fw"></i></a></li>
+        </ul>
+        {% endif %}
+
+        <!-- Top Navigation: Right Menu -->
+        <ul class="nav navbar-right navbar-top-links">
+            {% if alerts %}
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-bell fa-fw"></i> <b class="caret"></b>
+                    <span class="notification-label">{{ alerts|length }}</span>
+                </a>
+                <ul class="dropdown-menu dropdown-alerts">
+                    {% for item in alerts %}
+                    <li>
+                        <a href="{{ item.url }}" class="ajax">
+                            <div>
+                                <i class="fa fa-comment {{ item.icon }}"></i> {{ item.title }}
+                                <span class="pull-right text-muted small">{{ item.description }}</span>
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                    <li class="divider"></li>
+                    <li>
+                        <a class="text-center" href="#">
+                            <strong>Ver Todos</strong>
+                            <i class="fa fa-angle-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            {% endif %}
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" title="Configurações">
+                    <i class="fa fa-user fa-fw"></i> {{ request.user.name }} <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu dropdown-user">
+                    <li><a class="popup" href="/admin/profile/"><i class="fa fa-user fa-fw"></i> {% trans "Edit Profile" %}</a></li>
+                    <li><a class="popup" href="/admin/password/"><i class="fa fa-key fa-fw"></i> {% trans "Change Password" %}</a></li>
+                    {% if request.user.is_superuser %}
+                        <li><a class="ajax" href="/admin/configure/"><i class="fa fa-gear fa-fw"></i> {% trans "Settings" %}</a></li>
+                        <li class="divider"></li>
+
+                        <li><a href="/list/admin/group/" title="Grupos" class="ajax"><i class="fa fa-users fa-fw"></i> Grupos</a></li>
+                        <li><a href="/list/admin/permission/" title="Permissões" class="ajax"><i class="fa fa-check fa-fw"></i> Permissões</a></li>
+                        <li><a href="/list/admin/user/" title="Usuários" class="ajax"><i class="fa fa-user-plus fa-fw"></i> Usuários</a></li>
+                        <li><a class="ajax" href="/list/admin/log/" title="Logs"><i class="fa fa-history fa-fw"></i> Logs</a></li>
+                        <li class="divider"></li>
+                    {% endif %}
+                    <li><a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {% trans "Logout" %}</a>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+    </header>
+
+    <!-- Sidebar -->
+    {{ menu }}
+
+    <!-- Page Content -->
+    <main id="page-wrapper">
+        {% if request.user.is_authenticated %}
+                {% breadcrumbs request title %}
+            {% endif %}
+        <div>
+{% endif %}
+            {% block content %}
+
+            {% endblock %}
+{% if not request.GET.popup %}
+        </div>
+    </main>
+
+</div>
+
+</body>
+{% endif %}
+{% endblock %}

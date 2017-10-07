@@ -1,0 +1,26 @@
+{% with first_attr=obj|getattr:select_display.0 %}
+    {% if first_attr|is_image %}
+        <div style="display: inline-block;vertical-align:top">
+            <img src="/media/{{ first_attr }}" width="50px"/>
+        </div>
+    {% endif %}
+    <ul style="padding-left:0;display: inline-block">
+        {% for attr in select_display %}
+            {% if first_attr|is_image %}
+                {% if not forloop.first %}
+                    {% if forloop.counter == 2 %}
+                        <li><b>{{ obj|getattr:attr|format }}</b></li>
+                    {% else %}
+                        <li>{{ obj|getattr:attr|format }}</li>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                {% if forloop.counter == 1 %}
+                    <li><b>{{ obj|getattr:attr|format }}</b></li>
+                {% else %}
+                    <li>{{ obj|getattr:attr|format }}</li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </ul>
+{% endwith %}

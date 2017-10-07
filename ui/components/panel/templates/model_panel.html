@@ -1,0 +1,111 @@
+{% load i18n %}
+{% if self.as_pdf %}
+    {% for fieldset in self.get_active_fieldsets %}
+        {% if fieldset.paginators|length > 1 and fieldset.fields %}
+            <h2>{{ fieldset.title }}</h2>
+        {% endif %}
+        {% if fieldset.fields %}
+            <h3>{% if fieldset.icon %}<i class="fa {{ fieldset.icon }}"></i>{% endif %}{{ fieldset.title }}</h3>
+            <table>
+                {% for fields in fieldset.fields %}
+                    <tr>
+                        {% for field in fields %}
+                            <td colspan="{{ fields|length|colspan }}">
+                                <dt>{{ field.verbose_name }}</dt>
+                                <dd>{{ self.obj|getattr:field.name|print_format|safe }}</dd>
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+        {% if self.complete %}
+            {% for paginator in fieldset.paginators %}
+                {{ paginator }}
+            {% endfor %}
+            {% for info in fieldset.extra %}
+                {{ self.obj|getattr:info }}
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+{% else %}
+<div class="model-panel">
+    {% if self.complete %}
+    <div id="{% uuid %}" class="action-bar">
+        <div class="pull-left">
+            <h2>{{ self.title }}</h2>
+        </div>
+        {% if not self.request.GET.popup %}
+        <div class="pull-right">
+            {{ self.drop_down }}
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+        {% if not self.request.GET.popup and self.drop_down.actions %}
+        <div id="{% uuid %}" class="action-bar">
+            <div class="pull-right" id="{% uuid %}">
+                {{ self.drop_down }}
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    {% for fieldset in self.get_active_fieldsets %}
+
+        {% if self.tabs and forloop.counter0 == self.fieldsets_without_tab_name|length %}
+            <ul class="nav nav-tabs">
+            {% for tab_name, url in self.tabs %}
+              <li class="{% if self.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax" href="{{ url }}">{{ tab_name }}</a></li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% if fieldset.drop_down.has_items or fieldset.paginators|length > 1 and fieldset.fields %}
+            <div id="panel-{{ fieldset.title|slugify }}">
+                {% if fieldset.paginators|length > 1 and fieldset.fields %}
+                    <div class="pull-left">
+                        <h4>{{ fieldset.title }}</h4>
+                    </div>
+                {% endif %}
+
+                {% if not self.request.GET.popup %}
+                    <div class="pull-right action-bar">
+                        {{ fieldset.drop_down }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if fieldset.fields %}
+            <div class="panel panel-default info-panel" id="panel-{{ fieldset.title|slugify }}">
+                <div class="panel-heading">{% if fieldset.icon %}<i class="fa {{ fieldset.icon }}"></i>{% endif %}{{ fieldset.title }}</div>
+                <div class="panel-body">
+
+                    {% for fields in fieldset.fields %}
+                        <div  class="info-group n{{ fields|length }}">
+                            {% for field in fields %}
+                                <div>
+                                    <label>{{ field.verbose_name }}</label>
+                                    <div>{{ self.obj|getattr:field.name|format:self.request|safe }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+        {% endif %}
+
+        {% if self.complete %}
+            {% for paginator in fieldset.paginators %}
+                {{ paginator }}
+            {% endfor %}
+
+            {% for info in fieldset.extra %}
+                {{ self.obj|getattr:info }}
+            {% endfor %}
+        {% endif %}
+
+    {% endfor %}
+</div>
+{% endif %}

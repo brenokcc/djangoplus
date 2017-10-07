@@ -1,0 +1,92 @@
+{% load i18n %}
+<aside class="sidebar" role="navigation">
+    <div class="sidebar-nav navbar-collapse collapse">
+        {% if self.subitems %}
+        <ul class="nav main-menu" id="side-menu">
+            <li class="sidebar-profile">
+                <div>
+                    <img src="{{ self.request.user|photo }}" alt='{% trans "Photo" %} {% trans "of" %} {{ self.request.user.name }}' class="img-circle" width="50" height="50">
+                </div>
+                <div>
+                    <p>Bem-vindo, <strong>{{ self.request.user.name }}</strong>.</p>
+                    {% if request.user.organization %}
+                        <p>{{ request.user.organization }}</p>
+                    {% endif %}
+                    {% if request.user.unit %}
+                        <p>{{ request.user.unit }}</p>
+                    {% endif %}
+                </div>
+            </li>
+            <li class="sidebar-search">
+                <div class="custom-search-form">
+                    <input type="text" class="form-control" placeholder="Buscar no menu...">
+                </div>
+            </li>
+            {% for x1, d1 in self.subitems|sorted_items %}
+                {% for url, css in d1.urls %}
+                    <li>
+                        <a id="{{ url|slugify }}" href="{{ url }}" class="{{ css }}">{% if d1.icon %}<i class="fa {{ d1.icon }} fa-fw"></i>{% endif %} {{ x1 }}</a>
+                    </li>
+                {% endfor %}
+                {% if d1.subitems %}
+                <li>
+                    <a href="#">{% if d1.icon %}<i class="fa {{ d1.icon }} fa-fw"></i>{% endif %} {{ x1 }}<span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        {% for x2, d2 in d1.subitems|sorted_items %}
+                            {% for url, css in d2.urls %}
+                                <li>
+                                    <a id="{{ url|slugify }}" href="{{ url }}" class="{{ css }}">{{ x2 }}</a>
+                                </li>
+                            {% endfor %}
+                            {% if d2.subitems %}
+                                <li>
+                                    <a href="#">{{ x2 }} <span class="fa arrow"></span></a>
+                                    <ul class="nav nav-third-level">
+                                        {% for x3, d3 in d2.subitems|sorted_items %}
+                                            {% for url, css in d3.urls %}
+                                                <li>
+                                                    <a id="{{ url|slugify }}" href="{{ url }}" class="{{ css }}">{{ x3 }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+        </ul>
+    </div>
+</aside>
+<script>
+    var url = window.location.href;
+    var element = $('.main-menu a').filter(function() {
+        var href = this.href.replace('/breadcrumbs/reset', '');//.replace(/^.*\/\/[^\/]+/, '');
+        return href==url ? true : false;
+    }).addClass('active').parent().parent().addClass('in').parent();
+    if (true && element.is('li')) {
+        element.addClass('active');
+        var parent = element.parent().parent();
+        if(parent.is('li')) parent.addClass('active');
+    }
+    $('#side-menu').metisMenu();
+    $('.custom-search-form input').keyup(function(){
+        var q = this.value;
+        $(".main-menu ul.in").removeClass('in');
+        $(".main-menu ul.collapse").removeClass('collapse');
+        $(".main-menu li.active").removeClass('active');
+        $(".main-menu li.match").removeClass('match');
+        $('#side-menu').metisMenu();
+        $(".main-menu li").show();
+        if(q){
+            $(".main-menu li a:contains-IgnoreAccents('"+q+"')").parent().addClass('match').parents('li').addClass('match')
+            $(".main-menu li:not(.sidebar-search):not(.sidebar-profile):not(.match)").hide();
+            $(".main-menu li:has(li)").addClass('active');
+            $(".main-menu li:visible:has(li):not(:has(li.match))").hide();
+            $('#side-menu').metisMenu();
+        }
+    });
+</script>

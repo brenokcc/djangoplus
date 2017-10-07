@@ -1,0 +1,142 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: admin/templates/admin.html:105
+msgid "Edit Profile"
+msgstr "Editar Perfil"
+
+#: admin/templates/admin.html:106
+msgid "Change Password"
+msgstr "Alterar Senha"
+
+#: admin/templates/admin.html:108
+msgid "Settings"
+msgstr "Configurações"
+
+#: admin/templates/admin.html:117
+msgid "Logout"
+msgstr "Sair"
+
+#: admin/templates/delete.html:11
+msgid ""
+"Deleting this record will cause the exclusion of the following related items:"
+msgstr "A exclusão desse registro causará a exclusão dos seguintes itens:"
+
+#: admin/templates/delete.html:18
+msgid "Deleting this record will"
+msgstr "A exclusão desse registro"
+
+#: admin/templates/delete.html:18
+msgid "NOT"
+msgstr "NÃO"
+
+#: admin/templates/delete.html:18
+msgid "result in the exclusion of any other information in the system."
+msgstr "resultará na exclusão de nenhuma informação relacionada."
+
+#: admin/templates/login.html:25
+msgid "Sign-in Form"
+msgstr "Acesso ao Sistema"
+
+#: admin/templates/login.html:56
+msgid "Username"
+msgstr "Login"
+
+#: admin/templates/login.html:61
+msgid "Password"
+msgstr "Senha"
+
+#: admin/templates/login.html:70
+msgid "Remember"
+msgstr "Lembre-me"
+
+#: admin/templates/login.html:83
+msgid "Sign-in"
+msgstr "Acessar"
+
+#: admin/templates/login.html:85
+msgid "Register"
+msgstr "Cadastrar"
+
+#~ msgid "Documentation"
+#~ msgstr "Documentação"
+
+#~ msgid "This document describes the actors and funcionalities of the system"
+#~ msgstr "Este documento descreve os atores e funcionalidades do sistema"
+
+#~ msgid "Actors"
+#~ msgstr "Atores"
+
+#~ msgid "Group"
+#~ msgstr "Grupo"
+
+#~ msgid "Description"
+#~ msgstr "Descrição"
+
+#~ msgid "Scope"
+#~ msgstr "Escopo"
+
+#~ msgid "Superuser"
+#~ msgstr "Superusuário"
+
+#~ msgid "Functionalities"
+#~ msgstr "Funcionalidades"
+
+#~ msgid "Business Rules"
+#~ msgstr "Regras de Negócio"
+
+#~ msgid "Name"
+#~ msgstr "Nome"
+
+#~ msgid "Other Functionalities"
+#~ msgstr "Outras Funcionalidades"
+
+#~ msgid "Note"
+#~ msgstr "Nota"
+
+#~ msgid "Please correct the errors below"
+#~ msgstr "Por favor, corrija os erros abaixo"
+
+#~ msgid "Cancel"
+#~ msgstr "Cancelar"
+
+#~ msgid "Systemic Users"
+#~ msgstr "Usuários Sistêmicos"
+
+#~ msgid "Organization's Users"
+#~ msgstr "Usuários da Organização"
+
+#~ msgid "E-mail"
+#~ msgstr "E-mail"
+
+#~ msgid "Phones"
+#~ msgstr "Telefones"
+
+#~ msgid "Address"
+#~ msgstr "Endereço"
+
+#~ msgid "Page"
+#~ msgstr "Página"
+
+#~ msgid "of"
+#~ msgstr "de"
+
+#~ msgid "Systemic"
+#~ msgstr "Sistêmico"

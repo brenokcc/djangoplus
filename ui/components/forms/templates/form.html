@@ -1,0 +1,170 @@
+{% load i18n %}
+
+{% if self.note %}
+    <div class="alert alert-info">
+        <strong>{% trans "Note" %}: </strong> {{ self.note }}
+    </div>
+{% endif %}
+    
+{% if not self.partial %}
+    <form id="{{ self.id }}"
+          class="{% if self.horizontal %}form-horizontal{% endif %} no-margin form-border ajax-form {% if self.request.GET.popup %}popup-form{% endif %}{% if self.inline %}inline-form{% endif %}"
+          method="{{ self.method }}" enctype="multipart/form-data" action="{{ self.request.get_full_path }}" novalidate>
+    {% csrf_token %}
+    {{ self.str_hidden|safe }}
+    {{ self.media }}
+{% endif %}
+
+{% if self.title and not self.inline and not self.partial %}
+    <h2>{% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}</h2>
+{% endif %}
+
+{% if self.has_errors %}
+    {% if self.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for non_field_error in self.non_field_errors %}
+                {{ non_field_error }}
+            {% endfor %}
+        </div>
+    {% else %}
+        {% if not self.partial %}
+            <div class="alert alert-danger">
+                {% trans "Please correct the errors below" %}.
+            </div>
+        {% endif %}
+    {% endif %}
+{% endif %}
+
+{% for fieldset in self.configured_fieldsets %}
+    {% if not fieldset.tuples|must_hide_fieldset %}
+        {% if not self.inline and not self.partial %}
+            <div class="panel panel-default">
+            {% if fieldset.title %}
+                <div class="panel-heading">
+                    {% if fieldset.title or self.title %}
+                        {% if fieldset.icon %}
+                            <i class="fa {{ fieldset.icon }}"></i>
+                        {% endif %}
+                        {{ fieldset.title|default:"Dados Gerais" }}
+                    {% endif %}
+                </div>
+            {% endif %}
+            <div class="panel-body">
+        {% endif %}
+    {% for fields in fieldset.tuples %}
+        {% if fields %}
+            <div class="form-group {% if self.inline and self.partial %}inline-form-group {{ self.id }}{% endif %} n{{ fields|length }} {% if self.hidden %}hidden{% endif %}">
+                {% for field in fields %}
+                    {% if self.horizontal %}
+                        <div>
+                            <label class="control-label" id="label-for-{{ field.name }}" for="id-{{ field.name }}">{{ field.label|safe }}</label>
+                            <div>
+                                {{ field.widget }}
+                                {% if field.help_text %}
+                                    <div class="help-text">{{ field.help_text|format|safe }}</div>{% endif %}
+                                {{ field.widget.errors }}
+                            </div>
+                        </div>
+                    {% else %}
+                        {% if self.partial and self.inline and forloop.first %}
+                            <div class="inline-checkbox">
+                                <label class="control-label">&nbsp;</label>
+                                <div>
+                                    <input {% if self.instance.pk or self.prefix in self.data %}checked="checked"{% endif %} id="{{ self.prefix }}_id" name="{{ self.prefix }}" type="checkbox" onchange="checkWidgets(this);" data-scope=".form-group" class="one-to-many-checkbox"><span class="custom-checkbox"></span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <label class="control-label" id="label-for-{{ field.name }}" for="id-{{ field.name }}">{{ field.label|safe }}</label>
+                            {{ field.widget }}
+                            {% if field.help_text %}
+                                <div class="help-text">{{ field.help_text|format|safe }}</div>{% endif %}
+                            {{ field.widget.errors }}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+        {% if not self.inline and not self.partial %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+    {% for field, form, required, save in fieldset.one_to_one %}
+        {% if forloop.first %}
+            {{ form.media }}
+        {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                {% if field.required %}
+                    <input type="hidden" name="{{ form.prefix }}" value="on">
+                {% else %}
+                    <input {% if save or form.instance.pk %}checked="checked"{% endif %} name="{{ form.prefix }}" type="checkbox" onchange="checkWidgets(this);" data-scope=".panel" class="one-to-one-checkbox"><span class="custom-checkbox"></span>
+                {% endif %}
+                {{ field.label }}
+            </div>
+            <div class="panel-body">
+                {{ form }}
+            </div>
+        </div>
+    {% endfor %}
+    {% for field, forms in fieldset.one_to_many %}
+        <div class="panel panel-default">
+            <div class="panel-heading">{{ field.label }}</div>
+            <div class="panel-body">
+                {% for form in forms %}
+                    {% if forloop.first %}
+                        {{ form.media }}
+                    {% endif %}
+                    {{ form }}
+
+                    {% if form.hidden %}
+                        <a id="{{ form.id }}" class="pull-right inline-add-link hidden" href="javascript:" onclick="configureInlineAddLink('{{ form.id }}')">Mais</a>
+                    {% endif %}
+
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endfor %}
+
+{% if not self.partial %}
+    <div class="seperator"></div>
+    {% if not self.request.GET.popup %}
+        <div class="pull-right">
+            {%  if not self.inline %}
+            <button class="btn btn-default btn-sm" type="reset" name="action"
+                    onclick="loadUrl('{{ request.REFERRER }}');">
+                {% trans "Cancel" %}
+            </button>
+            {% endif %}
+            <button class='btn btn-{{ self.submit_style|default:"default" }}' name="action" type="submit">
+                <i class="fa fa-chevron-right"></i> <span>{{ self.submit_label }}</span>
+            </button>
+        </div>
+        <div style="clear: both"></div>
+    {% endif %}
+    </form>
+    {% if not self.inline %}
+    <!-- Used by popup to get the label of submit button -->
+    <input type="hidden" id="form-submit-label" value="{{ self.submit_label }}"/>
+    <input type="hidden" id="form-submit-style" value='btn btn-md btn-{{ self.submit_style|default:"default" }}' />
+    {% endif %}
+
+    <script>
+        var func = window['{{ self.name }}'];
+        if (func) func();
+        function configureInlineAddLink(formId){
+            if(formId) {
+                $('.' + formId + ', #' + formId).toggleClass('hidden');
+                $('#' + formId).toggleClass('inline-add-link-clicked');
+            }
+            $('.inline-form-group').parent().find('a:not(.inline-add-link-clicked):first').removeClass('hidden');
+        }
+        configureInlineAddLink()
+    </script>
+
+{% endif %}
+
+

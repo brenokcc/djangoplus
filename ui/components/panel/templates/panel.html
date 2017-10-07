@@ -1,0 +1,21 @@
+<div class="panel panel-default">
+    {% if self.title %}
+        <div class="panel-heading clearfix">
+            <span class="pull-left">
+                {% if self.icon.align == 'left' %}<span class="{{ self.icon.css }} m-right-xs"><i class="fa {{ self.icon.name }}"></i></span>{% endif %}
+                {{ self.title }}
+                {% if self.icon.align == 'right' %}<span class="{{ self.icon.css }} m-left-xs"><i class="fa {{ self.icon.name }}"></i></span>{% endif %}
+            </span>
+            {% for label in self.labels %}
+                <span class="label {{ label.css }} pull-right m-left-xs">{{ label.description }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="panel-body no-padding">
+        <div class="padding-md">
+            {{ self.text|safe }}
+        </div>
+    </div>
+
+</div>

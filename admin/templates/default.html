@@ -1,0 +1,15 @@
+{% extends "admin.html" %}
+
+{% block content %}
+
+    {{ widget_panel }}
+
+    {% if form or panel or paginator %}
+    <div class="padding-md">
+        {{ form }}
+        {{ panel }}
+        {{ paginator }}
+    </div>
+    {% endif %}
+
+{% endblock %}

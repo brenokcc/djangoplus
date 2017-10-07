@@ -1,0 +1,99 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: docs/templates/doc.html:36
+msgid "Documentation"
+msgstr "Documentação"
+
+#: docs/templates/doc.html:37
+msgid "This document describes the actors and funcionalities of the system"
+msgstr "Este documento descreve os atores e funcionalidades do sistema"
+
+#: docs/templates/doc.html:88
+msgid "Actors"
+msgstr "Atores"
+
+#: docs/templates/doc.html:93 docs/templates/homologate.html:20
+msgid "Group"
+msgstr "Perfil"
+
+#: docs/templates/doc.html:94 docs/templates/usecase.html:13
+msgid "Description"
+msgstr "Descrição"
+
+#: docs/templates/doc.html:96
+msgid "Scope"
+msgstr "Escopo"
+
+#: docs/templates/doc.html:110
+msgid "Superuser"
+msgstr "Superusuário"
+
+#: docs/templates/doc.html:141
+msgid "Functionalities"
+msgstr "Funcionalidades"
+
+#: docs/templates/doc.html:166
+msgid "Other Functionalities"
+msgstr "Outras Funcionalidades"
+
+#: docs/templates/homologate.html:12
+msgid "Systemic Users"
+msgstr "Usuários Sistêmicos"
+
+#: docs/templates/homologate.html:21
+msgid "Username"
+msgstr "Login"
+
+#: docs/templates/homologate.html:52
+msgid "Organization's Users"
+msgstr "Usuários da Organização"
+
+#: docs/templates/usecase.html:9
+msgid "Title"
+msgstr "Título"
+
+#: docs/templates/usecase.html:17
+msgid "Primary Actor"
+msgstr "Ator Primário"
+
+#: docs/templates/usecase.html:22
+msgid "Secondary Actors"
+msgstr "Atores Secundários"
+
+#: docs/templates/usecase.html:28
+msgid "Preconditions"
+msgstr "Pré-condicões"
+
+#: docs/templates/usecase.html:34
+msgid "Business Rules"
+msgstr "Regras de Negócio"
+
+#: docs/templates/usecase.html:39
+msgid "Postconditions"
+msgstr "Pós-condições"
+
+#: docs/templates/usecase.html:43
+msgid "Main Scenario"
+msgstr "Fluxo Principal"
+
+#: docs/templates/usecase.html:49
+msgid "Extensions"
+msgstr "Fluxos Alternativos"
