@@ -122,15 +122,16 @@ class SelectWidget(widgets.Select):
                 select_template = get_metadata(model, 'select_template')
                 select_display = get_metadata(model, 'select_display')
                 if select_template or select_display:
-                    templates.append('templateResult: function (item) {%s_templates = Array();' % name)
+                    templates_var_name = name.replace('-', '_')
+                    templates.append('templateResult: function (item) {%s_templates = Array();' % templates_var_name)
                     if hasattr(self.choices.queryset.model, 'get_tree_index_field'):
                         tree_index_field = self.choices.queryset.model.get_tree_index_field()
                         if tree_index_field:
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset:
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-                        templates.append('%s_templates[%s] = \'%s\';' % (name, obj.pk, obj_html.replace('\n', '')))
-                    templates.append('return %s_templates[item.id];},' % name)
+                        templates.append('%s_templates[%s] = \'%s\';' % (templates_var_name, obj.pk, obj_html.replace('\n', '')))
+                    templates.append('return %s_templates[item.id];},' % templates_var_name)
 
             if hasattr(self, 'user'):
                 for tmp in models:
@@ -192,15 +193,16 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                 select_template = get_metadata(queryset.model, 'select_template')
                 select_display = get_metadata(queryset.model, 'select_display')
                 if select_template or select_display:
-                    templates.append('templateResult: function (item) {%s_templates = Array();' % name)
+                    templates_var_name = name.replace('-', '_')
+                    templates.append('templateResult: function (item) {%s_templates = Array();' % templates_var_name)
                     if hasattr(self.choices.queryset.model, 'get_tree_index_field'):
                         tree_index_field = self.choices.queryset.model.get_tree_index_field()
                         if tree_index_field:
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset.all():
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-                        templates.append('%s_templates[%s] = \'%s\';' % (name, obj.pk, obj_html.replace('\n', '')))
-                    templates.append('return %s_templates[item.id];},' % name)
+                        templates.append('%s_templates[%s] = \'%s\';' % (templates_var_name, obj.pk, obj_html.replace('\n', '')))
+                    templates.append('return %s_templates[item.id];},' % templates_var_name)
         html = super(SelectMultipleWidget, self).render(name, value, attrs)
         links = []
         if queryset:
