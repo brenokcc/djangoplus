@@ -117,7 +117,7 @@ class UserForm(forms.ModelForm):
             )
 
     def save(self, *args, **kwargs):
-        user = super(UserForm, self).save(False)
+        user = super(UserForm, self).save(commit=False)
         if 'new_password' in self.cleaned_data and self.cleaned_data['new_password']:
             user.set_password(self.cleaned_data['new_password'])
         user.save()

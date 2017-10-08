@@ -277,7 +277,13 @@ class ModelForm(Form, django_forms.ModelForm):
                 # o valor default definido pelo desenvolvedor.
                 if getattr(self.instance, model_field.name) is None:
                     setattr(self.instance, model_field.name, value)
+        kwargs.update(commit=False)
         instance = super(ModelForm, self).save(*args, **kwargs)
+        instance._post_save_form = self
+        instance.save()
+        return instance
+
+    def save_121_and_12m(self):
         for fieldset in self.configured_fieldsets:
             for field, form, required, save in fieldset.get('one_to_one', ()):
                 if save:
@@ -292,8 +298,6 @@ class ModelForm(Form, django_forms.ModelForm):
                     else:
                         if form.instance.pk:
                             form.instance.delete()
-        return instance
-
 
 class ModelFormOptions(object):
     def __init__(self, options=None):

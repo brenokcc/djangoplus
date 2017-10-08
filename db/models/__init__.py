@@ -428,6 +428,12 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
         super(Model, self).save(*args, **kwargs)
 
+        # make many-to-many and one-to-many relations available after save
+        if hasattr(self, '_post_save_form'):
+            post_save_form = getattr(self, '_post_save_form')
+            getattr(post_save_form, 'save_121_and_12m')()
+            getattr(post_save_form, '_save_m2m')()
+
         if tree_index_field:
             for obj in type(self).objects.filter(**{parent_field.name: self}):
                 kwargs['recursive'] = True
