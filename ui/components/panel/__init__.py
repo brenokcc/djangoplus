@@ -443,7 +443,8 @@ class DashboardPanel(Component):
 
                 if type(f_return) in (int, Decimal):
                     verbose_name = get_metadata(model, 'verbose_name_plural')
-                    panel = NumberPanel(request, verbose_name, f_return, title)
+                    icon = get_metadata(model, 'icon')
+                    panel = NumberPanel(request, verbose_name, f_return, title, icon)
                     html = unicode(panel)
 
                 if type(f_return).__name__ == 'QueryStatistics' and not formatter:
