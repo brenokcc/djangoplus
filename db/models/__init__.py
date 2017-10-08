@@ -30,13 +30,16 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
 
 
 class QueryStatistics(object):
-    def __init__(self, title, labels, groups=[]):
+    def __init__(self, series, labels, groups=list(), title=None):
         self.title = title
         self.labels = labels
         self.groups = groups
         self.series = []
         self.xtotal = []
         self.ytotal = []
+
+        for serie in series:
+            self.add(serie)
 
     def add(self, serie, avg=False):
         self.series.append(serie)
@@ -165,7 +168,7 @@ class QuerySet(query.QuerySet):
                 iterators = iterator_model.objects.filter(pk__in=self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct())
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '%s anual por %s' % (verbose_name, horizontal_field.verbose_name)
-                statistics = QueryStatistics(title, months, [unicode(x) for x in iterators], )
+                statistics = QueryStatistics([unicode(x) for x in iterators], months, title=title)
 
                 for iterator in iterators:
                     serie = []
@@ -176,7 +179,7 @@ class QuerySet(query.QuerySet):
                 return statistics
             else:
                 title = '%s Anual' % (verbose_name,)
-                statistics = QueryStatistics(title, months)
+                statistics = QueryStatistics([], months, title=title)
                 serie = []
                 for i, month in enumerate(months):
                     if aggregate:
@@ -198,7 +201,7 @@ class QuerySet(query.QuerySet):
                 horizontal_objects = horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '%s por %s e %s' % (verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
-                statistics = QueryStatistics(title, [unicode(x) for x in horizontal_objects], [unicode(x) for x in vertical_objects])
+                statistics = QueryStatistics([unicode(x) for x in vertical_objects], [unicode(x) for x in horizontal_objects], title=title)
                 for vertical_object in vertical_objects:
                     serie = []
                     avg = False
@@ -219,7 +222,7 @@ class QuerySet(query.QuerySet):
                 return statistics
             else:
                 title = '%s por %s' % (verbose_name, vertical_field.verbose_name)
-                statistics = QueryStatistics(title, [unicode(x) for x in vertical_objects])
+                statistics = QueryStatistics([], [unicode(x) for x in vertical_objects], title=title)
                 serie = []
                 avg = False
                 for vertical_object in vertical_objects:
