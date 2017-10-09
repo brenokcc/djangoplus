@@ -15,7 +15,7 @@ An opensource extension of Django framework
 
    wget http://petshop.djangoplus.net/media/petshop.zip
    
-   unzip pethsop.zip -d petshop
+   unzip petshop.zip -d petshop
    
    cd petshop
 
