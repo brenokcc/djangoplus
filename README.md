@@ -10,6 +10,7 @@ An opensource extension of Django framework
 
    ./djangoplus/bin/mkvirtualenv
    
+   workon djangoplus
    
 3. Try PetShop example
 
