@@ -10,12 +10,13 @@ An opensource extension of Django framework
 
    ./djangoplus/bin/mkvirtualenv
    
+   workon djangoplus
    
 3. Try PetShop example
 
    wget http://petshop.djangoplus.net/media/petshop.zip
    
-   unzip pethsop.zip -d petshop
+   unzip petshop.zip -d petshop
    
    cd petshop
 
