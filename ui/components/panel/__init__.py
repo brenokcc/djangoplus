@@ -90,7 +90,7 @@ class ModelPanel(Component):
 
             if not tab_name or slugify(tab_name) == self.current_tab or self.as_pdf:
 
-                fieldset_dict = dict(title=title or u'Dados Gerais', tab_name=tab_name, fields=[], paginators=[], drop_down=drop_down)
+                fieldset_dict = dict(title=title or u'Dados Gerais', tab_name=tab_name, fields=[], paginators=[], drop_down=drop_down, image=None)
                 relations = fieldset[1].get('relations', [])
 
                 if tab_name or self.as_pdf:
@@ -108,6 +108,9 @@ class ModelPanel(Component):
                     self.obj.request = self.request
                     if not check_condition(condition, self.obj):
                         continue
+
+                if 'image' in fieldset[1]:
+                    fieldset_dict['image'] = fieldset[1]['image']
 
                 if 'fields' in fieldset[1]:
                     for name_or_tuple in fieldset[1]['fields']:

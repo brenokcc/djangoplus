@@ -81,6 +81,21 @@
                 <div class="panel-heading">{% if fieldset.icon %}<i class="fa {{ fieldset.icon }}"></i>{% endif %}{{ fieldset.title }}</div>
                 <div class="panel-body">
 
+                    {% if fieldset.image or fieldset.extra  %}
+                        {% if fieldset.image %}
+                        <div style="float: left; margin-right: 10px">
+                            <img class="materialboxed" src="/media/{{ self.obj|getattr:fieldset.image }}"/>
+                        </div>
+                        {% else %}
+                            <div style="float: right; margin-left: 10px">
+                            {% for info in fieldset.extra %}
+                                {{ self.obj|getattr:info }}
+                            {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div style="float: left">
+                    {% endif %}
+
                     {% for fields in fieldset.fields %}
                         <div  class="info-group n{{ fields|length }}">
                             {% for field in fields %}
@@ -92,17 +107,24 @@
                         </div>
                     {% endfor %}
 
+                    {% if fieldset.image  %}
+                        </div>
+                    {% endif %}
+
                 </div>
             </div>
+
+        {% else %}
+            {% if self.complete %}
+                {% for info in fieldset.extra %}
+                    {{ self.obj|getattr:info }}
+                {% endfor %}
+            {% endif %}
         {% endif %}
 
         {% if self.complete %}
             {% for paginator in fieldset.paginators %}
                 {{ paginator }}
-            {% endfor %}
-
-            {% for info in fieldset.extra %}
-                {{ self.obj|getattr:info }}
             {% endfor %}
         {% endif %}
 
