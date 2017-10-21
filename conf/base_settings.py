@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'djangoplus.ui.components.paginator',
     'djangoplus.ui.components.panel',
     'djangoplus.ui.components.report',
+    'djangoplus.ui.components.editor',
 )
 
 APP_MAPPING = {

@@ -335,18 +335,39 @@ def should_filter_or_display(request, model, to):
 
 def find_action(model, action_name):
     from djangoplus.cache import loader
-    for action_group in loader.actions[model]:
-        for func_name, action in loader.actions[model][action_group].items():
-            if action['title'] == action_name:
-                return action['function']
+    for actions in (loader.actions, loader.class_actions):
+        for action_group in actions[model]:
+            for func_name, action in actions[model][action_group].items():
+                if action['title'] == action_name:
+                    return action
     return None
 
 
 def find_model_by_verbose_name(verbose_name):
     from django.apps import apps
     for model in apps.get_models():
-        if get_metadata(model, 'verbose_name') == verbose_name:
-            return model
+        app_label = get_metadata(model, 'app_label')
+        if not app_label.startswith('admin'):
+            if get_metadata(model, 'verbose_name') == verbose_name:
+                return model
+    return None
+
+
+def find_model_by_verbose_name_plural(verbose_name_plural):
+    from django.apps import apps
+    for model in apps.get_models():
+        app_label = get_metadata(model, 'app_label')
+        if not app_label.startswith('admin'):
+            if get_metadata(model, 'verbose_name_plural') == verbose_name_plural:
+                return model
+    return None
+
+
+def find_subset_by_title(title, model):
+    from djangoplus.cache import loader
+    for subset in loader.subsets[model]:
+        if subset['title'] == title:
+            return subset
     return None
 
 

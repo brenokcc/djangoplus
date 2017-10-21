@@ -14,7 +14,7 @@ def meta(verbose_name, can_view=(), formatter=None, dashboard=None):
     return decorate
 
 
-def subset(title, can_view=(), alert=False, notify=None, menu=None):
+def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0):
     def decorate(function):
         set_metadata(function, 'type', 'subset')
         set_metadata(function, 'tab', True)
@@ -22,6 +22,7 @@ def subset(title, can_view=(), alert=False, notify=None, menu=None):
         set_metadata(function, 'alert', alert)
         set_metadata(function, 'notify', notify)
         set_metadata(function, 'menu', menu)
+        set_metadata(function, 'sequence', sequence)
         set_metadata(function, 'can_view', iterable(can_view))
         set_metadata(function, 'name', function.func_name)
         set_metadata(function, 'order', cache.next_number())

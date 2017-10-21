@@ -180,21 +180,22 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
         form = factory.get_one_to_one_form(request, obj, related_field_name, related_pk)
     else:
         # many to one
-        for related_object in list_related_objects(_model):
-            if hasattr(related_object, 'get_accessor_name'):
-                if related_object.get_accessor_name() in ('%s_set' % related_field_name, related_field_name):
-                    related_queryset = related_object.related_model.objects.all(request.user)
-                    related_obj = related_pk and related_queryset.get(pk=related_pk) or related_object.related_model()
+        for rel in list_related_objects(_model):
+            if hasattr(rel, 'get_accessor_name'):
+                if rel.get_accessor_name() in ('%s_set' % related_field_name, related_field_name):
+                    related_queryset = rel.related_model.objects.all(request.user)
+                    related_obj = related_pk and related_queryset.get(pk=related_pk) or rel.related_model()
                     related_obj.request = request
-                    setattr(related_obj, related_object.field.name, obj)
-                    setattr(related_obj, '%s_id' % related_object.field.name, obj.pk)
+                    setattr(related_obj, rel.field.name, obj)
+                    setattr(related_obj, '%s_id' % rel.field.name, obj.pk)
                     if related_pk:
-                        if not permissions.has_edit_permission(request, related_object.related_model) or not permissions.can_edit(request, related_obj):
+                        if not permissions.has_edit_permission(request, rel.related_model) or not permissions.can_edit(request, related_obj):
                             return HttpResponseForbidden()
                     else:
-                        if not permissions.has_add_permission(request, related_object.related_model) or not permissions.can_add(request, related_obj):
+                        if not permissions.has_add_permission(request, rel.related_model) or not permissions.can_add(request, related_obj):
                             return HttpResponseForbidden()
-                    form = factory.get_many_to_one_form(request, obj, related_object, related_obj)
+
+                    form = factory.get_many_to_one_form(request, obj, rel.get_accessor_name(), related_obj)
                     title = form.title
 
     if form.is_valid():

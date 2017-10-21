@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import re, base64
+import re
+import base64
 from django import forms
 from decimal import Decimal
 from django.apps import apps
@@ -37,6 +38,12 @@ class TextField(forms.fields.CharField):
     def __init__(self, *args, **kwargs):
         kwargs.pop('widget', widgets.Textarea)
         super(TextField, self).__init__(*args, widget=widgets.Textarea, **kwargs)
+
+
+class FormattedTextField(forms.fields.CharField):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('widget', widgets.Textarea)
+        super(FormattedTextField, self).__init__(*args, widget=widgets.FormattedTextarea, **kwargs)
 
 
 class IntegerField(forms.fields.IntegerField):

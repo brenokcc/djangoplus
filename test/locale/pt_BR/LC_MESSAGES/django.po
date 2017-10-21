@@ -61,3 +61,7 @@ msgstr "no canto superior direito da tela"
 #: test/utils.py:166
 msgid "The system displays the input form"
 msgstr "O sistema exibe o formulário de cadastro"
+
+#: docs/doc.py:206
+msgid "Visualize"
+msgstr "Visualizar"

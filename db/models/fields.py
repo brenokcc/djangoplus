@@ -67,6 +67,12 @@ class TextField(models.TextField, FieldPlus):
         return super(TextField, self).formfield(**kwargs)
 
 
+class FormattedTextField(models.TextField, FieldPlus):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.FormattedTextField)
+        return super(FormattedTextField, self).formfield(**kwargs)
+
+
 class IntegerField(models.IntegerField, FieldPlus):
     def __init__(self, *args, **kwargs):
         self.min_value = kwargs.pop('min_value', None)

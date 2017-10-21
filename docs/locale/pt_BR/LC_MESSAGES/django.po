@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"POT-Creation-Date: 2017-10-20 15:24-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,82 +18,288 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: docs/templates/doc.html:36
-msgid "Documentation"
-msgstr "Documentação"
+#: doc.py:72 doc.py:664
+msgid "Access"
+msgstr "Acessar"
 
-#: docs/templates/doc.html:37
-msgid "This document describes the actors and funcionalities of the system"
-msgstr "Este documento descreve os atores e funcionalidades do sistema"
+#: doc.py:74 doc.py:200
+msgid "List"
+msgstr "Listar"
 
-#: docs/templates/doc.html:88
-msgid "Actors"
-msgstr "Atores"
+#: doc.py:76 doc.py:266 doc.py:268
+msgid "Register"
+msgstr "Cadastrar"
 
-#: docs/templates/doc.html:93 docs/templates/homologate.html:20
-msgid "Group"
-msgstr "Perfil"
+#: doc.py:78 doc.py:319 doc.py:321
+msgid "Add"
+msgstr "Adicionar"
 
-#: docs/templates/doc.html:94 docs/templates/usecase.html:13
-msgid "Description"
-msgstr "Descrição"
+#: doc.py:97
+msgid "as"
+msgstr "como"
 
-#: docs/templates/doc.html:96
-msgid "Scope"
-msgstr "Escopo"
+#: doc.py:111
+msgid "The user access the system as"
+msgstr "O usuário acessa o sistema como"
 
-#: docs/templates/doc.html:110
+#: doc.py:113
+msgid "The system displays the main page"
+msgstr "O sistema exibe a página principal"
+
+#: doc.py:129
+msgid "The user clicks on the shortcut card"
+msgstr "O usuário clica no cartão de atalho"
+
+#: doc.py:130
+msgid "in the dashboard at main page"
+msgstr "no painel de controle na página principal"
+
+#: doc.py:134
+msgid "The system displays the listing page"
+msgstr "O sistema exibe a página de listagem"
+
+#: doc.py:146
+msgid "The user access the menu"
+msgstr "O usuário acessa o menu"
+
+#: doc.py:166 doc.py:195
+msgid "The user locates the record and clicks the visualization icon"
+msgstr "O usuário localiza o registro e clica na lupa"
+
+#: doc.py:167 doc.py:196
+msgid "The system displays the visualization page"
+msgstr "O sistema exibe a página de visualização"
+
+#: doc.py:187
+msgid "The user clicks the tab"
+msgstr "O usuário clica na aba"
+
+#: doc.py:190
+msgid "The user looks at the painel"
+msgstr "O usuário olha para o painel"
+
+#: doc.py:220
+msgid "The user clicks the pill"
+msgstr "O usuário clica na aba"
+
+#: doc.py:230
+msgid "The system displays the registered records"
+msgstr "O sistema exibe os registros cadastrados"
+
+#: doc.py:245
+msgid "The user optionally performs a search by"
+msgstr "O usuário opcionalmente busca por"
+
+#: doc.py:250
+msgid "The user optionally filter the records by"
+msgstr "O usuário opcionalmente filtra os registros por"
+
+#: doc.py:253
+msgid "The system displays"
+msgstr "O sistema exibe"
+
+#: doc.py:254
+msgid "of previous registered records"
+msgstr "os registros previamente cadastrados"
+
+#: doc.py:273
+msgid "Add new records of"
+msgstr "Insere novos registros de"
+
+#: doc.py:273
+msgid "in the system"
+msgstr "no sistema"
+
+#: doc.py:275
+msgid "The record will be successfully registered in the system"
+msgstr "O registro estará devidamente cadastrado no sistema"
+
+#: doc.py:283
+msgid ""
+"The following information must have been previouly registered in the system: "
+msgstr ""
+"As seguintes informações devem ter sido previamente cadastradas no sistema:"
+
+#: doc.py:292 doc.py:509 doc.py:561 templates/doc.html:113
 msgid "Superuser"
 msgstr "Superusuário"
 
-#: docs/templates/doc.html:141
-msgid "Functionalities"
-msgstr "Funcionalidades"
+#: doc.py:303 doc.py:310 doc.py:367 doc.py:377 doc.py:485 doc.py:494
+msgid "The user clicks the button"
+msgstr "O usuário clica no botão"
 
-#: docs/templates/doc.html:166
-msgid "Other Functionalities"
-msgstr "Outras Funcionalidades"
+#: doc.py:304
+msgid "on the right-side of the action bar"
+msgstr "no canto superior direito da barra de ações"
 
-#: docs/templates/homologate.html:12
-msgid "Systemic Users"
-msgstr "Usuários Sistêmicos"
+#: doc.py:321 doc.py:329 doc.py:455 doc.py:468 doc.py:566
+msgid " in "
+msgstr " em "
 
-#: docs/templates/homologate.html:21
-msgid "Username"
-msgstr "Login"
+#: doc.py:354
+msgid "add"
+msgstr "adicionar"
 
-#: docs/templates/homologate.html:52
-msgid "Organization's Users"
-msgstr "Usuários da Organização"
+#: doc.py:354
+#| msgid " in "
+msgid "in"
+msgstr "em"
 
-#: docs/templates/usecase.html:9
+#: doc.py:369 doc.py:487
+msgid "The system displays a popup window"
+msgstr "O sistema exibte uma janela pop-up"
+
+#: doc.py:389
+msgid "The system displays the input form"
+msgstr "O sistema execute o formulário"
+
+#: doc.py:397
+msgid "The user looks at fieldset"
+msgstr "O usuário olha para o fieldset"
+
+#: doc.py:439
+msgid "The user chooses"
+msgstr "O usuário seleciona"
+
+#: doc.py:444
+msgid "The user enters"
+msgstr "O usuário informa"
+
+#: doc.py:501
+msgid "Action successfully performed"
+msgstr "Ação realizada com sucesso"
+
+#: doc.py:534
+msgid "Name"
+msgstr "Nome"
+
+#: doc.py:535 templates/doc.html:94 templates/doc.html:171
+msgid "Description"
+msgstr "Descrição"
+
+#: doc.py:536 templates/doc.html:88
+msgid "Actors"
+msgstr "Atores"
+
+#: doc.py:537
+msgid "Buniness Rules"
+msgstr "Regras de Negócio"
+
+#: doc.py:538
+msgid "Pre-conditions"
+msgstr "Pré-condicões"
+
+#: doc.py:539
+msgid "Post-condition"
+msgstr "Pós-condições"
+
+#: doc.py:540
+msgid "Main-scenario"
+msgstr "Fluxo Principal"
+
+#: doc.py:562
+msgid "Acessar como"
+msgstr "Acessar como"
+
+#: doc.py:654
+msgid "Systemic"
+msgstr "Sistêmico"
+
+#: doc.py:683
+msgid "Description:"
+msgstr "Descrição"
+
+#: doc.py:686
+msgid "Actors:"
+msgstr "Atores"
+
+#: doc.py:690
+msgid "Workflow:"
+msgstr "Fluxo:"
+
+#: doc.py:694
+msgid "Usecases:"
+msgstr "Casos de Uso:"
+
+#: doc.py:699
+msgid "Class Diagrams:"
+msgstr "Diagrama de Classes"
+
+#: doc.py:701
+msgid "Diagram"
+msgstr "Diagrama"
+
+#: templates/doc.html:38
+msgid "Documentation"
+msgstr "Documentação"
+
+#: templates/doc.html:39
+msgid "This document describes the actors and funcionalities of the system"
+msgstr "Este documento descreve os atores e funcionalidades do sistema"
+
+#: templates/doc.html:93 templates/homologate.html:26
+msgid "Group"
+msgstr "Perfil"
+
+#: templates/doc.html:96
+msgid "Scope"
+msgstr "Escopo"
+
+#: templates/doc.html:144
+msgid "Use Cases"
+msgstr "Casos de Uso"
+
+#: templates/doc.html:167
 msgid "Title"
 msgstr "Título"
 
-#: docs/templates/usecase.html:17
+#: templates/doc.html:175
 msgid "Primary Actor"
 msgstr "Ator Primário"
 
-#: docs/templates/usecase.html:22
+#: templates/doc.html:181
 msgid "Secondary Actors"
 msgstr "Atores Secundários"
 
-#: docs/templates/usecase.html:28
+#: templates/doc.html:188
 msgid "Preconditions"
 msgstr "Pré-condicões"
 
-#: docs/templates/usecase.html:34
+#: templates/doc.html:195
 msgid "Business Rules"
 msgstr "Regras de Negócio"
 
-#: docs/templates/usecase.html:39
+#: templates/doc.html:200
 msgid "Postconditions"
 msgstr "Pós-condições"
 
-#: docs/templates/usecase.html:43
+#: templates/doc.html:204
 msgid "Main Scenario"
 msgstr "Fluxo Principal"
 
-#: docs/templates/usecase.html:49
+#: templates/doc.html:210
 msgid "Extensions"
 msgstr "Fluxos Alternativos"
+
+#: templates/homologate.html:13
+msgid "Systemic Users"
+msgstr "Usuários Sistêmicos"
+
+#: templates/homologate.html:27
+msgid "Username"
+msgstr "Login"
+
+#: templates/homologate.html:58
+msgid "Organization's Users"
+msgstr "Usuários da Organização"
+
+#: utils.py:36 utils.py:49
+msgid " or "
+msgstr " ou "
+
+#: utils.py:61
+msgid " and "
+msgstr " e "
+
+#~ msgid "Visualize"
+#~ msgstr "Visualizar"

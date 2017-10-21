@@ -37,7 +37,11 @@ unit_model = None
 signup_model = None
 permissions_by_scope = dict()
 
+# formatters
 formatters = dict()
+
+# documentation
+last_authenticated_role = None
 
 if not initialized:
     initialized = True
@@ -116,11 +120,19 @@ if not initialized:
                     subset_can_view = attr._metadata['%s:can_view' % attr_name]
                     subset_order = attr._metadata['%s:order' % attr_name]
                     subset_menu = attr._metadata['%s:menu' % attr_name]
+                    subset_workflow = attr._metadata['%s:sequence' % attr_name]
                     subset_url = u'%s%s/' % (url, attr.im_func.func_name)
 
                     item = dict(title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view, menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify, actions=subset_actions, order=subset_order)
                     subsets[model].append(item)
 
+                    if subset_workflow:
+                        role = subset_can_view and subset_can_view[0] or u'Superusuário'
+                        if attr_name == 'all':
+                            activity_description = u'Listar %s' % (verbose_name_plural,)
+                        else:
+                            activity_description = u'Listar %s: %s' % (verbose_name_plural, subset_title)
+                        workflows[subset_workflow] = dict(activity=activity_description, role=role, model=None)
 
                 else:
                     widget_title = attr._metadata['%s:verbose_name' % attr_name]
@@ -175,9 +187,12 @@ if not initialized:
                 attr = getattr(model.objects.get_queryset(), attr_name)
                 if hasattr(attr, '_action'):
                     action = getattr(attr, '_action')
+                    action_title = action['title']
+                    action_can_execute = action['can_execute']
                     action_group = action['group']
                     view_name = action['view_name']
                     action_subset = action['inline']
+                    action_workflow = action['sequence']
                     if action_group not in class_actions[model]:
                         class_actions[model][action_group] = dict()
                     class_actions[model][action_group][view_name] = action
@@ -185,6 +200,10 @@ if not initialized:
                     if action_subset not in subset_actions[model]:
                         subset_actions[model][action_subset] = []
                     subset_actions[model][action_subset].append(view_name)
+
+                    if action_workflow:
+                        role = action_can_execute and action_can_execute[0] or u'Superusuário'
+                        workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
 
     # indexing the actions, views and widgets in views module
     for app_label in settings.INSTALLED_APPS:

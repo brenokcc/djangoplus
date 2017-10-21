@@ -145,6 +145,14 @@ class TestCase(StaticLiveServerTestCase):
             self.watch(e)
         self.wait()
 
+    def click_tab(self, text):
+        print u'Clicking tab', text
+        try:
+            self.driver.execute_script(u"clickTab('%s')" % text)
+        except WebDriverException, e:
+            self.watch(e)
+        self.wait()
+
     def click_icon(self, name):
         print u'Clicking icon', name
         try:

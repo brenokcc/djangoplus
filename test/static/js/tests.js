@@ -32,15 +32,20 @@ function click(name, type, index){
 
     if(index==null) index = 0;
 
-    var element = []
+    var element = [];
 
     var menu = type==null || type=='menu';
     var link = type==null || type=='link';
     var button = type==null || type=='button';
+    var tab = type == 'tab';
 
-    if (element.length==0 && (link || button)) element = $(cursor).find( "button:visible:contains('"+name+"'), button[name='"+name+"']" );
-    if (element.length==0 && (link || button)) element = $(cursor).find( "a:visible:contains('"+name+"'), a[name='"+name+"']").not($('.main-menu').find('a'));
-    if (element.length==0 && menu) element = $(cursor).find('.main-menu').find( "a:visible:contains('"+name+"')" );
+    if (tab){
+        element = $(cursor).find('.nav-tabs').find( "a:visible:contains('"+name+"')" );
+    } else {
+        if (element.length == 0 && (link || button)) element = $(cursor).find("button:visible:contains('" + name + "'), button[name='" + name + "']");
+        if (element.length == 0 && (link || button)) element = $(cursor).find("a:visible:contains('" + name + "'), a[name='" + name + "']").not($('.main-menu').find('a'));
+        if (element.length == 0 && menu) element = $(cursor).find('.main-menu').find("a:visible:contains('" + name + "')");
+    }
 
     if(recursively(element)){
         return click(name, type);
@@ -55,6 +60,10 @@ function clickMenu(name){
 }
 
 function clickLink(name){
+    return click(name, 'link')
+}
+
+function clickTab(name){
     return click(name, 'link')
 }
 

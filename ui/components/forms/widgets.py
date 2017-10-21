@@ -2,6 +2,7 @@
 from django.forms import widgets
 from django.utils.encoding import force_unicode
 from djangoplus.ui.components.calendar.widgets import *
+from djangoplus.ui.components.editor.widgets import *
 from djangoplus.ui.components.select.widgets import *
 
 # Base Widgets #
@@ -93,6 +94,7 @@ class Textarea(widgets.Textarea):
             attrs['rows'] = 3
         html = super(Textarea, self).render(name, value, attrs)
         return mark_safe(html)
+
 
 
 class NumberInput(widgets.NumberInput):

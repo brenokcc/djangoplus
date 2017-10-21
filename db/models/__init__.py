@@ -168,7 +168,7 @@ class QuerySet(query.QuerySet):
                 iterators = iterator_model.objects.filter(pk__in=self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct())
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '%s anual por %s' % (verbose_name, horizontal_field.verbose_name)
-                statistics = QueryStatistics([unicode(x) for x in iterators], months, title=title)
+                statistics = QueryStatistics([], [unicode(x) for x in iterators], months, title=title)
 
                 for iterator in iterators:
                     serie = []

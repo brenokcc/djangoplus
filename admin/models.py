@@ -208,7 +208,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = u'Usuários'
         list_display = 'username', 'name', 'groups'
         add_form = 'UserForm'
-        can_admin = 'Gerenciador de Usuários'
+        can_admin = u'Gerenciador de Usuários'
         icon = 'fa-user'
 
     def save(self, *args, **kwargs):

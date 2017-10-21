@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
+
+from djangoplus.docs.doc import Documentation
 from os import path, listdir
 from django.conf import settings
 from djangoplus.cache import loader
@@ -75,41 +77,6 @@ def homologate(request):
 
 @view(u'Doc', login_required=False)
 def doc(request):
+    documentation = Documentation()
     workflow_data = json.dumps(loader.workflows)
-
-    class_diagrams = []
-    for class_diagram_name, models in loader.class_diagrams.items():
-        class_digram = dict(classes=[], compositions=[], agregations=[])
-        classes = dict()
-        position_map = {1: (2.2,), 2: (1.2, 3.2,), 3: (3.2, 1.1, 1.3,), 4: (2.2, 3.2, 1.1, 1.3,), 5: (2.2, 1.1, 1.3, 3.1, 3.3,), 6: (1.2, 3.2, 1.1, 3.1, 1.3, 3.3,), 7: (2.2, 1.2, 3.2, 1.1, 1.3, 3.1, 3.3,), 8: (1.2, 3.2, 1.1, 1.3, 2.1, 2.3, 3.1, 3.3,), 9: (1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3,)}
-        n = len(loader.class_diagrams[class_diagram_name])
-        associations_count = {}
-        for model in loader.class_diagrams[class_diagram_name]:
-            associations_count[model] = 0
-
-        for model in loader.class_diagrams[class_diagram_name]:
-            verbose_name = model._meta.verbose_name
-            classes[model] = dict(name=verbose_name, position='1.1')
-            for related_object in model._meta.related_objects:
-                related_verbose_name = related_object.related_model._meta.verbose_name
-                if related_object.related_model in models:
-                    if hasattr(related_object.field, 'composition') and related_object.field.composition:
-                        class_digram['compositions'].append([related_verbose_name, verbose_name, related_object.remote_field.name])
-                        associations_count[model] += 1
-                        associations_count[related_object.related_model] += 1
-                    else:
-                        if (model not in loader.role_models or class_diagram_name == related_verbose_name) or (class_diagram_name == verbose_name and related_object.related_model not in loader.role_models):
-                            class_digram['agregations'].append([verbose_name, related_verbose_name, related_object.field.name])
-                            associations_count[related_object.related_model] += 1
-                            associations_count[model] += 1
-        sorted_associations_count = sorted(associations_count, key=associations_count.get, reverse=True)
-        for i, model in enumerate(sorted_associations_count):
-            cls = classes[model]
-            cls['position'] = position_map[n][i]
-            class_digram['classes'].append(cls)
-
-        class_digram_data = json.dumps(class_digram)
-        class_diagrams.append((class_diagram_name, class_digram_data))
-
-    documentation = utils.documentation()
     return locals()

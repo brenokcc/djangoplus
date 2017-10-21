@@ -114,9 +114,8 @@ class AppTestCase(TestCase):
 
     def test_app(self):
 
-        User.objects.create_superuser('admin', None, settings.DEFAULT_PASSWORD)
+        User.objects.create_superuser(settings.DEFAULT_SUPERUSER, None, settings.DEFAULT_PASSWORD)
 
-        self.login(u'admin', settings.DEFAULT_PASSWORD)
 " > $PROJECT_NAME/tests.py
 
 printf "Django==1.11
