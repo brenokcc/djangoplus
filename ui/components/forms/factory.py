@@ -151,7 +151,7 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
         def save(self, *args, **kwargs):
             super(Form, self).save(*args, **kwargs)
             setattr(obj, related_field_name, self.instance)
-            obj.save()
+            # obj.save()
 
     form = Form(request, instance=related_object, initial=initial, **kwargs)
     form.name = u'%sForm' % related_field.rel.to.__name__

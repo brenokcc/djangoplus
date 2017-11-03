@@ -224,6 +224,10 @@ header.navbar {
     min-height: 40px;
 }
 
+.action-bar a{
+    margin-left: 10px;
+}
+
 .notification-label {
     position: absolute;
     display: inline-block;

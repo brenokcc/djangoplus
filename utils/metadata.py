@@ -196,7 +196,7 @@ def get_metadata(model, attr, default=None, iterable=False):
     if attr in (u'verbose_name', u'verbose_name_plural'):
         if unicode(_metadata) in (camel_case_to_spaces(model.__name__), '%ss' % camel_case_to_spaces(model.__name__)):
             check_recursively = True
-    if attr in (u'list_menu',):
+    if attr in (u'list_menu', 'verbose_female'):
         check_recursively = False
 
     if check_recursively:

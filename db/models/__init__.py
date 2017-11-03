@@ -152,11 +152,15 @@ class QuerySet(query.QuerySet):
         verbose_name = get_metadata(self.model,  'verbose_name')
         if not vertical_key:
             if aggregate:
+                value = 0
                 mode, attr = aggregate
                 if mode == 'sum':
                     value = self.aggregate(Sum(attr)).get('%s__sum' % attr) or 0
                 elif mode == 'avg':
                     value = self.aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                aggregation_field = get_field(self.model, attr)
+                if type(aggregation_field).__name__ in ('DecimalField',):
+                    value = Decimal(value)
                 return value
             return None
         vertical_field = get_field(self.model, vertical_key)
@@ -183,11 +187,15 @@ class QuerySet(query.QuerySet):
                 serie = []
                 for i, month in enumerate(months):
                     if aggregate:
+                        total = 0
                         mode, attr = aggregate
                         if mode == 'sum':
                             total = self.filter(**{'%s__month' % vertical_key: i+1}).aggregate(Sum(attr)).get('%s__sum' % attr) or 0
                         elif mode == 'avg':
                             total = self.filter(**{'%s__month' % vertical_key: i+1}).aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                        aggregation_field = get_field(self.model, attr)
+                        if type(aggregation_field).__name__ in ('DecimalField',):
+                            total = Decimal(total)
                     else:
                         total = self.filter(**{'%s__month' % vertical_key: i+1}).count()
                     serie.append(total)
@@ -215,6 +223,9 @@ class QuerySet(query.QuerySet):
                             elif mode == 'avg':
                                 avg = True
                                 value = self.filter(**lookup).aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                            aggregation_field = get_field(self.model, attr)
+                            if type(aggregation_field).__name__ in ('DecimalField',):
+                                value = Decimal(value)
                         else:
                             value = self.filter(**lookup).values('id').count()
                         serie.append(value)
@@ -235,6 +246,9 @@ class QuerySet(query.QuerySet):
                         elif mode == 'avg':
                             avg = True
                             value = self.filter(**lookup).aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                        aggregation_field = get_field(self.model, attr)
+                        if type(aggregation_field).__name__ in ('DecimalField',):
+                            value = Decimal(value)
                     else:
                         value = self.filter(**lookup).count()
                     serie.append(value)

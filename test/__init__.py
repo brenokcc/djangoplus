@@ -203,7 +203,12 @@ class TestCase(StaticLiveServerTestCase):
         data = dict(login_count=self.login_count, username=self.current_username, password=self.current_password)
         open(file_path, 'w').write(json.dumps(data))
         output = open(dump_file_path,'w')
-        call_command('dumpdata', *[x.split('.')[-1] for x in settings.INSTALLED_APPS], format='json', indent=3, stdout=output)
+        app_labels = []
+        for app in settings.INSTALLED_APPS:
+            app_label = app.split('.')[-1]
+            if app_label not in 'auth':
+                app_labels.append(app_label)
+        call_command('dumpdata', *app_labels, format='json', indent=3, stdout=output)
         output.close()
 
     def restore(self):
