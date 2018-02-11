@@ -13,7 +13,7 @@ def view(title, can_view=None, icon=None, menu=None, login_required=True, style=
         url = '/%s/%s/' % (function.__module__.split('.')[-2], function.func_name)
 
         def receive_function_args(request, *args, **kwargs):
-            without_permission = can_view and not permissions.check_group_or_permission(request, 'admin.%s' % function.func_name)
+            without_permission = can_view and not permissions.check_group_or_permission(request, can_view)
             without_authentication = login_required and not request.user.is_authenticated()
             if without_permission or without_authentication:
                     return HttpResponseRedirect('/admin/login/?next=%s'%url)

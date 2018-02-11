@@ -5,6 +5,7 @@ from django.conf import settings
 import tempfile
 import json
 import os
+import datetime
 
 
 def mobile(request):
@@ -79,6 +80,6 @@ class PdfResponse(HttpResponse):
 
 
 class ReportResponse(PdfResponse):
-    def __init__(self, title, request, objects, landscape=False):
-        html = render_to_string(['report.html'], dict(objects=objects, title=title), request=request)
-        PdfResponse.__init__(self, html, landscape)
+    def __init__(self, title, request, objects, landscape=False, template='report.html'):
+        html = render_to_string([template], dict(objects=objects, title=title, today=datetime.date.today()), request=request)
+        super(ReportResponse, self).__init__(html, landscape)

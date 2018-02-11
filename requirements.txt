@@ -2,6 +2,7 @@ Django==1.11
 pycrypto==2.6.1
 Pillow==3.2.0
 xhtml2pdf==0.0.6
+html5lib==1.0b8
 python-dateutil==2.5.3
 gunicorn==19.5.0
 selenium==2.53.2

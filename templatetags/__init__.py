@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 import json
 import datetime
 from decimal import Decimal
@@ -272,7 +273,7 @@ def sorted_items(d):
     keys = d.keys()
     keys.sort()
     for key in keys:
-        items.append((key, d[key]))
+        items.append((re.sub('^[0-9\.\- ]+', '', key).strip(), d[key]))
     return items
 
 

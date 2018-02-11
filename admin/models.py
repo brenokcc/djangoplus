@@ -185,7 +185,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['email']
 
     name = models.CharField(u'Nome', max_length=30, blank=True, search=True)
-    username = models.CharField(u'Login', max_length=30, unique=True)
+    username = models.CharField(u'Login', max_length=30, unique=True, search=True)
     email = models.CharField(u'E-mail', max_length=75, blank=True, default='')
     active = models.BooleanField(verbose_name=u'Ativo?', default=True, filter=True)
     photo = models.ImageField(upload_to='profiles', null=True, blank=True, default='', verbose_name=u'Foto', exclude=True)
@@ -322,29 +322,16 @@ class User(AbstractBaseUser, PermissionsMixin):
                 unit_ids = list(set(groups[group_name]['unit_ids']))
                 organization_ids = list(set(groups[group_name]['organization_ids']))
 
-                if obj:
+                can_list = can_list_by_role = can_list_by_unit = can_list_by_organization = False
 
-                    can_list = can_list_by_role = can_list_by_unit = can_list_by_organization = False
+                if obj:
 
                     if type(obj) in loader.permissions_by_scope:
                         can_list = group_name in loader.permissions_by_scope[type(obj)].get('add', [])
-                        can_list_by_role = group_name in loader.permissions_by_scope[type(obj)].get('add_by_role', [])
                         can_list_by_unit = group_name in loader.permissions_by_scope[type(obj)].get('add_by_unit', [])
                         can_list_by_organization = group_name in loader.permissions_by_scope[type(obj)].get('add_by_organization', [])
 
-                        if (can_list or can_list_by_role or can_list_by_unit or can_list_by_organization) is False:
-                            can_list = group_name in loader.permissions_by_scope[type(obj)].get('list', [])
-                            can_list_by_role = group_name in loader.permissions_by_scope[type(obj)].get('list_by_role', [])
-                            can_list_by_unit = group_name in loader.permissions_by_scope[type(obj)].get('list_by_unit', [])
-                            can_list_by_organization = group_name in loader.permissions_by_scope[type(obj)].get('list_by_organization', [])
-
-                    if (can_list or can_list_by_role or can_list_by_unit or can_list_by_organization) is False:
-                        can_list = group_name in loader.permissions_by_scope[model].get('list', [])
-                        can_list_by_role = group_name in loader.permissions_by_scope[model].get('list_by_role', [])
-                        can_list_by_unit = group_name in loader.permissions_by_scope[model].get('list_by_unit', [])
-                        can_list_by_organization = group_name in loader.permissions_by_scope[model].get('list_by_organization', [])
-
-                else:
+                if (can_list or can_list_by_role or can_list_by_unit or can_list_by_organization) is False:
                     can_list = group_name in loader.permissions_by_scope[model].get('list', [])
                     can_list_by_role = group_name in loader.permissions_by_scope[model].get('list_by_role', [])
                     can_list_by_unit = group_name in loader.permissions_by_scope[model].get('list_by_unit', [])
@@ -435,7 +422,6 @@ class User(AbstractBaseUser, PermissionsMixin):
                 raise Exception('A "lookup" meta-attribute must point to a role model in %s' % model)
 
         permission_mapping[permission_mapping_key] = lookups
-
         self.permission_mapping = json.dumps(permission_mapping)
         self.save()
 

@@ -15,7 +15,6 @@ subsets = dict()
 
 # roles
 role_models = dict()
-role_model_names = []
 abstract_role_models = dict()
 abstract_role_model_names = dict()
 
@@ -97,13 +96,17 @@ if not initialized:
         url = '/list/%s/%s/' % (app_label, model_name)
         icon = None
         if list_menu and model not in composition_fields:
+            menu_groups = ()
             if type(list_menu) == tuple:
-                menu, icon = list_menu
+                if len(list_menu) == 2:
+                    menu, icon = list_menu
+                else:
+                    menu, icon, menu_groups = list_menu
             else:
                 menu, icon = list_menu, get_metadata(model, 'icon')
             permission = u'%s.list_%s' % (app_label, model_name)
             # if issubclass(model, Model):
-            item = dict(url=url, can_view=permission, menu=menu, icon=icon, add_shortcut=False)
+            item = dict(url=url, can_view=permission, menu=menu, icon=icon, add_shortcut=False, groups=menu_groups)
             views.append(item)
 
         # indexing the subsets defined in the manager classes
@@ -230,7 +233,15 @@ if not initialized:
                         action_title = action['title']
                         action_workflow = action['sequence']
                         action_can_execute = action['can_execute']
+                        action_inline = action['inline']
                         action_menu = action['menu']
+
+                        if action_inline:
+                            action_subset = action_inline is not True and action_inline or None
+                            if action_subset not in subset_actions[action_model]:
+                                subset_actions[action_model][action_subset] = []
+                            subset_actions[action_model][action_subset].append(action_name)
+
                         if action_workflow:
                             role = action_can_execute and action_can_execute[0] or u'Superusuário'
                             action_model_verbose_name = get_metadata(action_model, 'verbose_name')

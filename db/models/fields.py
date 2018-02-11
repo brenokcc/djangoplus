@@ -20,7 +20,7 @@ class FieldPlus(models.Field):
         self.example = kwargs.pop('example', False)
         self.display = kwargs.pop('display', True)
         self.formatter = kwargs.pop('formatter', None)
-        if self.exclude and not kwargs.get('default', None):
+        if self.exclude and kwargs.get('default', None) is None:
             kwargs.update(null=True)
         super(FieldPlus, self).__init__(*args, **kwargs)
 

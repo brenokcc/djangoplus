@@ -154,20 +154,25 @@ class ModelReport(Component):
         self.title = title
         self.qs = qs
         self.components = []
+        self.filters = []
 
         if list_filter:
-            form = forms.Form(request)
+            form = forms.Form(request, method='GET')
             form.icon = 'fa-file-text-o'
             form.title = u''
             form.submit_label = u'Gerar Relatório'
             for field_name in list_filter:
                 field = get_field(qs.model, field_name)
-                form.fields[field_name] = forms.ModelChoiceField(field.rel.to.objects.all(), label=field.verbose_name, required=False)
+                if hasattr(field, 'choices') and field.choices:
+                    form.fields[field_name] = forms.ChoiceField(choices=[['', '']]+field.choices, label=field.verbose_name, required=False)
+                else:
+                    form.fields[field_name] = forms.ModelChoiceField(field.rel.to.objects.all(), label=field.verbose_name, required=False)
             if form.is_valid():
                 for field_name in list_filter:
                     value = form.cleaned_data[field_name]
                     if value:
                         qs = qs.filter(**{field_name : value})
+                        self.filters.append((form.fields[field_name].label, value))
             self.form = form
 
         order_by = get_metadata(qs.model, 'order_by', iterable=True)

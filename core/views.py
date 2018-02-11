@@ -11,7 +11,7 @@ from djangoplus.ui.components.breadcrumbs import httprr
 from django.template import Template, Context
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.utils.http import ReportResponse
-from django.views.defaults import page_not_found
+from django.views.defaults import page_not_found, server_error
 from django.core.exceptions import ValidationError
 from django.http.response import HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
@@ -24,8 +24,8 @@ def listt(request, app, cls, subset=None):
 
     try:
         _model = apps.get_model(app, cls)
-    except LookupError:
-        return page_not_found(request)
+    except LookupError as e:
+        return page_not_found(request, e, 'error404.html')
     subsetp = None
     if subset:
         subset_func = getattr(_model.objects.all(), subset)
@@ -144,8 +144,8 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 
     try:
         _model = apps.get_model(app, cls)
-    except LookupError:
-        return page_not_found(request)
+    except LookupError as e:
+        return page_not_found(request, e, 'error404.html')
 
     obj = pk and _model.objects.all(request.user).get(pk=pk) or _model()
     obj.request = request
@@ -234,8 +234,8 @@ def view(request, app, cls, pk, tab=None):
 
     try:
         _model = apps.get_model(app, cls)
-    except LookupError:
-        return page_not_found(request)
+    except LookupError as e:
+        return page_not_found(request, e, 'error404.html')
 
     qs = _model.objects.all(request.user)
 
@@ -267,8 +267,8 @@ def action(request, app, cls, action_name, pk=None):
 
     try:
         _model = apps.get_model(app, cls)
-    except LookupError:
-        return page_not_found(request)
+    except LookupError as e:
+        return page_not_found(request, e, 'error404.html')
 
     for group in loader.actions[_model]:
         if action_name in loader.actions[_model][group]:
@@ -344,8 +344,8 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
 
     try:
         _model = apps.get_model(app, cls)
-    except LookupError:
-        return page_not_found(request)
+    except LookupError as e:
+        return page_not_found(request, e, 'error404.html')
 
     obj = _model.objects.all(request.user).get(pk=pk)
     obj.request = request
@@ -372,8 +372,8 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
 def log(request, app, cls, pk=None):
     try:
         _model = apps.get_model(app, cls)
-    except LookupError:
-        return page_not_found(request)
+    except LookupError as e:
+        return page_not_found(request, e, 'error404.html')
 
     if pk:
         obj = _model.objects.get(pk=pk)
@@ -388,29 +388,25 @@ def log(request, app, cls, pk=None):
     return render(request, 'default.html', locals())
 
 
-def dispatcher(request, path=None):
-    if path == 'favicon.ico':
-        return HttpResponse()
+def dispatcher(request, app, view_name, params):
 
-    tokens = path.split('/')
-    try:
-        app_label, view_name, params = tokens[0], tokens[1], tokens[2:-1]
-    except:
-        return page_not_found(request)
+    params = params.split('/')[0:-1]
 
-    full_app_name = settings.APP_MAPPING.get(app_label, app_label)
+    full_app_name = settings.APP_MAPPING.get(app, app)
     fromlist = full_app_name.split('.')
 
     try:
         views = __import__('%s.views' % full_app_name, fromlist=fromlist)
-        if hasattr(views, view_name):
-            func = getattr(views, view_name)
-        else:
-            return page_not_found(request)
-    except ImportError:
+        func = getattr(views, view_name)
+    except (ImportError, TypeError, AttributeError) as e:
         traceback.print_exc()
-        return page_not_found(request)
+        return page_not_found(request, e, 'error404.html')
 
-    return func(request, *params)
+    try:
+        return func(request, *params)
+    except Exception as e:
+        print e
+        traceback.print_exc()
+        return server_error(request, 'error500.html')
 
 

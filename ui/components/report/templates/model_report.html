@@ -1,5 +1,6 @@
 {% load i18n %}
 
+{% if not self.as_pdf %}
 <h2><i class="fa fa-file-text-o"></i> {{ self.title }}</h2>
 
 {{ self.form }}
@@ -16,7 +17,16 @@
 
 </br>
 
+{% endif %}
+
 <div class="tab-data" style="{% if self.components %}display: none{% endif %}">
+    {% if not self.as_pdf %}
+    <div align="right">
+        <a href="{{ self.request.get_full_path }}{% if self.request.META.QUERY_STRING %}&{% else %}?{% endif %}pdf=1">
+            <i class="fa fa-file"></i> <span>Exportar PDF</span>
+        </a>
+    </div>
+    {% endif %}
     {{ self.table }}
 </div>
 

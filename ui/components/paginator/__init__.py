@@ -126,12 +126,18 @@ class Paginator(Component):
                             continue
                         if not should_filter_or_display(self.request, self.qs.model, field.rel.to):
                             continue
-
-                        if self.original_qs.query.can_filter():
-                            pks = self.original_qs.order_by(field_name).values_list(field_name, flat=True).distinct()
+                        if initial:
+                            if self.original_qs.query.can_filter():
+                                pks = self.original_qs.order_by(field_name).values_list(field_name, flat=True).distinct()
+                            else:
+                                pks = self.original_qs.model.objects.all().order_by(field_name).values_list(field_name, flat=True).distinct()
+                            qs = field.rel.to.objects.get_queryset().filter(pk__in=pks)
                         else:
-                            pks = self.original_qs.model.objects.all().order_by(field_name).values_list(field_name, flat=True).distinct()
-                        qs = field.rel.to.objects.get_queryset().filter(pk__in=pks)
+                            if self.qs.query.can_filter():
+                                pks = self.qs.order_by(field_name).values_list(field_name, flat=True).distinct()
+                            else:
+                                pks = self.qs.model.objects.all().order_by(field_name).values_list(field_name, flat=True).distinct()
+                            qs = field.rel.to.objects.get_queryset().filter(pk__in=pks)
                         empty_label = ''
 
                         form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False)

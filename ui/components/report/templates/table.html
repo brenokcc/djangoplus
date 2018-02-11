@@ -1,7 +1,7 @@
 {% load i18n %}
 {% if self.as_pdf %}
     <h2>{{ self.description }}</h2>
-    <table class="table">
+    <table class="table" repeat="1">
         <thead>
             <tr>
                 {% if self.enumerable %}

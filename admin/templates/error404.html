@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block extra_head %}
+    <style>
+        h1 {
+            font-size: 100px;
+        }
+
+        p {
+            padding: 20px;
+        }
+
+        p.message {
+            font-size: 120%;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <body>
+    <div class="padding-md">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 text-center">
+                <h1>Oops!! :(</h1>
+                <p class="message">
+                    This Page Could Not Be Found!
+                <p>
+                    <a class="btn btn-default m-bottom-sm" href="javascript:history.back()"><i class="fa fa-home"></i>
+                        Go Back</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    </body>
+{% endblock %}

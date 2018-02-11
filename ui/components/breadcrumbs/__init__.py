@@ -28,7 +28,7 @@ class Breadcrumbs(Component):
                     title, url = stack[index]
                     if not '?' in url:
                         url = '%s?' % url
-                    urlpath, querystring = url.split('?')
+                    urlpath, querystring = url.split('?')[0:2]
                     if view_title == title:#and QueryDict(querystring) == request.GET
                         count = len(stack) - index
                         break

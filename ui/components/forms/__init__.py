@@ -22,7 +22,7 @@ class Form(django_forms.Form):
     def __init__(self, request, *args, **kwargs):
         metaclass = hasattr(self.__class__, 'Meta') and self.__class__.Meta or None
         self.request = request
-        self.method = metaclass and hasattr(metaclass, 'method') and metaclass.method or 'post'
+        self.method = kwargs.pop('method', None) or metaclass and hasattr(metaclass, 'method') and metaclass.method or 'post'
         self.horizontal = True
         self.id = self.__class__.__name__.lower()
         self.inline = kwargs.pop('inline', False)
@@ -113,8 +113,8 @@ class Form(django_forms.Form):
 
                 if True:# hasattr(field.queryset.model._meta, 'unit_lookup') or hasattr(field.queryset.model, 'unit_ptr'):
                     from djangoplus.admin.models import Unit
-                    if issubclass(field.queryset.model, Unit) and field.queryset.count() == 1:
-                        if not isinstance(field, MultipleModelChoiceField):
+                    if issubclass(field.queryset.model, Unit):
+                        if not isinstance(field, MultipleModelChoiceField) and field.queryset.count() == 1:
                             obj = field.queryset[0]
                             field.widget = widgets.DisplayInput(obj)
 

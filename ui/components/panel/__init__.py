@@ -79,6 +79,12 @@ class ModelPanel(Component):
             if fieldset_actions:
                 drop_down.add_actions(self.obj, fieldset_title=title)
 
+            if 'condition' in fieldset[1]:
+                condition = fieldset[1]['condition']
+                self.obj.request = self.request
+                if not check_condition(condition, self.obj):
+                    continue
+
             if '::' in title:
                 tab_name, title = title.split('::')
                 url = '/view/%s/%s/%s/%s/' % (get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, slugify(tab_name))
@@ -103,12 +109,6 @@ class ModelPanel(Component):
                     if not permissions.check_group_or_permission(self.request, can_view):
                         continue
 
-                if 'condition' in fieldset[1]:
-                    condition = fieldset[1]['condition']
-                    self.obj.request = self.request
-                    if not check_condition(condition, self.obj):
-                        continue
-
                 if 'image' in fieldset[1]:
                     fieldset_dict['image'] = fieldset[1]['image']
 
@@ -128,7 +128,7 @@ class ModelPanel(Component):
                                 elif hasattr(attr, 'field'):
                                     field = attr.field
                                 if not field or not hasattr(field, 'display') or field.display:
-                                    if is_one_to_one(model, attr_name) and attr.field.display == 'detail':
+                                    if is_one_to_one(model, attr_name) and hasattr(attr.field, 'display') and attr.field.display == 'detail':
                                         relations.append(attr_name)
                                     elif is_one_to_many(model, attr_name) and field.display == 'detail':
                                         relations.append(attr_name)

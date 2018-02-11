@@ -84,7 +84,7 @@ class DisplayInput(widgets.TextInput):
         self.obj = obj
 
     def render(self, name, value, attrs=None):
-        return u'<input class="form-control" type="text" value="%s" disabled /><input type="hidden" name="%s" value="%s"/>' % (self.obj, name, self.obj.pk)
+        return u'<input class="form-control" type="text" value="%s" disabled /><input type="hidden" id="id_%s" name="%s" value="%s"/>' % (self.obj, name, name, self.obj.pk)
 
 
 class Textarea(widgets.Textarea):

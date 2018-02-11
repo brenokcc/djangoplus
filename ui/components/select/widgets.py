@@ -74,7 +74,7 @@ RELOAD_SCRIPT = u'''
             if(%(lazy)s){
                 window['qs_%(name)s']['qs'] = data.qs;
             } else {
-                $('#id_%(name)s').select2('destroy').empty().select2({data: data.results});
+                $('#id_%(name)s').select2('destroy').empty().select2({allowClear: true, data: data.results});
                 $('#id_%(name)s').val('%(value)s'.split('_'));
             }
             $('#id_%(name)s').trigger("change");

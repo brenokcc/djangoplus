@@ -134,7 +134,9 @@ class QuerySet(query.QuerySet):
         queryset = self._clone()
         queryset.user = user
         if user:
-            has_perm = obj and True or user.has_perm('%s.list_%s' % (app_label, self.model.__name__.lower()))
+            self_permission = '%s.list_%s' % (app_label, self.model.__name__.lower())
+            obj_permission = obj and '%s.list_%s' % (get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())
+            has_perm = obj_permission and user.has_perm(obj_permission) or user.has_perm(self_permission)
         else:
             has_perm = True
         if has_perm:

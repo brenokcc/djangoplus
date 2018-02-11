@@ -25,6 +25,6 @@ urlpatterns = [
     url(r'^log/(?P<app>\w+)/(?P<cls>\w+)/(?P<pk>\d+)/$', views.log),
     url(r'^log/(?P<app>\w+)/(?P<cls>\w+)/$', views.log),
 
-    url(r'^(?P<path>.*)$', views.dispatcher),
+    url(r'^(?P<app>\w+)/(?P<view_name>\w+)/(?P<params>.*)$', views.dispatcher),
 
 ]

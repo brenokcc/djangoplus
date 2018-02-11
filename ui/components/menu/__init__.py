@@ -44,7 +44,10 @@ class Menu(Component):
             from djangoplus.cache import loader
             for item in loader.views:
                 if item['menu']:
-                    if permissions.check_group_or_permission(self.request, item['can_view']):
+                    can_view = permissions.check_group_or_permission(self.request, item['can_view'])
+                    if can_view and 'groups' in item:
+                        can_view = permissions.check_group_or_permission(self.request, item['groups'])
+                    if can_view:
                         self.add(item['menu'], item['url'], item['icon'], item.get('style', 'ajax'))
 
             for cls, itens in loader.subsets.items():
