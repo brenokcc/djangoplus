@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 import six
 from django.core.exceptions import ValidationError
@@ -58,7 +58,7 @@ class QueryStatistics(object):
         return sum(self.xtotal)
 
     def __unicode__(self):
-        return u'%s\n%s\n%s' % (self.labels, self.series, self.groups)
+        return '{}\n{}\n{}'.format(self.labels, self.series, self.groups)
 
     def as_table(self, title=None):
         from djangoplus.ui.components.report import Table
@@ -134,8 +134,8 @@ class QuerySet(query.QuerySet):
         queryset = self._clone()
         queryset.user = user
         if user:
-            self_permission = '%s.list_%s' % (app_label, self.model.__name__.lower())
-            obj_permission = obj and '%s.list_%s' % (get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())
+            self_permission = '{}.list_{}'.format(app_label, self.model.__name__.lower())
+            obj_permission = obj and '{}.list_{}'.format(get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())
             has_perm = obj_permission and user.has_perm(obj_permission) or user.has_perm(self_permission)
         else:
             has_perm = True
@@ -145,7 +145,7 @@ class QuerySet(query.QuerySet):
                 if 'list_lookups' in permission_mapping and permission_mapping['list_lookups']:
                     l = []
                     for lookup, value in permission_mapping['list_lookups']:
-                        l.append(Q(**{'%s__in' % lookup: value}))
+                        l.append(Q(**{'{}__in'.format(lookup): value}))
                     return queryset.filter(reduce(OR, l))
             return queryset
         return self.none()
@@ -157,9 +157,9 @@ class QuerySet(query.QuerySet):
                 value = 0
                 mode, attr = aggregate
                 if mode == 'sum':
-                    value = self.aggregate(Sum(attr)).get('%s__sum' % attr) or 0
+                    value = self.aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                 elif mode == 'avg':
-                    value = self.aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                    value = self.aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                 aggregation_field = get_field(self.model, attr)
                 if type(aggregation_field).__name__ in ('DecimalField',):
                     value = Decimal(value)
@@ -167,24 +167,24 @@ class QuerySet(query.QuerySet):
             return None
         vertical_field = get_field(self.model, vertical_key)
         if type(vertical_field).__name__ in ('DateField', 'DateTimeField'):
-            months = [u'Jan', u'Fev', u'Mar', u'Abr', u'Mai', u'Jun', u'Jul', u'Ago', u'Set', u'Out', u'Nov', u'Dez']
+            months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
             if horizontal_key:
                 iterator_model = get_field(self.model, horizontal_key).rel.to
                 iterators = iterator_model.objects.filter(pk__in=self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct())
                 horizontal_field = get_field(self.model, horizontal_key)
-                title = '%s anual por %s' % (verbose_name, horizontal_field.verbose_name)
+                title = '{} anual por {}'.format(verbose_name, horizontal_field.verbose_name)
                 statistics = QueryStatistics([], [unicode(x) for x in iterators], months, title=title)
 
                 for iterator in iterators:
                     serie = []
                     for i, month in enumerate(months):
-                        qs = self.filter(**{'%s__month' % vertical_key: i+1, horizontal_key: iterator.pk})
+                        qs = self.filter(**{'{}__month'.format(vertical_key): i+1, horizontal_key: iterator.pk})
                         serie.append(qs.count())
                     statistics.add(serie)
                 return statistics
             else:
-                title = '%s Anual' % (verbose_name,)
+                title = '{} Anual'.format(verbose_name)
                 statistics = QueryStatistics([], months, title=title)
                 serie = []
                 for i, month in enumerate(months):
@@ -192,14 +192,14 @@ class QuerySet(query.QuerySet):
                         total = 0
                         mode, attr = aggregate
                         if mode == 'sum':
-                            total = self.filter(**{'%s__month' % vertical_key: i+1}).aggregate(Sum(attr)).get('%s__sum' % attr) or 0
+                            total = self.filter(**{'{}__month'.format(vertical_key): i+1}).aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                         elif mode == 'avg':
-                            total = self.filter(**{'%s__month' % vertical_key: i+1}).aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                            total = self.filter(**{'{}__month'.format(vertical_key): i+1}).aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                         aggregation_field = get_field(self.model, attr)
                         if type(aggregation_field).__name__ in ('DecimalField',):
                             total = Decimal(total)
                     else:
-                        total = self.filter(**{'%s__month' % vertical_key: i+1}).count()
+                        total = self.filter(**{'{}__month'.format(vertical_key): i+1}).count()
                     serie.append(total)
                 statistics.add(serie)
                 return statistics
@@ -210,7 +210,7 @@ class QuerySet(query.QuerySet):
                 horizontal_model = find_model(self.model, horizontal_key)
                 horizontal_objects = horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))
                 horizontal_field = get_field(self.model, horizontal_key)
-                title = '%s por %s e %s' % (verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
+                title = '{} por {} e {}'.format(verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
                 statistics = QueryStatistics([unicode(x) for x in vertical_objects], [unicode(x) for x in horizontal_objects], title=title)
                 for vertical_object in vertical_objects:
                     serie = []
@@ -221,10 +221,10 @@ class QuerySet(query.QuerySet):
                         if aggregate:
                             mode, attr = aggregate
                             if mode == 'sum':
-                                value = self.filter(**lookup).aggregate(Sum(attr)).get('%s__sum' % attr) or 0
+                                value = self.filter(**lookup).aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                             elif mode == 'avg':
                                 avg = True
-                                value = self.filter(**lookup).aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                                value = self.filter(**lookup).aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                             aggregation_field = get_field(self.model, attr)
                             if type(aggregation_field).__name__ in ('DecimalField',):
                                 value = Decimal(value)
@@ -234,7 +234,7 @@ class QuerySet(query.QuerySet):
                     statistics.add(serie, avg)
                 return statistics
             else:
-                title = '%s por %s' % (verbose_name, vertical_field.verbose_name)
+                title = '{} por {}'.format(verbose_name, vertical_field.verbose_name)
                 statistics = QueryStatistics([], [unicode(x) for x in vertical_objects], title=title)
                 serie = []
                 avg = False
@@ -244,10 +244,10 @@ class QuerySet(query.QuerySet):
                     if aggregate:
                         mode, attr = aggregate
                         if mode == 'sum':
-                            value = self.filter(**lookup).aggregate(Sum(attr)).get('%s__sum' % attr) or 0
+                            value = self.filter(**lookup).aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                         elif mode == 'avg':
                             avg = True
-                            value = self.filter(**lookup).aggregate(Avg(attr)).get('%s__avg' % attr) or 0
+                            value = self.filter(**lookup).aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                         aggregation_field = get_field(self.model, attr)
                         if type(aggregation_field).__name__ in ('DecimalField',):
                             value = Decimal(value)
@@ -297,9 +297,9 @@ class Manager(models.Manager):
 class ModelBase(base.ModelBase):
     def __new__(mcs, name, bases, attrs):
         meta_new = super(ModelBase, mcs).__new__
-        module = __import__(attrs['__module__'], fromlist=attrs['__module__'].split('.'))
-        if hasattr(module, '%sManager' % name):
-            queryset_class = getattr(module, '%sManager' % name)
+        module = __import__(attrs['__module__'], fromlist=list(map(str, attrs['__module__'].split('.'))))
+        if hasattr(module, '{}Manager'.format(name)):
+            queryset_class = getattr(module, '{}Manager'.format(name))
             if issubclass(queryset_class, QuerySet):
                 attrs.update(objects=Manager(queryset_class=queryset_class))
 
@@ -348,7 +348,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                 subinstance = getattr(self, subclass.__name__.lower())
                 if hasattr(subinstance, '__unicode__'):
                     return subinstance.__unicode__()
-        return u'%s%s' % (get_metadata(self.__class__, 'verbose_name'), self.pk and ' #%s'%self.pk or '')
+        return '{}{}'.format(get_metadata(self.__class__, 'verbose_name'), self.pk and ' #{}'.format(self.pk or ''))
 
     @classmethod
     def update_metadata(cls, **kwargs):
@@ -382,7 +382,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
     def get_children(self):
         tree_index = getattr(self, self.get_tree_index_field().name)
-        return type(self).objects.filter(**{'%s__startswith'%tree_index:tree_index}).exclude(pk=self.pk)
+        return type(self).objects.filter(**{'{}__startswith'.format(tree_index):tree_index}).exclude(pk=self.pk)
 
     def save(self, *args, **kwargs):
         log_data = get_metadata(self.__class__, 'log', False)
@@ -427,19 +427,19 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             if tree_index_field.ref:
                 tree_index_end = getattr(self, tree_index_field.ref)
                 if not tree_index_end:
-                    raise Exception(u'%s deve ser informado.' % tree_index_field.base)
+                    raise Exception('{} deve ser informado.'.format(tree_index_field.base))
             else:
                 tree_index_end = self.pk and getattr(self, tree_index_field.name).split('.')[-1] or None
                 if recursive or not self.pk or not type(self).objects.filter(
                         **{'id': self.pk, parent_field.name: parent}).exists():
                     tree_index_end = '1'
                     qs = type(self).objects.filter(**{parent_field.name: parent}).order_by(
-                        '-%s' % tree_index_field.name).values_list(tree_index_field.name, flat=True)
+                        '-{}'.format(tree_index_field.name)).values_list(tree_index_field.name, flat=True)
                     if qs.exists():
                         tree_index_end = int(qs[0].split('.')[-1]) + 1
             if parent:
                 parent_index = getattr(parent, tree_index_field.name)
-                tree_index = '%s%s%s' % (parent_index, tree_index_field.sep, tree_index_end)
+                tree_index = '{}{}{}'.format(parent_index, tree_index_field.sep, tree_index_end)
             else:
                 tree_index = tree_index_end
 
@@ -630,7 +630,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             if self._user.organization_id or self._user.unit_id or not self._user.is_superuser:
                 model = type(self)
                 app_label = get_metadata(model, 'app_label')
-                perm_name = '%s.edit_%s' % (app_label, model.__name__.lower())
+                perm_name = '{}.edit_{}'.format(app_label, model.__name__.lower())
                 if self._user.has_perm(perm_name):
                     permission_mapping = self._user.get_permission_mapping(model)
                     if 'edit_lookups' in permission_mapping and permission_mapping['edit_lookups']:
@@ -649,7 +649,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             if self._user.organization_id or self._user.unit_id or not self._user.is_superuser:
                 model = type(self)
                 app_label = get_metadata(model, 'app_label')
-                perm_name = '%s.delete_%s' % (app_label, model.__name__.lower())
+                perm_name = '{}.delete_{}'.format(app_label, model.__name__.lower())
                 if self._user.has_perm(perm_name):
                     permission_mapping = self._user.get_permission_mapping(model)
                     if 'delete_lookups' in permission_mapping and permission_mapping['delete_lookups']:

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import copy
 from djangoplus.ui.components import forms
 from djangoplus.ui import Component
@@ -108,7 +109,7 @@ class Paginator(Component):
                 if field_name == self.to:
                     continue
                 field = get_field(self.qs.model, field_name)
-                form_field_name = '%s%s' % (field_name, self.id)
+                form_field_name = '{}{}'.format(field_name, self.id)
                 if type(field).__name__ in ['DateField', 'DateTimeField']:
                     initial = (self._get_from_request(field_name, None, '_0'), self._get_from_request(field_name, None, '_1'))
                     form.fields[form_field_name] = forms.DateFilterField(label=normalyze(field.verbose_name), initial=initial, required=False)
@@ -171,12 +172,12 @@ class Paginator(Component):
         return ids
 
     def add_action(self, label, url, css, icon=None):
-        self.paginator_dropdown.add_action(label, url, 'global-action %s' % css, icon, label)
+        self.paginator_dropdown.add_action(label, url, 'global-action {}'.format(css), icon, label)
 
     def add_subset_action(self, label, url, css, icon=None, subset=None):
         if not subset or self.get_tab() == subset:
             if not self.mobile:
-                self.subset_dropdown.add_action(label, url, 'subset-action disabled %s' % css, icon, label)
+                self.subset_dropdown.add_action(label, url, 'subset-action disabled {}'.format(css), icon, label)
 
     def add_actions(self):
         export_url = self.request.get_full_path()
@@ -187,20 +188,20 @@ class Paginator(Component):
         pdf = get_metadata(self.qs.model, 'pdf')
 
         if list_csv:
-            export_url = '?' in export_url and '%s&export=csv' % export_url or '%s?export=csv' % export_url
+            export_url = '?' in export_url and '{}&export=csv'.format(export_url) or '{}?export=csv'.format(export_url)
             self.add_action('Exportar CSV', export_url, 'ajax', 'fa-table')
 
         if list_xls:
-            export_url = '?' in export_url and '%s&export=excel' % export_url or '%s?export=excel' % export_url
+            export_url = '?' in export_url and '{}&export=excel'.format(export_url) or '{}?export=excel'.format(export_url)
             self.add_action('Exportar Excel', export_url, 'ajax', 'fa-file-excel-o')
 
         if log:
-            log_url = '/log/%s/%s/' % (app_label, self.qs.model.__name__.lower())
+            log_url = '/log/{}/{}/'.format(app_label, self.qs.model.__name__.lower())
             if self.request.user.has_perm('admin.list_log'):
                 self.add_action('Visualizar Log', log_url, 'ajax', 'fa-history')
 
         if pdf:
-            pdf_url = '?' in export_url and '%s&export=pdf' % export_url or '%s?export=pdf' % export_url
+            pdf_url = '?' in export_url and '{}&export=pdf'.format(export_url) or '{}?export=pdf'.format(export_url)
             self.add_action('Imprimir', pdf_url, 'ajax', 'fa-print')
 
         subclasses = self.qs.model.__subclasses__()
@@ -210,14 +211,14 @@ class Paginator(Component):
             instance.user = self.request.user
             if not hasattr(instance, 'can_add') or instance.can_add():
                 add_label = get_metadata(self.qs.model, 'add_label', 'Cadastrar')
-                self.add_action(add_label, '/add/%s/%s/' % (app_label, self.qs.model.__name__.lower()), 'ajax', 'fa-plus')
+                self.add_action(add_label, '/add/{}/{}/'.format(app_label, self.qs.model.__name__.lower()), 'ajax', 'fa-plus')
 
         for subclass in subclasses:
             app = get_metadata(subclass, 'app_label')
             verbose_name = get_metadata(subclass, 'verbose_name')
             cls = subclass.__name__.lower()
             if permissions.has_add_permission(self.request, subclass):
-                self.add_action(verbose_name, '/add/%s/%s/' % (app, cls), False, 'fa-plus')
+                self.add_action(verbose_name, '/add/{}/{}/'.format(app, cls), False, 'fa-plus')
 
     def get_total(self):
         if self.list_total:
@@ -244,12 +245,12 @@ class Paginator(Component):
                     '<ul class="pagination pagination-xs m-top-none pull-right pagination-split">'
                     '<li class="disabled"><a href="#!"><i class="fa fa-chevron-left"></i></a></li>')
                 for i in range(1, page_numer + 1):
-                    onclick = "$('#page%s').val(%s);$('#%s').submit();" % (self.id, i, self.id)
+                    onclick = "$('#page{}').val({});$('#{}').submit();".format(self.id, i, self.id)
                     if i == current_page:
                         css = 'active'
                     else:
                         css = 'waves-effect'
-                    l.append('<li class="%s"><a href="javascript:" onclick="%s">%s</a></li>' % (css, onclick, i))
+                    l.append('<li class="{}"><a href="javascript:" onclick="{}">{}</a></li>'.format(css, onclick, i))
                 l.append('<li class="disabled"><a href="#!"><i class="fa fa-chevron-right"></i></a></li></ul>')
             self.pagination = ''.join(l)
         return queryset
@@ -346,7 +347,7 @@ class Paginator(Component):
             self.qs = self.tabs[0][2]
 
     def _get_from_request(self, param_name, default='', suffix=''):
-        key = '%s%s%s' % (param_name, self.id, suffix)
+        key = '{}{}{}'.format(param_name, self.id, suffix)
         value = self.request.GET.get(unicode(self.id)) and self.request.GET.get(key) or default
         return value
 
@@ -367,9 +368,9 @@ class Paginator(Component):
         if q:
             for i, search_field in enumerate(search_fields):
                 if i == 0:
-                    queryset = qs.filter(**{'%s__icontains' % search_field: q})
+                    queryset = qs.filter(**{'{}__icontains'.format(search_field): q})
                 else:
-                    queryset = queryset | qs.filter(**{'%s__icontains' % search_field: q})
+                    queryset = queryset | qs.filter(**{'{}__icontains'.format(search_field): q})
         else:
             queryset = qs
         for field_name in self.get_list_filter():
@@ -378,13 +379,13 @@ class Paginator(Component):
                 filter_value = self._get_from_request(field_name, None, '_0')
                 if filter_value:
                     date, month, year = filter_value.split('/')
-                    filter_value = '%s-%s-%s' % (year, month, date)
-                    queryset = queryset.filter(**{'%s__gte' % field_name: filter_value})
+                    filter_value = '{}-{}-{}'.format(year, month, date)
+                    queryset = queryset.filter(**{'{}__gte'.format(field_name): filter_value})
                 filter_value = self._get_from_request(field_name, None, '_1')
                 if filter_value:
                     date, month, year = filter_value.split('/')
-                    filter_value = '%s-%s-%s' % (year, month, date)
-                    queryset = queryset.filter(**{'%s__lte' % field_name: filter_value})
+                    filter_value = '{}-{}-{}'.format(year, month, date)
+                    queryset = queryset.filter(**{'{}__lte'.format(field_name): filter_value})
             elif type(field).__name__ in ['BooleanField', 'NullBooleanField']:
                 filter_value = self._get_from_request(field_name)
                 if filter_value:
@@ -427,7 +428,7 @@ class Paginator(Component):
         qs = self.get_queryset(False)
         if ids:
             qs = qs.filter(id__in=ids)
-        return XlsResponse([(u'Dados', tolist(qs, list_display=list_xls))])
+        return XlsResponse([('Dados', tolist(qs, list_display=list_xls))])
 
     def _get_pdf_response(self):
         self.as_pdf = True

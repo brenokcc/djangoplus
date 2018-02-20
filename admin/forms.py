@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import datetime
 from djangoplus.ui.components import forms
 from django.contrib import auth
@@ -14,10 +15,10 @@ class LoginForm(forms.Form):
     ORGANIZATION = 'organization'
     UNIT = 'unit'
     
-    username = forms.CharField(label=u'Usuário')
-    password = forms.PasswordField(label=u'Senha',
-                                   help_text=u'Caso tenha esquecido sua senha, clique aqui para '
-                                   u'<a class="popup" href="/admin/reset_password/">alterá-la</a>.')
+    username = forms.CharField(label='Usuário')
+    password = forms.PasswordField(label='Senha',
+                                   help_text='Caso tenha esquecido sua senha, clique aqui para '
+                                   '<a class="popup" href="/admin/reset_password/">alterá-la</a>.')
 
     def __init__(self, request, scope=None, organization=None, unit=None, *args, **kwargs):
         super(LoginForm, self).__init__(request, *args, **kwargs)
@@ -49,7 +50,7 @@ class LoginForm(forms.Form):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         if not User.objects.filter(username=username).exists():
-            raise forms.ValidationError(u'Usuário não cadastrado.')
+            raise forms.ValidationError('Usuário não cadastrado.')
         user = auth.authenticate(username=username, password=password)
         if user is not None:
             if user.active:
@@ -60,28 +61,28 @@ class LoginForm(forms.Form):
                     user.organization = self.cleaned_data.get('login_scope', self.organization)
                     is_organization_user = user.role_set.filter(organizations__in=(user.organization, 0)).exists()
                     if not is_organization_user:
-                        raise forms.ValidationError(u'%s não é usuário de %s' % (username, user.organization))
+                        raise forms.ValidationError('{} não é usuário de {}'.format(username, user.organization))
                 elif self.scope == LoginForm.UNIT:
                     user.unit = self.cleaned_data.get('login_scope', self.unit)
                     is_unit_user = user.role_set.filter(units__in=(user.unit, 0)).exists()
                     is_organization_user = loader.organization_model and user.role_set.filter(organizations__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:
-                        raise forms.ValidationError(u'%s não é usuário de %s' % (username, user.unit))
+                        raise forms.ValidationError('{} não é usuário de {}'.format(username, user.unit))
                 user.save()
                 auth.login(self.request, user)
                 return self.cleaned_data
             else:
-                raise forms.ValidationError(u'Usuário inativo.')
+                raise forms.ValidationError('Usuário inativo.')
         else:
-            raise forms.ValidationError(u'Senha não confere.')
+            raise forms.ValidationError('Senha não confere.')
 
     def submit(self):
         url = self.request.GET.get('next', '/admin/')
-        return httprr(self.request, url, u'Usuário autenticado com sucesso.')
+        return httprr(self.request, url, 'Usuário autenticado com sucesso.')
 
 
 class GroupForm(forms.ModelForm):
-    name = forms.CharField(label=u'Name')
+    name = forms.CharField(label='Name')
 
     class Meta:
         title = 'Cadastro de Grupo'
@@ -92,8 +93,8 @@ class GroupForm(forms.ModelForm):
 
 
 class UserForm(forms.ModelForm):
-    is_superuser = forms.BooleanField(label=u'Superusuário', required=False)
-    new_password = forms.PasswordField(label=u'Senha', required=False)
+    is_superuser = forms.BooleanField(label='Superusuário', required=False)
+    new_password = forms.PasswordField(label='Senha', required=False)
 
     class Meta:
         model = User
@@ -107,13 +108,13 @@ class UserForm(forms.ModelForm):
         if not args[0].user.is_superuser:
             del (self.fields['is_superuser'])
             self.fieldsets = (
-                (u'Identificação', {'fields': ('name', 'email',)}),
-                (u'Acesso', {'fields': (('username', 'new_password'), ('active',))}),
+                ('Identificação', {'fields': ('name', 'email',)}),
+                ('Acesso', {'fields': (('username', 'new_password'), ('active',))}),
             )
         else:
             self.fieldsets = (
-                (u'Identificação', {'fields': ('name', 'email',)}),
-                (u'Acesso', {'fields': (('username', 'new_password'), ('active', 'is_superuser'))}),
+                ('Identificação', {'fields': ('name', 'email',)}),
+                ('Acesso', {'fields': (('username', 'new_password'), ('active', 'is_superuser'))}),
             )
 
     def save(self, *args, **kwargs):
@@ -126,23 +127,23 @@ class UserForm(forms.ModelForm):
 class RegisterForm(forms.Form):
     name = forms.CharField(label='Nome', required=True)
     email = forms.EmailField(label='E-mail', required=True)
-    new_password = forms.PasswordField(label=u'Senha', required=True)
-    confirm_password = forms.PasswordField(label=u'Senha', required=True,
-                                           help_text=u'Repita a senha digitada anteriormente')
+    new_password = forms.PasswordField(label='Senha', required=True)
+    confirm_password = forms.PasswordField(label='Senha', required=True,
+                                           help_text='Repita a senha digitada anteriormente')
 
     class Meta:
-        title = u'Novo Usuário'
-        icon = u'fa-user'
+        title = 'Novo Usuário'
+        icon = 'fa-user'
         submit_label = 'Cadastrar'
 
     fieldsets = (
-        (u'Dados Gerais', {'fields': ('name', 'email')}),
-        (u'Senha de Acesso', {'fields': (('new_password', 'confirm_password'))}),
+        ('Dados Gerais', {'fields': ('name', 'email')}),
+        ('Senha de Acesso', {'fields': (('new_password', 'confirm_password'))}),
     )
 
     def clean(self):
         if not self.data['new_password'] == self.data['confirm_password']:
-            raise forms.ValidationError(u'As senhas devem ser iguais.')
+            raise forms.ValidationError('As senhas devem ser iguais.')
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -161,55 +162,55 @@ class RegisterForm(forms.Form):
             user.save()
             return user
         else:
-            token = encrypt('%s;%s;%s;%s' % (user.first_name, user.last_name, user.email, password))
-            url = u'%s/admin/create_user/%s/' % (settings.SERVER_ADDRESS, token)
-            user.email_user(u'Criação de Conta', u'Clique para confirmar a criação de sua conta: %s' % url,
+            token = encrypt('{};{};{};{}'.format(user.first_name, user.last_name, user.email, password))
+            url = '{}/admin/create_user/{}/'.format(settings.SERVER_ADDRESS, token)
+            user.email_user('Criação de Conta', 'Clique para confirmar a criação de sua conta: {}'.format(url),
                             settings.SYSTEM_EMAIL_ADDRESS)
             return None
 
 
 class ResetPasswordForm(forms.Form):
-    mail = forms.CharField(label=u'E-mail')
+    mail = forms.CharField(label='E-mail')
 
     class Meta:
-        title = u'Alteração de Senha'
-        icon = u'mdi-content-mail'
-        submit_label = u'Enviar E-mail'
-        note = u'Ao preencher e submeter o formulário abaixo, um e-mail será enviado para vocêcontendo ' \
-               u'um link através do qual você poderá alterar sua senha.'
+        title = 'Alteração de Senha'
+        icon = 'mdi-content-mail'
+        submit_label = 'Enviar E-mail'
+        note = 'Ao preencher e submeter o formulário abaixo, um e-mail será enviado para vocêcontendo ' \
+               'um link através do qual você poderá alterar sua senha.'
 
     def clean_mail(self):
         self.qs = User.objects.filter(email=self.cleaned_data['mail'])
         if self.qs.exists():
             return self.cleaned_data['mail']
         else:
-            raise forms.ValidationError(u'E-mail não cadastrado.')
+            raise forms.ValidationError('E-mail não cadastrado.')
 
     def submit(self):
         user = self.qs[0]
-        token = encrypt('%s' % user.pk)
-        url = '%s/admin/password/%s/' % (settings.SERVER_ADDRESS, token)
-        user.email_user(u'Recuperação de Senha', u'Clique no link a seguir para alterar sua senha: %s' % url,
+        token = encrypt('{}'.format(user.pk))
+        url = '{}/admin/password/{}/'.format(settings.SERVER_ADDRESS, token)
+        user.email_user('Recuperação de Senha', 'Clique no link a seguir para alterar sua senha: {}'.format(url),
                         settings.SYSTEM_EMAIL_ADDRESS)
 
 
 class ChangePasswordForm(forms.ModelForm):
-    new_password = forms.PasswordField(label=u'Senha', required=True)
-    confirm_password = forms.PasswordField(label=u'Confirmação', required=True,
-                                           help_text=u'Repita a senha digitada anteriormente')
+    new_password = forms.PasswordField(label='Senha', required=True)
+    confirm_password = forms.PasswordField(label='Confirmação', required=True,
+                                           help_text='Repita a senha digitada anteriormente')
 
-    fieldsets = ((u'Senhas', {'fields': ('new_password', 'confirm_password',)}),)
+    fieldsets = (('Senhas', {'fields': ('new_password', 'confirm_password',)}),)
 
     class Meta:
         model = User
         fields = ('id',)
-        title = u'Alteração de Senha'
+        title = 'Alteração de Senha'
         submit_label = 'Alterar'
         icon = 'fa-key'
 
     def clean(self):
         if not self.data.get('new_password') == self.data.get('confirm_password'):
-            raise forms.ValidationError(u'As senhas devem ser iguais.')
+            raise forms.ValidationError('As senhas devem ser iguais.')
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -226,20 +227,20 @@ class ChangePasswordForm(forms.ModelForm):
 
 
 class ProfileForm(forms.ModelForm):
-    new_password = forms.PasswordField(label=u'Senha', required=False)
-    confirm_password = forms.PasswordField(label=u'Confirmação', required=False,
-                                           help_text=u'Repita a senha digitada anteriormente')
+    new_password = forms.PasswordField(label='Senha', required=False)
+    confirm_password = forms.PasswordField(label='Confirmação', required=False,
+                                           help_text='Repita a senha digitada anteriormente')
 
     class Meta:
         model = User
         fields = ('name', 'photo', 'username')
-        title = u'Atualização de Perfil'
-        submit_label = u'Atualizar Perfil'
+        title = 'Atualização de Perfil'
+        submit_label = 'Atualizar Perfil'
         icon = 'fa-edit'
 
     fieldsets = (
-        (u'Dados do Usuário', {'fields': (('name', 'username'), 'photo')}),
-        (u'Senha de Acesso', {'fields': (('new_password', 'confirm_password'),)}),
+        ('Dados do Usuário', {'fields': (('name', 'username'), 'photo')}),
+        ('Senha de Acesso', {'fields': (('new_password', 'confirm_password'),)}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -248,7 +249,7 @@ class ProfileForm(forms.ModelForm):
 
     def clean_confirm_password(self):
         if not self.data.get('new_password') == self.data.get('confirm_password'):
-            raise forms.ValidationError(u'As senhas devem ser iguais.')
+            raise forms.ValidationError('As senhas devem ser iguais.')
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -271,7 +272,7 @@ class ProfileForm(forms.ModelForm):
 
 
 class RoleForm(forms.ModelForm):
-    units = forms.MultipleModelChoiceField(Unit.objects.all(), label=u'Unidades', required=False)
+    units = forms.MultipleModelChoiceField(Unit.objects.all(), label='Unidades', required=False)
 
     class Meta():
         model = Role

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 # DJANGO FIELDS
 import inspect
 from django.utils.text import camel_case_to_spaces
@@ -111,7 +112,7 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
 
         elif hasattr(field_or_function, '_metadata'):
             model_or_field = field_or_function
-            name = field_or_function._metadata['%s:verbose_name' % token]
+            name = field_or_function._metadata['{}:verbose_name'.format(token)]
             sortable = False
         else:
             model_or_field = field_or_function
@@ -129,7 +130,7 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
 def set_metadata(cls, attr, value):
     if not hasattr(cls, '_metadata'):
         cls._metadata = dict()
-    cls._metadata['%s:%s' % (cls.__name__, attr)] = value
+    cls._metadata['{}:{}'.format(cls.__name__, attr)] = value
 
 
 def get_metadata(model, attr, default=None, iterable=False):
@@ -163,7 +164,7 @@ def get_metadata(model, attr, default=None, iterable=False):
                                 if lookup in ('pk', 'id'):
                                     _metadata.append(field.name)
                                 else:
-                                    _metadata.append('%s__%s' % (field.name, lookup))
+                                    _metadata.append('{}__{}'.format(field.name, lookup))
             setattr(model._meta, field_attr, _metadata)
     else:
         _metadata = getattr(model._meta, attr)
@@ -193,10 +194,10 @@ def get_metadata(model, attr, default=None, iterable=False):
             _metadata = hasattr(model, 'fieldsets') and model.fieldsets or default
 
     check_recursively = not _metadata
-    if attr in (u'verbose_name', u'verbose_name_plural'):
-        if unicode(_metadata) in (camel_case_to_spaces(model.__name__), '%ss' % camel_case_to_spaces(model.__name__)):
+    if attr in ('verbose_name', 'verbose_name_plural'):
+        if unicode(_metadata) in (camel_case_to_spaces(model.__name__), '{}s'.format(camel_case_to_spaces(model.__name__))):
             check_recursively = True
-    if attr in (u'list_menu', 'verbose_female'):
+    if attr in ('list_menu', 'verbose_female'):
         check_recursively = False
 
     if check_recursively:
@@ -271,16 +272,16 @@ def getattr_rec(obj, args):
                         if callable(suffix):
                             suffix = suffix()
                     return value, suffix
-                elif hasattr(obj, 'get_%s_display' % args[0]):
-                    return getattr(obj, 'get_%s_display' % args[0])()
+                elif hasattr(obj, 'get_{}_display'.format(args[0])):
+                    return getattr(obj, 'get_{}_display'.format(args[0]))()
             else:
                 # it is a method decorated with @attr
                 _metadata = hasattr(value, '_metadata') and getattr(value, '_metadata') or None
                 if _metadata:
-                    verbose_name = _metadata.get('%s:verbose_name' % args[0])
+                    verbose_name = _metadata.get('{}:verbose_name'.format(args[0]))
                     if verbose_name:
                         value = value()
-                        formatter = _metadata.get('%s:formatter' % args[0])
+                        formatter = _metadata.get('{}:formatter'.format(args[0]))
                         if formatter:
                             func = loader.formatters[formatter]
                             if len(func.func_code.co_varnames) == 1:

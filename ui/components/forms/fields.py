@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 import base64
 from django import forms
@@ -140,7 +141,7 @@ class PhotoField(ImageField):
     def to_python(self, data):
         if data:
             data = ContentFile(base64.b64decode(data.split(',')[1]))
-            data.name = u'Image.png'
+            data.name = 'Image.png'
         return super(PhotoField, self).to_python(data)
 
 
@@ -150,9 +151,9 @@ class CpfField(CharField):
     widget = widgets.CpfWidget
 
     default_error_messages = {
-        'invalid': u'Número de CPF inválido.',
-        'max_digits': u'O CPF deve conter 11 dígitos',
-        'digits_only': u'O CPF deve conter apenas dígitos',
+        'invalid': 'Número de CPF inválido.',
+        'max_digits': 'O CPF deve conter 11 dígitos',
+        'digits_only': 'O CPF deve conter apenas dígitos',
     }
 
     def __init__(self, *args, **kwargs):
@@ -166,7 +167,7 @@ class CpfField(CharField):
     def clean(self, value):
         value = super(CpfField, self).clean(value)
         if value in validators.EMPTY_VALUES:
-            return u''
+            return ''
         orig_value = value[:]
         if not value.isdigit():
             value = re.sub("[-\.]", "", value)
@@ -193,9 +194,9 @@ class CpfField(CharField):
 class CnpjField(CharField):
     widget = widgets.CnpjWidget
     default_error_messages = {
-        'invalid': u'Número de CNPJ inválido.',
-        'max_digits': u'O CNPJ deve conter 18 dígitos',
-        'digits_only': u'O CNPJ deve conter apenas dígitos',
+        'invalid': 'Número de CNPJ inválido.',
+        'max_digits': 'O CNPJ deve conter 18 dígitos',
+        'digits_only': 'O CNPJ deve conter apenas dígitos',
     }
 
     def dv(self, v):
@@ -206,7 +207,7 @@ class CnpjField(CharField):
     def clean(self, value):
         value = super(CnpjField, self).clean(value)
         if value in validators.EMPTY_VALUES:
-            return u''
+            return ''
         orig_value = value[:]
         if not value.isdigit():
             value = re.sub("[-/\.]", "", value)
@@ -238,7 +239,7 @@ class CepField(forms.fields.RegexField):
     widget = widgets.CepWidget
 
     default_error_messages = {
-        'invalid': u'O CEP deve estar no formato XX.XXX-XXX.',
+        'invalid': 'O CEP deve estar no formato XX.XXX-XXX.',
     }
 
     def __init__(self, *args, **kwargs):
@@ -259,17 +260,17 @@ class PhoneField(CharField):
     widget = widgets.PhoneWidget
 
     default_error_messages = {
-        'invalid': u'O telefone deve estar no formato (XX) XXXX-XXXX.',
+        'invalid': 'O telefone deve estar no formato (XX) XXXX-XXXX.',
     }
 
     def clean(self, value):
         super(PhoneField, self).clean(value)
         if value in validators.EMPTY_VALUES:
-            return u''
+            return ''
         value = re.sub('(\(|\)|\s+)', '', smart_unicode(value))
         m = PhoneField.PHONE_DIGITS_RE.search(value)
         if m:
-            return u'(%s) %s-%s' % (m.group(1), m.group(2), m.group(3))
+            return '({}) {}-{}'.format(m.group(1), m.group(2), m.group(3))
         raise ValidationError(self.error_messages['invalid'])
 
 
@@ -317,9 +318,9 @@ class DateRangeField(forms.fields.MultiValueField):
         try:
             start_date, end_date = [datefield.clean(i) for i in value]
         except:
-            raise ValidationError(u'A faixa de datas está inválida.')
+            raise ValidationError('A faixa de datas está inválida.')
         if start_date > end_date:
-            raise ValidationError(u'A data final é menor que a inicial.')
+            raise ValidationError('A data final é menor que a inicial.')
         return [start_date, end_date]
 
 

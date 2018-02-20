@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from os import sep
 from djangoplus.conf.base_settings import *
 from os.path import abspath, dirname, join, exists
@@ -24,14 +25,14 @@ DATABASES = {
     }
 }
 
-WSGI_APPLICATION = '%s.wsgi.application' % PROJECT_NAME
+WSGI_APPLICATION = '{}.wsgi.application'.format(PROJECT_NAME)
 
 INSTALLED_APPS += (
     PROJECT_NAME,
     'djangoplus.ui.themes.default',
 )
 
-ROOT_URLCONF = '%s.urls' % PROJECT_NAME
+ROOT_URLCONF = '{}.urls'.format(PROJECT_NAME)
 
 if exists(join(BASE_DIR, 'logs')):
     DEBUG = False

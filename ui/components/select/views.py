@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 from django.apps import apps
 from django.http import HttpResponse
@@ -22,11 +23,11 @@ def autocomplete(request, app_name, class_name):
     if q:
         for i, search_field in enumerate(search_fields):
             if i == 0:
-                queryset = qs.filter(**{'%s__icontains' % search_field: q})
+                queryset = qs.filter(**{'{}__icontains'.format(search_field): q})
             else:
-                queryset = queryset | qs.filter(**{'%s__icontains' % search_field: q})
+                queryset = queryset | qs.filter(**{'{}__icontains'.format(search_field): q})
         if queryset is None:
-            raise ValueError('The class %s does not have any search field.' % class_name)
+            raise ValueError('The class {} does not have any search field.'.format(class_name))
     else:
         queryset = qs
 

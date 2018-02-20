@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.conf import settings
@@ -28,7 +29,7 @@ class XlsResponse(HttpResponse):
                     sheet.write(row_idx, col_idx, label=label)
         wb.save(output)
         HttpResponse.__init__(self, content=output.getvalue(), content_type='application/vnd.ms-excel')
-        self['Content-Disposition'] = 'attachment; filename=%s.xls' % name
+        self['Content-Disposition'] = 'attachment; filename={}.xls'.format(name)
 
 
 class CsvResponse(HttpResponse):
@@ -41,14 +42,14 @@ class CsvResponse(HttpResponse):
         for row in rows:
             writer.writerow(row)
         HttpResponse.__init__(self, content=output.getvalue(), content_type='application/csv')
-        self['Content-Disposition'] = 'attachment; filename=%s.xls' % name
+        self['Content-Disposition'] = 'attachment; filename={}.xls'.format(name)
 
 
 class ZipResponse(HttpResponse):
     def __init__(self, file_path):
         content = open(file_path)
         HttpResponse.__init__(self, content=content, content_type='application/zip')
-        self['Content-Disposition'] = 'attachment; filename=%s' % file_path.split(os.sep)[-1]
+        self['Content-Disposition'] = 'attachment; filename={}'.format(file_path.split(os.sep)[-1])
 
 
 class JsonResponse(HttpResponse):
@@ -63,7 +64,7 @@ class PdfResponse(HttpResponse):
         from xhtml2pdf import pisa
 
         def link_callback(uri, rel):
-            s = '%s/%s' % (settings.MEDIA_ROOT, uri)
+            s = '{}/{}'.format(settings.MEDIA_ROOT, uri)
             return s
 
         tmp = tempfile.NamedTemporaryFile(mode='w+b', delete=False)

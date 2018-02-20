@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 import datetime
 import unicodedata
@@ -43,7 +44,7 @@ def normalyze(nome):
 
 
 def format_bool(value):
-    return value and u'<span class="label label-success">Sim</span>' or u'<span class="label label-danger">Não</span>'
+    return value and '<span class="label label-success">Sim</span>' or '<span class="label label-danger">Não</span>'
 
 
 def format_value(value, html=True):
@@ -58,38 +59,38 @@ def format_value(value, html=True):
         return format_decimal(value)
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
         value = unicode(value)
-        url = u'/static/' in value and value or '/media/%s' % value
-        return html and mark_safe('<img width="50px" class="materialboxed" src="%s"/>' % url) or value
+        url = '/static/' in value and value or '/media/{}'.format(value)
+        return html and mark_safe('<img width="50px" class="materialboxed" src="{}"/>'.format(url)) or value
     elif isinstance(value, FieldFile):
         value = unicode(value)
-        url = u'/static/' in value and value or '/media/%s' % value
+        url = '/static/' in value and value or '/media/{}'.format(value)
         file_name = value.split('/')[-1]
         if url.lower().endswith('.pdf'):
             return html and mark_safe(
-                '<a class="ajax pdf" href="%s">%s</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="%s"><i class="mdi-file-file-download"></i></a>' % (
+                '<a class="ajax pdf" href="{}">{}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{}"><i class="mdi-file-file-download"></i></a>'.format(
                 url, file_name, url)) or file_name
         else:
-            return html and mark_safe('<a target="_blank" href="%s">%s</a>' % (url, file_name)) or url
+            return html and mark_safe('<a target="_blank" href="{}">{}</a>'.format(url, file_name)) or url
     elif isinstance(value, bool):
-        return value and u'Sim' or u'Não'
+        return value and 'Sim' or 'Não'
     elif value.__class__ == datetime.date:
         return value.strftime('%d/%m/%Y')
     elif value.__class__ == datetime.datetime:
         return value.strftime('%d/%m/%Y %H:%M')
     elif type(value).__name__ in ('QuerySet',) or type(value) == list:
         if html:
-            l = [u'<ul>']
+            l = ['<ul>']
             for obj in value:
-                l.append(u'<li>%s</li>' % obj)
-            l.append(u'</ul>')
-            return mark_safe(u''.join(l))
+                l.append('<li>{}</li>'.format(obj))
+            l.append('</ul>')
+            return mark_safe(''.join(l))
         else:
             l = []
             for obj in value:
                 l.append(unicode(obj))
-            return u', '.join(l)
+            return ', '.join(l)
     elif isinstance(value, tuple):
-        return u'%s %s' % (value[0], value[1])
+        return '{} {}'.format(value[0], value[1])
     else:
         return unicode(value)
 
@@ -117,7 +118,7 @@ def format_decimal(value):
     if '.' in value:
         reais, centavos = value.split('.')
         if len(centavos) == 1:
-            centavos = '%s0' % centavos
+            centavos = '{}0'.format(centavos)
         elif len(centavos) > 2:
             centavos = centavos[0:2]
     else:
@@ -131,9 +132,9 @@ def format_decimal3(value):
     value = str(value)
     if '.' in value:
         reais, centavos = value.split('.')
-        centavos = '%s000' % centavos
+        centavos = '{}000'.format(centavos)
         if len(centavos) == 1:
-            centavos = '%s0' % centavos
+            centavos = '{}0'.format(centavos)
         elif len(centavos) > 3:
             centavos = centavos[0:3]
     else:

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from djangoplus.ui.components.select.widgets import *
 
 
@@ -13,8 +14,8 @@ class FormattedTextarea(widgets.Textarea):
         js = '''
             <script>
             tinymce.remove();
-            tinymce.init({
-              selector: '#id_%s',
+            tinymce.init({{
+              selector: '#id_{}',
               height: 300,
               menubar: false,
                 plugins: [
@@ -22,8 +23,8 @@ class FormattedTextarea(widgets.Textarea):
                   ],
               toolbar: 'insert | undo redo |  formatselect | bold italic backcolor forecolor  | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table',
                   content_css: []
-            });
+            }});
             </script>
-        ''' % name
-        return mark_safe('%s%s' % (html, js))
+        '''.format(name)
+        return mark_safe('{}{}'.format(html, js))
 

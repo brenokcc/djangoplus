@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import zlib
 import base64
 import cPickle
@@ -6,7 +7,7 @@ from django.apps import apps
 
 def dumps_qs_query(qs):
     query = base64.b64encode(zlib.compress(cPickle.dumps(qs.query)))[::-1]
-    return '%s:::%s:::%s' % (qs.model._meta.app_label, qs.model.__name__, query)
+    return '{}:::{}:::{}'.format(qs.model._meta.app_label, qs.model.__name__, query)
 
 
 def loads_qs_query(s):

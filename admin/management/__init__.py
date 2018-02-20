@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.apps import apps
 from django.contrib.auth.models import Permission, Group, ContentType
 from django.db.models import signals
@@ -9,7 +10,7 @@ from djangoplus.cache import loader
 
 def sync_permissions():
 
-    default_permissions_names = dict(edit='Editar', add='Cadastrar', delete=u'Excluir', list='Listar')
+    default_permissions_names = dict(edit='Editar', add='Cadastrar', delete='Excluir', list='Listar')
 
     # Permission.objects.all().delete()
     # Group.objects.all().delete()
@@ -32,8 +33,8 @@ def sync_permissions():
                 content_type = ContentType.objects.create(app_label=app_label, model=model)
 
             for codename, name in default_permissions_names.items():
-                codename = '%s_%s' % (codename, content_type.model)
-                name = '%s %s' % (name, Model._meta.verbose_name)
+                codename = '{}_{}'.format(codename, content_type.model)
+                name = '{} {}'.format(name, Model._meta.verbose_name)
                 qs_permission = Permission.objects.filter(codename=codename, content_type=content_type)
                 if qs_permission.exists():
                     qs_permission.update(name=name)
@@ -44,7 +45,7 @@ def sync_permissions():
             for admin_group in get_metadata(Model, 'can_admin', (), iterable=True):
                 admin_groups.append(admin_group)
             for scope in ('role', 'unit', 'organization'):
-                for admin_group in get_metadata(Model, 'can_admin_by_%s' % scope, (), iterable=True):
+                for admin_group in get_metadata(Model, 'can_admin_by_{}'.format(scope), (), iterable=True):
                     admin_groups.append(admin_group)
             admin_groups = tuple(admin_groups)
 
@@ -60,12 +61,12 @@ def sync_permissions():
                     permissions.append((codename, admin_groups + groups + relate_groups))
 
             for codename in default_permissions_names:
-                attr_name = 'can_%s' % codename
+                attr_name = 'can_{}'.format(codename)
                 groups = []
                 for group in get_metadata(Model, attr_name, (), iterable=True):
                     groups.append(group)
                 for scope in ('role', 'unit', 'organization'):
-                    for group in get_metadata(Model, '%s_by_%s' % (attr_name, scope), (), iterable=True):
+                    for group in get_metadata(Model, '{}_by_{}'.format(attr_name, scope), (), iterable=True):
                         groups.append(group)
                 groups = tuple(groups)
                 if groups or admin_groups:
@@ -76,7 +77,7 @@ def sync_permissions():
             for codename, group_names in permissions:
 
                 if codename in default_permissions_names:
-                    codename = '%s_%s' % (codename, model)
+                    codename = '{}_{}'.format(codename, model)
 
                 permission = Permission.objects.get(codename=codename)
                 for group_name in group_names:
@@ -115,8 +116,8 @@ def sync_permissions():
                     name = actions_dict[model][category][key]['title']
                     can_execute = []
                     for scope in ('', 'role', 'unit', 'organization'):
-                        scope = scope and '_by_%s' % scope or scope
-                        for group_name in actions_dict[model][category][key].get('can_execute%s' % scope) or ():
+                        scope = scope and '_by_{}'.format(scope or scope)
+                        for group_name in actions_dict[model][category][key].get('can_execute{}'.format(scope)) or ():
                             can_execute.append(group_name)
                     if can_execute:
                         qs_permission = Permission.objects.filter(codename=key, content_type=content_type)

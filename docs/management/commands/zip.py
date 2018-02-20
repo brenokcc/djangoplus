@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.core.management.base import BaseCommand
 import os
 import zipfile
@@ -7,7 +8,7 @@ from django.conf import settings
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        zip_file_name = '%s.zip' % settings.PROJECT_NAME
+        zip_file_name = '{}.zip'.format(settings.PROJECT_NAME)
 
         def zipdir(file_path, ziph):
             for dirname, subdirs, files in os.walk(file_path):

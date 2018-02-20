@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.conf import settings
 from django.views.static import serve
 from django.conf.urls import include, url

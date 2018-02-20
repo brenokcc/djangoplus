@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from decimal import Decimal
 
 from djangoplus.ui import Component
@@ -55,7 +56,7 @@ class ModelPanel(Component):
             for field in get_metadata(type(obj), 'local_many_to_many'):
                 fields.append(field.name)
 
-            fieldsets = ((u'Dados Gerais', dict(fields=fields)),)
+            fieldsets = (('Dados Gerais', dict(fields=fields)),)
 
         if self.complete:
             self.drop_down = ModelDropDown(self.request, type(self.obj))
@@ -87,7 +88,7 @@ class ModelPanel(Component):
 
             if '::' in title:
                 tab_name, title = title.split('::')
-                url = '/view/%s/%s/%s/%s/' % (get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, slugify(tab_name))
+                url = '/view/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, slugify(tab_name))
                 tab = (tab_name, url)
                 if not self.tabs and not self.current_tab:
                     self.current_tab = slugify(tab_name)
@@ -96,7 +97,7 @@ class ModelPanel(Component):
 
             if not tab_name or slugify(tab_name) == self.current_tab or self.as_pdf:
 
-                fieldset_dict = dict(title=title or u'Dados Gerais', tab_name=tab_name, fields=[], paginators=[], drop_down=drop_down, image=None)
+                fieldset_dict = dict(title=title or 'Dados Gerais', tab_name=tab_name, fields=[], paginators=[], drop_down=drop_down, image=None)
                 relations = fieldset[1].get('relations', [])
 
                 if tab_name or self.as_pdf:
@@ -165,17 +166,17 @@ class ModelPanel(Component):
                                         app_label = get_metadata(model, 'app_label')
                                         model_name = model.__name__.lower()
                                         related_model_name = type(relation).__name__.lower()
-                                        add_url = '/add/%s/%s/%s/%s' % (app_label, model_name, self.obj.pk, relation_name)
+                                        add_url = '/add/{}/{}/{}/{}'.format(app_label, model_name, self.obj.pk, relation_name)
                                         delete_url = None
                                         if relation.pk:
-                                            add_url = '%s/%s/' % (add_url, relation.pk)
+                                            add_url = '{}/{}/'.format(add_url, relation.pk)
                                             app_label = get_metadata(type(relation), 'app_label')
-                                            delete_url = '/delete/%s/%s/%s/' % (app_label, related_model_name, relation.pk)
+                                            delete_url = '/delete/{}/{}/{}/'.format(app_label, related_model_name, relation.pk)
                                         if permissions.has_add_permission(self.request, model) or permissions.has_edit_permission(self.request, model):
                                             if delete_url:
-                                                panel.drop_down.add_action('Excluir %s' % relation_field.verbose_name,
+                                                panel.drop_down.add_action('Excluir {}'.format(relation_field.verbose_name),
                                                                            delete_url, 'popup', 'fa-close', None)
-                                            panel.drop_down.add_action('Atualizar %s' % relation_field.verbose_name,
+                                            panel.drop_down.add_action('Atualizar {}'.format(relation_field.verbose_name),
                                                                        add_url, 'popup', 'fa-edit')
 
                                     fieldset_dict['paginators'].append(panel)
@@ -189,9 +190,9 @@ class ModelPanel(Component):
 
                                 related_paginator = Paginator(self.request, relation.all(), title=fieldset_title, to=to, list_subsets=[])
 
-                                add_url = '/add/%s/%s/%s/%s/' % (get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
+                                add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
                                 if permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model):
-                                    related_paginator.add_action('Adicionar %s' % unicode(get_metadata(relation.model, 'verbose_name')),
+                                    related_paginator.add_action('Adicionar {}'.format(unicode(get_metadata(relation.model, 'verbose_name'))),
                                                                  add_url, 'popup', 'fa-plus')
                                 fieldset_dict['paginators'].append(related_paginator)
                         else:
@@ -212,7 +213,7 @@ class ModelPanel(Component):
                             fieldset_title = len(relations) > 1 and get_metadata(qs.model, 'verbose_name_plural') or title
 
                             if hasattr(relation, '_metadata'):
-                                fieldset_title = relation._metadata['%s:verbose_name' % relation_name]
+                                fieldset_title = relation._metadata['{}:verbose_name'.format(relation_name)]
 
                             exclude = [is_object_set and related_object.field.name or '']
 
@@ -226,7 +227,7 @@ class ModelPanel(Component):
                                         form_name = get_metadata(qs.model, 'add_form')
                                         if form_name:
                                             fromlist = get_metadata(qs.model, 'app_label')
-                                            forms_module = __import__('%s.forms' % fromlist, fromlist=fromlist)
+                                            forms_module = __import__('{}.forms'.format(fromlist), fromlist=list(map(str, [fromlist])))
                                             Form = getattr(forms_module, form_name)
                                         else:
                                             class Form(ModelForm):
@@ -235,7 +236,7 @@ class ModelPanel(Component):
                                                     fields = get_metadata(qs.model, 'form_fields', '__all__')
                                                     exclude = get_metadata(qs.model, 'exclude_fields', ())
                                                     submit_label = 'Adicionar'
-                                                    title = u'Adicionar %s' % get_metadata(qs.model, 'verbose_name')
+                                                    title = 'Adicionar {}'.format(get_metadata(qs.model, 'verbose_name'))
                                         form = Form(self.request, instance=instance, inline=True)
                                         if related_object.field.name in form.fields:
                                             del(form.fields[related_object.field.name])
@@ -243,14 +244,14 @@ class ModelPanel(Component):
                                         if form.is_valid():
                                             try:
                                                 form.save()
-                                                self.message = u'Ação realizada com sucesso'
+                                                self.message = 'Ação realizada com sucesso'
                                             except ValidationError, e:
                                                 form.add_error(None, unicode(e.message))
                                     else:
-                                        add_url = '/add/%s/%s/%s/%s/' % (
+                                        add_url = '/add/{}/{}/{}/{}/'.format(
                                         get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk,
                                         relation_name.replace('_set', ''))
-                                        add_label = u'Adicionar %s' % get_metadata(qs.model, 'verbose_name')
+                                        add_label = 'Adicionar {}'.format(get_metadata(qs.model, 'verbose_name'))
                                         add_label = get_metadata(qs.model, 'add_label', add_label)
                                         related_paginator.add_action(add_label, add_url,
                                                                      'popup', 'fa-plus')
@@ -304,10 +305,10 @@ class IconPanel(Component):
     def add_model(self, model):
         icon = get_metadata(model, 'icon')
         prefix = get_metadata(model, 'verbose_female') and 'Nova' or 'Novo'
-        description = '%s %s' % (prefix, get_metadata(model, 'verbose_name'))
+        description = '{} {}'.format(prefix, get_metadata(model, 'verbose_name'))
         description = get_metadata(model, 'add_label', description)
-        url = '/add/%s/%s/' % (get_metadata(model, 'app_label'), model.__name__.lower())
-        permission = '%s.list_%s' % (get_metadata(model, 'app_label'), model.__name__.lower())
+        url = '/add/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower())
+        permission = '{}.list_{}'.format(get_metadata(model, 'app_label'), model.__name__.lower())
         self.add(icon, description, None, url, permission)
 
     def add_models(self, *models):
@@ -349,15 +350,15 @@ class CardPanel(Component):
                             qs = getattr(qs, attr_name)()
                             count = qs.count()
                             if count:
-                                url = '/list/%s/%s/%s/' % (app_label, model_name, attr_name)
+                                url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
                                 self.add(icon, title, count, url, 'bg-info', None, item['title'])
 
         for item in loader.views:
             if False:  # TODO False
                 if permissions.check_group_or_permission(request, item['can_view']):
-                    self.add(item['icon'], item['menu'], None, item['url'], u'bg-info', item['can_view'], item['style'])
+                    self.add(item['icon'], item['menu'], None, item['url'], 'bg-info', item['can_view'], item['style'])
 
-    def add(self, icon, title, count=None, url=None, css=u'bg-info', perm_or_group=None, description=''):
+    def add(self, icon, title, count=None, url=None, css='bg-info', perm_or_group=None, description=''):
         if permissions.check_group_or_permission(self.request, perm_or_group):
             item = dict(icon=icon, title=title, count=count, url=url, css=css, description=description)
             self.items.append(item)
@@ -374,9 +375,9 @@ class CardPanel(Component):
             title = get_metadata(model, 'verbose_name_plural')
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
-            url = '/list/%s/%s/' % (app_label, model_name)
-            permission = '%s.list_%s' % (app_label, model_name)
-            self.add(icon, title, None, url, u'bg-info', permission)
+            url = '/list/{}/{}/'.format(app_label, model_name)
+            permission = '{}.list_{}'.format(app_label, model_name)
+            self.add(icon, title, None, url, 'bg-info', permission)
 
 
 class DashboardPanel(Component):
@@ -392,7 +393,7 @@ class DashboardPanel(Component):
 
         from djangoplus.cache import loader
         for model in loader.subsets:
-            icon = get_metadata(model, 'icon', u'fa-bell-o')
+            icon = get_metadata(model, 'icon', 'fa-bell-o')
             title = get_metadata(model, 'verbose_name_plural')
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
@@ -406,7 +407,7 @@ class DashboardPanel(Component):
                     qs = getattr(qs, attr_name)()
                     count = qs.count()
                     if count:
-                        url = '/list/%s/%s/%s/' % (app_label, model_name, attr_name)
+                        url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
                         notification_panel = NotificationPanel(request, title, count, url, description, icon)
                         self.right.append(notification_panel)
 
@@ -421,7 +422,7 @@ class DashboardPanel(Component):
                 function = item['function']
                 position = item['position']
                 f_return = function(request)
-                html = render_to_string(['%s.html' % function.func_name, 'widget.html'], f_return, request)
+                html = render_to_string(['{}.html'.format(function.func_name), 'widget.html'], f_return, request)
                 if position == 'top':
                     self.top.append(html)
                 elif position == 'center':

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.conf import settings
 from django.utils import translation
 from djangoplus.docs.doc import Documentation
@@ -16,7 +17,7 @@ class Command(BaseCommand):
         doc = Documentation()
         translation.activate(settings.LANGUAGE_CODE)
 
-        task = (u' '.join([x.decode('utf-8') for x in options['task']])).strip()
+        task = (' '.join([x.decode('utf-8') for x in options['task']])).strip()
 
         if task:
             if task.isdigit():
@@ -25,7 +26,7 @@ class Command(BaseCommand):
                     usecase = doc.usecases[index]
                     print unicode(usecase)
                 else:
-                    print u'There is no task with index %s' % task
+                    print 'There is no task with index {}'.format(task)
             else:
                 selected_usecase = None
                 for tmp in doc.usecases:
@@ -34,7 +35,7 @@ class Command(BaseCommand):
                 if selected_usecase:
                     print unicode(selected_usecase)
                 else:
-                    print u'There is no task named %s' % task
+                    print 'There is no task named {}'.format(task)
         else:
             if options.pop('json', False):
                 print unicode(doc.as_json())

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import os
 from dropbox import Dropbox
 from django.conf import settings
@@ -25,7 +26,7 @@ class Command(BaseCommand):
                 local_paths.append((file_or_directory, dropbox_path))
 
         for local_path, dropbox_path in local_paths:
-            dropbox_path = '/%s' % dropbox_path
-            print u'Uploading %s to %s...' % (local_path, dropbox_path)
+            dropbox_path = '/{}'.format(dropbox_path)
+            print 'Uploading {} to {}...'.format(local_path, dropbox_path)
             with open(local_path, 'rb') as f:
                 client.files_upload(f, dropbox_path, WriteMode.overwrite)

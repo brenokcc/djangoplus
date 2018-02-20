@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.shortcuts import render
 from djangoplus.utils import permissions
 from djangoplus.utils.http import PdfResponse
@@ -10,21 +11,21 @@ from djangoplus.utils.metadata import iterable
 def view(title, can_view=None, icon=None, menu=None, login_required=True, style='ajax', template=None, add_shortcut=False, sequence=0):
 
     def decorate(function):
-        url = '/%s/%s/' % (function.__module__.split('.')[-2], function.func_name)
+        url = '/{}/{}/'.format(function.__module__.split('.')[-2], function.func_name)
 
         def receive_function_args(request, *args, **kwargs):
             without_permission = can_view and not permissions.check_group_or_permission(request, can_view)
             without_authentication = login_required and not request.user.is_authenticated()
             if without_permission or without_authentication:
-                    return HttpResponseRedirect('/admin/login/?next=%s'%url)
+                    return HttpResponseRedirect('/admin/login/?next={}'.format(url))
             f_return = function(request, *args, **kwargs)
             if type(f_return) == dict:
-                f_return['title'] = title % f_return
+                f_return['title'] = title.format(f_return)
                 if 'pdf' in style:
-                    template_list = ['%s.html' % function.func_name, 'report.html']
+                    template_list = ['{}.html'.format(function.func_name), 'report.html']
                     return PdfResponse(render_to_string(template_list, f_return, request=request))
                 else:
-                    template_list = [template or '%s.html' % function.func_name, 'default.html']
+                    template_list = [template or '{}.html'.format(function.func_name), 'default.html']
                     return render(request, template_list, f_return)
             return f_return
 
@@ -44,22 +45,22 @@ def dashboard(can_view=(), position='bottom'):
     return decorate
 
 
-def action(model, title, can_execute=(), condition=None, category=u'Ações',
-           style='ajax', message=u'Ação realizada com sucesso.', template=None, inline=False, icon=None, sequence=0,
+def action(model, title, can_execute=(), condition=None, category='Ações',
+           style='ajax', message='Ação realizada com sucesso.', template=None, inline=False, icon=None, sequence=0,
            can_execute_by_organization=None, can_execute_by_unit=None, can_execute_by_role=None, redirect_to=None):
 
     def decorate(function):
         def receive_function_args(request, *args, **kwargs):
-            if can_execute and not permissions.check_group_or_permission(request, '%s.%s' % (model._meta.app_label, function.func_name)):
+            if can_execute and not permissions.check_group_or_permission(request, '{}.{}'.format(model._meta.app_label, function.func_name)):
                 return HttpResponseRedirect('/admin/login/')
             f_return = function(request, *args, **kwargs)
 
             if type(f_return) == dict:
                 if 'pdf' in style:
-                    template_list = ['%s.html' % function.func_name, 'report.html']
+                    template_list = ['{}.html'.format(function.func_name), 'report.html']
                     return PdfResponse(render_to_string(template_list, f_return, request=request))
                 else:
-                    template_list = ['%s.html' % function.func_name, 'default.html']
+                    template_list = ['{}.html'.format(function.func_name), 'default.html']
                     return render(request, template or template_list, f_return)
 
             else:

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.apps import apps
 from django.conf import settings
 from djangoplus.utils.metadata import get_metadata, get_scope
@@ -93,7 +94,7 @@ if not initialized:
             card_panel_models.append((model, list_shortcut))
 
         # indexing the views generated from model classes
-        url = '/list/%s/%s/' % (app_label, model_name)
+        url = '/list/{}/{}/'.format(app_label, model_name)
         icon = None
         if list_menu and model not in composition_fields:
             menu_groups = ()
@@ -104,7 +105,7 @@ if not initialized:
                     menu, icon, menu_groups = list_menu
             else:
                 menu, icon = list_menu, get_metadata(model, 'icon')
-            permission = u'%s.list_%s' % (app_label, model_name)
+            permission = '{}.list_{}'.format(app_label, model_name)
             # if issubclass(model, Model):
             item = dict(url=url, can_view=permission, menu=menu, icon=icon, add_shortcut=False, groups=menu_groups)
             views.append(item)
@@ -114,34 +115,34 @@ if not initialized:
         for attr_name in dir(model.objects.get_queryset()):
             attr = getattr(model.objects.get_queryset(), attr_name)
             if hasattr(attr, '_metadata'):
-                metadata_type = attr._metadata['%s:type' % attr_name]
+                metadata_type = attr._metadata['{}:type'.format(attr_name)]
                 if metadata_type == 'subset':
-                    subset_title = attr._metadata['%s:title' % attr_name]
-                    subset_name = attr._metadata['%s:name' % attr_name]
-                    subset_alert = attr._metadata['%s:alert' % attr_name]
-                    subset_notify = attr._metadata['%s:notify' % attr_name]
-                    subset_can_view = attr._metadata['%s:can_view' % attr_name]
-                    subset_order = attr._metadata['%s:order' % attr_name]
-                    subset_menu = attr._metadata['%s:menu' % attr_name]
-                    subset_workflow = attr._metadata['%s:sequence' % attr_name]
-                    subset_url = u'%s%s/' % (url, attr.im_func.func_name)
+                    subset_title = attr._metadata['{}:title'.format(attr_name)]
+                    subset_name = attr._metadata['{}:name'.format(attr_name)]
+                    subset_alert = attr._metadata['{}:alert'.format(attr_name)]
+                    subset_notify = attr._metadata['{}:notify'.format(attr_name)]
+                    subset_can_view = attr._metadata['{}:can_view'.format(attr_name)]
+                    subset_order = attr._metadata['{}:order'.format(attr_name)]
+                    subset_menu = attr._metadata['{}:menu'.format(attr_name)]
+                    subset_workflow = attr._metadata['{}:sequence'.format(attr_name)]
+                    subset_url = '{}{}/'.format(url, attr.im_func.func_name)
 
                     item = dict(title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view, menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify, actions=subset_actions, order=subset_order)
                     subsets[model].append(item)
 
                     if subset_workflow:
-                        role = subset_can_view and subset_can_view[0] or u'Superusuário'
+                        role = subset_can_view and subset_can_view[0] or 'Superusuário'
                         if attr_name == 'all':
-                            activity_description = u'Listar %s' % (verbose_name_plural,)
+                            activity_description = 'Listar {}'.format(verbose_name_plural,)
                         else:
-                            activity_description = u'Listar %s: %s' % (verbose_name_plural, subset_title)
+                            activity_description = 'Listar {}: {}'.format(verbose_name_plural, subset_title)
                         workflows[subset_workflow] = dict(activity=activity_description, role=role, model=None)
 
                 else:
-                    widget_title = attr._metadata['%s:verbose_name' % attr_name]
-                    widget_can_view = attr._metadata['%s:can_view' % attr_name]
-                    widget_position = attr._metadata['%s:position' % attr_name]
-                    widget_formatter = attr._metadata['%s:formatter' % attr_name]
+                    widget_title = attr._metadata['{}:verbose_name'.format(attr_name)]
+                    widget_can_view = attr._metadata['{}:can_view'.format(attr_name)]
+                    widget_position = attr._metadata['{}:position'.format(attr_name)]
+                    widget_formatter = attr._metadata['{}:formatter'.format(attr_name)]
                     widget = dict(title=widget_title, model=model, function=attr_name, can_view=widget_can_view, position=widget_position, formatter=widget_formatter)
                     subset_widgets.append(widget)
 
@@ -176,10 +177,10 @@ if not initialized:
                             subset_actions[model][action_subset] = []
                         subset_actions[model][action_subset].append(attr)
                     if action_workflow:
-                        role = action_can_execute and action_can_execute[0] or u'Superusuário'
+                        role = action_can_execute and action_can_execute[0] or 'Superusuário'
                         workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
                     if action_menu:
-                        url = '/action/%s/%s/%s/' % (get_metadata(model, 'app_label'), model.__name__.lower(), attr)
+                        url = '/action/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), attr)
                         action_view = dict(title=action_title, function=None, url=url, can_view=action_can_execute, menu=action_menu, icon=None,
                               style='ajax', add_shortcut=False, doc=function.__doc__, sequence=None)
                         views.append(action_view)
@@ -205,13 +206,13 @@ if not initialized:
                     subset_actions[model][action_subset].append(view_name)
 
                     if action_workflow:
-                        role = action_can_execute and action_can_execute[0] or u'Superusuário'
+                        role = action_can_execute and action_can_execute[0] or 'Superusuário'
                         workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
 
     # indexing the actions, views and widgets in views module
     for app_label in settings.INSTALLED_APPS:
             try:
-                module = __import__('%s.formatters' % app_label, fromlist=app_label.split('.'))
+                module = __import__('{}.formatters'.format(app_label), fromlist=list(map(str, app_label.split('.'))))
                 for attr_name in dir(module):
                     module_attr = getattr(module, attr_name)
                     if callable(module_attr):
@@ -220,7 +221,7 @@ if not initialized:
                 pass
 
             try:
-                module = __import__('%s.views' % app_label, fromlist=app_label.split('.'))
+                module = __import__('{}.views'.format(app_label), fromlist=list(map(str, app_label.split('.'))))
                 for attr_name in dir(module):
                     function = getattr(module, attr_name)
                     # indexing the actions
@@ -243,7 +244,7 @@ if not initialized:
                             subset_actions[action_model][action_subset].append(action_name)
 
                         if action_workflow:
-                            role = action_can_execute and action_can_execute[0] or u'Superusuário'
+                            role = action_can_execute and action_can_execute[0] or 'Superusuário'
                             action_model_verbose_name = get_metadata(action_model, 'verbose_name')
                             workflows[action_workflow] = dict(activity=action_title, role=role, model=action_model_verbose_name)
                         if action_function.func_code.co_argcount > 1:
@@ -263,7 +264,7 @@ if not initialized:
                         view_workflow = function._view['sequence']
                         view_can_view = function._view['can_view']
                         if view_workflow:
-                            role = view_can_view and view_can_view[0] or u'Superusuário'
+                            role = view_can_view and view_can_view[0] or 'Superusuário'
                             workflows[view_workflow] = dict(activity=view_title, role=role, model=None)
                     # indexing the widgets
                     elif hasattr(function, '_widget'):
@@ -296,8 +297,8 @@ if not initialized:
         permission_by_scope = dict()
         for scope in ('role', 'unit', 'organization'):
             for permission_name in ('edit', 'add', 'delete', 'list'):
-                permission_key = '%s_by_%s' % (permission_name, scope)
-                for group_name in get_metadata(model, 'can_%s' % permission_key, (), iterable=True):
+                permission_key = '{}_by_{}'.format(permission_name, scope)
+                for group_name in get_metadata(model, 'can_{}'.format(permission_key), (), iterable=True):
                     if permission_key not in permission_by_scope:
                         permission_by_scope[permission_key] = []
                     if group_name in abstract_role_model_names:
@@ -305,9 +306,9 @@ if not initialized:
                             permission_by_scope[permission_key].append(concrete_group_name)
                     else:
                         permission_by_scope[permission_key].append(group_name)
-            for group_name in get_metadata(model, 'can_admin_by_%s' % scope, (), iterable=True):
+            for group_name in get_metadata(model, 'can_admin_by_{}'.format(scope), (), iterable=True):
                 for permission_name in ('edit', 'add', 'delete', 'list'):
-                    permission_key = '%s_by_%s' % (permission_name, scope)
+                    permission_key = '{}_by_{}'.format(permission_name, scope)
                     if permission_key not in permission_by_scope:
                         permission_by_scope[permission_key] = []
                     if group_name not in permission_by_scope[permission_key]:
@@ -319,7 +320,7 @@ if not initialized:
 
         for permission_name in ('edit', 'add', 'delete', 'list'):
             permission_key = permission_name
-            for group_name in get_metadata(model, 'can_%s' % permission_name, (), iterable=True):
+            for group_name in get_metadata(model, 'can_{}'.format(permission_name), (), iterable=True):
                 if permission_key not in permission_by_scope:
                     permission_by_scope[permission_key] = []
                 if group_name not in permission_by_scope[permission_key]:
@@ -339,9 +340,9 @@ if not initialized:
                     view_name = actions_dict[model][category][key]['view_name']
                     can_execute = []
                     for scope in ('', 'role', 'unit', 'organization'):
-                        scope = scope and '_by_%s' % scope or scope
-                        for group_name in actions_dict[model][category][key].get('can_execute%s' % scope) or ():
-                            permission_key = '%s%s' % (view_name, scope)
+                        scope = scope and '_by_{}'.format(scope) or scope
+                        for group_name in actions_dict[model][category][key].get('can_execute{}'.format(scope)) or ():
+                            permission_key = '{}{}'.format(view_name, scope)
                             if permission_key not in permission_by_scope:
                                 permission_by_scope[permission_key] = []
                             permission_by_scope[permission_key].append(group_name)
@@ -358,22 +359,22 @@ if not initialized:
             if not role:
                 role = permission_by_scope.get('add_by_organization') and permission_by_scope.get('add_by_organization')[0] or None
             if not role:
-                role = u'Superusuário'
+                role = 'Superusuário'
 
             if model in composition_fields:
                 related_model = getattr(model, composition_fields[model]).field.rel.to
                 related_verbose_name = get_metadata(related_model, 'verbose_name')
                 related_add_label = get_metadata(model, 'add_label')
                 if related_add_label:
-                    activity = u'%s em %s' % (related_add_label, related_verbose_name)
+                    activity = '{} em {}'.format(related_add_label, related_verbose_name)
                 else:
-                    activity = u'Adicionar %s em %s' % (verbose_name, related_verbose_name)
+                    activity = 'Adicionar {} em {}'.format(verbose_name, related_verbose_name)
                 workflows[workflow] = dict(activity=activity, role=role, model=None)
             else:
                 if add_label:
                     activity = add_label
                 else:
-                    activity = u'%s %s' % (u'Cadastrar', verbose_name)
+                    activity = '{} {}'.format('Cadastrar', verbose_name)
                 workflows[workflow] = dict(activity=activity, role=role, model=None)
 
         if diagram_classes is not None:

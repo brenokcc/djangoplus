@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import copy
 from collections import OrderedDict
 from datetime import datetime
@@ -14,11 +15,11 @@ class GroupDropDown(Component):
         super(GroupDropDown, self).__init__(request)
         self.actions = OrderedDict()
         self.mobile = http.mobile(self.request)
-        self.actions[u'Ações'] = []
+        self.actions['Ações'] = []
 
-    def add_action(self, label, url, css='popup', icon=None, category=u'Ações'):
+    def add_action(self, label, url, css='popup', icon=None, category='Ações'):
         if self.mobile:
-            category = u'Ações'
+            category = 'Ações'
         if category not in self.actions:
             self.actions[category] = []
         item = dict(label=label, url=url, css=css, icon=icon)
@@ -60,7 +61,7 @@ class ModelDropDown(GroupDropDown):
             if category not in self.actions:
                 self.actions[category] = []
 
-    def add_action(self, label, url, css='popup', icon=None, category=u'Ações'):
+    def add_action(self, label, url, css='popup', icon=None, category='Ações'):
         if category not in self.actions:
             self.actions[category] = []
         item = dict(label=label, url=url, css=css, icon=icon)
@@ -124,7 +125,7 @@ class ModelDropDown(GroupDropDown):
                     continue
 
                 if is_action_view:
-                    action_url = '/%s/%s/' % (get_metadata(self.model, 'app_label'), action_name)
+                    action_url = '/{}/{}/'.format(get_metadata(self.model, 'app_label'), action_name)
                 else:
-                    action_url = '/action/%s/%s/%s/' % (get_metadata(self.model, 'app_label'), self.model.__name__.lower(), view_name)
+                    action_url = '/action/{}/{}/{}/'.format(get_metadata(self.model, 'app_label'), self.model.__name__.lower(), view_name)
                 self.add_action(action_title, action_url, action_css, action_icon, category)

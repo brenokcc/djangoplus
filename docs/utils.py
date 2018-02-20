@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 import json
 import inspect
@@ -10,9 +11,9 @@ from djangoplus.utils.metadata import get_metadata, get_fiendly_name
 def extract_documentation(model):
     s = ''
     if model.__doc__:
-        if not model.__doc__.decode('utf-8').startswith(u'%s(' % model.__name__):
+        if not model.__doc__.decode('utf-8').startswith('{}('.format(model.__name__)):
             s = model.__doc__.decode('utf-8')
-            s = s.replace(u'\t', u'').replace(u'\n', u'').replace(u'  ', u' ').strip()
+            s = s.replace('\t', '').replace('\n', '').replace('  ', ' ').strip()
     return s
 
 
@@ -22,7 +23,7 @@ def extract_exception_messages(function):
         code = unicode((''.join(inspect.getsourcelines(function)[0])).decode('utf-8'))
         for message in re.findall('ValidationError.*\(.*\)', code):
             messages.append(
-                message[message.index('(') + 1:message.index(')') - 1].replace(u'u\'', '').replace(u'"', ''))
+                message[message.index('(') + 1:message.index(')') - 1].replace('u\'', '').replace('"', ''))
     return messages
 
 
@@ -31,7 +32,7 @@ def get_search_fields(model):
     lookups = get_metadata(model, 'search_fields', [])
     if lookups:
         for i, lookup in enumerate(lookups):
-            l.append('"%s"' % get_fiendly_name(model, lookup).lower())
+            l.append('"{}"'.format(get_fiendly_name(model, lookup).lower()))
             if i > 0 and i == len(lookups) - 2:
                 l.append(_(' or '))
             elif i < len(lookups) - 2:
@@ -44,7 +45,7 @@ def get_list_filter(model):
     lookups = get_metadata(model, 'list_filter', [])
     if lookups:
         for i, lookup in enumerate(lookups):
-            l.append('"%s"' % get_fiendly_name(model, lookup).lower())
+            l.append('"{}"'.format(get_fiendly_name(model, lookup).lower()))
             if i > 0 and i == len(lookups) - 2:
                 l.append(_(' or '))
             elif i < len(lookups) - 2:
@@ -61,7 +62,7 @@ def get_list_display(model):
                 l.append(_(' and '))
             else:
                 l.append(', ')
-        l.append('"%s"' % get_fiendly_name(model, lookup).lower())
+        l.append('"{}"'.format(get_fiendly_name(model, lookup).lower()))
     return ''.join(l)
 
 

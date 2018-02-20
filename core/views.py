@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import traceback, copy
 from django.apps import apps
 from django.conf import settings
@@ -29,27 +30,27 @@ def listt(request, app, cls, subset=None):
     subsetp = None
     if subset:
         subset_func = getattr(_model.objects.all(), subset)
-        can_view = subset_func._metadata['%s:can_view' % subset]
+        can_view = subset_func._metadata['{}:can_view'.format(subset)]
     else:
         tid = request.GET.get('tid')
-        subsetp = request.GET.get('tab%s' % tid)
+        subsetp = request.GET.get('tab{}'.format(tid))
         if tid and subsetp:
             subset_func = getattr(_model.objects.get_queryset(), subsetp)
-            can_view = subset_func._metadata['%s:can_view' % subsetp]
+            can_view = subset_func._metadata['{}:can_view'.format(subsetp)]
             if not permissions.check_group_or_permission(request, can_view):
-                return httprr(request, '/admin/login/?next=%s' % request.get_full_path())
+                return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
         else:
-            permission = '%s.list_%s' % (app, cls)
+            permission = '{}.list_{}'.format(app, cls)
             if not request.user.has_perm(permission):
-                return httprr(request, '/admin/login/?next=%s' % request.get_full_path())
+                return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     qs = _model.objects.all(request.user)
     list_subsets = subset and [subset] or None
     if subset:
-        title = getattr(getattr(qs, subset), '_metadata')['%s:title' % subset]
+        title = getattr(getattr(qs, subset), '_metadata')['{}:title'.format(subset)]
 
     else:
-        title = u'%s' % get_metadata(_model, 'verbose_name_plural')
+        title = '{}'.format(get_metadata(_model, 'verbose_name_plural'))
 
     paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True)
     response = paginator.get_response()
@@ -81,7 +82,7 @@ def listt(request, app, cls, subset=None):
                     if func:
 
                         char = '?' in request.get_full_path() and '&' or '?'
-                        url = '%s%s%s' % (request.get_full_path(), char, '%s=' % view_name)
+                        url = '{}{}{}'.format(request.get_full_path(), char, '{}='.format(view_name))
 
                         has_input = func.func_code.co_argcount > 1
 
@@ -125,7 +126,7 @@ def listt(request, app, cls, subset=None):
                                 request.GET._mutable = False
                             return httprr(request, redirect_url, action_message)
                     else:
-                        url = '/%s/%s/' % (app, view_name)
+                        url = '/{}/{}/'.format(app, view_name)
                         if view_name in request.GET:
                             return httprr(request, url)
                         else:
@@ -140,7 +141,7 @@ def listt(request, app, cls, subset=None):
 def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 
     if not request.user.is_authenticated():
-        return httprr(request, '/admin/login/?next=%s' % request.get_full_path())
+        return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     try:
         _model = apps.get_model(app, cls)
@@ -182,12 +183,12 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
         # many to one
         for rel in list_related_objects(_model):
             if hasattr(rel, 'get_accessor_name'):
-                if rel.get_accessor_name() in ('%s_set' % related_field_name, related_field_name):
+                if rel.get_accessor_name() in ('{}_set'.format(related_field_name), related_field_name):
                     related_queryset = rel.related_model.objects.all(request.user)
                     related_obj = related_pk and related_queryset.get(pk=related_pk) or rel.related_model()
                     related_obj.request = request
                     setattr(related_obj, rel.field.name, obj)
-                    setattr(related_obj, '%s_id' % rel.field.name, obj.pk)
+                    setattr(related_obj, '{}_id'.format(rel.field.name), obj.pk)
                     if related_pk:
                         if not permissions.has_edit_permission(request, rel.related_model) or not permissions.can_edit(request, related_obj):
                             return HttpResponseForbidden()
@@ -204,9 +205,9 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
             form.save()
             obj = form.instance
             if 'select' in request.GET:
-                return HttpResponse(u'%s|%s|%s' % (obj.pk, obj, request.GET['select']));
+                return HttpResponse('{}|{}|{}'.format(obj.pk, obj, request.GET['select']));
             elif related_field_name:
-                message = u'Ação realizada com sucesso'
+                message = 'Ação realizada com sucesso'
                 url = '..'
             else:
                 message = get_metadata(form.instance.__class__, 'add_message')
@@ -214,13 +215,13 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
                     if hasattr(obj, 'get_absolute_url'):
                         url = obj.get_absolute_url()
                     else:
-                        url = '/view/%s/%s/%s/' % (get_metadata(obj.__class__, 'app_label'), obj.__class__.__name__.lower(), obj.pk)
+                        url = '/view/{}/{}/{}/'.format(get_metadata(obj.__class__, 'app_label'), obj.__class__.__name__.lower(), obj.pk)
                 else:
                     url = '..'
                 if is_editing:
-                    message = message or u'Atualização realizada com sucesso'
+                    message = message or 'Atualização realizada com sucesso'
                 else:
-                    message = message or u'Cadastro realizado com sucesso'
+                    message = message or 'Cadastro realizado com sucesso'
             return httprr(request, url, message)
         except ValidationError, e:
             form.add_error(None, unicode(e.message))
@@ -230,7 +231,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 def view(request, app, cls, pk, tab=None):
 
     if not request.user.is_authenticated():
-        return httprr(request, '/admin/login/?next=%s'%request.get_full_path())
+        return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     try:
         _model = apps.get_model(app, cls)
@@ -257,8 +258,8 @@ def view(request, app, cls, pk, tab=None):
 
     log_data = get_metadata(obj.__class__, 'log', False)
     if log_data and request.user.is_superuser and request.user.has_perm('admin.list_log'):
-        url = '/log/%s/%s/' % (app, cls)
-        panel.drop_down.add_action(u'Visualizar Log', url, 'ajax', 'fa fa-history')
+        url = '/log/{}/{}/'.format(app, cls)
+        panel.drop_down.add_action('Visualizar Log', url, 'ajax', 'fa fa-history')
 
     return render(request, 'default.html', locals())
 
@@ -280,7 +281,7 @@ def action(request, app, cls, action_name, pk=None):
     action_condition = form_action['condition']
     action_function = form_action['function']
     action_message = 'message' in form_action and form_action['message'] or None
-    action_permission = '%s.%s' % (_model._meta.app_label, action_function.func_name)
+    action_permission = '{}.{}'.format(_model._meta.app_label, action_function.func_name)
     action_input = form_action['input']
     redirect_to = form_action['redirect_to']
 
@@ -350,18 +351,18 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
     obj = _model.objects.all(request.user).get(pk=pk)
     obj.request = request
 
-    permission_name = '%s.delete_%s' % (app, cls)
+    permission_name = '{}.delete_{}'.format(app, cls)
     if permissions.can_delete(request, obj) and permissions.check_group_or_permission(request, permission_name):
 
         if related_field_name:
             getattr(obj, related_field_name).remove(related_pk)
-            return httprr(request, '..', u'Removido com sucesso')
+            return httprr(request, '..', 'Removido com sucesso')
         else:
-            title = u'Excluir %s' % unicode(obj)
+            title = 'Excluir {}'.format(unicode(obj))
             form = factory.get_delete_form(request, obj)
             if form.is_valid():
                 obj.delete()
-                return httprr(request, '..', u'Exclusão realizada com sucesso.')
+                return httprr(request, '..', 'Exclusão realizada com sucesso.')
 
             return render(request, 'delete.html', locals())
 
@@ -378,11 +379,11 @@ def log(request, app, cls, pk=None):
     if pk:
         obj = _model.objects.get(pk=pk)
         qs = obj.get_logs()
-        title = u'Log - %s' % obj
+        title = 'Log - {}'.format(obj)
     else:
         content_type = ContentType.objects.get_for_model(_model)
         qs = content_type.log_set.all()
-        title = u'Logs - %s' % get_metadata(_model, 'verbose_name_plural')
+        title = 'Logs - {}'.format(get_metadata(_model, 'verbose_name_plural'))
 
     paginator = Paginator(request, qs, 'Log')
     return render(request, 'default.html', locals())
@@ -396,7 +397,7 @@ def dispatcher(request, app, view_name, params):
     fromlist = full_app_name.split('.')
 
     try:
-        views = __import__('%s.views' % full_app_name, fromlist=fromlist)
+        views = __import__('{}.views'.format(full_app_name), fromlist=list(map(str, fromlist)))
         func = getattr(views, view_name)
     except (ImportError, TypeError, AttributeError) as e:
         traceback.print_exc()

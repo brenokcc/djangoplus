@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 import json
 import datetime
@@ -65,9 +66,9 @@ def tree_info(obj, queryset):
             if not hasattr(queryset, '__pks'):
                 queryset.__pks = queryset.values_list('pk', flat=True)
             if parent and parent.pk in queryset.__pks:
-                return 'treegrid-%s  treegrid-parent-%s' % (obj.pk, parent.pk)
+                return 'treegrid-{}  treegrid-parent-{}'.format(obj.pk, parent.pk)
             else:
-                return 'treegrid-%s' % obj.pk
+                return 'treegrid-{}'.format(obj.pk)
     else:
         return ''
 
@@ -85,14 +86,14 @@ def obj_icons(request, obj, to=None, edit=True, delete=True, css='ajax'):
     model = obj.__class__
     cls = model.__name__.lower()
     app = get_metadata(model, 'app_label')
-    css = to and u'popup' or css
+    css = to and 'popup' or css
     parent = to and hasattr(obj, to) and getattr(obj, to) or None
     if hasattr(obj, 'get_absolute_url'):
         view_url = obj.get_absolute_url()
     else:
-        view_url = u'/view/%s/%s/%s/' % (app, cls, obj.pk)
+        view_url = '/view/{}/{}/{}/'.format(app, cls, obj.pk)
     url_id = slugify(view_url)
-    url_title = u'Visualizar'
+    url_title = 'Visualizar'
 
     if parent:
         from djangoplus.cache import loader
@@ -111,44 +112,44 @@ def obj_icons(request, obj, to=None, edit=True, delete=True, css='ajax'):
                     can_spy = False
                     break
 
-        l.append(u'<a id="%s" class="%s" href="%s?parent=%s" title="%s"><i class="fa fa-search fa-lg"></i></a>' % (url_id, 'ajax', view_url, to, url_title))
+        l.append('<a id="{}" class="{}" href="{}?parent={}" title="{}"><i class="fa fa-search fa-lg"></i></a>'.format(url_id, 'ajax', view_url, to, url_title))
         if can_spy:
-            l.append(u'<a id="%s" class="%s" href="%s?parent=%s" title="%s"><i class="fa fa-eye fa-lg"></i></a>' % (url_id, 'popup', view_url, to, url_title))
+            l.append('<a id="{}" class="{}" href="{}?parent={}" title="{}"><i class="fa fa-eye fa-lg"></i></a>'.format(url_id, 'popup', view_url, to, url_title))
     else:
-        l.append(u'<a id="%s" class="%s" href="%s" title="%s"><i class="fa fa-search fa-lg"></i></a>' % (url_id, to and 'popup' or 'ajax', view_url, url_title))
+        l.append('<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i></a>'.format(url_id, to and 'popup' or 'ajax', view_url, url_title))
 
     if edit or delete:
         if parent and is_many_to_many(parent.__class__, to):
             if edit and (not hasattr(obj, 'can_edit') or obj.can_edit()):
-                delete_url = u'/delete/%s/%s/%s/%s/%s/' % (app, parent.__class__.__name__.lower(), parent.pk, to, obj.pk)
+                delete_url = '/delete/{}/{}/{}/{}/{}/'.format(app, parent.__class__.__name__.lower(), parent.pk, to, obj.pk)
                 url_id = slugify(delete_url)
-                url_title = u'Remover'
-                l.append(u' <a id="%s" class="%s" href="%s" title="%s"><i class="fa fa-times fa-lg"></i></a>' % (url_id, 'ajax', delete_url, url_title))
+                url_title = 'Remover'
+                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-times fa-lg"></i></a>'.format(url_id, 'ajax', delete_url, url_title))
         else:
             if edit and permissions.has_edit_permission(request, type(obj)) and (not hasattr(obj, 'can_edit') or obj.can_edit()):
                 if parent:
                     _app = get_metadata(parent.__class__, 'app_label')
                     _cls = parent.__class__.__name__.lower()
                     _related_field = find_field_by_name(obj.__class__, to).remote_field.get_accessor_name()
-                    edit_url = u'/add/%s/%s/%s/%s/%s/' % (_app, _cls, parent.pk, _related_field, obj.pk)
+                    edit_url = '/add/{}/{}/{}/{}/{}/'.format(_app, _cls, parent.pk, _related_field, obj.pk)
                 else:
-                    edit_url = u'/add/%s/%s/%s/' % (app, cls, obj.pk)
+                    edit_url = '/add/{}/{}/{}/'.format(app, cls, obj.pk)
                 url_id = slugify(edit_url)
-                url_title = u'Editar'
-                l.append(u' <a id="%s" class="%s" href="%s" title="%s"><i class="fa fa-edit fa-lg"></i></a>' % (url_id, css, edit_url, url_title))
+                url_title = 'Editar'
+                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i></a>'.format(url_id, css, edit_url, url_title))
 
             if delete and permissions.has_delete_permission(request, type(obj)) and (not hasattr(obj, 'can_delete') or obj.can_delete()):
-                delete_url = u'/delete/%s/%s/%s/' % (app, cls, obj.pk)
+                delete_url = '/delete/{}/{}/{}/'.format(app, cls, obj.pk)
                 url_id = slugify(delete_url)
-                url_title = u'Excluir'
-                l.append(u' <a id="%s" class="%s" href="%s" title="%s"><i class="fa fa-trash-o fa-lg"></i></a>' % (url_id, 'popup', delete_url, url_title))
+                url_title = 'Excluir'
+                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-trash-o fa-lg"></i></a>'.format(url_id, 'popup', delete_url, url_title))
 
             tree_index_field = hasattr(obj, 'get_tree_index_field') and obj.get_tree_index_field() or None
             if tree_index_field:
-                add_url = u'/add/%s/%s/%s/%s/' % (app, cls, obj.pk, cls)
+                add_url = '/add/{}/{}/{}/{}/'.format(app, cls, obj.pk, cls)
                 url_id = slugify(view_url)
-                url_title = u'Adicionar'
-                l.append(u' <a id="%s" class="%s" href="%s" title="%s"><i class="fa fa-plus fa-lg"></i></a>' % (
+                url_title = 'Adicionar'
+                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-plus fa-lg"></i></a>'.format(
                 url_id, 'popup', add_url, url_title))
 
     return mark_safe(''.join(l))
@@ -158,13 +159,13 @@ def obj_icons(request, obj, to=None, edit=True, delete=True, css='ajax'):
 def red_if_negative(obj):
     value = format2(obj)
     if obj < 0:
-        return '<span class="text-danger">%s</span>' % value
+        return '<span class="text-danger">{}</span>'.format(value)
     return value
 
 
 @register.filter
 def children(obj):
-    return getattr(obj, '%s_set' % obj.__class__.__name__.lower()).all()
+    return getattr(obj, '{}_set'.format(obj.__class__.__name__.lower())).all()
 
 
 @register.filter
@@ -173,7 +174,7 @@ def link(value):
         app = get_metadata(value.__class__, 'app_label')
         cls = value.__class__.__name__.lower()
 
-        return mark_safe('<a class="ajax" href="/view/%s/%s/%s/">%s</a>' % (app, cls, value.pk, value))
+        return mark_safe('<a class="ajax" href="/view/{}/{}/{}/">{}</a>'.format(app, cls, value.pk, value))
     return '-'
 
 
@@ -182,7 +183,7 @@ def format2(value, request=None):
     if value and hasattr(value, 'id') and hasattr(value, '_meta') and hasattr(value, 'fieldsets'):
         app = get_metadata(value.__class__, 'app_label')
         cls = value.__class__.__name__.lower()
-        if request and request.user.has_perm('%s.%s' % (app, cls)):
+        if request and request.user.has_perm('{}.{}'.format(app, cls)):
             return link(value)
     return mark_safe(format_value(value).replace('\n', '<br />'))
 
@@ -194,11 +195,11 @@ def print_format(value):
 
 @register.filter
 def ordered_list(value):
-    l = [u'<ol style="padding-left:13px">']
+    l = ['<ol style="padding-left:13px">']
     for obj in value:
-        l.append(u'<li style="list-style-type:decimal">%s</li>' % obj)
-    l.append(u'</ol>')
-    return mark_safe(u''.join(l))
+        l.append('<li style="list-style-type:decimal">{}</li>'.format(obj))
+    l.append('</ol>')
+    return mark_safe(''.join(l))
 
 
 @register.filter()
@@ -247,7 +248,7 @@ def number(value):
 
 @register.filter
 def tahoma(value):
-    return mark_safe('<font style="font-family: tahoma">%s</font>' % html(value))
+    return mark_safe('<font style="font-family: tahoma">{}</font>'.format(html(value)))
 
 
 @register.filter
@@ -279,12 +280,12 @@ def sorted_items(d):
 
 @register.filter
 def photo(user):
-    return user and user.photo and '/media/%s' % user.photo or '/static/images/user.png'
+    return user and user.photo and '/media/{}'.format(user.photo) or '/static/images/user.png'
 
 
 @register.filter
 def toast(message):
-    return mark_safe("<script>$.toast({ text: '%s', loader: false, position : {top: 60, right: 30}, hideAfter: 10000});</script>" % message.message)
+    return mark_safe("<script>$.toast({{ text: '{}', loader: false, position : {{top: 60, right: 30}}, hideAfter: 10000}});</script>".format(message.message))
 
 
 @register.simple_tag()

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import copy
 from django.template import loader
 from djangoplus.ui.components.forms.fields import *
@@ -11,8 +12,8 @@ from django.utils.html import conditional_escape
 from djangoplus.utils.metadata import get_metadata, iterable, is_one_to_many, is_one_to_one
 
 ValidationError = django_forms.ValidationError
-DEFAULT_FORM_TITLE = u'Formulário'
-DEFAULT_SUBMIT_LABEL = u'Enviar'
+DEFAULT_FORM_TITLE = 'Formulário'
+DEFAULT_SUBMIT_LABEL = 'Enviar'
 
 
 class Form(django_forms.Form):
@@ -42,7 +43,7 @@ class Form(django_forms.Form):
 
         if request.GET.get('popup'):
             prefix = kwargs.get('prefix', '')
-            prefix = 'popup%s' % prefix
+            prefix = 'popup{}'.format(prefix)
             kwargs.update(prefix=prefix)
 
         super(Form, self).__init__(*args, **kwargs)
@@ -60,7 +61,7 @@ class Form(django_forms.Form):
             if hasattr(metaclass, 'submit_label'):
                 self.submit_label = metaclass.submit_label
             elif hasattr(self, 'instance'):
-                self.submit_label = self.instance.pk and u'Atualizar' or u'Cadastrar'
+                self.submit_label = self.instance.pk and 'Atualizar' or 'Cadastrar'
 
             self.submit_style = hasattr(metaclass, 'submit_style') and metaclass.submit_style or 'default'
             self.method = hasattr(metaclass, 'method') and metaclass.method or 'post'
@@ -144,9 +145,9 @@ class Form(django_forms.Form):
         if not self.fieldsets:
             fields = self.fields.keys() + one_to_one_fields.keys() + one_to_many_fields.keys()
             if self.inline:
-                self.fieldsets = ((u'', {'fields': (fields, )}),)
+                self.fieldsets = (('', {'fields': (fields, )}),)
             else:
-                self.fieldsets = ((u'', {'fields': fields}),)
+                self.fieldsets = (('', {'fields': fields}),)
 
         fieldset_field_names = []
         extra_fieldset_field_names = []
@@ -160,7 +161,7 @@ class Form(django_forms.Form):
             if field_name not in fieldset_field_names:
                 extra_fieldset_field_names.append(field_name)
         if extra_fieldset_field_names:
-            self.fieldsets += (u'Outros', {'fields': extra_fieldset_field_names, }),
+            self.fieldsets += ('Outros', {'fields': extra_fieldset_field_names, }),
 
         for title, fieldset in self.fieldsets:
             title = '::' in title and title.split('::')[1] or title
@@ -187,9 +188,9 @@ class Form(django_forms.Form):
                             else:
                                 label = ''
 
-                            help_text = field.help_text or u''
+                            help_text = field.help_text or ''
                             label = force_unicode(label)[0:-1]
-                            label = field.required and '%s<span class="text-danger">*</span>' % label or label
+                            label = field.required and '{}<span class="text-danger">*</span>'.format(label) or label
 
                             d = dict(name=name, request=self.request, label=label, widget=bf,
                                      help_text=help_text)
@@ -197,7 +198,7 @@ class Form(django_forms.Form):
 
                     elif name in one_to_one_fields:
                         field = one_to_one_fields[name]
-                        one_to_one_id = getattr(self.instance, '%s_id' % name)
+                        one_to_one_id = getattr(self.instance, '{}_id'.format(name))
                         form = factory.get_one_to_one_form(self.request, self.instance, name, one_to_one_id,
                                                            partial=True, prefix=name)
                         required = field.required or form.data.get(form.prefix, None)
@@ -219,9 +220,9 @@ class Form(django_forms.Form):
                         for i in range(0, limit):
                             instance = i < count and qs[i] or None
                             form = factory.get_one_to_many_form(self.request, self.instance, name, partial=True,
-                                                                inline=True, prefix='%s%s' % (name, i),
+                                                                inline=True, prefix='{}{}'.format(name, i),
                                                                 instance=instance)
-                            form.id = '%s-%s' % (name, i)
+                            form.id = '{}-{}'.format(name, i)
                             form.hidden = i > count
                             required = form.data.get(form.prefix, None)
                             if not required:
@@ -237,7 +238,7 @@ class Form(django_forms.Form):
                 configured_fieldset['tuples'].append(fields)
 
             self.configured_fieldsets.append(configured_fieldset)
-        self.str_hidden = u''.join([unicode(x) for x in hidden_fields])
+        self.str_hidden = ''.join([unicode(x) for x in hidden_fields])
 
     def is_valid(self, *args, **kwargs):
         self.contextualize()
@@ -269,7 +270,7 @@ class ModelForm(Form, django_forms.ModelForm):
         setattr(self.instance, 'request', self.request)
         for model_field in get_metadata(self.instance, 'fields'):
             # Se para o campo em questão foi definido um valor default. Ex: BooleanField(default=True)
-            if unicode(model_field.default) != u'django.db.models.fields.NOT_PROVIDED':
+            if unicode(model_field.default) != 'django.db.models.fields.NOT_PROVIDED':
                 value = model_field.default
                 if callable(value):
                     value = value()

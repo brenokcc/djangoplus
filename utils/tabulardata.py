@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from djangoplus.utils.formatter import format_value
 from djangoplus.utils.metadata import get_metadata, get_fiendly_name, getattr2
 

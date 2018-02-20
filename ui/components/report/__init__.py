@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from decimal import Decimal
 from djangoplus.ui import Component
 from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
@@ -159,8 +160,8 @@ class ModelReport(Component):
         if list_filter:
             form = forms.Form(request, method='GET')
             form.icon = 'fa-file-text-o'
-            form.title = u''
-            form.submit_label = u'Gerar Relatório'
+            form.title = ''
+            form.submit_label = 'Gerar Relatório'
             for field_name in list_filter:
                 field = get_field(qs.model, field_name)
                 if hasattr(field, 'choices') and field.choices:

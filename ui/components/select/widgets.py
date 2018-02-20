@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.forms import widgets
 from django.utils.safestring import mark_safe
 from djangoplus.utils.metadata import get_metadata
@@ -6,88 +7,88 @@ from django.template.loader import render_to_string
 from djangoplus.utils.serialization import dumps_qs_query
 
 
-INIT_SCRIPT = u'''%(html)s
+INIT_SCRIPT = '''{html}
 <script>
-    $("#id_%(name)s").select2({
+    $("#id_{name}").select2({{
         allowClear: true,
         language: 'pt-BR',
-        %(templates)s
-        escapeMarkup: function (markup) { var links = markup=='Nenhum resultado encontrado'? '<div>%(links)s</dev>' : ''; return markup + links; }}).on('select2:unselecting',
-        function() {
-            $(this).data('unselecting', true);}).on(
+        {templates}
+        escapeMarkup: function (markup) {{ var links = markup=='Nenhum resultado encontrado'? '<div>{links}</dev>' : ''; return markup + links; }}}}).on('select2:unselecting',
+        function() {{
+            $(this).data('unselecting', true);}}).on(
             'select2:opening',
-            function(e) {
-                if ($(this).data('unselecting')) {
+            function(e) {{
+                if ($(this).data('unselecting')) {{
                     $(this).removeData('unselecting');
                     e.preventDefault();
-                }
-            }
+                }}
+            }}
         );
-    function load%(function_name)s(value){
-        $('#id_%(name)s').val(value);
-        $('#id_%(name)s').trigger("change");
-    }
+    function load{function_name}(value){{
+        $('#id_{name}').val(value);
+        $('#id_{name}').trigger("change");
+    }}
 </script>'''
 
-AJAX_INIT_SCRIPT = u'''%(html)s
+AJAX_INIT_SCRIPT = '''{html}
 <script>
-    window['qs_%(name)s'] = { 'qs' : '%(qs_dump)s' }
-    $('#id_%(name)s').select2({
+    window['qs_{name}'] = {{ 'qs' : '{qs_dump}' }}
+    $('#id_{name}').select2({{
         allowClear: true,
         language: 'pt-BR',
-        escapeMarkup: function (markup) { var links = markup=='Nenhum resultado encontrado'? '<div>%(links)s</dev>' : ''; return markup + links; },
-        ajax: {
+        escapeMarkup: function (markup) {{ var links = markup=='Nenhum resultado encontrado'? '<div>{links}</dev>' : ''; return markup + links; }},
+        ajax: {{
             delay: 500,
             dataType: 'json',
             type: 'POST',
-            url:'/autocomplete/%(app_label)s/%(model_name)s/',
-            data: function (params) {return {qs: window['qs_%(name)s'], q:params.term}},
+            url:'/autocomplete/{app_label}/{model_name}/',
+            data: function (params) {{return {{qs: window['qs_{name}'], q:params.term}}}},
             cache: true,
-            success: function(data){
-                var values = $('#id_%(name)s').val();
-                //$('#id_%(name)s').empty();
-                $('#id_%(name)s').append($('<option></option>').attr("value", "").text(""));
-                for(var i=0; i<data.results.length; i++){
+            success: function(data){{
+                var values = $('#id_{name}').val();
+                //$('#id_{name}').empty();
+                $('#id_{name}').append($('<option></option>').attr("value", "").text(""));
+                for(var i=0; i<data.results.length; i++){{
                     var option = $('<option></option>').attr("value", data.results[i].id).text(data.results[i].text)
                     //if(values.indexOf(String(data.results[i].id))>-1) option.attr("selected", true)
-                    $('#id_%(name)s').append(option);
-                }
-            }
-        },
+                    $('#id_{name}').append(option);
+                }}
+            }}
+        }},
         minimumInputLength: 1,
-        templateResult: function (item) {if (item.loading) return item.text; return item.html;}
-        }
+        templateResult: function (item) {{if (item.loading) return item.text; return item.html;}}
+        }}
     );
-    function load%(function_name)s(value, text){
+    function load{function_name}(value, text){{
         var option = $('<option></option>').attr("value", value).text(text).attr("selected", true);
-        $('#id_%(name)s').append(option);
-    }
+        $('#id_{name}').append(option);
+    }}
 </script>
 '''
 
-RELOAD_SCRIPT = u'''
+RELOAD_SCRIPT = '''
 <script>
-    function reload_%(function_name)s(){
-        var pk = $('#id_%(field_name)s').val()
+    function reload_({function_name}(){{
+        var pk = $('#id_{field_name}').val()
         if(!pk) pk = 0;
-        $.ajax({url:"/reload_options/%(app_label)s/%(model_name)s/%(value)s/%(lookup)s/"+pk+"/%(lazy)s/", dataType:'json', success:function( data ) {
-            if(%(lazy)s){
-                window['qs_%(name)s']['qs'] = data.qs;
-            } else {
-                $('#id_%(name)s').select2('destroy').empty().select2({allowClear: true, data: data.results});
-                $('#id_%(name)s').val('%(value)s'.split('_'));
-            }
-            $('#id_%(name)s').trigger("change");
-        }});
-    }
-    $('#id_%(field_name)s').on('change', function(e) {
-        reload_%(function_name)s();
-    });
-    reload_%(function_name)s();
+        $.ajax({{url:"/reload_options/{app_label}/{model_name}/{value}/{lookup}/"+pk+"/{lazy}/", dataType:'json', success:function( data ) {{
+            if({lazy}){{
+                window['qs_{name}']['qs'] = data.qs;
+            }} else {{
+                $('#id_{name}').select2('destroy').empty().select2({{allowClear: true, data: data.results}});
+                $('#id_{name}').val('{value}'.split('_'));
+            }}
+            $('#id_{name}').trigger("change");
+        }}}});
+    }}
+    $('#id_{field_name}').on('change', function(e) {{
+        reload_{function_name}();
+    }});
+    reload_{function_name}();
 </script>
 '''
 
-ADD_LINK = u'<a class="pull-right popup" style="padding:5px" href="javascript:" onclick="$(\\\'#id_%s\\\').select2(\\\'close\\\');popup(\\\'/add/%s/%s/?select=id_%s\\\');"><i class="fa fa-plus">\</i>Adicionar %s</a>'
+ADD_LINK = '<a class="pull-right popup" style="padding:5px" href="javascript:" onclick="$(\\\'#id_{}\\\').select2(\\\'close\\\');popup(\\\'/add/{}/{}/?select=id_{}\\\');"><i class="fa fa-plus">\</i>Adicionar {}</a>'
 
 
 class SelectWidget(widgets.Select):
@@ -123,23 +124,23 @@ class SelectWidget(widgets.Select):
                 select_display = get_metadata(model, 'select_display')
                 if select_template or select_display:
                     templates_var_name = name.replace('-', '_')
-                    templates.append('templateResult: function (item) {%s_templates = Array();' % templates_var_name)
+                    templates.append('templateResult: function (item) {{{}_templates = Array();'.format(templates_var_name))
                     if hasattr(self.choices.queryset.model, 'get_tree_index_field'):
                         tree_index_field = self.choices.queryset.model.get_tree_index_field()
                         if tree_index_field:
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset:
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-                        templates.append('%s_templates[%s] = \'%s\';' % (templates_var_name, obj.pk, obj_html.replace('\n', '')))
-                    templates.append('return %s_templates[item.id];},' % templates_var_name)
+                        templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
+                    templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
 
             if hasattr(self, 'user'):
                 for tmp in models:
                     class_name = tmp.__name__.lower()
                     app_label = get_metadata(tmp, 'app_label')
-                    perm = '%s.add_%s' % (app_label, class_name)
+                    perm = '{}.add_{}'.format(app_label, class_name)
                     if self.user.has_perm(perm):
-                        links.append(ADD_LINK % (name, app_label, class_name, name, get_metadata(tmp, 'verbose_name')))
+                        links.append(ADD_LINK.format(name, app_label, class_name, name, get_metadata(tmp, 'verbose_name')))
 
         html = super(SelectWidget, self).render(name, value, attrs)
         html = html.replace('---------', '')
@@ -148,24 +149,24 @@ class SelectWidget(widgets.Select):
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
             qs_dump = dumps_qs_query(queryset)
-            html = AJAX_INIT_SCRIPT % dict(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links))
+            html = AJAX_INIT_SCRIPT.format(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links))
         else:
-            html = INIT_SCRIPT % dict(html=html, name=name, function_name=function_name, links=''.join(links), templates=''.join(templates))
+            html = INIT_SCRIPT.format(html=html, name=name, function_name=function_name, links=''.join(links), templates=''.join(templates))
 
         if model:
             value = value or 0
             lazy = self.lazy and 1 or 0
             for field_name, lookup in self.form_filters:
                 if '-' in name:
-                    field_name = '%s-%s' % (name.split('-')[0], field_name)
+                    field_name = '{}-{}'.format(name.split('-')[0], field_name)
                 app_label = get_metadata(model, 'app_label')
                 model_name = model.__name__.lower()
                 function_name = name.replace('-', '__')
-                reload_script = RELOAD_SCRIPT % dict(
+                reload_script = RELOAD_SCRIPT.format(
                     function_name=function_name, field_name=field_name, app_label=app_label, model_name=model_name,
                     value=value, lookup=lookup, lazy=lazy, name=name
                 )
-                html = '%s %s' % (html, reload_script)
+                html = '{} {}'.format(html, reload_script)
         return mark_safe(html)
 
 
@@ -182,7 +183,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
 
     def render(self, name, value, attrs=None):
         attrs['class'] = 'form-control'
-        attrs['data-placeholder'] = u' '
+        attrs['data-placeholder'] = ' '
         queryset = None
         templates = []
         if hasattr(self.choices, 'queryset'):
@@ -194,15 +195,15 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                 select_display = get_metadata(queryset.model, 'select_display')
                 if select_template or select_display:
                     templates_var_name = name.replace('-', '_')
-                    templates.append('templateResult: function (item) {%s_templates = Array();' % templates_var_name)
+                    templates.append('templateResult: function (item) {{{}_templates = Array();'.format(templates_var_name))
                     if hasattr(self.choices.queryset.model, 'get_tree_index_field'):
                         tree_index_field = self.choices.queryset.model.get_tree_index_field()
                         if tree_index_field:
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset.all():
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-                        templates.append('%s_templates[%s] = \'%s\';' % (templates_var_name, obj.pk, obj_html.replace('\n', '')))
-                    templates.append('return %s_templates[item.id];},' % templates_var_name)
+                        templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
+                    templates.append('return {}_templates[item.id];},'.format(templates_var_name))
         html = super(SelectMultipleWidget, self).render(name, value, attrs)
         links = []
         if queryset:
@@ -211,18 +212,18 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                 for tmp in models:
                     class_name = tmp.__name__.lower()
                     app_label = get_metadata(tmp, 'app_label')
-                    perm = u'%s.add_%s' % (app_label, class_name)
+                    perm = '{}.add_{}'.format(app_label, class_name)
                     if self.user.has_perm(perm):
-                        links.append(ADD_LINK % (name, app_label, class_name, name, get_metadata(tmp, 'verbose_name')))
+                        links.append(ADD_LINK.format(name, app_label, class_name, name, get_metadata(tmp, 'verbose_name')))
 
         function_name = name.replace('-', '__')
         if queryset.model and self.lazy:
             app_label = get_metadata(queryset.model, 'app_label')
             model_name = queryset.model.__name__.lower()
             qs_dump = dumps_qs_query(queryset)
-            html = AJAX_INIT_SCRIPT % dict(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links))
+            html = AJAX_INIT_SCRIPT.format(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links))
         else:
-            html = INIT_SCRIPT % dict(html=html, name=name, function_name=function_name, links=''.join(links), templates=''.join(templates))
+            html = INIT_SCRIPT.format(html=html, name=name, function_name=function_name, links=''.join(links), templates=''.join(templates))
 
         if queryset.model:
             l = []
@@ -237,9 +238,9 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                 model_name = queryset.model.__name__.lower()
                 value = '_'.join(l)
                 function_name = name.replace('-', '__')
-                reload_script = RELOAD_SCRIPT % dict(function_name=function_name, field_name=field_name,
+                reload_script = RELOAD_SCRIPT.format(function_name=function_name, field_name=field_name,
                     app_label=app_label, model_name=model_name, value=value, lookup=lookup, lazy=lazy, name=name)
-                html = '%s %s' % (html, reload_script)
+                html = '{} {}'.format(html, reload_script)
 
         return mark_safe(html)
     
@@ -256,5 +257,5 @@ class NullBooleanSelect(widgets.NullBooleanSelect):
             attrs['data-placeholder'] = ' '
         function_name = name.replace('-', '__')
         html = super(NullBooleanSelect, self).render(name, value, attrs)
-        html = INIT_SCRIPT % dict(html=html, name=name, function_name=function_name, templates='', links='')
+        html = INIT_SCRIPT.format(html=html, name=name, function_name=function_name, templates='', links='')
         return mark_safe(html)

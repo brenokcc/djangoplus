@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.conf import settings
 from djangoplus.ui import Component
 from djangoplus.utils import permissions
@@ -12,7 +13,7 @@ class Menu(Component):
         self.settings = app_settings
 
     def add(self, description, url, icon=None, style='ajax'):
-        url = '/breadcrumbs/reset%s' % url
+        url = '/breadcrumbs/reset{}'.format(url)
         levels = description.split('::')
         for i, level in enumerate(levels):
             levels[i] = level.strip()

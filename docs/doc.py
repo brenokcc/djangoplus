@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 from django.apps import apps
 from django.conf import settings
@@ -70,13 +71,13 @@ class UseCase(object):
 
         self._request = None
 
-        if name.startswith(_(u'Access')):
+        if name.startswith(_('Access')):
             self._login(name)
-        elif name.startswith(_(u'List')):
+        elif name.startswith(_('List')):
             self._list(name)
-        elif name.startswith(_(u'Register')):
+        elif name.startswith(_('Register')):
             self._register(name)
-        elif name.startswith(_(u'Add')):
+        elif name.startswith(_('Add')):
             self._add(name)
         else:
             self._execute(name)
@@ -88,11 +89,11 @@ class UseCase(object):
         return self._request
 
     def _debug(self):
-        print u'\n'.join(self._interactions)
+        print '\n'.join(self._interactions)
         print
-        print u'\n'.join(self._test_function_code)
+        print '\n'.join(self._test_function_code)
         print
-        print u'\n'.join(self._test_flow_code)
+        print '\n'.join(self._test_flow_code)
 
     def _login(self, action):
         verbose_name = action.split(_('as'))[-1].strip()
@@ -109,12 +110,12 @@ class UseCase(object):
             username = username = settings.DEFAULT_SUPERUSER
         password = settings.DEFAULT_PASSWORD
 
-        interaction = _(u'The user access the system as')
-        self._interactions.append(u'%s %s' % (interaction, verbose_name))
-        self._interactions.append(_(u'The system displays the main page'))
+        interaction = _('The user access the system as')
+        self._interactions.append('{} {}'.format(interaction, verbose_name))
+        self._interactions.append(_('The system displays the main page'))
 
-        self._test_flow_code.append('\t\t# %s' % action)
-        self._test_flow_code.append("\t\tif self.login(u'%s', u'%s'):" % (username, password))
+        self._test_flow_code.append('\t\t# {}'.format(action))
+        self._test_flow_code.append("\t\tif self.login('{}', '{}'):".format(username, password))
 
     def _find(self, model):
         click_str = []
@@ -127,34 +128,34 @@ class UseCase(object):
 
         if not loader.last_authenticated_role or True in list_shortcut or loader.last_authenticated_role in list_shortcut:
 
-            left = _(u'The user clicks on the shortcut card')
-            right = _(u'in the dashboard at main page')
-            interaction = u'%s "%s" %s' % (left, verbose_name_plural, right)
+            left = _('The user clicks on the shortcut card')
+            right = _('in the dashboard at main page')
+            interaction = '{} "{}" {}'.format(left, verbose_name_plural, right)
             self._interactions.append(interaction)
 
-            self._interactions.append(_(u'The system displays the listing page'))
+            self._interactions.append(_('The system displays the listing page'))
 
-            self._test_function_code.append(u'\t\tself.click_link(u\'%s\')' % verbose_name_plural)
+            self._test_function_code.append('\t\tself.click_link(u\'{}\')'.format(verbose_name_plural))
 
         elif list_menu:
 
             if type(list_menu) == tuple:
                 list_menu = list_menu[0]
             for menu_item in list_menu.split('::'):
-                click_str.append(u'"%s"' % menu_item)
-                click_str_unicode.append(u"u'%s'" % menu_item)
+                click_str.append('"{}"'.format(menu_item))
+                click_str_unicode.append("'{}'".format(menu_item))
 
-            interaction = _(u'The user access the menu')
-            self._interactions.append(u'%s %s' % (interaction, ', '.join(click_str)))
+            interaction = _('The user access the menu')
+            self._interactions.append('{} {}'.format(interaction, ', '.join(click_str)))
 
-            self._test_function_code.append(u'\t\tself.click_menu(%s)' % ', '.join(click_str_unicode))
+            self._test_function_code.append('\t\tself.click_menu({})'.format(', '.join(click_str_unicode)))
 
         else:
-            raise ValueError(u'There is no way to access the model "%s", please do one of the following things:\n '
-                             u'i) Add the "list_menu" meta-attribute to model\n '
-                             u'ii) Add the "list_shortcut" meta-attribute to model\n '
-                             u'iii) Add the "composotion" field attribute to one of foreignkey fields of the model if '
-                             u'it exists and the the relation on the foreignkey model' % verbose_name)
+            raise ValueError('There is no way to access the model "{}", please do one of the following things:\n '
+                             'i) Add the "list_menu" meta-attribute to model\n '
+                             'ii) Add the "list_shortcut" meta-attribute to model\n '
+                             'iii) Add the "composotion" field attribute to one of foreignkey fields of the model if '
+                             'it exists and the the relation on the foreignkey model'.format(verbose_name))
 
     def _view(self, model, recursive=False):
 
@@ -164,9 +165,9 @@ class UseCase(object):
         # if the model can be accessed by the menu or shortcut
         if list_shortcut or list_menu:
             self._find(model)
-            self._interactions.append(_(u'The user locates the record and clicks the visualization icon'))
-            self._interactions.append(_(u'The system displays the visualization page'))
-            self._test_function_code.append(u"\t\tself.click_icon(u'%s')" % u'Visualizar')  # _(u'Visualize')
+            self._interactions.append(_('The user locates the record and clicks the visualization icon'))
+            self._interactions.append(_('The system displays the visualization page'))
+            self._test_function_code.append("\t\tself.click_icon('{}')".format('Visualizar'))  # _('Visualize')
         else:
             # the model can be accesses only by a parent model
             for parent_model in loader.composition_relations:
@@ -184,21 +185,21 @@ class UseCase(object):
                     if panel_title:
                         if '::' in panel_title:
                             tab_name, panel_title = panel_title.split('::')
-                            self._test_function_code.append(u"\t\tself.click_tab(u'%s')" % tab_name)
-                            interaction = _(u'The user clicks the tab')
-                            self._interactions.append(u'%s "%s"' % (interaction, tab_name))
+                            self._test_function_code.append("\t\tself.click_tab('{}')".format(tab_name))
+                            interaction = _('The user clicks the tab')
+                            self._interactions.append('{} "{}"'.format(interaction, tab_name))
                         if panel_title:
-                            interaction = _(u'The user looks at the painel')
-                            self._interactions.append(u'%s "%s"' % (interaction, panel_title))
-                            self._test_function_code.append(u"\t\tself.look_at_panel(u'%s')" % panel_title)
+                            interaction = _('The user looks at the painel')
+                            self._interactions.append('{} "{}"'.format(interaction, panel_title))
+                            self._test_function_code.append("\t\tself.look_at_panel('{}')".format(panel_title))
 
                     if recursive:
-                        self._interactions.append(_(u'The user locates the record and clicks the visualization icon'))
-                        self._interactions.append(_(u'The system displays the visualization page'))
-                        self._test_function_code.append(u"\t\tself.click_icon(u'%s')" % u'Visualizar')  # _(u'Visualize')
+                        self._interactions.append(_('The user locates the record and clicks the visualization icon'))
+                        self._interactions.append(_('The system displays the visualization page'))
+                        self._test_function_code.append("\t\tself.click_icon('{}')".format('Visualizar'))  # _('Visualize')
 
     def _list(self, action):
-        verbose_name_plural = action.replace(_(u'List'), '').strip()
+        verbose_name_plural = action.replace(_('List'), '').strip()
 
         if ':' in action:
             # it refers to a subset
@@ -213,29 +214,29 @@ class UseCase(object):
             for can_view in subset['can_view']:
                 self.actors.append(can_view)
             if not self.actors:
-                self.actors.append(u'Superusuário')
+                self.actors.append('Superusuário')
 
             # register the interactions and testing code
             self._find(model)
 
-            interaction = _(u'The user clicks the pill')
-            self._interactions.append('%s "%s"' % (interaction, subset_name))
+            interaction = _('The user clicks the pill')
+            self._interactions.append('{} "{}"'.format(interaction, subset_name))
 
-            self._test_function_code.append(u"\t\tself.click_link(u'%s')" % subset_name)
+            self._test_function_code.append("\t\tself.click_link('{}')".format(subset_name))
 
         else:
             model = find_model_by_verbose_name_plural(verbose_name_plural)
 
             # set the attributes of the usecase
-            self.description = u'List %s previouly registered in the system' % verbose_name_plural.lower()
-            self.post_condition = _(u'The system displays the registered records')
+            self.description = 'List {} previouly registered in the system'.format(verbose_name_plural.lower())
+            self.post_condition = _('The system displays the registered records')
             for meta_data in ('can_admin', 'can_admin_by_role', 'can_admin_by_unit', 'can_admin_by_organization',
                               'can_list', 'can_list_by_role', 'can_list_by_unit', 'can_list_by_organization'):
                 for actor in get_metadata(model, meta_data, iterable=True):
                     if actor:
                         self.actors.append(actor)
             if not self.actors:
-                self.actors.append(u'Superusuário')
+                self.actors.append('Superusuário')
 
             # register the interactions and testing code
             self._find(model)
@@ -243,17 +244,17 @@ class UseCase(object):
         # register the interactions
         search_fields = utils.get_search_fields(model)
         if search_fields:
-            interaction = _(u'The user optionally performs a search by')
-            self._interactions.append(u'%s %s' % (interaction, search_fields))
+            interaction = _('The user optionally performs a search by')
+            self._interactions.append('{} {}'.format(interaction, search_fields))
 
         list_filter = utils.get_list_filter(model)
         if list_filter:
-            interaction = _(u'The user optionally filter the records by')
-            self._interactions.append(u'%s %s' % (interaction, list_filter))
+            interaction = _('The user optionally filter the records by')
+            self._interactions.append('{} {}'.format(interaction, list_filter))
 
-        left = _(u'The system displays')
-        right = _(u'of previous registered records')
-        interaction = '%s %s %s' % (left, utils.get_list_display(model), right)
+        left = _('The system displays')
+        right = _('of previous registered records')
+        interaction = '{} {} {}'.format(left, utils.get_list_display(model), right)
         self._interactions.append(interaction)
 
     def _register(self, action):
@@ -264,16 +265,16 @@ class UseCase(object):
             button_label = get_metadata(model, 'add_label')
             func_name = slugify(button_label).replace('-', '_')
         else:
-            verbose_name = action.replace(_(u'Register'), u'').strip()
+            verbose_name = action.replace(_('Register'), '').strip()
             model = find_model_by_verbose_name(verbose_name)
-            button_label = _(u'Register')
-            func_name = u'cadastrar_%s' % model.__name__.lower()
+            button_label = _('Register')
+            func_name = 'cadastrar_{}'.format(model.__name__.lower())
 
         # set the attributes of the usecase
         self.name = action
-        self.description = '%s %s %s' % (_(u'Add new records of'),  verbose_name.lower(), _(u'in the system'))
+        self.description = '{} {} {}'.format(_('Add new records of'),  verbose_name.lower(), _('in the system'))
         self.business_rules = utils.extract_exception_messages(model.save)
-        self.post_condition = _(u'The record will be successfully registered in the system')
+        self.post_condition = _('The record will be successfully registered in the system')
         required_data = []
         for field in get_metadata(model, 'get_fields'):
             if isinstance(field, model_fields.ForeignKey):
@@ -281,8 +282,8 @@ class UseCase(object):
                     if not isinstance(field, model_fields.OneToManyField):
                         required_data.append(field.verbose_name.lower())
         if required_data:
-            pre_condition = _(u'The following information must have been previouly registered in the system: ')
-            self.pre_conditions.append('%s %s' % (pre_condition, u', '.join(required_data)))
+            pre_condition = _('The following information must have been previouly registered in the system: ')
+            self.pre_conditions.append('{} {}'.format(pre_condition, ', '.join(required_data)))
 
         for meta_data in ('can_admin', 'can_admin_by_role', 'can_admin_by_unit', 'can_admin_by_organization', 'can_add',
                           'can_add_by_role', 'can_add_by_unit', 'can_add_by_organization'):
@@ -290,36 +291,36 @@ class UseCase(object):
                 if actor:
                     self.actors.append(actor)
         if not self.actors:
-            self.actors.append(_(u'Superuser'))
+            self.actors.append(_('Superuser'))
 
         # register the interactions and testing code
-        func_signature = u'%s(self)' % func_name
-        self._test_flow_code.append(u'\t\t\t# %s' % action)
-        self._test_flow_code.append(u'\t\t\tself.%s()' % func_name)
+        func_signature = '{}(self)'.format(func_name)
+        self._test_flow_code.append('\t\t\t# {}'.format(action))
+        self._test_flow_code.append('\t\t\tself.{}()'.format(func_name))
 
-        self._test_function_code.append('\tdef %s:' % func_signature)
+        self._test_function_code.append('\tdef {}:'.format(func_signature))
         self._find(model)
-        self._test_function_code.append(u"\t\tself.click_button(u'%s')" % button_label)
+        self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
 
-        a = _(u'The user clicks the button')
-        b = _(u'on the right-side of the action bar')
-        self._interactions.append(u'%s "%s" %s' % (a, button_label, b))
+        a = _('The user clicks the button')
+        b = _('on the right-side of the action bar')
+        self._interactions.append('{} "{}" {}'.format(a, button_label, b))
 
         form = factory.get_register_form(self._mocked_request(), model())
         self._fill_out(form)
 
-        interaction = _(u'The user clicks the button')
-        self._interactions.append(u'%s "%s"' % (interaction, button_label))
-        self._test_function_code.append(u"\t\tself.click_button(u'%s')" % button_label)
-        self._test_function_code.append(u"\t\tself.click_icon(u'%s')" % u'Principal')
+        interaction = _('The user clicks the button')
+        self._interactions.append('{} "{}"'.format(interaction, button_label))
+        self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
+        self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
 
     def _add(self, action):
 
         model = None
 
-        if action.startswith(_(u'Add')):
+        if action.startswith(_('Add')):
             # not add_label was defined for the related model
-            tokens = action.replace(_(u'Add'), '').split(_(u' in '))
+            tokens = action.replace(_('Add'), '').split(_(' in '))
             verbose_name = tokens[0].strip()
             if len(tokens) > 1:
                 relation_verbose_name = tokens[1].strip()
@@ -327,7 +328,7 @@ class UseCase(object):
             related_model = find_model_by_verbose_name(verbose_name)
         else:
             # an add_label was defined for the related model
-            tokens = action.split(_(u' in '))
+            tokens = action.split(_(' in '))
             add_label = tokens[0].strip()
             if len(tokens) > 1:
                 verbose_name = tokens[1].strip()
@@ -348,46 +349,44 @@ class UseCase(object):
         if relation_name:
             add_inline = get_metadata(related_model, 'add_inline')
             add_label = get_metadata(related_model, 'add_label')
-            button_label = add_label or u'Adicionar'
+            button_label = add_label or 'Adicionar'
             button_label = get_metadata(related_model, 'add_label', button_label)
 
-            function_signature = u'%s_%s_%s_%s' % \
-                                 (_(u'add'), related_model.__name__.lower(), _(u'in'), model.__name__.lower())
-            self._test_flow_code.append(u'\t\t\t# %s' % action)
-            self._test_flow_code.append(u'\t\t\tself.%s()' % function_signature)
+            function_signature = '{}_{}_{}_{}'.format(_('add'), related_model.__name__.lower(), _('in'), model.__name__.lower())
+            self._test_flow_code.append('\t\t\t# {}'.format(action))
+            self._test_flow_code.append('\t\t\tself.{}()'.format(function_signature))
 
-            self._test_function_code.append(u'\tdef %s(self):' % function_signature)
+            self._test_function_code.append('\tdef {}(self):'.format(function_signature))
 
             self._view(related_model)
 
             # the form is not in the visualization page and it must be opened
             if not add_inline:
-                add_button_label = u'Adicionar %s' % get_metadata(related_model, 'verbose_name')
+                add_button_label = 'Adicionar {}'.format(get_metadata(related_model, 'verbose_name'))
                 add_button_label = get_metadata(related_model, 'add_label', add_button_label)
 
-                interaction = _(u'The user clicks the button')
-                self._interactions.append(u'%s "%s"' % (interaction, add_button_label))
-                self._interactions.append(_(u'The system displays a popup window'))
+                interaction = _('The user clicks the button')
+                self._interactions.append('{} "{}"'.format(interaction, add_button_label))
+                self._interactions.append(_('The system displays a popup window'))
 
-                self._test_function_code.append(u"\t\tself.click_button(u'%s')" % add_button_label)
-                self._test_function_code.append(u"\t\tself.look_at_popup_window()")
+                self._test_function_code.append("\t\tself.click_button('{}')".format(add_button_label))
+                self._test_function_code.append("\t\tself.look_at_popup_window()")
 
             form = factory.get_many_to_one_form(self._mocked_request(), model(), relation_name, related_model())
             self._fill_out(form)
 
-            interaction = _(u'The user clicks the button')
-            self._interactions.append(u'%s "%s"' % (interaction, button_label))
+            interaction = _('The user clicks the button')
+            self._interactions.append('{} "{}"'.format(interaction, button_label))
 
-            self._test_function_code.append(u"\t\tself.click_button(u'%s')" % button_label)
-            self._test_function_code.append(u"\t\tself.click_icon(u'%s')" % u'Principal')
+            self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
+            self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
         else:
-            raise ValueError(u'Please add the %s\'s relation in the fieldsets of model %s' %
-                             (related_model.__name__, model.__name__))
+            raise ValueError('Please add the {}\'s relation in the fieldsets of model {}'.format(related_model.__name__, model.__name__))
 
     def _fill_out(self, form, inline=None):
 
         if not inline:
-            self._interactions.append(_(u'The system displays the input form'))
+            self._interactions.append(_('The system displays the input form'))
 
         form.contextualize()
         form.configure()
@@ -395,8 +394,8 @@ class UseCase(object):
         for fieldset in form.configured_fieldsets:
             if inline or fieldset['title']:
                 if fieldset['tuples'] and fieldset['tuples'][0]:
-                    interaction = _(u'The user looks at fieldset')
-                    self._interactions.append(u'%s "%s"' % (interaction, inline or fieldset['title']))
+                    interaction = _('The user looks at fieldset')
+                    self._interactions.append('{} "{}"'.format(interaction, inline or fieldset['title']))
 
             for fields in fieldset['tuples']:
                 if not type(fields) in (list, tuple):
@@ -436,14 +435,14 @@ class UseCase(object):
 
                         # define the kind of user interaction
                         if hasattr(form_field, 'choices') and form_field.choices:
-                            self._test_function_code.append(u"\t\tself.choose(u'%s', u'%s')" % (form_field.label, value))
-                            interaction = _(u'The user chooses')
-                            self._interactions.append(u'%s "%s"' % (interaction, form_field.label))
+                            self._test_function_code.append("\t\tself.choose('{}', '{}')".format(form_field.label, value))
+                            interaction = _('The user chooses')
+                            self._interactions.append('{} "{}"'.format(interaction, form_field.label))
                         else:
                             if not isinstance(form_field, form_fields.BooleanField) and not isinstance(form_field, form_fields.NullBooleanField):
-                                self._test_function_code.append(u"\t\tself.enter(u'%s', u'%s')" % (form_field.label, value))
-                                interaction = _(u'The user enters')
-                                self._interactions.append(u'%s "%s"' % (interaction, form_field.label))
+                                self._test_function_code.append("\t\tself.enter('{}', '{}')".format(form_field.label, value))
+                                interaction = _('The user enters')
+                                self._interactions.append('{} "{}"'.format(interaction, form_field.label))
 
             # add the interactions recursively if the form inner forms
             for field, form, required, save in fieldset.get('one_to_one', ()):
@@ -453,7 +452,7 @@ class UseCase(object):
                     self._fill_out(form, inline=field.label)
 
     def _execute(self, action):
-        tokens = action.split(_(u' in '))
+        tokens = action.split(_(' in '))
         if find_model_by_add_label(tokens[0].strip()):
             if len(tokens) == 1:
                 self._register(action)
@@ -466,40 +465,40 @@ class UseCase(object):
                 self._execute_action(action)
 
     def _execute_action(self, action):
-        tokens = action.split(_(u' in '))
+        tokens = action.split(_(' in '))
         action_name = tokens[0].strip()
         verbose_name = tokens[1].strip()
         model = find_model_by_verbose_name(verbose_name)
         action_dict = find_action(model, action_name)
         func = action_dict['function']
 
-        func_signature = u'%s_em_%s(self)' % (func.__name__.lower(), model.__name__.lower())
-        self._test_flow_code.append(u'\t\t\t# %s' % action)
-        self._test_flow_code.append(u'\t\t\tself.%s_em_%s()' % (func.__name__.lower(), model.__name__.lower()))
+        func_signature = '{}_em_{}(self)'.format(func.__name__.lower(), model.__name__.lower())
+        self._test_flow_code.append('\t\t\t# {}'.format(action))
+        self._test_flow_code.append('\t\t\tself.{}_em_{}()'.format(func.__name__.lower(), model.__name__.lower()))
 
-        self._test_function_code.append(u'\tdef %s:' % func_signature)
+        self._test_function_code.append('\tdef {}:'.format(func_signature))
         self._view(model, True)
         if hasattr(func, '_action'):
             button_label = func._action['title']
             params = func.func_code.co_varnames[1:func.func_code.co_argcount]
             if params:
-                interaction = _(u'The user clicks the button')
-                self._interactions.append(u'%s "%s"' % (interaction, button_label))
-                self._interactions.append(_(u'The system displays a popup window'))
+                interaction = _('The user clicks the button')
+                self._interactions.append('{} "{}"'.format(interaction, button_label))
+                self._interactions.append(_('The system displays a popup window'))
 
-                self._test_function_code.append(u"\t\tself.click_button(u'%s')" % button_label)
-                self._test_function_code.append(u"\t\tself.look_at_popup_window()")
+                self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
+                self._test_function_code.append("\t\tself.look_at_popup_window()")
                 form = factory.get_action_form(self._mocked_request(), model(), func._action)
                 self._fill_out(form)
 
-            interaction = _(u'The user clicks the button')
-            self._interactions.append(u'%s "%s"' % (interaction, button_label))
-            self._test_function_code.append(u"\t\tself.click_button(u'%s')" % button_label)
-            self._test_function_code.append(u"\t\tself.click_icon(u'%s')" % u'Principal')
+            interaction = _('The user clicks the button')
+            self._interactions.append('{} "{}"'.format(interaction, button_label))
+            self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
+            self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
 
             description = func.__doc__ and func.__doc__.decode('utf-8').strip() or ''
             business_rules = utils.extract_exception_messages(func)
-            post_condition = _(u'Action successfully performed')
+            post_condition = _('Action successfully performed')
             self.name = action_dict['title']
             self.description = description
             self.business_rules = business_rules
@@ -507,7 +506,7 @@ class UseCase(object):
             for can_execute in action_dict['can_execute']:
                 self.actors.append(can_execute)
             if not self.actors:
-                self.actors.append(_(u'Superuser'))
+                self.actors.append(_('Superuser'))
 
     def _execute_view(self, action):
         pass
@@ -515,8 +514,8 @@ class UseCase(object):
     def get_interactions_as_string(self):
         l = []
         for i, interaction in enumerate(self._interactions):
-            l.append(u'\t\t\t%s. %s' % (i+1, interaction))
-        return u'\n'.join(l)
+            l.append('\t\t\t{}. {}'.format(i+1, interaction))
+        return '\n'.join(l)
 
     def get_test_flow_code(self):
         return self._test_flow_code
@@ -531,17 +530,17 @@ class UseCase(object):
 
     def __unicode__(self):
         l = list()
-        l.append(u'')
-        l.append(u'%s:\t\t\t%s' % (terminal.info(_(u'Name')), self.name))
-        l.append(u'%s:\t\t%s' % (terminal.info(_(u'Description')), self.description or u''))
-        l.append(u'%s:\t\t\t%s' % (terminal.info(_(u'Actors')), u', '.join(self.actors)))
-        l.append(u'%s:\t\t%s' % (terminal.info(_(u'Buniness Rules')), u', '.join(self.business_rules)))
-        l.append(u'%s:\t\t%s' % (terminal.info(_(u'Pre-conditions')), u', '.join(self.pre_conditions)))
-        l.append(u'%s:\t\t%s' % (terminal.info(_(u'Post-condition')), (self.post_condition or '')))
-        l.append(u'%s:' % terminal.info(_(u'Main-scenario')))
+        l.append('')
+        l.append('{}:\t\t\t{}'.format(terminal.info(_('Name')), self.name))
+        l.append('{}:\t\t{}'.format(terminal.info(_('Description')), self.description or ''))
+        l.append('{}:\t\t\t{}'.format(terminal.info(_('Actors')), ', '.join(self.actors)))
+        l.append('{}:\t\t{}'.format(terminal.info(_('Buniness Rules')), ', '.join(self.business_rules)))
+        l.append('{}:\t\t{}'.format(terminal.info(_('Pre-conditions')), ', '.join(self.pre_conditions)))
+        l.append('{}:\t\t{}'.format(terminal.info(_('Post-condition')), (self.post_condition or '')))
+        l.append('{}:'.format(terminal.info(_('Main-scenario'))))
         l.append(self.get_interactions_as_string())
-        l.append(u'')
-        return u'\n'.join(l)
+        l.append('')
+        return '\n'.join(l)
 
 
 class Workflow(object):
@@ -559,12 +558,12 @@ class Workflow(object):
             model = task['model']
 
             if role != tmp:
-                tmp = role or _(u'Superuser')
-                action = _(u'Acessar como')
-                self.tasks.append('%s %s' % (action, tmp))
+                tmp = role or _('Superuser')
+                action = _('Acessar como')
+                self.tasks.append('{} {}'.format(action, tmp))
 
             if model:
-                action = u'%s%s%s' % (activity, _(' in '), model)
+                action = '{}{}{}'.format(activity, _(' in '), model)
             else:
                 action = activity
             self.tasks.append(action)
@@ -651,18 +650,18 @@ class Documentation(object):
             scope = ''
             if organization_name:
                 scope = loader.role_models[model]['scope']
-                if scope == u'systemic':
-                    scope = _(u'Systemic')
-                elif scope == u'organization':
+                if scope == 'systemic':
+                    scope = _('Systemic')
+                elif scope == 'organization':
                     scope = organization_name
-                elif scope == u'unit':
+                elif scope == 'unit':
                     scope = unit_name
             self.actors.append(Actor(name=name, scope=scope, description=description))
 
         # load usecases
         self.workflow = Workflow()
         for task in self.workflow.tasks:
-            if not task.startswith(_(u'Access')):
+            if not task.startswith(_('Access')):
                 usecase = UseCase(task)
                 self.usecases.append(usecase)
 
@@ -681,26 +680,26 @@ class Documentation(object):
 
     def __unicode__(self):
         l = list()
-        l.append(terminal.bold(_(u'Description:').upper()))
+        l.append(terminal.bold(_('Description:').upper()))
         l.append(terminal.info(self.description))
         l.append('')
-        l.append(terminal.bold(_(u'Actors:').upper()))
+        l.append(terminal.bold(_('Actors:').upper()))
         for i, actor in enumerate(self.actors):
-            l.append(u'%s. %s' % (i + 1, actor.name))
+            l.append('{}. {}'.format(i + 1, actor.name))
         l.append('')
-        l.append(terminal.bold(_(u'Workflow:').upper()))
+        l.append(terminal.bold(_('Workflow:').upper()))
         for i, task in enumerate(self.workflow.tasks):
-            l.append(u'%s %s' % (u' ' * i, task))
+            l.append('{} {}'.format(' ' * i, task))
         l.append('')
-        l.append(terminal.bold(_(u'Usecases:').upper()))
+        l.append(terminal.bold(_('Usecases:').upper()))
         for i, usecase in enumerate(self.usecases):
-            l.append(terminal.bold(u'* Usecase #%s' % (i + 1)))
-            l.append(u'%s' % usecase)
+            l.append(terminal.bold('* Usecase #{}'.format((i + 1))))
+            l.append('{}'.format(usecase))
         l.append('')
-        l.append(terminal.bold(_(u'Class Diagrams:').upper()))
+        l.append(terminal.bold(_('Class Diagrams:').upper()))
         for class_diagram in self.class_diagrams:
-            l.append(terminal.bold(u'\t%s %s' % (class_diagram.name, _(u'Diagram'))))
+            l.append(terminal.bold('\t{} {}'.format(class_diagram.name, _('Diagram'))))
             for i, cls in enumerate(class_diagram.classes):
-                l.append(u'\t\t\t%s. %s' % (i + 1, cls['name']))
+                l.append('\t\t\t{}. {}'.format(i + 1, cls['name']))
         return '\n'.join(l)
 

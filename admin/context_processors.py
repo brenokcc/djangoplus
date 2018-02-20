@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import copy
 from django.conf import settings
 from djangoplus.cache import loader
@@ -18,7 +19,7 @@ def context_processor(request):
         menu.load()
 
         for model in loader.subsets:
-            icon = get_metadata(model, 'icon', u'fa-warning')
+            icon = get_metadata(model, 'icon', 'fa-warning')
             title = get_metadata(model, 'verbose_name_plural')
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
@@ -31,7 +32,7 @@ def context_processor(request):
                     qs = getattr(qs, attr_name)()
                     count = qs.count()
                     if count:
-                        url = '/list/%s/%s/%s/' % (app_label, model_name, attr_name)
+                        url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
                         item = dict(title=title, description=item['title'], count=count, url=url, icon=icon)
                         alerts.append(item)
 

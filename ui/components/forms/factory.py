@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.conf import settings
 from djangoplus.ui.components import forms
 from django.apps import apps
@@ -19,16 +20,16 @@ def get_register_form(request, obj):
 
     if form_name:
         full_app_name = settings.APP_MAPPING.get(app_label, app_label)
-        forms_module = __import__('%s.forms' % full_app_name, fromlist=app_label)
+        forms_module = __import__('{}.forms'.format(full_app_name), fromlist=list(map(str, [app_label])))
         Form = getattr(forms_module, form_name)
     else:
         if obj.pk:
-            form_title = u'Atualização de %s' % unicode(verbose_name)
-            button_label = u'Atualizar'
+            form_title = 'Atualização de {}'.format(unicode(verbose_name))
+            button_label = 'Atualizar'
         else:
             add_label = get_metadata(_model, 'add_label', None)
-            form_title = add_label or u'Cadastro de %s' % unicode(verbose_name)
-            button_label = add_label or u'Cadastrar'
+            form_title = add_label or 'Cadastro de {}'.format(unicode(verbose_name))
+            button_label = add_label or 'Cadastrar'
 
         class Form(forms.ModelForm):
             class Meta:
@@ -38,10 +39,10 @@ def get_register_form(request, obj):
                 submit_label = button_label
                 title = form_title
                 icon = get_metadata(_model, 'icon', None)
-                perm_or_group = '%s.add_%s' % (app_label, _model.__name__.lower())
+                perm_or_group = '{}.add_{}'.format(app_label, _model.__name__.lower())
 
     form = Form(request, instance=obj, initial=initial)
-    form.name = u'%sForm' % _model.__name__
+    form.name = '{}Form'.format(_model.__name__)
     for field_name in choices:
         form.fields[field_name].queryset = choices[field_name]
         form.fields[field_name].widget.queryset = choices[field_name]
@@ -68,8 +69,8 @@ def get_one_to_many_form(request, obj, related_field_name, **kwargs):
             model = rel.to
             fields = get_metadata(rel.to, 'form_fields', '__all__')
             exclude = get_metadata(rel.to, 'exclude_fields', ())
-            submit_label = u'Adicionar %s' % get_metadata(rel.to, 'verbose_name')
-            title = u'Adicionar %s' % get_metadata(rel.to, 'verbose_name')
+            submit_label = 'Adicionar {}'.format(get_metadata(rel.to, 'verbose_name'))
+            title = 'Adicionar {}'.format(get_metadata(rel.to, 'verbose_name'))
             icon = get_metadata(rel.to, 'icon', None)
 
         def save(self, *args, **kwargs):
@@ -89,8 +90,8 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
         form_title = add_label
         button_label = add_label
     else:
-        action = related_obj.pk and u'Atualizar' or u'Adicionar'
-        form_title = u'%s %s' % (action, get_metadata(rel.related_model, 'verbose_name'))
+        action = related_obj.pk and 'Atualizar' or 'Adicionar'
+        form_title = '{} {}'.format(action, get_metadata(rel.related_model, 'verbose_name'))
         button_label = action
     related_field_name = rel.field.name
 
@@ -104,7 +105,7 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
     form_name = get_metadata(rel.related_model, 'add_form')
     if form_name:
         full_app_name = settings.APP_MAPPING.get(app_label, app_label)
-        forms_module = __import__('%s.forms' % full_app_name, fromlist=app_label)
+        forms_module = __import__('{}.forms'.format(full_app_name), fromlist=list(map(str, [app_label])))
         Form = getattr(forms_module, form_name)
     else:
         class Form(forms.ModelForm):
@@ -112,7 +113,7 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
                 model = rel.related_model
                 fields = get_metadata(rel.related_model, 'form_fields', '__all__')
                 exclude = get_metadata(rel.related_model, 'exclude_fields', ())
-                submit_label = related_obj.pk and u'Atualizar' or button_label
+                submit_label = related_obj.pk and 'Atualizar' or button_label
                 title = form_title
 
     initial[related_field_name] = obj.pk
@@ -121,7 +122,7 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
             del (initial[key])
 
     form = Form(request, initial=initial, instance=related_obj)
-    form.form_name = u'%sForm' % rel.related_model.__name__
+    form.form_name = '{}Form'.format(rel.related_model.__name__)
     for field_name in choices:
         if field_name in form.fields:
             form.fields[field_name].queryset = choices[field_name]
@@ -144,8 +145,8 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
             model = related_field.rel.to
             fields = get_metadata(related_field.rel.to, 'form_fields', '__all__')
             exclude = get_metadata(related_field.rel.to, 'exclude_fields', ())
-            submit_label = 'Atualizar %s' % related_field.verbose_name
-            title = u'Atualizar %s' % related_field.verbose_name
+            submit_label = 'Atualizar {}'.format(related_field.verbose_name)
+            title = 'Atualizar {}'.format(related_field.verbose_name)
             icon = get_metadata(related_field.rel.to, 'icon', None)
 
         def save(self, *args, **kwargs):
@@ -154,7 +155,7 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
             # obj.save()
 
     form = Form(request, instance=related_object, initial=initial, **kwargs)
-    form.name = u'%sForm' % related_field.rel.to.__name__
+    form.name = '{}Form'.format(related_field.rel.to.__name__)
     for field_name in choices:
         if field_name in form.fields:
             form.fields[field_name].queryset = choices[field_name]
@@ -176,7 +177,7 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
         class Meta:
             model = _model
             fields = ()
-            title = u'Adicionar %s' % get_metadata(related_field_model, 'verbose_name')
+            title = 'Adicionar {}'.format(get_metadata(related_field_model, 'verbose_name'))
             icon = get_metadata(related_field_model, 'icon', None)
 
         def save(self, *args, **kwargs):
@@ -184,7 +185,7 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
                 getattr(self.instance, related_field_name).add(related_object)
 
     form = Form(request, instance=obj, initial=initial)
-    form.name = u'%sForm' % _model.__name__
+    form.name = '{}Form'.format(_model.__name__)
     for field_name in choices:
         if field_name in form.fields:
             form.fields[field_name].queryset = choices[field_name]
@@ -201,7 +202,7 @@ def get_class_action_form(request, _model, action, func):
         # it is a form name
         if type(action_input) in [str, unicode] and '.' not in action_input:
             full_app_name = settings.APP_MAPPING.get(app_label, app_label)
-            module = __import__('%s.forms' % full_app_name, fromlist=[app_label])
+            module = __import__('{}.forms'.format(full_app_name), fromlist=list(map(str, [app_label])))
             Form = getattr(module, action_input)
         # it is a model or model name
         else:
@@ -251,7 +252,7 @@ def get_action_form(request, obj, action):
         if type(action_input) in [str, unicode] and '.' not in action_input:
             full_app_name = settings.APP_MAPPING.get(app_label, app_label)
             fromlist = app_label
-            module = __import__('%s.forms' % full_app_name, fromlist=[app_label])
+            module = __import__('{}.forms'.format(full_app_name), fromlist=list(map(str, [app_label])))
             form_cls = getattr(module, action_input)
 
         # it is a model or model name
@@ -303,7 +304,7 @@ def get_action_form(request, obj, action):
 def get_delete_form(request, obj):
     class Form(forms.Form):
         class Meta:
-            submit_label = u'Confirmar Exclusão'
+            submit_label = 'Confirmar Exclusão'
             submit_style = 'danger'
 
         def __init__(self, *args, **kwargs):

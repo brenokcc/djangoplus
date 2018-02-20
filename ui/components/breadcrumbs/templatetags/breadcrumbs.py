@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django import template
 from djangoplus.ui.components.breadcrumbs import Breadcrumbs
 

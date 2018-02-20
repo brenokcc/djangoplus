@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import cStringIO, shutil
 from decimal import Decimal
 from django.db import models
@@ -224,7 +225,7 @@ class ImageFieldFile(ImageFieldFile):
                     return ''
                 else:
                     split = self.url.rsplit('.', 1)
-                    thumb_url = '%s.%sx%s.%s' % (split[0], w, h, split[1])
+                    thumb_url = '{}.{}x{}.{}'.format(split[0], w, h, split[1])
                     return thumb_url
 
             first = True
@@ -233,13 +234,13 @@ class ImageFieldFile(ImageFieldFile):
                 if first:
                     first = False
                     if self:
-                        setattr(self, 'url_%sx%s' % (w, h), self.url)
+                        setattr(self, 'url_{}x{}'.format(w, h), self.url)
                         setattr(self, 'small', self.url)
                     else:
-                        setattr(self, 'url_%sx%s' % (w, h), '')
+                        setattr(self, 'url_{}x{}'.format(w, h), '')
                         setattr(self, 'small', '')
                 else:
-                    setattr(self, 'url_%sx%s' % (w, h), get_size(self, size))
+                    setattr(self, 'url_{}x{}'.format(w, h), get_size(self, size))
                     setattr(self, 'large', get_size(self, size))
 
     def generate_thumb(self, img, thumb_size, file_format):
@@ -290,7 +291,7 @@ class ImageFieldFile(ImageFieldFile):
             for size in self.field.sizes:
                 (w, h) = size
                 split = self.name.rsplit('.', 1)
-                thumb_name = '%s.%sx%s.%s' % (split[0], w, h, split[1])
+                thumb_name = '{}.{}x{}.{}'.format(split[0], w, h, split[1])
 
                 # you can use another thumbnailing function if you like
                 thumb_content = self.generate_thumb(content, size, split[1])
@@ -298,7 +299,7 @@ class ImageFieldFile(ImageFieldFile):
                 thumb_name_ = self.storage.save(thumb_name, thumb_content)
 
                 if not thumb_name == thumb_name_:
-                    raise ValueError('There is already a file named %s' % thumb_name)
+                    raise ValueError('There is already a file named {}'.format(thumb_name))
 
                 if first:
                     first = False
@@ -311,7 +312,7 @@ class ImageFieldFile(ImageFieldFile):
             for size in self.field.sizes:
                 (w, h) = size
                 split = name.rsplit('.', 1)
-                thumb_name = '%s.%sx%s.%s' % (split[0], w, h, split[1])
+                thumb_name = '{}.{}x{}.{}'.format(split[0], w, h, split[1])
                 try:
                     self.storage.delete(thumb_name)
                 except:
@@ -398,7 +399,7 @@ class SearchField(TextField):
                     val = getattr2(model_instance, attr_name)
                     if val:
                         search_text.append(unicode(to_ascii(val).upper().strip()))
-        return u' '.join(search_text)
+        return ' '.join(search_text)
 
 
 class HtmlTextField(models.TextField, FieldPlus):

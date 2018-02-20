@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import datetime
 from selenium import webdriver
 import traceback, time, json
@@ -61,7 +62,7 @@ class TestCase(StaticLiveServerTestCase):
         time.sleep(seconds)
 
     def open(self, url):
-        self.driver.get(u"%s%s" % (self.live_server_url, url))
+        self.driver.get("{}{}".format(self.live_server_url, url))
 
     def enter(self, name, value, submit=False):
 
@@ -70,25 +71,25 @@ class TestCase(StaticLiveServerTestCase):
         if type(value) == datetime.date:
             value = value.strftime('%d/%m/%Y')
 
-        print u'Entering ', value
+        print 'Entering ', value
         try:
             if submit:
-                self.driver.execute_script(u"enter('%s', '%s', 1)" % (name, value))
+                self.driver.execute_script("enter('{}', '{}', 1)".format(name, value))
             else:
-                self.driver.execute_script(u"enter('%s', '%s')" % (name, value))
+                self.driver.execute_script("enter('{}', '{}')".format(name, value))
         except WebDriverException, e:
             self.watch(e)
 
     def choose(self, name, value):
-        print u'Choosing', value
+        print 'Choosing', value
         try:
-            self.driver.execute_script("return choose('%s', '%s')" % (name, value))
+            self.driver.execute_script("return choose('{}', '{}')".format(name, value))
             self.wait(2)
         except WebDriverException, e:
             self.watch(e)
 
     def look_for(self, text):
-        print u'Looking for', text
+        print 'Looking for', text
         self.wait()
         try:
             assert text in self.driver.find_element_by_tag_name('body').text
@@ -96,73 +97,73 @@ class TestCase(StaticLiveServerTestCase):
             self.watch(e)
 
     def look_at_popup_window(self):
-        print u'Looking at popup window'
+        print 'Looking at popup window'
         self.wait()
         try:
-            self.driver.execute_script(u"lookAtPopupWindow()")
+            self.driver.execute_script("lookAtPopupWindow()")
         except WebDriverException, e:
             self.watch(e)
 
     def look_at(self, text):
-        print u'Loking at', text
+        print 'Loking at', text
         self.wait()
         try:
-            self.driver.execute_script(u"lookAt('%s')" % text)
+            self.driver.execute_script("lookAt('{}')".format(text))
         except WebDriverException, e:
             self.watch(e)
 
     def look_at_panel(self, text):
-        print u'Looking at panel', text
+        print 'Looking at panel', text
         self.wait()
         try:
-            self.driver.execute_script(u"lookAtPanel('%s')" % text)
+            self.driver.execute_script("lookAtPanel('{}')".format(text))
         except WebDriverException, e:
             self.watch(e)
 
     def click_menu(self, *texts):
-        print u'Clicking menu', '->'.join(texts)
+        print 'Clicking menu', '->'.join(texts)
         for text in texts:
             self.wait()
             try:
-                self.driver.execute_script(u"clickMenu('%s')" % text.strip())
+                self.driver.execute_script("clickMenu('{}')".format(text.strip()))
             except WebDriverException, e:
                 self.watch(e)
         self.wait()
 
     def click_link(self, text):
-        print u'Clicking link', text
+        print 'Clicking link', text
         try:
-            self.driver.execute_script(u"clickLink('%s')" % text)
+            self.driver.execute_script("clickLink('{}')".format(text))
         except WebDriverException, e:
             self.watch(e)
         self.wait()
 
     def click_button(self, text):
-        print u'Clicking button', text
+        print 'Clicking button', text
         try:
-            self.driver.execute_script(u"clickButton('%s')" % text)
+            self.driver.execute_script("clickButton('{}')".format(text))
         except WebDriverException, e:
             self.watch(e)
         self.wait()
 
     def click_tab(self, text):
-        print u'Clicking tab', text
+        print 'Clicking tab', text
         try:
-            self.driver.execute_script(u"clickTab('%s')" % text)
+            self.driver.execute_script("clickTab('{}')".format(text))
         except WebDriverException, e:
             self.watch(e)
         self.wait()
 
     def click_icon(self, name):
-        print u'Clicking icon', name
+        print 'Clicking icon', name
         try:
-            self.driver.execute_script(u"clickIcon('%s')" % name)
+            self.driver.execute_script("clickIcon('{}')".format(name))
         except WebDriverException, e:
             self.watch(e)
         self.wait()
 
     def login(self, username, password):
-        print u'Logging as', username
+        print 'Logging as', username
         self.login_count += 1
         self.current_username = username
         self.current_password = password
@@ -172,8 +173,8 @@ class TestCase(StaticLiveServerTestCase):
             self.dump()
 
             self.open('/admin/login/')
-            self.enter(_(u'Username'), username)
-            self.enter(_(u'Password'), password, True)
+            self.enter(_('Username'), username)
+            self.enter(_('Password'), password, True)
             self.wait()
 
             return True
@@ -184,8 +185,8 @@ class TestCase(StaticLiveServerTestCase):
             return False
 
     def logout(self):
-        print u'Logging out'
-        self.click_icon(u'Configurações')
+        print 'Logging out'
+        self.click_icon('Configurações')
         self.click_link('Sair')
         self.wait()
         self.username = None
@@ -197,8 +198,8 @@ class TestCase(StaticLiveServerTestCase):
         # len(self._resultForDoCleanups.errors)>0
 
     def dump(self, failed=False):
-        file_path = '/tmp/%s.test' % settings.PROJECT_NAME
-        dump_file_path = '/tmp/%s.json' % settings.PROJECT_NAME
+        file_path = '/tmp/{}.test'.format(settings.PROJECT_NAME)
+        dump_file_path = '/tmp/{}.json'.format(settings.PROJECT_NAME)
 
         data = dict(login_count=self.login_count, username=self.current_username, password=self.current_password)
         open(file_path, 'w').write(json.dumps(data))
@@ -212,7 +213,7 @@ class TestCase(StaticLiveServerTestCase):
         output.close()
 
     def restore(self):
-        dump_file_path = '/tmp/%s.json' % settings.PROJECT_NAME
+        dump_file_path = '/tmp/{}.json'.format(settings.PROJECT_NAME)
         call_command('loaddata', dump_file_path)
         self.restored = True
 

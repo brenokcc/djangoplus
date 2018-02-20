@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import datetime
 import json
 import urllib2
@@ -14,18 +15,18 @@ from djangoplus.admin.forms import ProfileForm, ChangePasswordForm, \
     ResetPasswordForm, SettingsForm, LoginForm
 
 
-@view(u'Public', login_required=False)
+@view('Public', login_required=False)
 def public(request):
     return locals()
 
 
-@view(u'Index', login_required=True)
+@view('Index', login_required=True)
 def index(request):
     widget_panel = DashboardPanel(request)
     return locals()
 
 
-@view(u'Login', login_required=False)
+@view('Login', login_required=False)
 def login(request, scope=None, organization=None, unit=None):
     auth.logout(request)
     can_register = loader.signup_model is not None
@@ -37,14 +38,14 @@ def login(request, scope=None, organization=None, unit=None):
     return locals()
 
 
-@view(u'Logout', login_required=False)
+@view('Logout', login_required=False)
 def logout(request):
     url = '/'
     unit_id = request.session.get('unit_id', None)
     if unit_id:
-        url = '/admin/login/%s/' % unit_id
+        url = '/admin/login/{}/'.format(unit_id)
     auth.logout(request)
-    return httprr(request, url, u'Logout realizado com sucesso.')
+    return httprr(request, url, 'Logout realizado com sucesso.')
 
 
 @view('404')
@@ -54,7 +55,7 @@ def error(request):
 
 @view('Change Password')
 def password(request, pk=None):
-    title = u'Alterar Senha'
+    title = 'Alterar Senha'
 
     if not pk:
         user = request.user
@@ -67,7 +68,7 @@ def password(request, pk=None):
     if form.is_valid():
         form.instance.set_password(form.cleaned_data['new_password'])
         form.save()
-        return httprr(request, '..', u'Senha alterada com sucesso')
+        return httprr(request, '..', 'Senha alterada com sucesso')
     return locals()
 
 
@@ -76,7 +77,7 @@ def reset_password(request):
     form = ResetPasswordForm(request)
     if form.is_valid():
         form.submit()
-        return httprr(request, '..', u'E-mail enviado com sucesso.')
+        return httprr(request, '..', 'E-mail enviado com sucesso.')
     return locals()
 
 
@@ -91,19 +92,19 @@ def register(request, token=None, userid=None):
     name_field = get_metadata(loader.signup_model, 'role_name')
 
     if not loader.signup_model:
-        return httprr(request, '/admin/login/', u'O cadastrado externo não está habilitado.')
+        return httprr(request, '/admin/login/', 'O cadastrado externo não está habilitado.')
 
     if token:
         if token and userid:
-            url = 'https://graph.facebook.com/%s?fields=email,first_name,last_name&access_token=%s' % (userid, token)
+            url = 'https://graph.facebook.com/{}?fields=email,first_name,last_name&access_token={}'.format(userid, token)
         elif token:
-            url = 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=%s' % token
+            url = 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}'.format(token)
         data = json.loads(urllib2.urlopen(url).read())
         qs = User.objects.filter(username=data['email'])
         if qs.exists():
             user = qs[0]
             auth.login(request, user)
-            return httprr(request, '/admin/', u'Usuário autenticado com sucesso.')
+            return httprr(request, '/admin/', 'Usuário autenticado com sucesso.')
         else:
             initial = {name_field: data['name'], username_field : data['email'], email_field : data['email']}
 
@@ -113,12 +114,12 @@ def register(request, token=None, userid=None):
             fields = get_metadata(loader.signup_model, 'form_fields', '__all__')
             exclude = get_metadata(loader.signup_model, 'exclude_fields', ())
             submit_label = 'Cadastrar'
-            title = 'Cadastro de %s' % get_metadata(loader.signup_model, 'verbose_name')
+            title = 'Cadastro de {}'.format(get_metadata(loader.signup_model, 'verbose_name'))
             icon = get_metadata(loader.signup_model, 'icon', None)
 
 
     form = RegisterForm(request, initial=initial)
-    form.fields[username_field].help_text=u'Utilizado para acessar o sistema.'
+    form.fields[username_field].help_text='Utilizado para acessar o sistema.'
 
     save_instance = True
     for field_name in form.fields:
@@ -131,17 +132,17 @@ def register(request, token=None, userid=None):
         instance.save()
         user = User.objects.get(username=initial[username_field])
         auth.login(request, user)
-        return httprr(request, '/admin/', u'Usuário cadastrado com sucesso.')
+        return httprr(request, '/admin/', 'Usuário cadastrado com sucesso.')
 
     if form.is_valid():
         instance = form.save()
-        extra = email_field and u'Um e-mail será enviado para você tão logo sua conta seja ativada.' or ''
+        extra = email_field and 'Um e-mail será enviado para você tão logo sua conta seja ativada.' or ''
         if instance:
             user = User.objects.get(username=form.cleaned_data[username_field])
             auth.login(request, user)
-            return httprr(request, '/admin/', u'Usuário cadastrado com sucesso.')
+            return httprr(request, '/admin/', 'Usuário cadastrado com sucesso.')
         else:
-            return httprr(request, '..', u'Acesse o link enviado para seu e-mail para confirmar a criação da sua conta.')
+            return httprr(request, '..', 'Acesse o link enviado para seu e-mail para confirmar a criação da sua conta.')
     return locals()
 
 
@@ -156,7 +157,7 @@ def create_user(request, token):
     user.username = user.email
     user.set_password(password)
     user.save()
-    return httprr(request, '/admin/login/', u'Conta confirmada com sucesso.')
+    return httprr(request, '/admin/login/', 'Conta confirmada com sucesso.')
 
 
 @view('Profile')
@@ -164,23 +165,23 @@ def profile(request):
     form = ProfileForm(request, instance=request.user)
     if form.is_valid():
         form.save()
-        return httprr(request, '..', u'Perfil atualizado com sucesso')
+        return httprr(request, '..', 'Perfil atualizado com sucesso')
     return locals()
 
 
 @view('Configure')
 def configure(request):
     if not request.user.is_superuser:
-        return httprr(request, '/', u'Você não tem permissão para realizar isto!', 'error')
-    title = u'Configurações'
+        return httprr(request, '/', 'Você não tem permissão para realizar isto!', 'error')
+    title = 'Configurações'
     form = SettingsForm(request)
     if form.is_valid():
         form.save()
-        return httprr(request, u'..', u'Configuração salva com sucesso')
+        return httprr(request, '..', 'Configuração salva com sucesso')
     return locals()
 
 
-@view(u'Sidebar')
+@view('Sidebar')
 def toggle_menu(request):
     if 'hidden_menu' in request.session and request.session['hidden_menu']:
         request.session['hidden_menu'] = False

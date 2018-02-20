@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.forms import widgets
 from django.utils.encoding import force_unicode
 from djangoplus.ui.components.calendar.widgets import *
@@ -10,7 +11,7 @@ from djangoplus.ui.components.select.widgets import *
 
 class TextInput(widgets.TextInput):
     def render(self, name, value, attrs={}):
-        attrs.update(**{'class':'form-control %s' % self.attrs.get('class', '')})
+        attrs.update(**{'class':'form-control {}'.format(self.attrs.get('class', ''))})
         return super(TextInput, self).render(name, value, attrs)
 
 
@@ -18,12 +19,12 @@ class EmailInput(TextInput):
     def render(self, name, value, attrs={}):
         attrs['type'] = 'email'
         html = super(EmailInput, self).render(name, value, attrs)
-        html = u'''
+        html = '''
         <div class="input-group">
-            %s
+            {}
             <span class="input-group-addon"><i class="fa fa-at"></i></span>
         </div>
-        ''' % html
+        '''.format(html)
         return html
 
 
@@ -31,24 +32,24 @@ class UrlInput(TextInput):
     def render(self, name, value, attrs={}):
         attrs['type'] = 'url'
         html = super(UrlInput, self).render(name, value, attrs)
-        html = u'''
+        html = '''
         <div class="input-group">
-            %s
+            {}
             <span class="input-group-addon"><i class="fa fa-link"></i></span>
         </div>
-        ''' % html
+        '''.format(html)
         return html
 
 
 class AddressInput(TextInput):
     def render(self, name, value, attrs={}):
         html = super(AddressInput, self).render(name, value, attrs)
-        html = u'''
+        html = '''
         <div class="input-group">
-            %s
+            {}
             <span class="input-group-addon"><i class="fa fa-envelope-o"></i></span>
         </div>
-        ''' % html
+        '''.format(html)
         return html
 
 
@@ -64,8 +65,8 @@ class MaskWidget(widgets.TextInput):
     def render(self, name, value, attrs={}):
         attrs['class'] = 'form-control'
         html = super(MaskWidget, self).render(name, value, attrs)
-        script = '<script>$("#id_%s").mask("%s", {clearIfNotMatch: true});</script>' % (name, self.mask)
-        return mark_safe('%s\n\n%s' % (html, script))
+        script = '<script>$("#id_{}").mask("{}", {{clearIfNotMatch: true}});</script>'.format(name, self.mask)
+        return mark_safe('{}\n\n{}'.format(html, script))
 
 
 class HiddenInput(widgets.HiddenInput):
@@ -84,7 +85,7 @@ class DisplayInput(widgets.TextInput):
         self.obj = obj
 
     def render(self, name, value, attrs=None):
-        return u'<input class="form-control" type="text" value="%s" disabled /><input type="hidden" id="id_%s" name="%s" value="%s"/>' % (self.obj, name, name, self.obj.pk)
+        return '<input class="form-control" type="text" value="{}" disabled /><input type="hidden" id="id_{}" name="{}" value="{}"/>'.format(self.obj, name, name, self.obj.pk)
 
 
 class Textarea(widgets.Textarea):
@@ -116,8 +117,8 @@ class DecimalInput(widgets.TextInput):
         attrs['class'] = 'form-control'
         html = super(DecimalInput, self).render(name, value, attrs)
         html = html.replace('type="number"', 'type="text"')
-        js = "<script>$('#id_%s').mask('###.###.##0,00', {reverse: true});</script>" % name
-        return mark_safe('%s\n%s' % (html, js))
+        js = "<script>$('#id_{}').mask('###.###.##0,00', {{reverse: true}});</script>".format(name)
+        return mark_safe('{}\n{}'.format(html, js))
 
 
 class MoneyInput(DecimalInput):
@@ -125,17 +126,17 @@ class MoneyInput(DecimalInput):
         html = super(MoneyInput, self).render(name, value, attrs)
         html = '''
         <div class="input-group">
-            %s
+            {}
             <span class="input-group-addon">R$</span>
         </div>
-        ''' % html
+        '''.format(html)
         return mark_safe(html)
 
 
 class CheckboxInput(widgets.CheckboxInput):
     def render(self, *args, **kwargs):
         html = super(CheckboxInput, self).render(*args, **kwargs)
-        html = u'%s<span class="custom-checkbox"></span>' % html
+        html = '{}<span class="custom-checkbox"></span>'.format(html)
         return mark_safe(html)
 
 
@@ -156,7 +157,7 @@ class RenderableSelectMultiple(widgets.SelectMultiple):
         for obj in qs:
             option_value = obj.pk
             if has_id:
-                final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+                final_attrs = dict(final_attrs, id='{}_{}'.format(attrs['id'], i))
             final_attrs['class'] = 'custom-checkbox'
             cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
             option_value = force_unicode(option_value)
@@ -185,12 +186,12 @@ class FileInput(widgets.ClearableFileInput):
         input = input[0:-2] + 'class="file-input" ' + input[-2:]
         html = '''
             <div class="upload-file">
-                 %s
-                 <label for="%s" style="padding:5px"></label>
+                 {}
+                 <label for="{}" style="padding:5px"></label>
             </div>
-            <div style="margin-top:20px">%s</div>
-            <script>$('#%s').change(function(){$(this).parent().find('label').html($(this).val().split('\\\\').pop());});</script>
-        ''' % (input, kwargs['attrs']['id'], extra, kwargs['attrs']['id'])
+            <div style="margin-top:20px">{}</div>
+            <script>$('#{}').change(function(){{$(this).parent().find('label').html($(this).val().split('\\\\').pop());}});</script>
+        '''.format(input, kwargs['attrs']['id'], extra, kwargs['attrs']['id'])
         return mark_safe(html)
 
 
@@ -208,13 +209,13 @@ class ImageInput(widgets.ClearableFileInput):
         input = input[0:-2] + 'class="file-input" ' + input[-2:]
         html = '''
             <div class="upload-file">
-                 %s
-                 <label for="%s" style="padding:5px"></label>
+                 {}
+                 <label for="{}" style="padding:5px"></label>
             </div>
-            <div style="margin-top:20px">%s</div>
-            <script>$('#%s').change(function(){$(this).parent().find('label').html($(this).val().split('\\\\').pop());});</script>
+            <div style="margin-top:20px">{}</div>
+            <script>$('#{}').change(function(){{$(this).parent().find('label').html($(this).val().split('\\\\').pop());}});</script>
 
-        ''' % (input, kwargs['attrs']['id'], extra, kwargs['attrs']['id'])
+        '''.format(input, kwargs['attrs']['id'], extra, kwargs['attrs']['id'])
         return mark_safe(html)
 
 
@@ -246,22 +247,22 @@ class CpfCnpjWidget(TextInput):
         html = super(CpfCnpjWidget, self).render(name, value, attrs)
         html = '''
                 <div class="input-group">
-                    %s
+                    {}
                 </div>
                 <script>
-                    var CpfCnpjMaskBehavior = function (val) {
+                    var CpfCnpjMaskBehavior = function (val) {{
                         return val.replace(/\D/g, '').length <= 11 ? '000.000.000-009' : '00.000.000/0000-00';
-                    },
-                    spOptions = {
+                    }},
+                    spOptions = {{
                       clearIfNotMatch: true,
-                      onKeyPress: function(val, e, field, options) {
+                      onKeyPress: function(val, e, field, options) {{
                           field.mask(CpfCnpjMaskBehavior.apply({}, arguments), options);
-                        }
-                    };
+                        }}
+                    }};
 
-                    $('#id_%s').mask(CpfCnpjMaskBehavior, spOptions);
+                    $('#id_{}').mask(CpfCnpjMaskBehavior, spOptions);
                 </script>
-                ''' % (html, name)
+                '''.format(html, name)
         return mark_safe(html)
 
 
@@ -284,23 +285,23 @@ class PhoneWidget(TextInput):
         html = super(PhoneWidget, self).render(name, value, attrs)
         html = '''
         <div class="input-group">
-            %s
+            {}
             <span class="input-group-addon"><i class="fa fa-phone"></i></span>
         </div>
         <script>
-            var SPMaskBehavior = function (val) {
+            var SPMaskBehavior = function (val) {{
               return val.replace(/\D/g, '').length === 11 ? '(00) 00000-0000' : '(00) 0000-00009';
-            },
-            spOptions = {
+            }},
+            spOptions = {{
               clearIfNotMatch: true,
-              onKeyPress: function(val, e, field, options) {
-                  field.mask(SPMaskBehavior.apply({}, arguments), options);
-                }
-            };
+              onKeyPress: function(val, e, field, options) {{
+                  field.mask(SPMaskBehavior.apply({{}}, arguments), options);
+                }}
+            }};
 
-            $('#id_%s').mask(SPMaskBehavior, spOptions);
+            $('#id_{}').mask(SPMaskBehavior, spOptions);
         </script>
-        ''' % (html, name)
+        '''.format(html, name)
         return mark_safe(html)
 
 # Utilitary Fields #
@@ -318,8 +319,8 @@ class DecimalInput3(DecimalInput):
         attrs['class'] = 'form-control'
         html = super(DecimalInput, self).render(name, value, attrs)
         html = html.replace('type="number"', 'type="text"')
-        js = "<script>$('#id_%s').mask('#.##0,000', {reverse: true, clearIfNotMatch: true});</script>" % name
-        return mark_safe('%s\n%s' % (html, js))
+        js = "<script>$('#id_{}').mask('#.##0,000', {{reverse: true, clearIfNotMatch: true}});</script>".format(name)
+        return mark_safe('{}\n{}'.format(html, js))
 
 
 class OneDigitValidationInput(TextInput):
@@ -331,8 +332,8 @@ class OneDigitValidationInput(TextInput):
         attrs['class'] = 'form-control'
         html = super(OneDigitValidationInput, self).render(name, value, attrs)
         html = html.replace('type="number"', 'type="text"')
-        js = "<script>$('#id_%s').mask('#.##0-0', {reverse: true, clearIfNotMatch: true});</script>" % name
-        return mark_safe('%s\n%s' % (html, js))
+        js = "<script>$('#id_{}').mask('#.##0-0', {{reverse: true, clearIfNotMatch: true}});</script>".format(name)
+        return mark_safe('{}\n{}'.format(html, js))
 
 
 class CreditCardWidget(MaskWidget):

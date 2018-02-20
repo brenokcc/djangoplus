@@ -11,3 +11,4 @@ xlrd==0.9.4
 unicodecsv==0.14.1
 dropbox==6.5.0
 html5lib==1.0b8
+Fabric==1.14.0

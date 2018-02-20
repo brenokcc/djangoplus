@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import datetime
 import calendar
 
@@ -34,22 +35,22 @@ def pretty_date(d):
     if diff.days > 365 or diff.days < 0:
         return d.strftime('%d %b %y')
     elif 60 > diff.days > 30:
-        return u'1 mês atrás'
+        return '1 mês atrás'
     elif diff.days > 60:
-        return u'{} meses atrás'.format(diff.days/30)
+        return '{} meses atrás'.format(diff.days/30)
     elif diff.days == 1:
-        return u'1 dia atrás'
+        return '1 dia atrás'
     elif diff.days > 1:
-        return u'{} dias atrás'.format(diff.days)
+        return '{} dias atrás'.format(diff.days)
     elif s <= 1:
-        return u'agora'
+        return 'agora'
     elif s < 60:
-        return u'{} segundos atrás'.format(s)
+        return '{} segundos atrás'.format(s)
     elif s < 120:
-        return u'1 minuto atrás'
+        return '1 minuto atrás'
     elif s < 3600:
-        return u'{} minutos atrás'.format(s/60)
+        return '{} minutos atrás'.format(s/60)
     elif s < 7200:
-        return u'1 hora atrás'
+        return '1 hora atrás'
     else:
-        return u'{} horas atrás'.format(s/3600)
+        return '{} horas atrás'.format(s/3600)

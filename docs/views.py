@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 
 from djangoplus.docs.doc import Documentation
@@ -11,13 +12,13 @@ from djangoplus.decorators.views import view
 from djangoplus.admin.models import User, Organization
 
 
-@view(u'Modelo', login_required=False, template='source.html')
+@view('Modelo', login_required=False, template='source.html')
 def model(request):
     src = []
     content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'models.py')).read()
-    src.append(dict(file=u'models.py', language='python', content=content))
+    src.append(dict(file='models.py', language='python', content=content))
     content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'formatters.py')).read()
-    src.append(dict(file=u'formatters.py', language='python', content=content))
+    src.append(dict(file='formatters.py', language='python', content=content))
     for template_file_name in listdir(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'templates')):
         if template_file_name != 'public.html':
             content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'templates', template_file_name)).read()
@@ -25,17 +26,17 @@ def model(request):
     return locals()
 
 
-@view(u'Testes', login_required=False, template='source.html')
+@view('Testes', login_required=False, template='source.html')
 def tests(request):
     src = []
     content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'tests.py')).read()
-    src.append(dict(file=u'tests.py', language='python', content=content))
+    src.append(dict(file='tests.py', language='python', content=content))
     return locals()
 
 
-@view(u'Homologação', login_required=False)
+@view('Homologação', login_required=False)
 def homologate(request):
-    title = u'Homologação'
+    title = 'Homologação'
     groups = Group.objects.filter(role__units=0, role__organizations=0).order_by('name').distinct()
 
     http_host = request.META['HTTP_HOST']
@@ -75,7 +76,7 @@ def homologate(request):
     return locals()
 
 
-@view(u'Doc', login_required=False)
+@view('Doc', login_required=False)
 def doc(request):
     documentation = Documentation()
     workflow_data = json.dumps(loader.workflows)

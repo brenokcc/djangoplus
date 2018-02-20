@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from djangoplus.ui import Component
 from django.contrib import messages
 from django.http import HttpResponseRedirect, HttpResponse
@@ -27,7 +28,7 @@ class Breadcrumbs(Component):
                     index -= 1
                     title, url = stack[index]
                     if not '?' in url:
-                        url = '%s?' % url
+                        url = '{}?'.format(url)
                     urlpath, querystring = url.split('?')[0:2]
                     if view_title == title:#and QueryDict(querystring) == request.GET
                         count = len(stack) - index

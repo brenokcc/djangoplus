@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import datetime, json
 from django.http.response import HttpResponse
 from djangoplus.templatetags import obj_icons
@@ -21,8 +22,8 @@ def populate(request):
     request.session.save()
 
     filters = dict()
-    filters['%s__gte' % start_field] = start
-    filters['%s__lte' % start_field] = end
+    filters['{}__gte'.format(start_field)] = start
+    filters['{}__lte'.format(start_field)] = end
     queryset = queryset.filter(**filters)
 
     for obj in queryset.all():
@@ -36,17 +37,17 @@ def populate(request):
         drop_down.add_actions(obj, inline=True)
         html_id = hash(obj)
         html = list()
-        html.append(u'<div id="%s">' % html_id)
-        html.append(u'<div class="pull-right">%s</div><br/><br/>' % icons)
-        html.append(u'<dl>')
-        html.append(u'<dt>Início</dt><dd>%s</dd>' % start)
+        html.append('<div id="{}">'.format(html_id))
+        html.append('<div class="pull-right">{}</div><br/><br/>'.format(icons))
+        html.append('<dl>')
+        html.append('<dt>Início</dt><dd>{}</dd>'.format(start))
         if end:
-            html.append(u'<dt>Fim</dt><dd>%s</dd>' % end)
-        html.append(u'</dl>')
-        html.append(u'<hr/>')
+            html.append('<dt>Fim</dt><dd>{}</dd>'.format(end))
+        html.append('</dl>')
+        html.append('<hr/>')
         html.append(unicode(drop_down))
-        html.append(u'</div>')
-        html.append(u'<script>initialize("%s");</script>' % html_id)
+        html.append('</div>')
+        html.append('<script>initialize("{}");</script>'.format(html_id))
         item = dict(id=html_id, title=title, start=str(start), end=end and str(end) or None, allDay=False, url='javascript:', html=''.join(html))
         items.append(item)
 

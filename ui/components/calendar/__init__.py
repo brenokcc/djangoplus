@@ -38,6 +38,6 @@ class ModelCalendar(Calendar):
         label = get_metadata(queryset.model, 'verbose_name')
         app_label = get_metadata(queryset.model, 'app_label')
         model_name = queryset.model.__name__.lower()
-        url = '/add/%s/%s/?%s=' % (app_label, model_name, start_field)
+        url = '/add/{}/{}/?{}='.format(app_label, model_name, start_field)
         link = dict(label=label, url=url)
         self.links.append(link)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from djangoplus import cache
 from djangoplus.utils.metadata import set_metadata, iterable
 
@@ -31,15 +32,15 @@ def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0):
     return decorate
 
 
-def action(title, can_execute=(), condition=None, category=u'Ações', style='popup', input=None,
-           message=u'Ação realizada com sucesso.', initial=None, choices=None, inline=None, icon=None,
+def action(title, can_execute=(), condition=None, category='Ações', style='popup', input=None,
+           message='Ação realizada com sucesso.', initial=None, choices=None, inline=None, icon=None,
            sequence=0, can_execute_by_organization=None, can_execute_by_unit=None, can_execute_by_role=None, redirect_to=None, menu=None):
     def decorate(function):
         function._action = dict(
             title=title, can_execute=iterable(can_execute),
             input=input, group=category or title, css=style, condition=condition, view_name=function.__name__,
-            message=message, initial=initial or '%s_initial' % function.__name__, function=function,
-            choices=choices or '%s_choices' % function.__name__, inline=inline, icon=icon, doc=function.__doc__,
+            message=message, initial=initial or '{}_initial'.format(function.__name__), function=function,
+            choices=choices or '{}_choices'.format(function.__name__), inline=inline, icon=icon, doc=function.__doc__,
             sequence=sequence, can_execute_by_organization=iterable(can_execute_by_organization),
             can_execute_by_unit=iterable(can_execute_by_unit), can_execute_by_role=iterable(can_execute_by_role),
             redirect_to=redirect_to, menu=menu

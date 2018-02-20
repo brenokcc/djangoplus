@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 # list - Allows the user to access the Admin page to view all registered objects
 # add - Allows the user to add objects from the Admin page and the Relation tables
@@ -9,7 +10,7 @@
 def has_permission(request, model, perm):
     app_label = getattr(model, '_meta').app_label
     model_name = model.__name__.lower()
-    return perm == 'view' or request.user.has_perm('%s.%s_%s' % (app_label, perm, model_name))
+    return perm == 'view' or request.user.has_perm('{}.{}_{}'.format(app_label, perm, model_name))
 
 
 def has_list_permission(request, model):
@@ -40,7 +41,7 @@ def can(request, obj, action):
     if request.user.is_superuser:
         return True
     if has_permission(request, type(obj), action):
-        func_name = 'can_%s' % action
+        func_name = 'can_{}'.format(action)
         if hasattr(obj, func_name):
             obj.request = request
             return getattr(obj, func_name)()
