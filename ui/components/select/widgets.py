@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os
 from django.forms import widgets
 from django.utils.safestring import mark_safe
 from djangoplus.utils.metadata import get_metadata
@@ -104,6 +105,9 @@ class SelectWidget(widgets.Select):
 
     def render(self, name, value, attrs=None):
 
+        if 'HEADLESS' in os.environ:
+            self.lazy = False
+
         attrs['class'] = 'form-control'
         if 'data-placeholder' not in self.attrs:
             attrs['data-placeholder'] = ' '
@@ -182,6 +186,10 @@ class SelectMultipleWidget(widgets.SelectMultiple):
         self.form_filters = []
 
     def render(self, name, value, attrs=None):
+
+        if 'HEADLESS' in os.environ:
+            self.lazy = False
+
         attrs['class'] = 'form-control'
         attrs['data-placeholder'] = ' '
         queryset = None
@@ -203,7 +211,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                     for obj in self.choices.queryset.all():
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
                         templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
-                    templates.append('return {}_templates[item.id];},'.format(templates_var_name))
+                    templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
         html = super(SelectMultipleWidget, self).render(name, value, attrs)
         links = []
         if queryset:

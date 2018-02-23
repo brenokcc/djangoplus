@@ -133,24 +133,28 @@ function enter(name, value, submit){
     }
 }
 
-function choose(name, value){
+function choose(name, value, headless){
     var element = $(cursor).find( "select[name='"+name+"']" )
     if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('select')
 
     if(recursively(element)){
-        return choose(name, value);
+        return choose(name, value, headless);
     } else {
-        element.select2("open");
-        var $search = element.data('select2').dropdown.$search || element.data('select2').selection.$search;
-        $search.val(value);
-        $search.trigger('keyup');
-        var lookup = "option:contains(" + value + ")";
-        function waitValue() {
-            var value = element.find(lookup).val();
-            element.val(value).trigger('change');
-            element.select2('close');
+        if(headless){
+            $(element).val(element.find("option:contains(" + value + ")").val());
+        } else {
+            element.select2("open");
+            var $search = element.data('select2').dropdown.$search || element.data('select2').selection.$search;
+            $search.val(value);
+            $search.trigger('keyup');
+            var lookup = "option:contains(" + value + ")";
+            function waitValue() {
+                var value = element.find(lookup).val();
+                element.val(value).trigger('change');
+                element.select2('close');
+            }
+            setTimeout(waitValue, '2000');
         }
-        setTimeout(waitValue, '2000');
         return element.parent()[0]
     }
 }

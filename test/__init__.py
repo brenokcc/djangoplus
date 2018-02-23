@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os
 import datetime
 from selenium import webdriver
 import traceback, time, json
@@ -26,13 +27,15 @@ class TestCase(StaticLiveServerTestCase):
         super(TestCase, self).setUp()
         self.slowly = False
         self.username = None
-        try:
-            self.driver = webdriver.Chrome()
-        except:
-            self.driver = webdriver.Firefox()
+        if 'HEADLESS' in os.environ:
+            self.driver = webdriver.PhantomJS()
+        else:
+            try:
+                self.driver = webdriver.Chrome()
+            except Exception as e:
+                self.driver = webdriver.Firefox()
 
         self.driver.set_window_size(1400, 1000)
-
 
         data = '''[{"model": "admin.organization", "pk": 0, "fields": {"ascii": ""}}, {"model": "admin.unit", "pk": 0, "fields": {"ascii": ""}}]'''
         for obj in serializers.deserialize("json", data):
@@ -70,8 +73,8 @@ class TestCase(StaticLiveServerTestCase):
             value = value()
         if type(value) == datetime.date:
             value = value.strftime('%d/%m/%Y')
-
-        print 'Entering ', value
+        if value:
+            print '{} "{}" for "{}"'.format('Entering', value, name)
         try:
             if submit:
                 self.driver.execute_script("enter('{}', '{}', 1)".format(name, value))
@@ -81,15 +84,16 @@ class TestCase(StaticLiveServerTestCase):
             self.watch(e)
 
     def choose(self, name, value):
-        print 'Choosing', value
+        print '{} "{}" for "{}"'.format('Choosing', value, name)
         try:
-            self.driver.execute_script("return choose('{}', '{}')".format(name, value))
+            headless = 'HEADLESS' in os.environ and 'true' or 'false'
+            self.driver.execute_script("return choose('{}', '{}', {})".format(name, value, headless))
             self.wait(2)
         except WebDriverException, e:
             self.watch(e)
 
     def look_for(self, text):
-        print 'Looking for', text
+        print 'Looking for "{}"'.format(text)
         self.wait()
         try:
             assert text in self.driver.find_element_by_tag_name('body').text
@@ -105,7 +109,7 @@ class TestCase(StaticLiveServerTestCase):
             self.watch(e)
 
     def look_at(self, text):
-        print 'Loking at', text
+        print 'Loking at "{}"'.format(text)
         self.wait()
         try:
             self.driver.execute_script("lookAt('{}')".format(text))
@@ -113,7 +117,7 @@ class TestCase(StaticLiveServerTestCase):
             self.watch(e)
 
     def look_at_panel(self, text):
-        print 'Looking at panel', text
+        print 'Looking at panel "{}"'.format(text)
         self.wait()
         try:
             self.driver.execute_script("lookAtPanel('{}')".format(text))
@@ -121,7 +125,7 @@ class TestCase(StaticLiveServerTestCase):
             self.watch(e)
 
     def click_menu(self, *texts):
-        print 'Clicking menu', '->'.join(texts)
+        print 'Clicking menu "{}"'.format('->'.join(texts))
         for text in texts:
             self.wait()
             try:
@@ -131,7 +135,7 @@ class TestCase(StaticLiveServerTestCase):
         self.wait()
 
     def click_link(self, text):
-        print 'Clicking link', text
+        print 'Clicking link "{}"'.format(text)
         try:
             self.driver.execute_script("clickLink('{}')".format(text))
         except WebDriverException, e:
@@ -139,7 +143,7 @@ class TestCase(StaticLiveServerTestCase):
         self.wait()
 
     def click_button(self, text):
-        print 'Clicking button', text
+        print 'Clicking button "{}"'.format(text)
         try:
             self.driver.execute_script("clickButton('{}')".format(text))
         except WebDriverException, e:
@@ -147,7 +151,7 @@ class TestCase(StaticLiveServerTestCase):
         self.wait()
 
     def click_tab(self, text):
-        print 'Clicking tab', text
+        print 'Clicking tab "{}"'.format(text)
         try:
             self.driver.execute_script("clickTab('{}')".format(text))
         except WebDriverException, e:
@@ -155,7 +159,7 @@ class TestCase(StaticLiveServerTestCase):
         self.wait()
 
     def click_icon(self, name):
-        print 'Clicking icon', name
+        print 'Clicking icon "{}"'.format(name)
         try:
             self.driver.execute_script("clickIcon('{}')".format(name))
         except WebDriverException, e:

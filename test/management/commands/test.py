@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os
 import json
 from os import path
 from django.conf import settings
@@ -16,8 +17,12 @@ class Command(test.Command):
                             help='Continues from the last successfull login')
         parser.add_argument('--generate', action='store_true', dest='generate', default=(),
                             help='Adds test cases in test.py file')
+        parser.add_argument('--watch', action='store_true', dest='watch', default=False,
+                            help='Run test in browser intead of headless mode')
 
     def handle(self, *args, **options):
+        if not options.pop('watch', False):
+            os.environ['HEADLESS'] = '1'
         if options.pop('generate', False):
             workflow = Workflow()
             function_definitions = []
