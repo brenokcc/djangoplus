@@ -55,7 +55,8 @@ class TestCase(StaticLiveServerTestCase):
             traceback.print_exc()
             self.watched = True
             self.driver.save_screenshot('/tmp/test.png')
-            raw_input('Type enter to continue...')
+            if 'HEADLESS' not in os.environ:
+                raw_input('Type enter to continue...')
 
     def slow_down(self):
         self.slowly = True
