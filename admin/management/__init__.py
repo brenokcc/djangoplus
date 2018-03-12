@@ -10,7 +10,7 @@ from djangoplus.cache import loader
 
 def sync_permissions():
 
-    default_permissions_names = dict(edit='Editar', add='Cadastrar', delete='Excluir', list='Listar')
+    default_permissions_names = dict(edit='Editar', add='Cadastrar', delete='Excluir', list='Listar', view='Visualizar')
 
     # Permission.objects.all().delete()
     # Group.objects.all().delete()
@@ -49,16 +49,14 @@ def sync_permissions():
                     admin_groups.append(admin_group)
             admin_groups = tuple(admin_groups)
 
-            relate_groups = get_metadata(Model, 'can_relate', (), iterable=True)
-
             for codename, name, groups in get_metadata(Model, 'permissions', []):
                 qs_permission = Permission.objects.filter(codename=codename, content_type=content_type)
                 if qs_permission.exists():
                     qs_permission.update(name=name)
                 else:
                     Permission.objects.create(codename=codename, name=name, content_type=content_type)
-                if groups or admin_groups or relate_groups:
-                    permissions.append((codename, admin_groups + groups + relate_groups))
+                if groups or admin_groups:
+                    permissions.append((codename, admin_groups + groups))
 
             for codename in default_permissions_names:
                 attr_name = 'can_{}'.format(codename)
@@ -71,25 +69,29 @@ def sync_permissions():
                 groups = tuple(groups)
                 if groups or admin_groups:
                     permissions.append((codename, admin_groups + groups))
-                if relate_groups and codename != 'list':
-                    permissions.append((codename, relate_groups))
 
             for codename, group_names in permissions:
 
+                permissions = []
+
                 if codename in default_permissions_names:
-                    codename = '{}_{}'.format(codename, model)
+                    if codename == 'list':
+                        permissions.append(Permission.objects.get(codename='view_{}'.format(model)))
+                    permissions.append(Permission.objects.get(codename='{}_{}'.format(codename, model)))
+                else:
+                    permissions.append(Permission.objects.get(codename='{}_{}'.format(codename, model)))
 
-                permission = Permission.objects.get(codename=codename)
-                for group_name in group_names:
-                    group_name = hasattr(group_name, '_meta') and group_name._meta.verbose_name or group_name
+                for permission in permissions:
+                    for group_name in group_names:
+                        group_name = hasattr(group_name, '_meta') and group_name._meta.verbose_name or group_name
 
-                    if group_name in loader.abstract_role_model_names:
-                        for concrete_group_name in loader.abstract_role_model_names[group_name]:
-                            group = Group.objects.get_or_create(name=concrete_group_name.strip())[0]
+                        if group_name in loader.abstract_role_model_names:
+                            for concrete_group_name in loader.abstract_role_model_names[group_name]:
+                                group = Group.objects.get_or_create(name=concrete_group_name.strip())[0]
+                                group.permissions.add(permission)
+                        else:
+                            group = Group.objects.get_or_create(name=group_name.strip())[0]
                             group.permissions.add(permission)
-                    else:
-                        group = Group.objects.get_or_create(name=group_name.strip())[0]
-                        group.permissions.add(permission)
 
     for view in loader.views:
         function = view.get('function')

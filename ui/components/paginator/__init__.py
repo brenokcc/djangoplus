@@ -15,7 +15,7 @@ from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name,
 
 class Paginator(Component):
     def __init__(self, request, qs, title=None, list_display=None, list_filter=None, search_fields=None,
-                 list_per_page=25, list_subsets=None, exclude=None, to=None, readonly=False, is_list_view=False):
+                 list_per_page=25, list_subsets=None, exclude=None, to=None, readonly=False, is_list_view=False, help_text=None, url=None):
 
         super(Paginator, self).__init__(request)
 
@@ -33,6 +33,8 @@ class Paginator(Component):
         self.is_list_view = is_list_view
         self.icon = get_metadata(qs.model, 'icon', None)
         self.list_total = get_metadata(qs.model, 'list_total', None)
+        self.help_text = help_text
+        self.url = url
 
         self.subset_actions = []
         self.filters = []
@@ -40,17 +42,17 @@ class Paginator(Component):
 
         self.original_qs = qs
 
+        # tabs
+        self.tabs = []
+        self.current_tab = self._get_from_request('tab', None)
+        self._load_tabs()
+
         # list display
         self._configure_list_display()
 
         # column names
         self.column_names = []
         self._configure_column_names()
-
-        # tabs
-        self.tabs = []
-        self.current_tab = self._get_from_request('tab', None)
-        self._load_tabs()
 
         # drop down
         self.paginator_dropdown = GroupDropDown(request)
@@ -69,6 +71,8 @@ class Paginator(Component):
         if len(self.tabs) > 1:
             if self.current_tab and self.current_tab != 'all':
                 return self.current_tab
+        if len(self.tabs) > 0:
+            return self.tabs[0][0]
         return ''
     
     def get_tab(self):
@@ -110,7 +114,7 @@ class Paginator(Component):
                     continue
                 field = get_field(self.qs.model, field_name)
                 form_field_name = '{}{}'.format(field_name, self.id)
-                if type(field).__name__ in ['DateField', 'DateTimeField']:
+                if hasattr(field, 'auto_now'):
                     initial = (self._get_from_request(field_name, None, '_0'), self._get_from_request(field_name, None, '_1'))
                     form.fields[form_field_name] = forms.DateFilterField(label=normalyze(field.verbose_name), initial=initial, required=False)
                 else:
@@ -125,7 +129,7 @@ class Paginator(Component):
                             continue
                         if self.request.user.organization_id and hasattr(field.rel.to, 'organization_ptr_id'):
                             continue
-                        if not should_filter_or_display(self.request, self.qs.model, field.rel.to):
+                        if field.rel and not should_filter_or_display(self.request, self.qs.model, field.rel.to):
                             continue
                         if initial:
                             if self.original_qs.query.can_filter():
@@ -185,7 +189,7 @@ class Paginator(Component):
         list_xls = get_metadata(self.qs.model, 'list_xls')
         log = get_metadata(self.qs.model, 'log')
         app_label = get_metadata(self.qs.model, 'app_label')
-        pdf = get_metadata(self.qs.model, 'pdf')
+        list_pdf = get_metadata(self.qs.model, 'list_pdf')
 
         if list_csv:
             export_url = '?' in export_url and '{}&export=csv'.format(export_url) or '{}?export=csv'.format(export_url)
@@ -200,7 +204,7 @@ class Paginator(Component):
             if self.request.user.has_perm('admin.list_log'):
                 self.add_action('Visualizar Log', log_url, 'ajax', 'fa-history')
 
-        if pdf:
+        if list_pdf:
             pdf_url = '?' in export_url and '{}&export=pdf'.format(export_url) or '{}?export=pdf'.format(export_url)
             self.add_action('Imprimir', pdf_url, 'ajax', 'fa-print')
 
@@ -227,7 +231,7 @@ class Paginator(Component):
             return None
 
     def can_show_actions(self):
-        return permissions.has_list_permission(self.request, self.qs.model)
+        return permissions.has_view_permission(self.request, self.qs.model)
 
     def get_queryset(self, paginate=True):
         queryset = self.qs
@@ -244,13 +248,14 @@ class Paginator(Component):
                 l.append(
                     '<ul class="pagination pagination-xs m-top-none pull-right pagination-split">'
                     '<li class="disabled"><a href="#!"><i class="fa fa-chevron-left"></i></a></li>')
-                for i in range(1, page_numer + 1):
-                    onclick = "$('#page{}').val({});$('#{}').submit();".format(self.id, i, self.id)
-                    if i == current_page:
-                        css = 'active'
-                    else:
-                        css = 'waves-effect'
-                    l.append('<li class="{}"><a href="javascript:" onclick="{}">{}</a></li>'.format(css, onclick, i))
+                for i in range(current_page-10, current_page+10):
+                    if page_numer >= i > 0 and i:
+                        onclick = "$('#page{}').val({});$('#{}').submit();".format(self.id, i, self.id)
+                        if i == current_page:
+                            css = 'active'
+                        else:
+                            css = 'waves-effect'
+                        l.append('<li class="{}"><a href="javascript:" onclick="{}">{}</a></li>'.format(css, onclick, i))
                 l.append('<li class="disabled"><a href="#!"><i class="fa fa-chevron-right"></i></a></li></ul>')
             self.pagination = ''.join(l)
         return queryset
@@ -323,25 +328,35 @@ class Paginator(Component):
             tab_function = subset['function']
             tab_can_view = subset['can_view']
             tab_name = subset['name']
+            tab_help_text = subset['help_text']
             tab_order = subset['order']
+            tab_list_display = subset['list_display']
+            tab_list_filter = subset['list_filter']
+            tab_search_fields = subset['search_fields']
             tab_active = False
             if permissions.check_group_or_permission(self.request, tab_can_view):
                 tab_qs = tab_function()
                 tab_qs = tab_qs.all(self.request.user)
                 tab_active = self.current_tab == tab_name
-                self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order])
+                self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order, tab_help_text])
+                if (tab_active or len(list_subsets) == 1) and tab_help_text:
+                    self.help_text = tab_help_text
             if tab_name == 'all':
                 create_default_tab = False
             if tab_active:
                 self.qs = tab_qs
                 self.drop_down = ModelDropDown(self.request, self.qs.model)
+                self.list_display = tab_list_display
+                self.list_filter = tab_list_filter
+                self.search_fields = tab_search_fields
+
         self.tabs = sorted(self.tabs, key=lambda k: k[4])
         if self.list_subsets is None and create_default_tab:
             tab_title = get_metadata(self.qs.model, 'verbose_female') and 'Todas' or 'Todos'
             tab_qs = self.original_qs
             tab_active = self.current_tab == 'all'
             tab_order = 0
-            self.tabs.insert(0, ['', tab_title, tab_qs, tab_active, tab_order])
+            self.tabs.insert(0, ['', tab_title, tab_qs, tab_active, tab_order, None])
         if not self.current_tab and self.tabs:
             self.tabs[0][3] = True
             self.qs = self.tabs[0][2]

@@ -17,6 +17,10 @@ def has_list_permission(request, model):
     return has_permission(request, model, 'list')
 
 
+def has_view_permission(request, model):
+    return has_permission(request, model, 'view')
+
+
 def has_add_permission(request, model):
     return has_permission(request, model, 'add')
 
@@ -67,12 +71,12 @@ def can_view(request, obj):
     return can(request, obj, 'view')
 
 
-def check_group_or_permission(request, perm_or_group):
+def check_group_or_permission(request, perm_or_group, ignore_superuser=False):
     if perm_or_group:
         satisfied = False
         for perm_or_group in (type(perm_or_group) not in (list, tuple) and (perm_or_group,) or perm_or_group):
             if perm_or_group:
-                if request.user.is_superuser:
+                if request.user.is_superuser and not ignore_superuser:
                     satisfied = True
                 elif '.' not in perm_or_group:
                     satisfied = request.user.groups.filter(name=perm_or_group).exists()

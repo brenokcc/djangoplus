@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import uuid
 import re
 import base64
+from datetime import datetime, date
 from django import forms
 from decimal import Decimal
 from django.apps import apps
@@ -73,12 +75,67 @@ class DateField(forms.fields.DateField):
     widget = widgets.DateWidget
 
 
+class CurrentDateTimeField(DateField):
+    widget = widgets.HiddenInput
+
+    def clean(self, value):
+        return date.today()
+
+
+class PastDateField(forms.fields.DateField):
+    widget = widgets.DateWidget
+
+    def clean(self, value):
+        value = super(PastDateField, self).clean(value)
+        if value and value > date.today():
+            raise ValidationError('Informe uma data atual ou passada')
+        return value
+
+
+class FutureDateField(forms.fields.DateField):
+    widget = widgets.DateWidget
+
+    def clean(self, value):
+        value = super(FutureDateField, self).clean(value)
+        if value and value < date.today():
+            raise ValidationError('Informe uma data atual ou futura')
+        return value
+
+
 class DateTimeField(forms.fields.DateTimeField):
     widget = widgets.DateTimeWidget
 
 
+class CurrentDateTimeField(DateTimeField):
+    widget = widgets.HiddenInput
+
+    def clean(self, value):
+        return datetime.now()
+
+
+class PastDateTimeField(forms.fields.DateTimeField):
+    widget = widgets.DateTimeWidget
+
+    def clean(self, value):
+        value = super(PastDateTimeField, self).clean(value)
+        if value and value > datetime.now():
+            raise ValidationError('Informe uma data/hora atual ou passada')
+        return value
+
+
+class FutureDateTimeField(forms.fields.DateTimeField):
+    widget = widgets.DateTimeWidget
+
+    def clean(self, value):
+        value = super(FutureDateTimeField, self).clean(value)
+        if value and value < datetime.now():
+            raise ValidationError('Informe uma data/hora atual ou futura')
+        return value
+
+
 class BooleanField(forms.fields.BooleanField):
     widget = widgets.CheckboxInput
+
 
 class NullBooleanField(forms.fields.NullBooleanField):
     widget = widgets.NullBooleanSelect
@@ -130,9 +187,23 @@ class OneToManyField(MultipleModelChoiceField):
 class FileField(forms.fields.FileField):
     widget = widgets.FileInput
 
+    def clean(self, data, initial=None):
+        cleaned_data = super(FileField, self).clean(data, initial=initial)
+        if cleaned_data and cleaned_data.name != initial:
+            extension = cleaned_data.name.split('.')[-1]
+            cleaned_data.name = '{}.{}'.format(str(uuid.uuid1()), extension)
+        return cleaned_data
+
 
 class ImageField(forms.fields.ImageField):
     widget = widgets.ImageInput
+
+    def clean(self, data, initial=None):
+        cleaned_data = super(ImageField, self).clean(data, initial=initial)
+        if cleaned_data and cleaned_data.name != initial:
+            extension = cleaned_data.name.split('.')[-1]
+            cleaned_data.name = '{}.{}'.format(str(uuid.uuid1()), extension)
+        return cleaned_data
 
 
 class PhotoField(ImageField):

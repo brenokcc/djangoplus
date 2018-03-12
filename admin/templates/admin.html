@@ -56,7 +56,17 @@
         {% endif %}
         <h1 class="navbar-header">
             <a href="/admin/" class="navbar-brand ajax" title="{{ settings.initials }}">
-                {% if settings.logo %}<img height="30px" src="/media/{{ settings.logo }}" alt="Logotipo de {{ settings.initials }}" />{% else %}{{ settings.initials|truncatechars:17 }}{% endif %}
+                {% if settings.logo %}
+                    <img height="50px" src="/media/{{ settings.logo }}" alt="Logotipo de {{ settings.initials }}" />
+                {% else %}
+                    <span>{{ settings.initials|truncatechars:17 }}</span>
+                {% endif %}
+                {% if request.session.scope %}
+                    <div class="hide-mobile" style="float: right; margin-left: 10px">
+                        {% if not settings.logo %} - {% endif %}
+                        {{ request.session.scope }}
+                    </div>
+                {% endif %}
             </a>
         </h1>
 
@@ -103,7 +113,6 @@
                 </a>
                 <ul class="dropdown-menu dropdown-user">
                     <li><a class="popup" href="/admin/profile/"><i class="fa fa-user fa-fw"></i> {% trans "Edit Profile" %}</a></li>
-                    <li><a class="popup" href="/admin/password/"><i class="fa fa-key fa-fw"></i> {% trans "Change Password" %}</a></li>
                     {% if request.user.is_superuser %}
                         <li><a class="ajax" href="/admin/configure/"><i class="fa fa-gear fa-fw"></i> {% trans "Settings" %}</a></li>
                         <li class="divider"></li>
@@ -135,6 +144,26 @@
             {% block content %}
 
             {% endblock %}
+
+                <div align="right" class="copyright">
+                    {% if settings.company %}
+                        &copy; {{ settings.company }} |
+                    {% endif %}
+                    {% if settings.address %}
+                        {{ settings.address }} |
+                    {% endif %}
+                    {% if settings.phone_1 %}
+                        {{ settings.phone_1 }} |
+                    {% endif %}
+                    {% if settings.phone_2 %}
+                        {{ settings.phone_2 }} |
+                    {% endif %}
+                    {% if settings.email %}
+                        {{ settings.email }} |
+                    {% endif %}
+                    Versão {{ settings.version }}
+                </div>
+
 {% if not request.GET.popup %}
         </div>
     </main>

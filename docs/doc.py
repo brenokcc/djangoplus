@@ -231,7 +231,7 @@ class UseCase(object):
             self.description = 'List {} previouly registered in the system'.format(verbose_name_plural.lower())
             self.post_condition = _('The system displays the registered records')
             for meta_data in ('can_admin', 'can_admin_by_role', 'can_admin_by_unit', 'can_admin_by_organization',
-                              'can_list', 'can_list_by_role', 'can_list_by_unit', 'can_list_by_organization'):
+                              'can_view', 'can_view_by_role', 'can_view_by_unit', 'can_view_by_organization'):
                 for actor in get_metadata(model, meta_data, iterable=True):
                     if actor:
                         self.actors.append(actor)

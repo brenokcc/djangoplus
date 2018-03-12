@@ -109,7 +109,7 @@
             </div>
         </div>
     {% endfor %}
-    {% for field, forms in fieldset.one_to_many %}
+    {% for name, field, forms, one_to_many_count in fieldset.one_to_many %}
         <div class="panel panel-default">
             <div class="panel-heading">{{ field.label }}</div>
             <div class="panel-body">
@@ -125,6 +125,62 @@
 
                 {% endfor %}
             </div>
+            {% if one_to_many_count %}
+            <script>
+                function {{ name }}DisplayForms(count){
+                    if(count) {
+                        $('.{{ name  }}-1').closest('.panel').show();
+                        for (var i = 0; i < 12; i++) {
+                            var formId = '{{ name  }}-' + i;
+                            $('.' + formId + ', #' + formId).addClass('hidden');
+                            var checkboxId = '#{{ name }}' + i + '_id';
+                            $(checkboxId).prop('checked', false);
+                            $(checkboxId).trigger('change');
+                        }
+                        for (var i = 0; i < count; i++) {
+                            var formId = '{{ name  }}-' + i;
+                            $('.' + formId + ', #' + formId).removeClass('hidden');
+                            $('#' + formId).hide();
+                            var checkboxId = '#{{ name }}' + i + '_id';
+                            $(checkboxId).prop('checked', true);
+                            $(checkboxId).trigger('change');
+                        }
+                    } else {
+                        $('.{{ name  }}-1').closest('.panel').hide();
+                    }
+                }
+                function {{ name }}ControllerChange(url, widget){
+                    if($(widget).val()) {
+                        url = url.replace('PK', $(widget).val());
+                        $.get(url, function (n) {
+                            {{ name }}DisplayForms(n);
+                        });
+                    } else {
+                        {{ name }}DisplayForms(0);
+                    }
+                }
+                jQuery(function(){
+                    if(isNaN('{{ one_to_many_count }}')){
+                        var tokens = '{{ one_to_many_count }}'.split(':');
+                        var controllerId = '#id_'+tokens[0];
+                        if(tokens.length>1) {
+                            var url = tokens[1];
+                            $(controllerId).on('change', function () {
+                                {{ name }}ControllerChange(url, this);
+                            });
+                            {{ name }}ControllerChange(url, controllerId);
+                        } else {
+                            $(controllerId).on('change', function () {
+                                {{ name }}DisplayForms($(controllerId).val());
+                            });
+                            {{ name }}DisplayForms($(controllerId).val());
+                        }
+                    } else {
+                        {{ name }}DisplayForms('{{ one_to_many_count }}');
+                    }
+                });
+            </script>
+            {% endif %}
         </div>
     {% endfor %}
 {% endfor %}

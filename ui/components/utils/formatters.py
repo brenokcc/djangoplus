@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from djangoplus.ui.components.report import Timeline, StatisticsTable
+from djangoplus.ui.components.utils import Timeline, StatisticsTable, QrCode, ProgressBar
 
 
 def timeline(value, **kwargs):
@@ -45,3 +45,12 @@ def line_chart(value, **kwargs):
 
 def area_chart(value, **kwargs):
     return chart(value, **kwargs).area()
+
+
+def qrcode(value, **kwargs):
+    return QrCode(value)
+
+
+def progress(percentual):
+    return ProgressBar(percentual)
+

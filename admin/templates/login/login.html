@@ -1,0 +1,60 @@
+{% extends "login/base.html" %}
+{% load i18n %}
+
+{% block form %}
+
+
+                        <form id="login-form" method="POST" action="{{ request.get_full_path  }}" class="ajax-form" novalidate>
+                            {% csrf_token %}
+
+                            {% if can_register %}
+                                <div align="center">
+                                    <img src="/static/images/facebook.png" onclick="fb_login();" class="social-login">
+                                    <img src="/static/images/google.png" onclick="handleAuthClick(event)" class="social-login">
+                                    <div style="clear: both"></div>
+                                    <hr/>
+                                </div>
+                            {% endif %}
+
+                            {% if form.login_scope %}
+                            <div class="form-group">
+                                {{ form.login_scope }}
+                                {{ form.login_scope.errors }}
+                            </div>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label>{% trans "Username" %}</label>
+                                {{ form.username }}
+                                {{ form.username.errors }}
+                            </div>
+                            <div class="form-group">
+                                <label>{% trans "Password" %}</label>
+                                <input type="password" id="id_password" name="password" placeholder="Senha" class="form-control input-sm bounceIn animation-delay4">
+                                {{ form.username.errors }}
+                            </div>
+                            <div class="form-group">
+                                <label class="label-checkbox inline">
+                                    <input type="checkbox" class="regular-checkbox chk-delete" />
+                                    <span class="custom-checkbox info bounceIn animation-delay4"></span>
+                                </label>
+                                {% trans "Remember" %}
+                            </div>
+
+                            <div class="seperator"></div>
+
+
+                            <div class="form-group">
+                                Esqueceu a senha?<br/>
+                                <a href="/admin/recover/">Click aqui para recuperá-la</a>.
+                            </div>
+
+                            <hr/>
+
+                            <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-sign-in"></i> {% trans "Sign-in" %}</button>
+                            {% if can_register %}
+                            <a href="/admin/register/" class="bounceIn animation-delay5 pull-left popup" type="submit" style="margin-right: 10px"> {% trans "Register" %}</a>
+                            {% endif %}
+                        </form>
+
+{% endblock %}

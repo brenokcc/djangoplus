@@ -8,12 +8,14 @@
 
 
         <div style="display: inline-block; width: 170px;margin-top:-50px">
-            <div>
-                <a class="ajax" href="{{ self.url }}" style="font-size: 1200%">{{ self.count }}</a>
+            <div style="font-size: 1200%">
+                {{ self.count }}
             </div>
+            <a class="ajax" href="{{ self.url }}">
             <div style="margin-top: -30px">
                 <p style="font-size: 150%;">{{ self.description }}</p>
             </div>
+            </a>
         </div>
 
 

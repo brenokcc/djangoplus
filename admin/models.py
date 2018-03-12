@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import sys
 import json
 import datetime
-from django.db.models import Q
+import uuid
+from djangoplus.utils.mail import send_mail
 from djangoplus.db import models
-from django.core.mail import send_mail
 from django.conf import settings
-from operator import __or__ as OR
 from djangoplus.decorators import action, meta, subset
-from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.models import ContentTypeManager
 from djangoplus.utils.metadata import get_metadata, getattr2, get_field
@@ -77,7 +76,7 @@ class Log(models.Model):
     def get_icon(self):
         return ('plus', 'pencil', 'trash-o')[self.operation - 1]
 
-    @meta('Tags', formatter='log_tags')
+    @meta('Tags')
     def get_tags(self):
         return json.loads(self.content)
 
@@ -171,7 +170,7 @@ class UserManager(DjangoUserManager):
             raise ValueError('The given username must be set')
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, active=True, is_superuser=is_superuser,
-                          last_login=datetime.datetime.now())
+                          last_login=None)
         if password:
             user.set_password(password)
         user.save(using=self._db)
@@ -213,6 +212,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         icon = 'fa-user'
 
     def save(self, *args, **kwargs):
+        if not self.password:
+            if settings.DEBUG or 'test' in sys.argv:
+                password = settings.DEFAULT_PASSWORD
+            else:
+                password = uuid.uuid4().get_hex()
+            self.set_password(password)
         super(User, self).save(*args, **kwargs)
 
     def __unicode__(self):
@@ -222,6 +227,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     def change_password(self, new_password, confirm_password):
         self.set_password(new_password)
         self.save()
+
+    @action(u'Enviar Convite de Acesso', inline=True, condition='email', category=None)
+    def send_access_invitation(self):
+        project_name = Settings.default().initials
+        subject = 'Acesso ao Sistema - "{}"'.format(project_name)
+        message = '''Você está cadastro no sistema <b>{}</b>.
+            Para (re)definir sua senha de acesso, clique no botão abaixo.
+        '''.format(project_name)
+        actions = [('Acessar agora!', '/admin/password/{}/{}/'.format(self.pk, self.password.encode('hex')))]
+        send_mail(subject, message, self.email, actions=actions)
 
     def units(self, group_name=None):
         qs = self.role_set.all()
@@ -323,32 +338,32 @@ class User(AbstractBaseUser, PermissionsMixin):
                 unit_ids = list(set(groups[group_name]['unit_ids']))
                 organization_ids = list(set(groups[group_name]['organization_ids']))
 
-                can_list = can_list_by_role = can_list_by_unit = can_list_by_organization = False
+                can_view = can_view_by_role = can_view_by_unit = can_view_by_organization = False
 
                 if obj:
 
                     if type(obj) in loader.permissions_by_scope:
-                        can_list = group_name in loader.permissions_by_scope[type(obj)].get('add', [])
-                        can_list_by_unit = group_name in loader.permissions_by_scope[type(obj)].get('add_by_unit', [])
-                        can_list_by_organization = group_name in loader.permissions_by_scope[type(obj)].get('add_by_organization', [])
+                        can_view = group_name in loader.permissions_by_scope[type(obj)].get('add', [])
+                        can_view_by_unit = group_name in loader.permissions_by_scope[type(obj)].get('add_by_unit', [])
+                        can_view_by_organization = group_name in loader.permissions_by_scope[type(obj)].get('add_by_organization', [])
 
-                if (can_list or can_list_by_role or can_list_by_unit or can_list_by_organization) is False:
-                    can_list = group_name in loader.permissions_by_scope[model].get('list', [])
-                    can_list_by_role = group_name in loader.permissions_by_scope[model].get('list_by_role', [])
-                    can_list_by_unit = group_name in loader.permissions_by_scope[model].get('list_by_unit', [])
-                    can_list_by_organization = group_name in loader.permissions_by_scope[model].get('list_by_organization', [])
+                if (can_view or can_view_by_role or can_view_by_unit or can_view_by_organization) is False:
+                    can_view = group_name in loader.permissions_by_scope[model].get('view', [])
+                    can_view_by_role = group_name in loader.permissions_by_scope[model].get('view_by_role', [])
+                    can_view_by_unit = group_name in loader.permissions_by_scope[model].get('view_by_unit', [])
+                    can_view_by_organization = group_name in loader.permissions_by_scope[model].get('view_by_organization', [])
 
-                if can_list:
+                if can_view:
                     lookups['list_lookups'] = []
                 else:
-                    if can_list_by_role:
+                    if can_view_by_role:
                         for username_lookup in username_lookups:
                             lookups['list_lookups'].append((username_lookup, (self.username,)))
-                    if can_list_by_unit or self.unit_id:
+                    if can_view_by_unit or self.unit_id:
                         if unit_ids and 0 not in unit_ids:
                             for unit_lookup in unit_lookups:
                                 lookups['list_lookups'].append(('{}'.format(unit_lookup), unit_ids))
-                    if can_list_by_organization:
+                    if can_view_by_organization:
                         if organization_ids and 0 not in organization_ids:
                             for organization_lookup in organization_lookups:
                                 lookups['list_lookups'].append(('{}'.format(organization_lookup), organization_ids))
@@ -415,12 +430,14 @@ class User(AbstractBaseUser, PermissionsMixin):
                                     lookups[view_name] = []
                                 lookups[view_name] += execute_lookups
 
-            if loader.permissions_by_scope[model].get('list_by_unit') and not unit_lookups:
-                raise Exception('A "lookup" meta-attribute must point to a Unit model in {}'.format(model))
-            if loader.permissions_by_scope[model].get('list_by_organization') and (not organization_lookups and not unit_lookups):
-                raise Exception('A "lookup" meta-attribute must point to a Unit or Organization model in {}'.format(model))
-            if loader.permissions_by_scope[model].get('list_by_role') and not role_lookups:
-                raise Exception('A "lookup" meta-attribute must point to a role model in {}'.format(model))
+        for codename in ('view', 'list'):
+            if model in loader.permissions_by_scope:
+                if loader.permissions_by_scope[model].get('{}_by_unit'.format(codename)) and not unit_lookups:
+                    raise Exception('A "lookup" meta-attribute must point to a Unit model in {}'.format(model))
+                if loader.permissions_by_scope[model].get('{}_by_organization'.format(codename)) and (not organization_lookups and not unit_lookups):
+                    raise Exception('A "lookup" meta-attribute must point to a Unit or Organization model in {}'.format(model))
+                if loader.permissions_by_scope[model].get('{}_by_role'.format(codename)) and not role_lookups:
+                    raise Exception('A "lookup" meta-attribute must point to a role model in {}'.format(model))
 
         permission_mapping[permission_mapping_key] = lookups
         self.permission_mapping = json.dumps(permission_mapping)
@@ -601,7 +618,7 @@ class Settings(models.Model):
     fieldsets = (
         ('Configuração Geral', {'fields': (('initials', 'name'), ('logo', 'logo_pdf'), ('icon', 'background'))}),
         ('Social', {'fields': (('twitter', 'facebook'), ('google', 'pinterest'), ('linkedin', 'rss'))}),
-        ('Contato', {'fields': (('phone_1', 'phone_2'), 'address', 'email')}),
+        ('Direitos Autorais', {'fields': ('company', ('phone_1', 'phone_2'), 'address', 'email')}),
         ('Aparência', {'fields': ('default_color',)}),
         ('Servidor', {'fields': (('server_address', 'system_email_address'),)}),
         ('Versão', {'fields': ('version',)}),
@@ -624,7 +641,8 @@ class Settings(models.Model):
     linkedin = models.CharField('Linkedin', null=True, blank=True)
     rss = models.CharField('RSS', null=True, blank=True)
 
-    # Contact info
+    # Company
+    company = models.CharField('Empresa', null=True, blank=True)
     address = models.TextField('Endereço', null=True, blank=True)
     phone_1 = models.PhoneField('Telefone Principal', null=True, blank=True)
     phone_2 = models.PhoneField('Telefone Secundário', null=True, blank=True)
@@ -650,6 +668,7 @@ class Settings(models.Model):
             settings.pinterest = 'https://www.pinterest.com/'
             settings.linkedin = 'https://www.linkedin.com/'
             settings.rss = 'https://www.rss.com/'
+            settings.company = ''
             settings.address = ''
             settings.phone_1 = ''
             settings.phone_2 = ''

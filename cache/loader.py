@@ -52,6 +52,7 @@ if not initialized:
         list_shortcut = get_metadata(model, 'list_shortcut')
         verbose_name = get_metadata(model, 'verbose_name')
         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
+        menu = get_metadata(model, 'menu')
         list_menu = get_metadata(model, 'list_menu')
         role_signup = get_metadata(model, 'role_signup', False)
 
@@ -96,18 +97,18 @@ if not initialized:
         # indexing the views generated from model classes
         url = '/list/{}/{}/'.format(app_label, model_name)
         icon = None
-        if list_menu and model not in composition_fields:
+        if menu and model not in composition_fields:
             menu_groups = ()
-            if type(list_menu) == tuple:
-                if len(list_menu) == 2:
-                    menu, icon = list_menu
-                else:
-                    menu, icon, menu_groups = list_menu
+            if list_menu and list_menu is not True:
+                if type(list_menu) != tuple:
+                    list_menu = list_menu,
+                menu_groups = list_menu
+            if type(menu) == tuple:
+                description, icon = menu
             else:
-                menu, icon = list_menu, get_metadata(model, 'icon')
+                description, icon = menu, get_metadata(model, 'icon')
             permission = '{}.list_{}'.format(app_label, model_name)
-            # if issubclass(model, Model):
-            item = dict(url=url, can_view=permission, menu=menu, icon=icon, add_shortcut=False, groups=menu_groups)
+            item = dict(url=url, can_view=permission, menu=description, icon=icon, add_shortcut=False, groups=menu_groups)
             views.append(item)
 
         # indexing the subsets defined in the manager classes
@@ -119,16 +120,30 @@ if not initialized:
                 if metadata_type == 'subset':
                     subset_title = attr._metadata['{}:title'.format(attr_name)]
                     subset_name = attr._metadata['{}:name'.format(attr_name)]
+                    subset_help_text = attr._metadata['{}:help_text'.format(attr_name)]
                     subset_alert = attr._metadata['{}:alert'.format(attr_name)]
                     subset_notify = attr._metadata['{}:notify'.format(attr_name)]
                     subset_can_view = attr._metadata['{}:can_view'.format(attr_name)]
                     subset_order = attr._metadata['{}:order'.format(attr_name)]
                     subset_menu = attr._metadata['{}:menu'.format(attr_name)]
+                    subset_position = attr._metadata['{}:position'.format(attr_name)]
+                    subset_list_display = attr._metadata['{}:list_display'.format(attr_name)]
+                    subset_list_filter = attr._metadata['{}:list_filter'.format(attr_name)]
+                    subset_search_fields = attr._metadata['{}:search_fields'.format(attr_name)]
                     subset_workflow = attr._metadata['{}:sequence'.format(attr_name)]
                     subset_url = '{}{}/'.format(url, attr.im_func.func_name)
 
-                    item = dict(title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view, menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify, actions=subset_actions, order=subset_order)
+                    item = dict(
+                        title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
+                        menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify, actions=subset_actions,
+                        order=subset_order, help_text=subset_help_text, list_display=subset_list_display,
+                        list_filter=subset_list_filter, search_fields=subset_search_fields
+                    )
                     subsets[model].append(item)
+
+                    if subset_position:
+                        widget = dict(title=subset_title, model=model, function=attr_name, can_view=subset_can_view, position=subset_position, formatter=None, link=True, list_display=subset_list_display, list_filter=subset_list_filter, search_fields=subset_search_fields)
+                        subset_widgets.append(widget)
 
                     if subset_workflow:
                         role = subset_can_view and subset_can_view[0] or 'Superusuário'
@@ -143,7 +158,7 @@ if not initialized:
                     widget_can_view = attr._metadata['{}:can_view'.format(attr_name)]
                     widget_position = attr._metadata['{}:position'.format(attr_name)]
                     widget_formatter = attr._metadata['{}:formatter'.format(attr_name)]
-                    widget = dict(title=widget_title, model=model, function=attr_name, can_view=widget_can_view, position=widget_position, formatter=widget_formatter)
+                    widget = dict(title=widget_title, model=model, function=attr_name, can_view=widget_can_view, position=widget_position, formatter=widget_formatter, link=False)
                     subset_widgets.append(widget)
 
         # indexing the actions refered in fieldsets
@@ -296,9 +311,11 @@ if not initialized:
 
         permission_by_scope = dict()
         for scope in ('role', 'unit', 'organization'):
-            for permission_name in ('edit', 'add', 'delete', 'list'):
+            for permission_name in ('edit', 'add', 'delete', 'view', 'list'):
                 permission_key = '{}_by_{}'.format(permission_name, scope)
                 for group_name in get_metadata(model, 'can_{}'.format(permission_key), (), iterable=True):
+                    if permission_name == 'list':
+                        permission_key = 'view_by_{}'.format(scope)
                     if permission_key not in permission_by_scope:
                         permission_by_scope[permission_key] = []
                     if group_name in abstract_role_model_names:
@@ -307,8 +324,11 @@ if not initialized:
                     else:
                         permission_by_scope[permission_key].append(group_name)
             for group_name in get_metadata(model, 'can_admin_by_{}'.format(scope), (), iterable=True):
-                for permission_name in ('edit', 'add', 'delete', 'list'):
-                    permission_key = '{}_by_{}'.format(permission_name, scope)
+                for permission_name in ('edit', 'add', 'delete', 'view', 'list'):
+                    if permission_name == 'list':
+                        permission_key = 'view_by_{}'.format(scope)
+                    else:
+                        permission_key = '{}_by_{}'.format(permission_name, scope)
                     if permission_key not in permission_by_scope:
                         permission_by_scope[permission_key] = []
                     if group_name not in permission_by_scope[permission_key]:
@@ -318,16 +338,20 @@ if not initialized:
                         else:
                             permission_by_scope[permission_key].append(group_name)
 
-        for permission_name in ('edit', 'add', 'delete', 'list'):
+        for permission_name in ('edit', 'add', 'delete', 'view', 'list'):
             permission_key = permission_name
             for group_name in get_metadata(model, 'can_{}'.format(permission_name), (), iterable=True):
+                if permission_name == 'list':
+                    permission_key = 'view'
                 if permission_key not in permission_by_scope:
                     permission_by_scope[permission_key] = []
                 if group_name not in permission_by_scope[permission_key]:
                     permission_by_scope[permission_key].append(group_name)
         for group_name in get_metadata(model, 'can_admin', (), iterable=True):
-            for permission_name in ('edit', 'add', 'delete', 'list'):
+            for permission_name in ('edit', 'add', 'delete', 'view', 'list'):
                 permission_key = permission_name
+                if permission_name == 'list':
+                    permission_key = 'view'
                 if permission_key not in permission_by_scope:
                     permission_by_scope[permission_key] = []
                 if group_name not in permission_by_scope[permission_key]:

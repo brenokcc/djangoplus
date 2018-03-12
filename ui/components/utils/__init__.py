@@ -82,6 +82,25 @@ class Timeline(Component):
         return self.render('timeline.html')
 
 
+class QrCode(Component):
+    def __init__(self, text, width=200, height=200):
+        self.text = text
+        self.width = width
+        super(QrCode, self).__init__()
+
+    def __unicode__(self):
+        return self.render('qrcode.html')
+
+
+class ProgressBar(Component):
+    def __init__(self, percentual):
+        self.percentual = percentual
+        super(ProgressBar, self).__init__()
+
+    def __unicode__(self):
+        return self.render('progress_bar.html')
+
+
 class Table(Component):
     def __init__(self, request, title, header=[], rows=[], footer=[], enumerable=True):
         super(Table, self).__init__(request)
@@ -119,11 +138,22 @@ class ModelTable(Table):
 class StatisticsTable(Table):
     def __init__(self, request, title, queryset_statistics, symbol=None):
         if queryset_statistics.groups:
-            header = [''] + queryset_statistics.labels + ['']
+            header = []
             rows = []
-            for i, serie in enumerate(queryset_statistics.series):
-                rows.append([queryset_statistics.groups[i]]+serie+[queryset_statistics.xtotal[i]])
-            footer = [''] + queryset_statistics.ytotal + [queryset_statistics.total()]
+            footer = []
+            if queryset_statistics.series:
+                for i, label in enumerate(queryset_statistics.labels):
+                    row = [label]
+                    for value in queryset_statistics.series[i]:
+                        row.append(value)
+                    if len(queryset_statistics.series) > 1:
+                        row.append(queryset_statistics.xtotal[i])
+                    rows.append(row)
+                if len(queryset_statistics.series) > 1:
+                    footer = [''] + queryset_statistics.ytotal + [queryset_statistics.total()]
+                    header = [''] + queryset_statistics.groups + ['']
+                else:
+                    header = [''] + queryset_statistics.groups
         else:
             header = []
             rows = []
@@ -142,7 +172,7 @@ class StatisticsTable(Table):
         if not self.queryset_statistics.groups:
             return Chart(self.queryset_statistics.labels, self.queryset_statistics.series, symbol=self.symbol, title=self.title).donut()
         else:
-            chart = Chart(self.queryset_statistics.labels, self.queryset_statistics.series, self.queryset_statistics.groups, symbol=self.symbol, title=self.title)
+            chart = Chart(self.queryset_statistics.groups, self.queryset_statistics.series, self.queryset_statistics.labels, symbol=self.symbol, title=self.title)
             if self.queryset_statistics.labels and self.queryset_statistics.labels[0] == 'Jan':
                 return chart.line()
             else:

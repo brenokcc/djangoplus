@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ project_name }}</title>
+</head>
+<body style="background-color:#f9f9f9; margin:0">
+    <table cellspacing="0" width="100%" style="background-color:#f9f9f9; clear:both; margin:0 auto;">
+        <tr>
+            <td>
+                <br><br><br>
+                <table cellspacing="0" width="600" style="background-color:#fff; clear:both; margin:0 auto;">
+                    <tr>
+                        <td valign="top" width="80" height="80" style="padding:30px 30px 0;">
+                            <img src="{{ project_logo }}" height="80" alt="{{ project_logo }}"/>
+                        </td>
+                        <td valign="bottom" width="520" height="80" style="padding:30px 30px 0 0;">
+                            <h1 style="margin-bottom:5px">{{ project_name }}</h1>
+                            {{ project_description }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" valign="top" width="540" style="padding:20px 30px;">
+                            <h2>{{ subject }}</h2>
+                            {{ message|safe }}
+                            {% for label, url in actions %}
+                                <p style="text-align:center;">
+                                    <a href="{{ project_url }}{{ url }}" style="border:solid 1px #AAA; color:#000; display:inline-block; margin-top:10px; padding:10px 20px; text-decoration:none;">{{ label }}</a>
+                                </p>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" valign="top" width="600"
+                            style="background-color:#f9f9f9; color:#666; font-size:11pt; padding:2px 30px;">
+                            <p>&copy; {{ project_name }}</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

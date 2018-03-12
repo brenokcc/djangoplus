@@ -23,6 +23,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+HOST_NAME = 'localhost:8000'
+
 # Application definition
 
 INSTALLED_APPS = (
@@ -43,7 +45,7 @@ INSTALLED_APPS = (
     'djangoplus.ui.components.menu',
     'djangoplus.ui.components.paginator',
     'djangoplus.ui.components.panel',
-    'djangoplus.ui.components.report',
+    'djangoplus.ui.components.utils',
     'djangoplus.ui.components.editor',
 )
 
@@ -107,6 +109,7 @@ EXTRA_CSS = []
 
 DEFAULT_SUPERUSER = 'admin'
 DEFAULT_PASSWORD = 'senha'
+USERNAME_MASK = None
 DROPBOX_TOKEN = ''
 BACKUP_FILES = ['media', 'sqlite.db']
 

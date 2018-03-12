@@ -82,5 +82,12 @@ class PdfResponse(HttpResponse):
 
 class ReportResponse(PdfResponse):
     def __init__(self, title, request, objects, landscape=False, template='report.html'):
-        html = render_to_string([template], dict(objects=objects, title=title, today=datetime.date.today()), request=request)
+        from djangoplus.admin.models import Settings
+        app_settings = Settings.default()
+        logo = app_settings.logo
+        project_name = app_settings.initials
+        project_description = app_settings.name
+        context = dict(objects=objects, title=title, today=datetime.date.today(), logo=logo,
+                       project_name=project_name, project_description=project_description)
+        html = render_to_string([template], context, request=request)
         super(ReportResponse, self).__init__(html, landscape)

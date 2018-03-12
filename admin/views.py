@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import datetime
+import os
 import json
 import urllib2
 from djangoplus.cache import loader
@@ -9,10 +9,8 @@ from django.http.response import HttpResponse
 from djangoplus.decorators.views import view
 from djangoplus.ui.components.breadcrumbs import httprr
 from djangoplus.admin.models import User, Unit, Organization
-from djangoplus.utils.aescipher import decrypt
 from djangoplus.ui.components.panel import DashboardPanel
-from djangoplus.admin.forms import ProfileForm, ChangePasswordForm, \
-    ResetPasswordForm, SettingsForm, LoginForm
+from djangoplus.admin.forms import ProfileForm, ChangePasswordForm, SettingsForm, LoginForm, RecoverPassowordForm
 
 
 @view('Public', login_required=False)
@@ -26,10 +24,10 @@ def index(request):
     return locals()
 
 
-@view('Login', login_required=False)
+@view('Acesso ao Sistema', login_required=False, template='login/login.html')
 def login(request, scope=None, organization=None, unit=None):
     auth.logout(request)
-    can_register = loader.signup_model is not None
+    can_register = loader.signup_model is not None and not 'HEADLESS' in os.environ
     organization = organization and Organization.objects.get(pk=organization) or None
     unit = unit and Unit.objects.get(pk=unit) or None
     form = LoginForm(request, scope, organization, unit)
@@ -53,31 +51,23 @@ def error(request):
     return locals()
 
 
-@view('Change Password')
-def password(request, pk=None):
+@view('Alteração de Senha', login_required=False, template='login/password.html')
+def password(request, pk, token):
     title = 'Alterar Senha'
-
-    if not pk:
-        user = request.user
-    else:
-        pk = len(pk) < 10 and pk or decrypt(pk)
-        user = User.objects.get(pk=pk)
-
+    user = User.objects.get(pk=pk)
     form = ChangePasswordForm(request, instance=user)
-
     if form.is_valid():
-        form.instance.set_password(form.cleaned_data['new_password'])
         form.save()
-        return httprr(request, '..', 'Senha alterada com sucesso')
+        return httprr(request, '/admin/', 'Parabéns! Sua senha foi alterada com sucesso.')
     return locals()
 
 
-@view('Reset Password')
-def reset_password(request):
-    form = ResetPasswordForm(request)
+@view('Recuperação de Senha', login_required=False, template='login/recover.html')
+def recover(request):
+    title = 'Recuperar Senha'
+    form = RecoverPassowordForm(request)
     if form.is_valid():
-        form.submit()
-        return httprr(request, '..', 'E-mail enviado com sucesso.')
+        return httprr(request, '/admin/login/', 'O link para redefinição da senha foi enviado para o e-mail informado.')
     return locals()
 
 
@@ -144,20 +134,6 @@ def register(request, token=None, userid=None):
         else:
             return httprr(request, '..', 'Acesse o link enviado para seu e-mail para confirmar a criação da sua conta.')
     return locals()
-
-
-@view('Register Confirmation')
-def create_user(request, token):
-    user = User()
-    user.first_name, user.last_name, user.email, password = decrypt(token).split(';')
-    user.is_active = True
-    user.is_superuser = False
-    user.last_login = datetime.datetime.now()
-    user.date_joined = datetime.datetime.now()
-    user.username = user.email
-    user.set_password(password)
-    user.save()
-    return httprr(request, '/admin/login/', 'Conta confirmada com sucesso.')
 
 
 @view('Profile')

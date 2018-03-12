@@ -115,7 +115,7 @@ class ModelDropDown(GroupDropDown):
                             continue
                 else:
                     # it is a dropdown in a paginator
-                    if subset_name not in loader.subset_actions[self.model] or action_name not in loader.subset_actions[self.model][subset_name]:
+                    if action_inline is not True and (subset_name not in loader.subset_actions[self.model] or action_name not in loader.subset_actions[self.model][subset_name]):
                         continue
 
                 if not permissions.check_group_or_permission(self.request, action_can_execute):

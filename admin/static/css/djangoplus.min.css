@@ -2,7 +2,9 @@
  * Code licensed under the Apache License v2.0.
  * For details, see http://www.apache.org/licenses/LICENSE-2.0.
  */
-
+.copyright{
+    margin: 20px;
+}
 /* general */
 aside,
 #page-wrapper {
@@ -48,7 +50,7 @@ header.navbar {
 }
 
 .navbar-header img {
-    margin-top: -5px;
+    margin-top: -15px;
 }
 
 .navbar-left {
@@ -91,6 +93,7 @@ header.navbar {
 .navbar-top-links .dropdown-menu li a {
     padding: 3px 20px;
     min-height: 0;
+    white-space: nowrap;
 }
 
 .navbar-top-links .dropdown-menu li a div {
@@ -836,9 +839,7 @@ input::placeholder, .select2-selection__placeholder {
 }
 
 /* full calendar */
-.fc-content {
-    background-color: #428bca;
-}
+
 
 .fc-button-group button, .fc-state-active, .fc-state-hover {
     background: #FFF;
@@ -1031,7 +1032,9 @@ input::placeholder, .select2-selection__placeholder {
 
 /* large screen */
 @media (max-width: 1024px) {
-
+    .hide-mobile{
+        display: None;
+    }
     .card-panel {
         padding-right: 10px;
     }
@@ -1089,6 +1092,9 @@ input::placeholder, .select2-selection__placeholder {
 
 /* medium screen */
 @media (max-width: 767px) {
+    .hide-mobile{
+        display: None;
+    }
     aside.navbar-default.sidebar {
         padding-top: 48px;
     }
@@ -1127,6 +1133,9 @@ input::placeholder, .select2-selection__placeholder {
 
 /* small screens */
 @media (max-width: 500px) {
+    .hide-mobile{
+        display: None;
+    }
     h3 {
         font-size: 22px;
     }

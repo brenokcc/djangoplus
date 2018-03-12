@@ -52,10 +52,19 @@
 
             <div {% if not self.is_list_view %}class="panel panel-default"{% endif %}>
                 {% if not self.is_list_view %}
-                <div class="panel-heading">{{ self.title }}</div>
+                <div class="panel-heading">
+                    {% if self.url %}
+                        {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
+                        <a class="ajax" href="{{ self.url }}">{{ self.title }}</a>
+                    {% else %}
+                        {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
+                        {{ self.title }}
+                    {% endif %}
+                </div>
 
                 {% endif %}
                 <div class="panel-body">
+
                     {% if self.tabs|length > 1 and not self.readonly %}
                         <ul class="paginator-tabs">
                             {% for tab in self.tabs %}
@@ -139,6 +148,13 @@
                     </form>
                     <div style="clear:both"></div>
                     {% if queryset.exists %}
+
+                        {% if self.help_text %}
+                            <div class="alert alert-info">
+                                {{ self.help_text }}
+                            </div>
+                        {% endif %}
+
                         {% if self.has_customized_template %}
                             {{ self|render_paginator }}
                         {% else %}
@@ -205,7 +221,7 @@
                                                     {% endwith %}
                                                 {% endfor %}
                                                 {% if self.drop_down.has_inline_action and not self.readonly and not self.request.GET.popup %}
-                                                <td class="action-column" align="center"> {{ self|add_actions:obj }}
+                                                <td class="action-column" align="center" style="vertical-align: middle"> {{ self|add_actions:obj }}
                                                 {{ self.drop_down }} </td>
                                                 {% endif %}
                                             </tr>

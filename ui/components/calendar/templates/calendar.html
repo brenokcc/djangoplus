@@ -6,8 +6,15 @@
 <link href='/static/css/fullcalendar.min-3.3.1.css' rel='stylesheet'/>
 <div class="panel panel-default">
     <div class="panel-heading">
-        <i class="fa fa-calendar fa-lg"></i>
-        {{ self.title }}
+        {% if self.url %}
+            <a class="ajax" href="{{ self.url }}">
+                <i class="fa fa-calendar fa-lg"></i>
+                {{ self.title }}
+            </a>
+        {% else %}
+            <i class="fa fa-calendar fa-lg"></i>
+            {{ self.title }}
+        {% endif %}
     </div>
     <div class="panel-body">
         <div id="{{ self.id }}" class="fc fc-ltr"></div>
@@ -19,15 +26,18 @@
         var calendar = $('#{{ self.id }}').fullCalendar({
             header : {
                 left : 'prev,next',
-                center : 'title',
-                right : 'month,agendaWeek,agendaDay'
+                center : 'title'
+
             },
-            defaultDate : '{{ self.default_date|date:"Y-m-d" }}',
+            defaultDate : '{{ self.initial_date|date:"Y-m-d" }}',
             lang : 'pt',
             timeFormat: 'h:mm',
             selectable : true,
             selectHelper : true,
             editable : false,
+            {% if not self.display_time %}
+            displayEventTime: false,
+            {% endif %}
             {% if self.lazy %}
                 eventSources: [
                     {% for item in self.items %}
@@ -70,6 +80,7 @@
                     });
                     $(element).popover("show");
                 },
+                {% if self.links %}
                 dayClick: function(date, jsEvent, view) {
                     $(this).popover({
                         html: true,
@@ -87,6 +98,7 @@
                     });
                     $(this).popover("toggle");
                 },
+                {% endif %}
                 {% endif %}
             {% else %}
                 events : [

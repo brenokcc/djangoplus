@@ -81,7 +81,7 @@ def format_value(value, html=True):
         if html:
             l = ['<ul>']
             for obj in value:
-                l.append('<li>{}</li>'.format(obj))
+                l.append('<li style="list-style-type:square">{}</li>'.format(obj))
             l.append('</ul>')
             return mark_safe(''.join(l))
         else:

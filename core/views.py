@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from django.http.response import HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
 from djangoplus.utils.metadata import list_related_objects, \
-    is_many_to_many, is_one_to_one, get_metadata, check_condition, is_one_to_many
+    is_many_to_many, is_one_to_one, get_metadata, check_condition, is_one_to_many, getattr2
 from djangoplus.ui.components.forms import factory, DEFAULT_FORM_TITLE, DEFAULT_SUBMIT_LABEL, ModelChoiceField
 
 
@@ -28,9 +28,15 @@ def listt(request, app, cls, subset=None):
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
     subsetp = None
+    list_display = None
+    list_filter = None
+    search_fields = None
     if subset:
         subset_func = getattr(_model.objects.all(), subset)
         can_view = subset_func._metadata['{}:can_view'.format(subset)]
+        list_display = subset_func._metadata['{}:list_display'.format(subset)]
+        list_filter = subset_func._metadata['{}:list_filter'.format(subset)]
+        search_fields = subset_func._metadata['{}:search_fields'.format(subset)]
     else:
         tid = request.GET.get('tid')
         subsetp = request.GET.get('tab{}'.format(tid))
@@ -46,13 +52,14 @@ def listt(request, app, cls, subset=None):
 
     qs = _model.objects.all(request.user)
     list_subsets = subset and [subset] or None
+    verbose_name_plural = get_metadata(_model, 'verbose_name_plural')
     if subset:
-        title = getattr(getattr(qs, subset), '_metadata')['{}:title'.format(subset)]
+        title = '{} {}'.format(verbose_name_plural, getattr(getattr(qs, subset), '_metadata')['{}:title'.format(subset)])
 
     else:
-        title = '{}'.format(get_metadata(_model, 'verbose_name_plural'))
+        title = '{}'.format(verbose_name_plural)
 
-    paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True)
+    paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True, list_display=list_display, list_filter=list_filter, search_fields=search_fields)
     response = paginator.get_response()
     if response:
         return response
@@ -243,6 +250,10 @@ def view(request, app, cls, pk, tab=None):
     obj = qs.get(pk=pk)
     obj.request = request
     obj._user = request.user
+
+    if 'one_to_many_count' in request.GET:
+        # TODO create a specific view for this purpose
+        return HttpResponse(getattr2(obj, request.GET['one_to_many_count']))
 
     if not permissions.can_view(request, obj):
         return HttpResponseForbidden()

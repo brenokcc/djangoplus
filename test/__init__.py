@@ -68,7 +68,7 @@ class TestCase(StaticLiveServerTestCase):
     def open(self, url):
         self.driver.get("{}{}".format(self.live_server_url, url))
 
-    def enter(self, name, value, submit=False):
+    def enter(self, name, value, submit=False, count=2):
 
         if callable(value):
             value = value()
@@ -82,48 +82,68 @@ class TestCase(StaticLiveServerTestCase):
             else:
                 self.driver.execute_script("enter('{}', '{}')".format(name, value))
         except WebDriverException, e:
-            self.watch(e)
+            if count:
+                self.wait()
+                self.enter(name, value, submit, count-1)
+            else:
+                self.watch(e)
 
-    def choose(self, name, value):
+    def choose(self, name, value, count=2):
         print '{} "{}" for "{}"'.format('Choosing', value, name)
         try:
             headless = 'HEADLESS' in os.environ and 'true' or 'false'
             self.driver.execute_script("return choose('{}', '{}', {})".format(name, value, headless))
             self.wait(2)
         except WebDriverException, e:
-            self.watch(e)
+            if count:
+                self.wait()
+                self.choose(name, value, count-1)
+            else:
+                self.watch(e)
 
-    def look_for(self, text):
+    def look_for(self, text, count=2):
         print 'Looking for "{}"'.format(text)
-        self.wait()
         try:
             assert text in self.driver.find_element_by_tag_name('body').text
         except WebDriverException, e:
-            self.watch(e)
+            if count:
+                self.wait()
+                self.look_for(text, count-1)
+            else:
+                self.watch(e)
 
-    def look_at_popup_window(self):
+    def look_at_popup_window(self, count=2):
         print 'Looking at popup window'
-        self.wait()
         try:
             self.driver.execute_script("lookAtPopupWindow()")
         except WebDriverException, e:
-            self.watch(e)
+            if count:
+                self.wait()
+                self.look_at_popup_window(count-1)
+            else:
+                self.watch(e)
 
-    def look_at(self, text):
+    def look_at(self, text, count=2):
         print 'Loking at "{}"'.format(text)
-        self.wait()
         try:
             self.driver.execute_script("lookAt('{}')".format(text))
         except WebDriverException, e:
-            self.watch(e)
+            if count:
+                self.wait()
+                self.look_at(text, count-1)
+            else:
+                self.watch(e)
 
-    def look_at_panel(self, text):
+    def look_at_panel(self, text, count=2):
         print 'Looking at panel "{}"'.format(text)
-        self.wait()
         try:
             self.driver.execute_script("lookAtPanel('{}')".format(text))
         except WebDriverException, e:
-            self.watch(e)
+            if count:
+                self.wait()
+                self.look_at_panel(text, count-1)
+            else:
+                self.watch(e)
 
     def click_menu(self, *texts):
         print 'Clicking menu "{}"'.format('->'.join(texts))

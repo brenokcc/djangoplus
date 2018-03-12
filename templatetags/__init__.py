@@ -12,7 +12,8 @@ from djangoplus.utils.formatter import format_value, normalyze
 from djangoplus.utils.metadata import get_metadata, find_field_by_name, getattr2, is_many_to_many
 from uuid import uuid4
 from django.template.defaultfilters import slugify
-
+import base64
+import cStringIO
 register = template.Library()
 
 
@@ -301,3 +302,15 @@ def is_image(value):
             if unicode(value).lower().endswith(ext):
                 return True
     return False
+
+
+@register.filter
+def qrcode64(text):
+    import qrcode
+    qr = qrcode.QRCode()
+    qr.add_data(text)
+    image = qr.make_image()
+    buffer = cStringIO.StringIO()
+    image.save(buffer, format="JPEG")
+    img_str = base64.b64encode(buffer.getvalue())
+    return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))

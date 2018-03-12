@@ -164,7 +164,7 @@ class Form(django_forms.Form):
             self.fieldsets += ('Outros', {'fields': extra_fieldset_field_names, }),
 
         for title, fieldset in self.fieldsets:
-            title = '::' in title and title.split('::')[1] or title
+            title = '::' in title and title.split('::')[1] or title.split('::')[0]
             field_names = fieldset.get('fields', ())
             relation_names = fieldset.get('relations', ())
 
@@ -211,26 +211,41 @@ class Form(django_forms.Form):
                     elif name in one_to_many_fields:
                         field = one_to_many_fields[name]
                         one_to_many_forms = []
+
                         if self.instance.pk:
                             qs = getattr(self.instance, name).all()
                         else:
                             qs = field.queryset.filter(pk=0)
                         count = qs.count()
-                        limit = 4
+                        limit = 12
                         for i in range(0, limit):
                             instance = i < count and qs[i] or None
                             form = factory.get_one_to_many_form(self.request, self.instance, name, partial=True,
                                                                 inline=True, prefix='{}{}'.format(name, i),
                                                                 instance=instance)
                             form.id = '{}-{}'.format(name, i)
-                            form.hidden = i > count
+                            form.hidden = i > count or field.one_to_many_count
                             required = form.data.get(form.prefix, None)
                             if not required:
                                 for field_name in form.fields:
                                     form.fields[field_name].required = False
                             one_to_many_forms.append(form)
                             self.inner_forms.append(form)
-                        configured_fieldset['one_to_many'].append((field, one_to_many_forms))
+                        one_to_many_count = None
+                        if field.one_to_many_count:
+                            if type(field.one_to_many_count) is int:
+                                one_to_many_count = field.one_to_many_count
+                            else:
+                                app_label = get_metadata(qs.model, 'app_label')
+                                if '__' in field.one_to_many_count > 0:
+                                    tokens = field.one_to_many_count.split('__')
+                                    model_name = self.fields[tokens[0]].queryset.model.__name__.lower()
+                                    model_lookup = '__'.join(tokens[1:])
+                                    one_to_many_count = '{}:/view/{}/{}/PK/?one_to_many_count={}'.format(
+                                        tokens[0], app_label, model_name, model_lookup)
+                                else:
+                                    one_to_many_count = field.one_to_many_count
+                        configured_fieldset['one_to_many'].append((name, field, one_to_many_forms, one_to_many_count))
 
                 if len(fields) > 2 or mobile(self.request):
                     self.horizontal = False
@@ -292,7 +307,7 @@ class ModelForm(Form, django_forms.ModelForm):
                 elif form.instance.pk:
                     form.instance.delete()
 
-            for field, one_to_many_forms in fieldset.get('one_to_many', ()):
+            for name, field, one_to_many_forms, one_to_many_count in fieldset.get('one_to_many', ()):
                 for form in one_to_many_forms:
                     if form.data.get(form.prefix, None):
                         form.save()

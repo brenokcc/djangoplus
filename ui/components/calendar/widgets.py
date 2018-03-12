@@ -57,7 +57,9 @@ class DateTimeWidget(widgets.DateTimeInput):
         attrs['class'] = 'form-control'
         html = super(DateTimeWidget, self).render(name, value, attrs)
         if type(value) not in [unicode, str]:
-            value = value and 'new Date{}'.format((value.year, value.month, value.day, value.hour, value.minute),) or 'new Date()'
+            js_value = value and 'new Date{}'.format((value.year, value.month-1, value.day, value.hour, value.minute),) or 'new Date()'
+        else:
+            js_value = "'{}'".format(value)
         script = '''
                     $("#id_{}").daterangepicker({{
                         singleDatePicker: true,
@@ -77,7 +79,7 @@ class DateTimeWidget(widgets.DateTimeInput):
                           $(this).val(picker.startDate.format('DD/MM/YYYY H:mm'));
                         }});
                         $("#id_{}").mask("00/00/0000 00:00", {{clearIfNotMatch: true}});
-                '''.format(name, value, name, name)
+                '''.format(name, js_value, name, name)
         html = '<div class="input-group">{}<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div><script>{}</script>'.format(
         html, script)
         return mark_safe(html)

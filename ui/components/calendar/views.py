@@ -16,9 +16,11 @@ def populate(request):
     end_field = request.POST['end_field']
     start = datetime.datetime.strptime(request.POST['start'], '%Y-%m-%d')
     end = datetime.datetime.strptime(request.POST['end'], '%Y-%m-%d')
+    fstart = start.strftime('%d/%m/%Y')
+    fend = start.strftime('%d/%m/%Y')
     action_names = request.POST['action_names'].split(',')
 
-    request.session['calendar_default_date'] = (start + datetime.timedelta(days=10)).strftime('%Y-%m-%d')
+    request.session['calendar_initial_date'] = (start + datetime.timedelta(days=10)).strftime('%Y-%m-%d')
     request.session.save()
 
     filters = dict()
@@ -31,7 +33,7 @@ def populate(request):
         start = getattr(obj, start_field)
         end = end_field and getattr(obj, end_field) or None
         if end:
-            end= end + datetime.timedelta(days=1)
+            end = end + datetime.timedelta(days=1)
         icons = obj_icons(request, obj, css='popup')
         drop_down = ModelDropDown(request, obj.__class__, action_names=action_names)
         drop_down.add_actions(obj, inline=True)
@@ -39,11 +41,15 @@ def populate(request):
         html = list()
         html.append('<div id="{}">'.format(html_id))
         html.append('<div class="pull-right">{}</div><br/><br/>'.format(icons))
-        html.append('<dl>')
-        html.append('<dt>Início</dt><dd>{}</dd>'.format(start))
+
         if end:
-            html.append('<dt>Fim</dt><dd>{}</dd>'.format(end))
-        html.append('</dl>')
+            html.append('<dl>')
+            html.append('<dt>Início</dt><dd>{}</dd>'.format(fstart))
+            html.append('<dt>Fim</dt><dd>{}</dd>'.format(fend))
+            html.append('</dl>')
+        else:
+            html.append('{}'.format(fstart))
+
         html.append('<hr/>')
         html.append(unicode(drop_down))
         html.append('</div>')

@@ -35,7 +35,7 @@ AESCIPHER = AESCipher(settings.SECRET_KEY)
 
 
 def encrypt(text):
-    return AESCIPHER.encrypt(text)
+    return AESCIPHER.encrypt('{}'.format(text))
 
 
 def decrypt(text):

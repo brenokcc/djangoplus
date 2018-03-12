@@ -15,7 +15,8 @@ def meta(verbose_name, can_view=(), formatter=None, dashboard=None):
     return decorate
 
 
-def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0):
+def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0, help_text=None, dashboard=None,
+           list_display=None, list_filter=None, search_fields=None):
     def decorate(function):
         set_metadata(function, 'type', 'subset')
         set_metadata(function, 'tab', True)
@@ -23,10 +24,15 @@ def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0):
         set_metadata(function, 'alert', alert)
         set_metadata(function, 'notify', notify)
         set_metadata(function, 'menu', menu)
+        set_metadata(function, 'help_text', help_text)
         set_metadata(function, 'sequence', sequence)
         set_metadata(function, 'can_view', iterable(can_view))
         set_metadata(function, 'name', function.func_name)
         set_metadata(function, 'order', cache.next_number())
+        set_metadata(function, 'position', dashboard)
+        set_metadata(function, 'list_display', list_display)
+        set_metadata(function, 'list_filter', list_filter)
+        set_metadata(function, 'search_fields', search_fields)
         return function
 
     return decorate
@@ -34,7 +40,8 @@ def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0):
 
 def action(title, can_execute=(), condition=None, category='Ações', style='popup', input=None,
            message='Ação realizada com sucesso.', initial=None, choices=None, inline=None, icon=None,
-           sequence=0, can_execute_by_organization=None, can_execute_by_unit=None, can_execute_by_role=None, redirect_to=None, menu=None):
+           sequence=0, can_execute_by_organization=None, can_execute_by_unit=None, can_execute_by_role=None,
+           redirect_to=None, menu=None):
     def decorate(function):
         function._action = dict(
             title=title, can_execute=iterable(can_execute),

@@ -1,0 +1,23 @@
+{% extends "login/base.html" %}
+{% load i18n %}
+
+{% block form %}
+
+
+                        <form id="login-form" method="POST" action="{{ request.path }}" class="ajax-form" novalidate>
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <label>E-mail</label>
+                                <input type="text" id="id_email" name="email" placeholder="E-mail" class="form-control input-sm bounceIn animation-delay4" value="{{ form.data.email|default:"" }}">
+                                {{ form.email.errors }}
+                            </div>
+
+                            <div class="seperator"></div>
+                            <hr/>
+
+                            <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-mail-forward"></i> {% trans "Recuperar Senha" %}</button>
+
+                        </form>
+
+{% endblock %}

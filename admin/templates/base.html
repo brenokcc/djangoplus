@@ -99,6 +99,10 @@
     </script>
 {% endif %}
 
+    {% if username_mask %}
+        <script>$('input[name=username]').mask("{{ username_mask }}", {clearIfNotMatch: true});</script>
+    {% endif %}
+
     {% if messages %}
         {% for message in messages %}
             {{ message|toast }}

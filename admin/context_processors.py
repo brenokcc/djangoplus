@@ -33,10 +33,12 @@ def context_processor(request):
                     count = qs.count()
                     if count:
                         url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                        item = dict(title=title, description=item['title'], count=count, url=url, icon=icon)
+                        description = item['title'].replace(title, '')
+                        item = dict(title=title, description=description, count=count, url=url, icon=icon)
                         alerts.append(item)
 
     return dict(
+        username_mask=settings.USERNAME_MASK,
         js_files=settings.EXTRA_JS,
         css_files=settings.EXTRA_CSS,
         settings=app_settings,

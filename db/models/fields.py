@@ -113,10 +113,46 @@ class DateField(models.DateField, FieldPlus):
         return super(DateField, self).formfield(**kwargs)
 
 
+class CurrentDateField(DateField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.CurrentDateField)
+        return super(CurrentDateField, self).formfield(**kwargs)
+
+
+class PastDateField(DateField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.PastDateField)
+        return super(PastDateField, self).formfield(**kwargs)
+
+
+class FutureDateField(DateField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.FutureDateField)
+        return super(FutureDateField, self).formfield(**kwargs)
+
+
 class DateTimeField(models.DateTimeField, FieldPlus):
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.DateTimeField)
         return super(DateTimeField, self).formfield(**kwargs)
+
+
+class CurrentDateTimeField(DateTimeField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.CurrentDateTimeField)
+        return super(CurrentDateTimeField, self).formfield(**kwargs)
+
+
+class PastDateTimeField(DateTimeField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.PastDateTimeField)
+        return super(PastDateTimeField, self).formfield(**kwargs)
+
+
+class FutureDateTimeField(DateTimeField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.FutureDateTimeField)
+        return super(FutureDateTimeField, self).formfield(**kwargs)
 
 
 class BooleanField(models.BooleanField, FieldPlus):
@@ -203,9 +239,16 @@ MultipleModelChoiceField = ManyToManyField
 
 
 class OneToManyField(ManyToManyField):
+
+    def __init__(self, *args, **kwargs):
+        self.one_to_many_count = kwargs.pop('count', None)
+        super(OneToManyField, self).__init__(*args, **kwargs)
+
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.OneToManyField)
-        return super(OneToManyField, self).formfield(**kwargs)
+        form_field = super(OneToManyField, self).formfield(**kwargs)
+        form_field.one_to_many_count = self.one_to_many_count
+        return form_field
 
 # File Fields #
 
@@ -339,7 +382,7 @@ class ImageField(models.ImageField, FieldPlus):
 
 
 class PhotoField(models.ImageField, FieldPlus):
-    attr_class = attr_class = ImageFieldFile
+    attr_class = ImageFieldFile
 
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.PhotoField)

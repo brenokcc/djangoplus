@@ -8,6 +8,7 @@ from djangoplus.cache import loader
 from djangoplus.ui.components.breadcrumbs import httprr
 from djangoplus.utils.aescipher import encrypt
 from djangoplus.admin.models import Group, User, Unit, Role, Settings, Organization
+from django.contrib.auth.hashers import make_password
 
 
 class LoginForm(forms.Form):
@@ -68,6 +69,19 @@ class LoginForm(forms.Form):
                     is_organization_user = loader.organization_model and user.role_set.filter(organizations__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:
                         raise forms.ValidationError('{} não é usuário de {}'.format(username, user.unit))
+                else:
+                    systemic_roles = user.role_set.filter(organizations__isnull=True, units__isnull=True)
+                    organizations = user.role_set.filter(organizations__isnull=False).values_list('organizations', flat=True).distinct()
+                    units = user.role_set.filter(units__isnull=False).values_list('units', flat=True).distinct()
+                    # if the user has no systemic roles and is associated to only one organization or unit
+                    if not systemic_roles.exists() and (organizations.count() + units.count()) == 1:
+                        if organizations:
+                            organization_id = organizations[0]
+                            self.request.session['scope'] = unicode(Organization.objects.get(pk=organization_id))
+                        else:
+                            unit_id = units[0]
+                            self.request.session['scope'] = unicode(Unit.objects.get(pk=unit_id))
+                        self.request.session.save()
                 user.save()
                 auth.login(self.request, user)
                 return self.cleaned_data
@@ -154,7 +168,7 @@ class RegisterForm(forms.Form):
         user.username = self.cleaned_data['email']
         user.active = True
         user.is_superuser = False
-        user.last_login = datetime.datetime.now()
+        user.last_login = None
         user.date_joined = datetime.datetime.now()
         user.username = user.email
         user.set_password(password)
@@ -167,31 +181,6 @@ class RegisterForm(forms.Form):
             user.email_user('Criação de Conta', 'Clique para confirmar a criação de sua conta: {}'.format(url),
                             settings.SYSTEM_EMAIL_ADDRESS)
             return None
-
-
-class ResetPasswordForm(forms.Form):
-    mail = forms.CharField(label='E-mail')
-
-    class Meta:
-        title = 'Alteração de Senha'
-        icon = 'mdi-content-mail'
-        submit_label = 'Enviar E-mail'
-        note = 'Ao preencher e submeter o formulário abaixo, um e-mail será enviado para vocêcontendo ' \
-               'um link através do qual você poderá alterar sua senha.'
-
-    def clean_mail(self):
-        self.qs = User.objects.filter(email=self.cleaned_data['mail'])
-        if self.qs.exists():
-            return self.cleaned_data['mail']
-        else:
-            raise forms.ValidationError('E-mail não cadastrado.')
-
-    def submit(self):
-        user = self.qs[0]
-        token = encrypt('{}'.format(user.pk))
-        url = '{}/admin/password/{}/'.format(settings.SERVER_ADDRESS, token)
-        user.email_user('Recuperação de Senha', 'Clique no link a seguir para alterar sua senha: {}'.format(url),
-                        settings.SYSTEM_EMAIL_ADDRESS)
 
 
 class ChangePasswordForm(forms.ModelForm):
@@ -215,15 +204,23 @@ class ChangePasswordForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         super(ChangePasswordForm, self).save(*args, **kwargs)
-        password = self.cleaned_data['new_password']
-
-        if password:
-            self.instance.set_password(password)
-            self.instance.save()
-            user = auth.authenticate(username=self.cleaned_data.get('username'), password=password)
-        else:
-            user = self.instance
+        User.objects.filter(pk=self.instance.pk).update(password=make_password(self.cleaned_data['new_password']))
+        user = auth.authenticate(username=self.instance.username, password=self.cleaned_data['new_password'])
         auth.login(self.request, user)
+
+
+class RecoverPassowordForm(forms.Form):
+    email = forms.EmailField(label='E-mail')
+
+    def clean(self):
+        qs = User.objects.filter(
+            email=self.cleaned_data['email']
+        )
+        if qs.exists():
+            qs[0].send_access_invitation()
+            return self.cleaned_data
+        else:
+            raise forms.ValidationError('Usuário não encontrado')
 
 
 class ProfileForm(forms.ModelForm):

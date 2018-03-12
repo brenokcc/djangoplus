@@ -322,14 +322,14 @@ def get_scope(model, organization_model, unit_model):
 
 def should_filter_or_display(request, model, to):
     if get_metadata(to, 'role_username'):
-        can_list = list(
+        can_view = list(
             get_metadata(model, 'can_admin', (), iterable=True) +
             get_metadata(model, 'can_admin_by_organization', (), iterable=True) +
             get_metadata(model,'can_admin_by_unit',(), iterable=True) +
-            get_metadata(model, 'can_list', (), iterable=True) +
-            get_metadata(model, 'can_list_by_organization', (), iterable=True) +
-            get_metadata(model, 'can_list_by_unit', (), iterable=True))
-        if can_list and not request.user.in_group(*can_list):
+            get_metadata(model, 'can_view', (), iterable=True) +
+            get_metadata(model, 'can_view_by_organization', (), iterable=True) +
+            get_metadata(model, 'can_view_by_unit', (), iterable=True))
+        if can_view and not request.user.in_group(*can_view):
             return False
     return True
 

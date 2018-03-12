@@ -52,7 +52,7 @@
         }
         h2 {
             font-size: 14pt;
-            text-align: right;
+            text-align: center;
             text-transform: uppercase;
             vertical-align: bottom;
         }
@@ -116,6 +116,13 @@
             line-height: 1em;
             padding: 5px;
         }
+        .header tr{
+            border: solid 1px #bbb;
+        }
+        .header td{
+            border: 0;
+            padding: 3px;
+        }
         {% block style %}
         {% endblock %}
     </style>
@@ -125,24 +132,16 @@
 
 <header>
 {% block cabecalho %}
-    <table>
+    <table class="header">
         <tr>
-            {% if settings.logo_pdf %}
-                <td rowspan="4"><img src="{{ settings.logo_pdf }}" style="height:50px; margin-right:20px;" /></td>
-            {% elif settings.logo %}
-                <td rowspan="4"><img src="{{ settings.logo }}" style="height:50px; margin-right:20px;" /></td>
+            {% if logo %}
+
+                <td align="center" width="50px"><img src="{{ logo }}"/></td>
             {% endif %}
-            <td><h1>{% block title %}{{ settings.name }}{% endblock %}</h1></td>
-            <td rowspan="4"><h2>{{ title }}</h2></td>
-        </tr>
-        <tr>
-            <td>{% trans "E-mail" %}: {{ settings.email }}</td>
-        </tr>
-        <tr>
-            <td>{% trans "Phones" %}: {{ settings.phone_1 }} {{ settings.phone_2 }}</td>
-        </tr>
-        <tr>
-            <td>{% trans "Address" %}: {{ settings.address }}</td>
+            <td align="center">
+                <h1 style="padding-top:10px">{{ project_name }} - {{ project_description }}</h1>
+                <b>Emitido em</b> {{ today|format }}
+            </td>
         </tr>
     </table>
 {% endblock %}

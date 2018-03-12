@@ -1,15 +1,17 @@
-{% if self.items %}
-    <div class="shortcut-wrapper">
+<div class="panel panel-default info-panel" id="panel-dados-gerais">
+    <div class="panel-heading">
+        {{ self.title }}
+    </div>
+    <div class="panel-body">
         {% for item in self.items %}
-            <a href="{{ item.url }}" class="shortcut-link {{ item.style }}">
-                <span class="shortcut-icon">
-                    <i class="fa {{ item.icon }}"></i>
-                    {% if item.count %}
-                        <span class="shortcut-alert">{{ item.count }}</span>
-                    {% endif %}
-                </span>
-                <span>{{ item.description }}</span>
-            </a>
+            <div style="text-align: center; float: left; margin: 15px">
+                <i class="fa {{ item.icon }}" style="font-size: 50px;"></i>
+                <p>
+                    <a class="ajax" href="{{ item.url }}">{{ item.label }}</a>
+                </p>
+            </div>
         {% endfor %}
     </div>
-{% endif %}
+
+</div>
+

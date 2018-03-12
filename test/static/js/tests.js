@@ -160,11 +160,9 @@ function choose(name, value, headless){
 }
 
 function wait(ms){
-    console.log(1);
     var start = new Date().getTime();
     var end = start;
     while(end < start + ms) {
       end = new Date().getTime();
    }
-   console.log(2);
  }

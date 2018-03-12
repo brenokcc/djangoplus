@@ -129,15 +129,15 @@ class ModelPanel(Component):
                                 elif hasattr(attr, 'field'):
                                     field = attr.field
                                 if not field or not hasattr(field, 'display') or field.display:
-                                    if is_one_to_one(model, attr_name) and hasattr(attr.field, 'display') and attr.field.display == 'detail':
+                                    if self.complete and is_one_to_one(model, attr_name) and hasattr(attr.field, 'display') and attr.field.display == 'detail':
                                         relations.append(attr_name)
-                                    elif is_one_to_many(model, attr_name) and field.display == 'detail':
+                                    elif self.complete and is_one_to_many(model, attr_name) and field.display == 'detail':
                                         relations.append(attr_name)
-                                    elif is_many_to_one(model, attr_name) and field.display == 'detail':
+                                    elif self.complete and is_many_to_one(model, attr_name) and field.display == 'detail':
                                         relations.append(attr_name)
-                                    elif is_many_to_many(model, attr_name) and (not hasattr(field, 'display') or field.display == 'detail'):
+                                    elif self.complete and is_many_to_many(model, attr_name) and (not hasattr(field, 'display') or field.display == 'detail'):
                                         relations.append(attr_name)
-                                    elif is_one_to_many_reverse(model, attr_name):
+                                    elif self.complete and is_one_to_many_reverse(model, attr_name):
                                         relations.append(attr_name)
                                     else:
                                         verbose_name, lookup, sortable, to = get_fiendly_name(model, attr_name, as_tuple=True)
@@ -190,15 +190,15 @@ class ModelPanel(Component):
 
                                 related_paginator = Paginator(self.request, relation.all(), title=fieldset_title, to=to, list_subsets=[])
 
-                                add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
-                                if permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model):
-                                    related_paginator.add_action('Adicionar {}'.format(unicode(get_metadata(relation.model, 'verbose_name'))),
-                                                                 add_url, 'popup', 'fa-plus')
+                                if not is_one_to_many(model, relation_name):
+                                    add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
+                                    if permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model):
+                                        related_paginator.add_action('Adicionar {}'.format(unicode(get_metadata(relation.model, 'verbose_name'))), add_url, 'popup', 'fa-plus')
                                 fieldset_dict['paginators'].append(related_paginator)
                         else:
                             is_object_set = False
                             for related_object in list_related_objects(model):
-                                if relation_name == related_object.get_accessor_name():
+                                if hasattr(related_object, 'get_accessor_name') and relation_name == related_object.get_accessor_name():
                                     is_object_set = True
                                     break
                             relation = getattr(self.obj, relation_name)
@@ -272,9 +272,25 @@ class ModelPanel(Component):
 
 class IconPanel(Component):
 
+    def __init__(self, request, title, icon=None):
+        super(IconPanel, self).__init__(request)
+        self.title = title
+        self.icon = icon
+        self.items = []
+
+    def add_item(self, label, url, icon=None, css='ajax'):
+        item = dict(label=label, url=url, css=css, icon=icon or self.icon)
+        self.items.append(item)
+
+    def __unicode__(self):
+        return self.render('icon_panel.html')
+
+
+class ShortcutPanel(Component):
+
     def __init__(self, request):
         from djangoplus.cache import loader
-        super(IconPanel, self).__init__(request)
+        super(ShortcutPanel, self).__init__(request)
         self.items = []
 
         for model, add_shortcut in loader.icon_panel_models:
@@ -300,7 +316,7 @@ class IconPanel(Component):
             self.items.append(item)
 
     def __unicode__(self):
-        return self.render('icon_panel.html')
+        return self.render('shortcut_panel.html')
 
     def add_model(self, model):
         icon = get_metadata(model, 'icon')
@@ -383,7 +399,7 @@ class CardPanel(Component):
 class DashboardPanel(Component):
 
     def __init__(self, request):
-        from djangoplus.cache import loader
+
         super(DashboardPanel, self).__init__(request)
         self.top = []
         self.center = []
@@ -411,35 +427,21 @@ class DashboardPanel(Component):
                         notification_panel = NotificationPanel(request, title, count, url, description, icon)
                         self.right.append(notification_panel)
 
-        icon_panel = IconPanel(request)
+        icon_panel = ShortcutPanel(request)
         card_panel = CardPanel(request)
 
         self.top.append(icon_panel)
         self.center.append(card_panel)
 
-        for item in loader.widgets:
-            if permissions.check_group_or_permission(request, item['can_view']):
-                function = item['function']
-                position = item['position']
-                f_return = function(request)
-                html = render_to_string(['{}.html'.format(function.func_name), 'widget.html'], f_return, request)
-                if position == 'top':
-                    self.top.append(html)
-                elif position == 'center':
-                    self.center.append(html)
-                elif position == 'left':
-                    self.left.append(html)
-                elif position == 'right':
-                    self.right.append(html)
-                elif position == 'bottom':
-                    self.bottom.append(html)
         for item in loader.subset_widgets:
-            if permissions.check_group_or_permission(request, item['can_view']):
+            if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):
                 model = item['model']
                 title = item['title']
                 function = item['function']
                 position = item['position']
                 formatter = item['formatter']
+                list_display = item['list_display']
+                link = item['link']
                 qs = model.objects.all()
                 qs.user = request.user
                 f_return = getattr(qs, function)()
@@ -461,9 +463,35 @@ class DashboardPanel(Component):
                     else:
                         html = unicode(func(f_return, request=self.request, verbose_name=title))
                 elif hasattr(f_return, 'model'):
-                    paginator = Paginator(self.request, f_return, title, readonly=True, list_filter=(), search_fields=())
+                    compact = position in ('left', 'right')
+                    app_label = get_metadata(model, 'app_label')
+                    model_name = model.__name__.lower()
+                    verbose_name_plural = get_metadata(model, 'verbose_name_plural')
+                    if link:
+                        title = '{} {}'.format(verbose_name_plural, title)
+                    url = '/list/{}/{}/{}/'.format(app_label, model_name, function)
+                    paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[function], url=link and url or None)
+                    if compact:
+                        paginator.column_names = paginator.column_names[0:1]
                     html = unicode(paginator)
 
+                if position == 'top':
+                    self.top.append(html)
+                elif position == 'center':
+                    self.center.append(html)
+                elif position == 'left':
+                    self.left.append(html)
+                elif position == 'right':
+                    self.right.append(html)
+                elif position == 'bottom':
+                    self.bottom.append(html)
+
+        for item in loader.widgets:
+            if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):
+                function = item['function']
+                position = item['position']
+                f_return = function(request)
+                html = render_to_string(['{}.html'.format(function.func_name), 'widget.html'], f_return, request)
                 if position == 'top':
                     self.top.append(html)
                 elif position == 'center':

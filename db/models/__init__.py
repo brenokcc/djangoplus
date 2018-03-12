@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import json
 import six
+import sys
 from django.core.exceptions import ValidationError
 from django.db.models import base
 from django.db.models import Q
@@ -16,16 +17,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 
 setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
-    'icon', 'verbose_female', 'order_by',
-    'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut', 'list_csv', 'list_xls', 'list_menu', 'list_lookups',
+    'icon', 'verbose_female', 'order_by', 'pdf', 'menu',
+    'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut', 'list_csv', 'list_xls', 'list_menu', 'list_lookups', 'list_pdf',
     'add_label', 'add_form', 'add_inline', 'add_message', 'add_shortcut', 'select_template', 'select_display',
-    'role_name', 'role_username', 'role_email', 'role_scope', 'role_signup', 'role_signup_confirmation', 'role_signup_activation',
+    'role_name', 'role_username', 'role_email', 'role_scope', 'role_signup',
     'log', 'logging',
-    'can_add', 'can_relate', 'can_edit', 'can_delete', 'can_list', 'can_admin',
-    'can_list_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
-    'can_list_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
-    'can_list_by_organization', 'can_add_by_organization', 'can_edit_by_organization', 'can_admin_by_organization',
-    'sequence', 'class_diagram', 'pdf',
+    'can_add', 'can_edit', 'can_delete', 'can_list', 'can_view', 'can_admin',
+    'can_list_by_role', 'can_view_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
+    'can_list_by_unit', 'can_view_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
+    'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization', 'can_edit_by_organization', 'can_admin_by_organization',
+    'sequence', 'class_diagram',
 ))
 
 
@@ -60,36 +61,12 @@ class QueryStatistics(object):
     def __unicode__(self):
         return '{}\n{}\n{}'.format(self.labels, self.series, self.groups)
 
-    def as_table(self, title=None):
-        from djangoplus.ui.components.report import Table
-        if self.groups:
-            header = [''] + self.labels + ['']
-            rows = []
-            for i, serie in enumerate(self.series):
-                rows.append([self.groups[i]] + serie + [self.xtotal[i]])
-            footer = [''] + self.ytotal + [self.total()]
-        else:
-            header = []
-            rows = []
-            footer = []
-            if self.series:
-                for i, serie in enumerate(self.series[0]):
-                    rows.append([self.labels[i], self.series[0][i]])
-                if len(self.series[0]) > 1:
-                    footer.append('')
-                    footer.append(self.total())
-        return Table(None, title or self.title, header, rows, footer, enumerable=False)
+    def as_table(self, title=None, symbol=None):
+        from djangoplus.ui.components.utils import StatisticsTable
+        return StatisticsTable(None, self.title, self, symbol=symbol)
 
     def as_chart(self, title=None, symbol=None):
-        from djangoplus.ui.components.report import Chart
-        if not self.groups:
-            return Chart(self.labels, self.series, symbol=symbol, title=title or self.title).donut()
-        else:
-            chart = Chart(self.labels, self.series, self.groups, symbol=symbol, title=title or self.title)
-            if self.labels and self.labels[0] == 'Jan':
-                return chart.line()
-            else:
-                return chart.bar()
+        return self.as_table(title=title, symbol=symbol).as_chart()
 
 
 class ModelGeneratorWrapper:
@@ -134,8 +111,8 @@ class QuerySet(query.QuerySet):
         queryset = self._clone()
         queryset.user = user
         if user:
-            self_permission = '{}.list_{}'.format(app_label, self.model.__name__.lower())
-            obj_permission = obj and '{}.list_{}'.format(get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())
+            self_permission = '{}.view_{}'.format(app_label, self.model.__name__.lower())
+            obj_permission = obj and '{}.view_{}'.format(get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())
             has_perm = obj_permission and user.has_perm(obj_permission) or user.has_perm(self_permission)
         else:
             has_perm = True
@@ -211,7 +188,7 @@ class QuerySet(query.QuerySet):
                 horizontal_objects = horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '{} por {} e {}'.format(verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
-                statistics = QueryStatistics([unicode(x) for x in vertical_objects], [unicode(x) for x in horizontal_objects], title=title)
+                statistics = QueryStatistics([], [unicode(x) for x in vertical_objects], [unicode(x) for x in horizontal_objects], title=title)
                 for vertical_object in vertical_objects:
                     serie = []
                     avg = False
@@ -471,7 +448,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             log.save()
             log.create_indexes(self)
 
-        self.check_role()
+        self._check_role()
 
     def as_user(self):
         role_username = get_metadata(self.__class__, 'role_username')
@@ -479,7 +456,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             return get_user_model().objects.get(username=getattr(self, role_username))
         return None
 
-    def check_role(self, saving=True):
+    def _check_role(self, saving=True):
         role_name = get_metadata(self.__class__, 'role_name')
         role_username = get_metadata(self.__class__, 'role_username')
         verbose_name = get_metadata(self.__class__, 'verbose_name')
@@ -549,8 +526,9 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                         user.username = username
                         user.name = name or unicode(self)
                         user.email = email
-                        user.set_password(settings.DEFAULT_PASSWORD)
                         user.save()
+                        if user.email and not (settings.DEBUG or 'test' in sys.argv):
+                            user.send_access_invitation()
 
                     user.groups.add(group)
                     if organization:
@@ -616,7 +594,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
         super(Model, self).delete(*args, **kwargs)
 
-        self.check_role(False)
+        self._check_role(False)
 
     def get_logs(self):
         content_type = ContentType.objects.get_for_model(self.__class__)
