@@ -84,10 +84,12 @@ class ReportResponse(PdfResponse):
     def __init__(self, title, request, objects, landscape=False, template='report.html'):
         from djangoplus.admin.models import Settings
         app_settings = Settings.default()
-        logo = app_settings.logo
+        logo = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
         project_name = app_settings.initials
         project_description = app_settings.name
+        unit_or_organization = request.session.get('scope')
         context = dict(objects=objects, title=title, today=datetime.date.today(), logo=logo,
-                       project_name=project_name, project_description=project_description)
+                       project_name=project_name, project_description=project_description,
+                       unit_or_organization=unit_or_organization)
         html = render_to_string([template], context, request=request)
         super(ReportResponse, self).__init__(html, landscape)

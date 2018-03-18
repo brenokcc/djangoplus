@@ -41,14 +41,6 @@
         </div>
         {% endif %}
     </div>
-    {% else %}
-        {% if not self.request.GET.popup and self.drop_down.actions %}
-        <div id="{% uuid %}" class="action-bar">
-            <div class="pull-right" id="{% uuid %}">
-                {{ self.drop_down }}
-            </div>
-        </div>
-        {% endif %}
     {% endif %}
 
     {% for fieldset in self.get_active_fieldsets %}

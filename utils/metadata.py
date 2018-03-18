@@ -291,7 +291,7 @@ def getattr_rec(obj, args):
                             return mark_safe(unicode(value))
 
             if callable(value):
-                if type(value).__name__ == 'ManyRelatedManager':
+                if type(value).__name__ in ('ManyRelatedManager' or 'RelatedManager'):
                     value = value.all()
                 else:
                     value = value()
@@ -329,7 +329,7 @@ def should_filter_or_display(request, model, to):
             get_metadata(model, 'can_view', (), iterable=True) +
             get_metadata(model, 'can_view_by_organization', (), iterable=True) +
             get_metadata(model, 'can_view_by_unit', (), iterable=True))
-        if can_view and not request.user.in_group(*can_view):
+        if not request.user.is_superuser and can_view and not request.user.in_group(*can_view):
             return False
     return True
 

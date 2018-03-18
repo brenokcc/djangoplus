@@ -73,6 +73,7 @@ printf "" > $PROJECT_NAME/static/css/$PROJECT_NAME.css
 printf "" > $PROJECT_NAME/__init__.py
 
 printf "# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from djangoplus.ui.components import forms
 from djangoplus.decorators import action
 
@@ -105,6 +106,7 @@ from djangoplus.decorators.views import view, action, dashboard
 " > $PROJECT_NAME/views.py
 
 printf "# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from djangoplus.admin.models import User
 from djangoplus.test import TestCase
 from django.conf import settings
@@ -122,6 +124,7 @@ printf "djangoplus
 " > requirements.txt
 
 printf "# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from django.conf.urls import url, include
 from djangoplus.admin.views import public, index
 
@@ -135,6 +138,7 @@ urlpatterns = [
 " > $PROJECT_NAME/urls.py
 
 printf "# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 def h1(value):
     return u'<h1></h1>' %% value

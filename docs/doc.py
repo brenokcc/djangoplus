@@ -210,7 +210,7 @@ class UseCase(object):
             subset = find_subset_by_title(subset_name, model)
 
             # set the attributes of the usecase
-            self.description = subset['function'].__doc__.decode('utf-8').strip()
+            self.description = subset['function'].__doc__.strip()
             for can_view in subset['can_view']:
                 self.actors.append(can_view)
             if not self.actors:
@@ -337,6 +337,7 @@ class UseCase(object):
 
         # check if there is a fieldset was defined with the relation
         relation_name = None
+        inlines = []
         if hasattr(model, 'fieldsets'):
             for fieldset in model.fieldsets:
                 if 'relations' in fieldset[1]:
@@ -344,10 +345,16 @@ class UseCase(object):
                         tmp = getattr(model, item)
                         if tmp.rel.related_model == related_model:
                             relation_name = item
+                if 'inlines' in fieldset[1]:
+                    for item in fieldset[1]['inlines']:
+                        inlines.append(item)
+                        tmp = getattr(model, item)
+                        if tmp.rel.related_model == related_model:
+                            relation_name = item
 
         # if the relation was defined in a fieldset
         if relation_name:
-            add_inline = get_metadata(related_model, 'add_inline')
+            add_inline = relation_name in inlines
             add_label = get_metadata(related_model, 'add_label')
             button_label = add_label or 'Adicionar'
             button_label = get_metadata(related_model, 'add_label', button_label)
@@ -496,7 +503,7 @@ class UseCase(object):
             self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
             self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
 
-            description = func.__doc__ and func.__doc__.decode('utf-8').strip() or ''
+            description = func.__doc__ and func.__doc__.strip() or ''
             business_rules = utils.extract_exception_messages(func)
             post_condition = _('Action successfully performed')
             self.name = action_dict['title']
@@ -637,7 +644,7 @@ class Documentation(object):
         # load description
         for app_config in apps.get_app_configs():
             if app_config.label == settings.PROJECT_NAME:
-                self.description = app_config.module.__doc__ and app_config.module.__doc__.decode('utf-8').strip() or None
+                self.description = app_config.module.__doc__ and app_config.module.__doc__.strip() or None
 
         # load actors
         organization_name = loader.organization_model and get_metadata(loader.organization_model, 'verbose_name') or None

@@ -27,6 +27,7 @@ def listt(request, app, cls, subset=None):
         _model = apps.get_model(app, cls)
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
+    title = get_metadata(_model, 'verbose_name_plural')
     subsetp = None
     list_display = None
     list_filter = None
@@ -37,12 +38,15 @@ def listt(request, app, cls, subset=None):
         list_display = subset_func._metadata['{}:list_display'.format(subset)]
         list_filter = subset_func._metadata['{}:list_filter'.format(subset)]
         search_fields = subset_func._metadata['{}:search_fields'.format(subset)]
+        title = '{} - {}'.format(title, subset_func._metadata['{}:title'.format(subset)])
     else:
         tid = request.GET.get('tid')
         subsetp = request.GET.get('tab{}'.format(tid))
         if tid and subsetp:
             subset_func = getattr(_model.objects.get_queryset(), subsetp)
+            subset_title = subset_func._metadata['{}:title'.format(subsetp)]
             can_view = subset_func._metadata['{}:can_view'.format(subsetp)]
+            title = '{} - {}'.format(title, subset_func._metadata['{}:title'.format(subsetp)])
             if not permissions.check_group_or_permission(request, can_view):
                 return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
         else:
@@ -52,12 +56,6 @@ def listt(request, app, cls, subset=None):
 
     qs = _model.objects.all(request.user)
     list_subsets = subset and [subset] or None
-    verbose_name_plural = get_metadata(_model, 'verbose_name_plural')
-    if subset:
-        title = '{} {}'.format(verbose_name_plural, getattr(getattr(qs, subset), '_metadata')['{}:title'.format(subset)])
-
-    else:
-        title = '{}'.format(verbose_name_plural)
 
     paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True, list_display=list_display, list_filter=list_filter, search_fields=search_fields)
     response = paginator.get_response()

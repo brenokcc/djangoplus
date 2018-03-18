@@ -22,6 +22,7 @@ class Chart(Component):
         self.groups = groups
         self.symbol = symbol or ''
         self.title = title
+        self.color_index = 0
 
         for i, serie in enumerate(self.series):
             for j, valor in enumerate(serie):
@@ -36,6 +37,20 @@ class Chart(Component):
 
     def __unicode__(self):
         return self.render('chart.html')
+
+    def get_box_series(self):
+        l = []
+        serie = self.series[0]
+        total = sum(serie)
+        for i, label in enumerate(self.labels):
+            percentage = int(total and serie[i]*100/total or 0)
+            l.append((label, serie[i], percentage))
+        return l
+
+    def next_color(self):
+        color = self.colors[self.color_index]
+        self.color_index += 1
+        return color
 
     def change_type(self, chart_type):
         self.type = chart_type
@@ -64,6 +79,9 @@ class Chart(Component):
 
     def area(self):
         return self.change_type('area')
+
+    def box(self):
+        return self.change_type('box')
 
 
 class Timeline(Component):

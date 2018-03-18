@@ -1,3 +1,26 @@
+{% if self.type == "box" %}
+<div class="panel panel-default">
+    <div class="panel-heading bg-info">
+        <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
+    </div>
+    <div class="panel-body">
+        <table width="100%">
+            <tr>
+            {% for label, value, percentage in self.get_box_series %}
+                <td align="center">
+                <div data-toggle="tooltip" title="{{ value }} {{ label }}, {{ percentage }}%" style="background-color: {{ self.next_color }}; min-width: 100px; margin: 5px; color:white; border-radius: 15px;">
+                    <div style="font-size: 700%">{{ value }}</div>
+                    <div style="font-size: 150%">{{ label }}</div>
+                    <div>{{ percentage }}%</div>
+                    <br>
+                </div>
+                </td>
+            {% endfor %}
+            </tr>
+        </table>
+    </div>
+</div>
+{% else %}
 <link href="/static/css/chartist.min.css" rel="stylesheet">
 <script src="/static/js/chartist.min.js"></script>
 <style>
@@ -117,6 +140,7 @@
     });
 
 </script>
+{% endif %}
 {% endif %}
 
 

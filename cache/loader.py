@@ -24,6 +24,7 @@ actions = dict()
 class_actions = dict()
 fieldset_actions = dict()
 subset_actions = dict()
+add_inline_actions = dict()
 
 # documentation
 workflows = dict()
@@ -126,7 +127,7 @@ if not initialized:
                     subset_can_view = attr._metadata['{}:can_view'.format(attr_name)]
                     subset_order = attr._metadata['{}:order'.format(attr_name)]
                     subset_menu = attr._metadata['{}:menu'.format(attr_name)]
-                    subset_position = attr._metadata['{}:position'.format(attr_name)]
+                    subset_dashboard = attr._metadata['{}:dashboard'.format(attr_name)]
                     subset_list_display = attr._metadata['{}:list_display'.format(attr_name)]
                     subset_list_filter = attr._metadata['{}:list_filter'.format(attr_name)]
                     subset_search_fields = attr._metadata['{}:search_fields'.format(attr_name)]
@@ -141,8 +142,8 @@ if not initialized:
                     )
                     subsets[model].append(item)
 
-                    if subset_position:
-                        widget = dict(title=subset_title, model=model, function=attr_name, can_view=subset_can_view, position=subset_position, formatter=None, link=True, list_display=subset_list_display, list_filter=subset_list_filter, search_fields=subset_search_fields)
+                    if subset_dashboard:
+                        widget = dict(title=subset_title, model=model, function=attr_name, can_view=subset_can_view, dashboard=subset_dashboard, formatter=None, link=True, list_display=subset_list_display, list_filter=subset_list_filter, search_fields=subset_search_fields)
                         subset_widgets.append(widget)
 
                     if subset_workflow:
@@ -156,9 +157,9 @@ if not initialized:
                 else:
                     widget_title = attr._metadata['{}:verbose_name'.format(attr_name)]
                     widget_can_view = attr._metadata['{}:can_view'.format(attr_name)]
-                    widget_position = attr._metadata['{}:position'.format(attr_name)]
+                    widget_dashboard = attr._metadata['{}:dashboard'.format(attr_name)]
                     widget_formatter = attr._metadata['{}:formatter'.format(attr_name)]
-                    widget = dict(title=widget_title, model=model, function=attr_name, can_view=widget_can_view, position=widget_position, formatter=widget_formatter, link=False)
+                    widget = dict(title=widget_title, model=model, function=attr_name, can_view=widget_can_view, dashboard=widget_dashboard, formatter=widget_formatter, link=False)
                     subset_widgets.append(widget)
 
         # indexing the actions refered in fieldsets
@@ -199,6 +200,27 @@ if not initialized:
                         action_view = dict(title=action_title, function=None, url=url, can_view=action_can_execute, menu=action_menu, icon=None,
                               style='ajax', add_shortcut=False, doc=function.__doc__, sequence=None)
                         views.append(action_view)
+
+        # indexing the actions related to related whose model has the add_inline meta-attribute
+        inlines = []
+        if hasattr(model, 'fieldsets'):
+            for fieldset in model.fieldsets:
+                if 'relations' in fieldset[1]:
+                    for item in fieldset[1]['relations']:
+                        tmp = getattr(model, item)
+                        if hasattr(tmp, 'rel'):
+                            add_inline = get_metadata(tmp.rel.related_model, 'add_inline')
+                            if add_inline:
+                                action_model_verbose_name = get_metadata(tmp.rel.related_model, 'verbose_name')
+                                action_title = get_metadata(tmp.rel.related_model, 'add_label', 'Adicionar {}'.format(action_model_verbose_name))
+                                action_can_execute = get_metadata(tmp.rel.related_model, 'can_add')
+                                url = '/add/{}/{}/{{}}/{}/'.format(app_label, model_name, tmp.rel.name)
+                                add_inline_action = dict(title=action_title, url=url, can_execute=action_can_execute, style='popup')
+                                if model not in add_inline_actions:
+                                    add_inline_actions[model] = []
+                                action_subset = add_inline is not True and add_inline or None
+                                add_inline_action['subset'] = action_subset
+                                add_inline_actions[model].append(add_inline_action)
 
         # indexing the actions defined in managers
         for attr_name in dir(model.objects.get_queryset()):

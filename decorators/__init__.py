@@ -10,7 +10,7 @@ def meta(verbose_name, can_view=(), formatter=None, dashboard=None):
         set_metadata(func, 'verbose_name', verbose_name)
         set_metadata(func, 'can_view', can_view)
         set_metadata(func, 'formatter', formatter)
-        set_metadata(func, 'position', dashboard)
+        set_metadata(func, 'dashboard', dashboard)
         return func
     return decorate
 
@@ -29,7 +29,7 @@ def subset(title, can_view=(), alert=False, notify=None, menu=None, sequence=0, 
         set_metadata(function, 'can_view', iterable(can_view))
         set_metadata(function, 'name', function.func_name)
         set_metadata(function, 'order', cache.next_number())
-        set_metadata(function, 'position', dashboard)
+        set_metadata(function, 'dashboard', dashboard)
         set_metadata(function, 'list_display', list_display)
         set_metadata(function, 'list_filter', list_filter)
         set_metadata(function, 'search_fields', search_fields)

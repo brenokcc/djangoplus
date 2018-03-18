@@ -27,10 +27,7 @@ class Breadcrumbs(Component):
                 while index:
                     index -= 1
                     title, url = stack[index]
-                    if not '?' in url:
-                        url = '{}?'.format(url)
-                    urlpath, querystring = url.split('?')[0:2]
-                    if view_title == title:#and QueryDict(querystring) == request.GET
+                    if view_title == title:
                         count = len(stack) - index
                         break
 
@@ -71,7 +68,8 @@ def httprr(request, url, message='', error=False):
                 stack.pop()
                 back -= 1
             request.session.save()
-            title, url = stack[-1]
+            if stack:
+                title, url = stack[-1]
         else:
             url = request.get_full_path()
 

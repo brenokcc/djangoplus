@@ -55,6 +55,9 @@ class ModelDropDown(GroupDropDown):
                     if not self.has_inline_action:
                         self.has_inline_action = form_action.get('inline')
 
+            if not self.has_inline_action:
+                self.has_inline_action = self.model in loader.add_inline_actions
+
         super(ModelDropDown, self).__init__(request)
         # adding the actions defined in the model class
         for category in loader.actions[self.model]:
@@ -64,6 +67,11 @@ class ModelDropDown(GroupDropDown):
     def add_action(self, label, url, css='popup', icon=None, category='Ações'):
         if category not in self.actions:
             self.actions[category] = []
+        if self.obj:
+            if '{}' in url:
+                url = url.format(self.obj.pk)
+            else:
+                url = '{}{}/'.format(url, self.obj.pk)
         item = dict(label=label, url=url, css=css, icon=icon)
         self.actions[category].append(item)
 
@@ -77,8 +85,17 @@ class ModelDropDown(GroupDropDown):
         self.actions = copy.deepcopy(self.actions_cache)
         self.obj = obj
 
-        if not inline and get_metadata(type(obj), 'pdf'):
-            self.add_action('Imprimir', '?pdf=', 'ajax', 'fa fa-print')
+        if inline:
+            if self.model in loader.add_inline_actions:
+                for add_inline_action in loader.add_inline_actions[self.model]:
+                    if add_inline_action['subset'] is True or add_inline_action['subset'] == subset_name:
+                        if permissions.check_group_or_permission(self.request, add_inline_action['can_execute']):
+                            self.add_action(
+                                add_inline_action['title'], add_inline_action['url'], 'popup', 'fa fa-plus'
+                            )
+        else:
+            if get_metadata(type(obj), 'pdf'):
+                self.add_action('Imprimir', '?pdf=', 'ajax', 'fa fa-print')
 
         for category in loader.actions[self.model]:
             for view_name in loader.actions[self.model][category]:

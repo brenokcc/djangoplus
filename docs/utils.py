@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import re
-import json
 import inspect
 from django.apps import apps
 from django.utils.translation import ugettext as _
@@ -11,8 +10,8 @@ from djangoplus.utils.metadata import get_metadata, get_fiendly_name
 def extract_documentation(model):
     s = ''
     if model.__doc__:
-        if not model.__doc__.decode('utf-8').startswith('{}('.format(model.__name__)):
-            s = model.__doc__.decode('utf-8')
+        if not model.__doc__.startswith('{}('.format(model.__name__)):
+            s = model.__doc__
             s = s.replace('\t', '').replace('\n', '').replace('  ', ' ').strip()
     return s
 
@@ -20,7 +19,7 @@ def extract_documentation(model):
 def extract_exception_messages(function):
     messages = []
     if function:
-        code = unicode((''.join(inspect.getsourcelines(function)[0])).decode('utf-8'))
+        code = ''.join([x.decode('utf-8') for x in inspect.getsourcelines(function)[0]])
         for message in re.findall('ValidationError.*\(.*\)', code):
             messages.append(
                 message[message.index('(') + 1:message.index(')') - 1].replace('u\'', '').replace('"', ''))
@@ -64,7 +63,6 @@ def get_list_display(model):
                 l.append(', ')
         l.append('"{}"'.format(get_fiendly_name(model, lookup).lower()))
     return ''.join(l)
-
 
 
 def documentation(as_json=False):

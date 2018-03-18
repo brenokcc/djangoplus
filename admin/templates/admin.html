@@ -74,7 +74,7 @@
         {% if request.user.is_authenticated %}
         <ul class="nav navbar-nav navbar-left navbar-top-links">
             <li><a class="ajax" href="/admin/" title="Principal"><i class="fa fa-home fa-fw"></i></a></li>
-            <li><a class="ajax referrer-link" href="#" title="Voltar"><i class="fa fa-arrow-left fa-fw"></i></a></li>
+            <li><a class="ajax referrer-link" href="javascript:" title="Voltar"><i class="fa fa-arrow-left fa-fw"></i></a>
         </ul>
         {% endif %}
 
@@ -144,7 +144,7 @@
             {% block content %}
 
             {% endblock %}
-
+{% if not request.GET.popup %}
                 <div align="right" class="copyright">
                     {% if settings.company %}
                         &copy; {{ settings.company }} |
@@ -164,7 +164,7 @@
                     Versão {{ settings.version }}
                 </div>
 
-{% if not request.GET.popup %}
+
         </div>
     </main>
 

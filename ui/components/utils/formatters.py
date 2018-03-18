@@ -47,6 +47,10 @@ def area_chart(value, **kwargs):
     return chart(value, **kwargs).area()
 
 
+def box_chart(value, **kwargs):
+    return chart(value, **kwargs).box()
+
+
 def qrcode(value, **kwargs):
     return QrCode(value)
 

@@ -98,7 +98,8 @@ class ModelPanel(Component):
             if not tab_name or slugify(tab_name) == self.current_tab or self.as_pdf:
 
                 fieldset_dict = dict(title=title or 'Dados Gerais', tab_name=tab_name, fields=[], paginators=[], drop_down=drop_down, image=None)
-                relations = fieldset[1].get('relations', [])
+                relations = list(fieldset[1].get('relations', []))
+                inlines = list(fieldset[1].get('inlines', []))
 
                 if tab_name or self.as_pdf:
                     self.fieldsets_with_tab_name.append(fieldset_dict)
@@ -129,34 +130,21 @@ class ModelPanel(Component):
                                 elif hasattr(attr, 'field'):
                                     field = attr.field
                                 if not field or not hasattr(field, 'display') or field.display:
-                                    if self.complete and is_one_to_one(model, attr_name) and hasattr(attr.field, 'display') and attr.field.display == 'detail':
-                                        relations.append(attr_name)
-                                    elif self.complete and is_one_to_many(model, attr_name) and field.display == 'detail':
-                                        relations.append(attr_name)
-                                    elif self.complete and is_many_to_one(model, attr_name) and field.display == 'detail':
-                                        relations.append(attr_name)
-                                    elif self.complete and is_many_to_many(model, attr_name) and (not hasattr(field, 'display') or field.display == 'detail'):
-                                        relations.append(attr_name)
-                                    elif self.complete and is_one_to_many_reverse(model, attr_name):
-                                        relations.append(attr_name)
-                                    else:
-                                        verbose_name, lookup, sortable, to = get_fiendly_name(model, attr_name, as_tuple=True)
-                                        if to and not should_filter_or_display(self.request, model, to):
-                                            continue
-                                        attr_names.append(dict(verbose_name=verbose_name, name=attr_name))
+                                    verbose_name, lookup, sortable, to = get_fiendly_name(model, attr_name, as_tuple=True)
+                                    if to and not should_filter_or_display(self.request, model, to):
+                                        continue
+                                    attr_names.append(dict(verbose_name=verbose_name, name=attr_name))
                         if attr_names:
                             fieldset_dict['fields'].append(attr_names)
 
                 if self.complete:
 
-                    for relation_name in relations:
+                    for relation_name in relations + inlines:
                         if relation_name in [field.name for field in get_metadata(model, 'get_fields')]:
                             relation_field = find_field_by_name(model, relation_name)
                             relation = getattr(self.obj, relation_name)
-                            if not relation and hasattr(relation_field, 'rel') and relation_field.rel.to:
-                                relation = relation_field.rel.to()
-                            if hasattr(relation.__class__, 'pk'):
-                                if relation.pk:
+                            if is_one_to_one(model, relation_name) or is_many_to_one(model, relation_name):
+                                if relation:
                                     fieldset_title = relation_field.verbose_name
                                     panel_fieldsets = get_metadata(type(relation), 'view_fieldsets', [])
                                     panel_fieldsets = ((fieldset_title, panel_fieldsets[0][1]), )
@@ -179,7 +167,9 @@ class ModelPanel(Component):
                                             panel.drop_down.add_action('Atualizar {}'.format(relation_field.verbose_name),
                                                                        add_url, 'popup', 'fa-edit')
 
-                                    fieldset_dict['paginators'].append(panel)
+                                else:
+                                    panel = Panel(request, relation_field.verbose_name, text='')
+                                fieldset_dict['paginators'].append(panel)
                             else:
                                 fieldset_title = len(relations) > 1 and title or relation_field.verbose_name
 
@@ -222,8 +212,7 @@ class ModelPanel(Component):
                                 instance = qs.model()
                                 setattr(instance, related_object.field.name, self.obj)
                                 if permissions.can_add(self.request, instance):
-                                    add_inline = get_metadata(qs.model, 'add_inline')
-                                    if add_inline:
+                                    if relation_name in inlines:
                                         form_name = get_metadata(qs.model, 'add_form')
                                         if form_name:
                                             fromlist = get_metadata(qs.model, 'app_label')
@@ -434,57 +423,68 @@ class DashboardPanel(Component):
         self.center.append(card_panel)
 
         for item in loader.subset_widgets:
-            if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):
-                model = item['model']
-                title = item['title']
-                function = item['function']
-                position = item['position']
-                formatter = item['formatter']
-                list_display = item['list_display']
-                link = item['link']
-                qs = model.objects.all()
-                qs.user = request.user
-                f_return = getattr(qs, function)()
-                html = ''
 
-                if type(f_return) in (int, Decimal):
-                    verbose_name = get_metadata(model, 'verbose_name_plural')
-                    icon = get_metadata(model, 'icon')
-                    panel = NumberPanel(request, verbose_name, f_return, title, icon)
-                    html = unicode(panel)
+            model = item['model']
+            title = item['title']
+            function = item['function']
+            dashboard = item['dashboard']
+            formatter = item['formatter']
+            list_display = item.get('list_display')
+            link = item['link']
 
-                if type(f_return).__name__ == 'QueryStatistics' and not formatter:
-                    formatter = 'statistics'
+            l = []
+            if type(dashboard) == dict:
+                for position, group_names in dashboard.items():
+                    group_names = type(group_names) == tuple and group_names or (group_names,)
+                    l.append((position, group_names))
+            else:
+                l.append((dashboard, item['can_view']))
 
-                if formatter:
-                    func = loader.formatters[formatter]
-                    if len(func.func_code.co_varnames) == 1:
-                        html = unicode(func(f_return))
-                    else:
-                        html = unicode(func(f_return, request=self.request, verbose_name=title))
-                elif hasattr(f_return, 'model'):
-                    compact = position in ('left', 'right')
-                    app_label = get_metadata(model, 'app_label')
-                    model_name = model.__name__.lower()
-                    verbose_name_plural = get_metadata(model, 'verbose_name_plural')
-                    if link:
-                        title = '{} {}'.format(verbose_name_plural, title)
-                    url = '/list/{}/{}/{}/'.format(app_label, model_name, function)
-                    paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[function], url=link and url or None)
-                    if compact:
-                        paginator.column_names = paginator.column_names[0:1]
-                    html = unicode(paginator)
+            for position, group_names in l:
+                if permissions.check_group_or_permission(request, group_names, ignore_superuser=True):
+                    qs = model.objects.all()
+                    qs.user = request.user
+                    f_return = getattr(qs, function)()
+                    html = ''
 
-                if position == 'top':
-                    self.top.append(html)
-                elif position == 'center':
-                    self.center.append(html)
-                elif position == 'left':
-                    self.left.append(html)
-                elif position == 'right':
-                    self.right.append(html)
-                elif position == 'bottom':
-                    self.bottom.append(html)
+                    if type(f_return) in (int, Decimal):
+                        verbose_name = get_metadata(model, 'verbose_name_plural')
+                        icon = get_metadata(model, 'icon')
+                        panel = NumberPanel(request, verbose_name, f_return, title, icon)
+                        html = unicode(panel)
+
+                    if type(f_return).__name__ == 'QueryStatistics' and not formatter:
+                        formatter = 'statistics'
+
+                    if formatter:
+                        func = loader.formatters[formatter]
+                        if len(func.func_code.co_varnames) == 1:
+                            html = unicode(func(f_return))
+                        else:
+                            html = unicode(func(f_return, request=self.request, verbose_name=title))
+                    elif hasattr(f_return, 'model'):
+                        compact = position in ('left', 'right')
+                        app_label = get_metadata(model, 'app_label')
+                        model_name = model.__name__.lower()
+                        verbose_name_plural = get_metadata(model, 'verbose_name_plural')
+                        if link:
+                            title = '{} {}'.format(verbose_name_plural, title)
+                        url = '/list/{}/{}/{}/'.format(app_label, model_name, function)
+                        paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[function], url=link and url or None)
+                        if compact:
+                            paginator.column_names = paginator.column_names[0:1]
+                        html = unicode(paginator)
+
+                    if position == 'top':
+                        self.top.append(html)
+                    elif position == 'center':
+                        self.center.append(html)
+                    elif position == 'left':
+                        self.left.append(html)
+                    elif position == 'right':
+                        self.right.append(html)
+                    elif position == 'bottom':
+                        self.bottom.append(html)
 
         for item in loader.widgets:
             if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):

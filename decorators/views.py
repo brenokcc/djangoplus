@@ -19,9 +19,17 @@ def view(title, can_view=None, icon=None, menu=None, login_required=True, style=
             if without_permission or without_authentication:
                     return HttpResponseRedirect('/admin/login/?next={}'.format(url))
             f_return = function(request, *args, **kwargs)
+            if 'title' not in f_return:
+                f_return['title'] = title
             if type(f_return) == dict:
-                f_return['title'] = title.format(f_return)
                 if 'pdf' in style:
+                    from datetime import datetime
+                    from djangoplus.admin.models import Settings
+                    app_settings = Settings.default()
+                    f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
+                    f_return['project_name'] = app_settings.initials
+                    f_return['project_description'] = app_settings.name
+                    f_return['today'] = datetime.now()
                     template_list = ['{}.html'.format(function.func_name), 'report.html']
                     return PdfResponse(render_to_string(template_list, f_return, request=request))
                 else:
@@ -54,9 +62,17 @@ def action(model, title, can_execute=(), condition=None, category='Ações',
             if can_execute and not permissions.check_group_or_permission(request, '{}.{}'.format(model._meta.app_label, function.func_name)):
                 return HttpResponseRedirect('/admin/login/')
             f_return = function(request, *args, **kwargs)
-
+            if 'title' not in f_return:
+                f_return['title'] = title
             if type(f_return) == dict:
                 if 'pdf' in style:
+                    from datetime import datetime
+                    from djangoplus.admin.models import Settings
+                    app_settings = Settings.default()
+                    f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
+                    f_return['project_name'] = app_settings.initials
+                    f_return['project_description'] = app_settings.name
+                    f_return['today'] = datetime.now()
                     template_list = ['{}.html'.format(function.func_name), 'report.html']
                     return PdfResponse(render_to_string(template_list, f_return, request=request))
                 else:

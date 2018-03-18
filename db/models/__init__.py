@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import json
 import six
@@ -181,20 +182,31 @@ class QuerySet(query.QuerySet):
                 statistics.add(serie)
                 return statistics
         else:
-            vertical_model = find_model(self.model, vertical_key)
-            vertical_objects = vertical_model.objects.filter(id__in=self.values_list(vertical_key, flat=True))
+            if vertical_field.choices:
+                vertical_choices = vertical_field.choices
+            elif vertical_field.__class__.__name__ == 'BooleanField':
+                vertical_choices = [(True, 'Sim'), (False, 'Não')]
+            else:
+                vertical_model = find_model(self.model, vertical_key)
+                vertical_choices = [(o.pk, unicode(o)) for o in vertical_model.objects.filter(id__in=self.values_list(vertical_key, flat=True))]
             if horizontal_key:
-                horizontal_model = find_model(self.model, horizontal_key)
-                horizontal_objects = horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))
                 horizontal_field = get_field(self.model, horizontal_key)
+                if horizontal_field.choices:
+                    horizontal_choices = horizontal_field.choices
+                elif horizontal_field.__class__.__name__ == 'BooleanField':
+                    vertical_choices = [(True, 'Sim'), (False, 'Não')]
+                else:
+                    horizontal_model = find_model(self.model, horizontal_key)
+                    horizontal_choices = [(o.pk, unicode(o)) for o in horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))]
+
                 title = '{} por {} e {}'.format(verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
-                statistics = QueryStatistics([], [unicode(x) for x in vertical_objects], [unicode(x) for x in horizontal_objects], title=title)
-                for vertical_object in vertical_objects:
+                statistics = QueryStatistics([], [choice[1] for choice in vertical_choices], [choice[1] for choice in horizontal_choices], title=title)
+                for vertical_choice in vertical_choices:
                     serie = []
                     avg = False
-                    for horizontal_object in horizontal_objects:
+                    for horizontal_choice in horizontal_choices:
                         value = 0
-                        lookup = {vertical_key: vertical_object.id, horizontal_key: horizontal_object.id}
+                        lookup = {vertical_key: vertical_choice[0], horizontal_key: horizontal_choice[0]}
                         if aggregate:
                             mode, attr = aggregate
                             if mode == 'sum':
@@ -212,11 +224,11 @@ class QuerySet(query.QuerySet):
                 return statistics
             else:
                 title = '{} por {}'.format(verbose_name, vertical_field.verbose_name)
-                statistics = QueryStatistics([], [unicode(x) for x in vertical_objects], title=title)
+                statistics = QueryStatistics([], [choice[1] for choice in vertical_choices], title=title)
                 serie = []
                 avg = False
-                for vertical_object in vertical_objects:
-                    lookup = {vertical_key: vertical_object.id}
+                for vertical_choice in vertical_choices:
+                    lookup = {vertical_key: vertical_choice[0]}
                     value = 0
                     if aggregate:
                         mode, attr = aggregate

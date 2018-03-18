@@ -19,7 +19,7 @@ class Paginator(Component):
 
         super(Paginator, self).__init__(request)
 
-        self.id = abs(hash(title))
+        self.id = not is_list_view and abs(hash(title)) or '0'
         self.qs = qs.all()
         self.title = title
         self.list_display = list_display
@@ -33,6 +33,7 @@ class Paginator(Component):
         self.is_list_view = is_list_view
         self.icon = get_metadata(qs.model, 'icon', None)
         self.list_total = get_metadata(qs.model, 'list_total', None)
+        self.ordering = get_metadata(qs.model, 'ordering', None)
         self.help_text = help_text
         self.url = url
 
@@ -235,6 +236,10 @@ class Paginator(Component):
 
     def get_queryset(self, paginate=True):
         queryset = self.qs
+        if self.ordering:
+            if not type (self.ordering) == tuple:
+                self.ordering = self.ordering,
+            queryset = queryset.order_by(*self.ordering)
         if paginate:
             l = []
             count = queryset.count()

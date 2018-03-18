@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="panel panel-default info-panel" id="panel-dados-gerais">
     <div class="panel-heading">
         {{ self.title }}
@@ -10,6 +11,8 @@
                     <a class="ajax" href="{{ item.url }}">{{ item.label }}</a>
                 </p>
             </div>
+        {% empty %}
+            <div class="alert alert-warning">{% trans "No records found" %}.</div>
         {% endfor %}
     </div>
 

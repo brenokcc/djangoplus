@@ -43,12 +43,10 @@
         dt::after {
             content: ":";
         }
-        footer {
-            margin-top: 10px;
-        }
         h1 {
             font-size: 16pt;
-            margin: 5px 0;
+            margin-bottom: 0;
+            text-align: center;
         }
         h2 {
             font-size: 14pt;
@@ -57,25 +55,38 @@
             vertical-align: bottom;
         }
         h3 {
-            font-size: 12pt;
-            line-height: 1em;
+            font-size: 13pt;
             margin: 20px 0 0;
             padding: 10px 0;
         }
         h4 {
-            font-size: 11pt;
+            font-size: 12pt;
             font-weight: 400;
             margin: 20px 0 0;
             padding: 10px 0 0;
         }
-        header {
-            border-bottom: 1px solid #ccc;
-            margin: 0.5cm;
-            padding: 0 0 15px;
+        .header .title{
+            padding-top: 5px;
+            font-size: 14pt;
+            font-weight: bold;
         }
-        header td{
-            padding: 5px;
-            line-height: 2rem;
+        .header .subtitle{
+            font-size: 11pt;
+            font-weight: bold;
+        }
+        .header tr{
+            border: solid 1px #bbb;
+        }
+        .header td{
+            border: 0;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        .logo{
+            text-align: center;
+        }
+        .footer {
+            margin-top: 10px;
         }
         hr {
             border-top: 1px dotted #8c8b8b;
@@ -110,18 +121,20 @@
         .align-right {
             text-align: right;
         }
+        .table header {
+            border-bottom: 1px solid #ccc;
+            margin: 0.5cm;
+            padding: 0 0 15px;
+        }
+        .table header td{
+            padding: 5px;
+            line-height: 2rem;
+        }
         .table td,
         .table th {
             border: 1px solid #ccc;
             line-height: 1em;
             padding: 5px;
-        }
-        .header tr{
-            border: solid 1px #bbb;
-        }
-        .header td{
-            border: 0;
-            padding: 3px;
         }
         {% block style %}
         {% endblock %}
@@ -131,31 +144,37 @@
 <body>
 
 <header>
-{% block cabecalho %}
+{% block header %}
     <table class="header">
         <tr>
             {% if logo %}
-
-                <td align="center" width="50px"><img src="{{ logo }}"/></td>
+                <td class="logo" width="200px"><img src="{{ logo }}"/></td>
             {% endif %}
             <td align="center">
-                <h1 style="padding-top:10px">{{ project_name }} - {{ project_description }}</h1>
-                <b>Emitido em</b> {{ today|format }}
+                <div class="title">{{ project_name }} - {{ project_description }}</div>
+                    <div class="subtitle">
+                        {% if unit_or_organization %}<div>{{ unit_or_organization }}</div>{% endif %}
+                        {% block extra_header %}
+
+                        {% endblock %}
+                    </div>
+                <div>Emitido em {{ today|format }}</div>
             </td>
         </tr>
     </table>
 {% endblock %}
 </header> 
 
-<section>
 {% block content %}
+<section>
+    <h1 align="center">{{ title }}</h1>
     {% for obj in objects %}
         {{ obj }}
     {% endfor %}
-{% endblock %}
 </section>
+{% endblock %}
 
-<footer>
+<footer class="footer">
 <div id="footer" class="align-center">{% trans "Page" %} <pdf:pagenumber> {% trans "of" %} <pdf:pagecount> </div>
 </footer>
 

@@ -1,7 +1,6 @@
 {% load i18n %}
 {% if self.as_pdf %}
     {% with queryset=self.get_queryset %}
-    <h2>{{ self.title }}</h2>
     {% if queryset.exists %}
     <table class="table">
         <thead>
