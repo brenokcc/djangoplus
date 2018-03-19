@@ -34,6 +34,7 @@ class Form(django_forms.Form):
         self.configured_fieldsets = []
         self.submit_label = DEFAULT_SUBMIT_LABEL
         self.title = DEFAULT_FORM_TITLE
+        self.is_inner = False
 
         if self.method.lower() == 'post':
             kwargs['data'] = request.POST or None
@@ -55,6 +56,7 @@ class Form(django_forms.Form):
             self.title = hasattr(metaclass, 'title') and metaclass.title or ''
             self.icon = hasattr(metaclass, 'icon') and metaclass.icon or ''
             self.note = hasattr(metaclass, 'note') and metaclass.note or ''
+            self.is_inner = hasattr(metaclass, 'is_inner') and metaclass.is_inner or False
             self.horizontal = hasattr(metaclass, 'horizontal') and metaclass.horizontal or False
             self.perm_or_group = hasattr(metaclass, 'perm_or_group') and iterable(metaclass.perm_or_group) or self.perm_or_group
 
@@ -101,7 +103,7 @@ class Form(django_forms.Form):
                             continue
 
                 if self.request.user.is_authenticated and (not hasattr(field, 'ignore_lookup') or not field.ignore_lookup):
-                    if hasattr(self, 'instance'):
+                    if hasattr(self, 'instance') and not self.is_inner:
                         field.queryset = field.queryset.all(self.request.user, obj=self.instance)
 
                 if True:#hasattr(field.queryset.model._meta, 'organization_lookup') or hasattr(field.queryset.model,'organization_ptr'):

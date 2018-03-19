@@ -72,6 +72,7 @@ def get_one_to_many_form(request, obj, related_field_name, **kwargs):
             submit_label = 'Adicionar {}'.format(get_metadata(rel.to, 'verbose_name'))
             title = 'Adicionar {}'.format(get_metadata(rel.to, 'verbose_name'))
             icon = get_metadata(rel.to, 'icon', None)
+            is_inner = True
 
         def save(self, *args, **kwargs):
             super(Form, self).save(*args, **kwargs)
@@ -115,6 +116,7 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
                 exclude = get_metadata(rel.related_model, 'exclude_fields', ())
                 submit_label = related_obj.pk and 'Atualizar' or button_label
                 title = form_title
+                is_inner = True
 
     initial[related_field_name] = obj.pk
     for key in initial.keys():
@@ -148,6 +150,7 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
             submit_label = 'Atualizar {}'.format(related_field.verbose_name)
             title = 'Atualizar {}'.format(related_field.verbose_name)
             icon = get_metadata(related_field.rel.to, 'icon', None)
+            is_inner = True
 
         def save(self, *args, **kwargs):
             super(Form, self).save(*args, **kwargs)
@@ -179,6 +182,7 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
             fields = ()
             title = 'Adicionar {}'.format(get_metadata(related_field_model, 'verbose_name'))
             icon = get_metadata(related_field_model, 'icon', None)
+            is_inner = True
 
         def save(self, *args, **kwargs):
             for related_object in self.cleaned_data['related_objects']:

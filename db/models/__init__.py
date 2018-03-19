@@ -441,6 +441,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             post_save_form = getattr(self, '_post_save_form')
             getattr(post_save_form, 'save_121_and_12m')()
             getattr(post_save_form, '_save_m2m')()
+            super(Model, self).save(*args, **kwargs)
 
         if tree_index_field:
             for obj in type(self).objects.filter(**{parent_field.name: self}):

@@ -31,7 +31,7 @@ def autocomplete(request, app_name, class_name):
     else:
         queryset = qs
 
-    queryset = queryset.all(request.user)
+    # queryset = queryset.all(request.user)
     for obj in queryset[0:25]:
         html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
         results.append(dict(id=obj.id, text=unicode(obj), html=html))
