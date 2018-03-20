@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+BOLD='\033[1m'
+CYAN='\033[1;36m'
+GREEN='\033[1;32m'
+BLACK='\033[0m'
 
 if [[ "$1" != "" ]]; then
     PROJECT_NAME=$1
@@ -209,12 +212,10 @@ from djangoplus.fabric.tests.fabfile import *
 
 python manage.py sync
 echo ""
-echo ""
-echo ""
-echo "Congratulations!! The project was successfully started and configured. =)"
-echo "A superuser named 'admin' with password 'senha' was created"
-echo "Type 'cd $PROJECT_NAME' to get into the project's root directory"
-echo "Afterwards, type 'runserver' and access 'http://localhost:800' on your browser"
-echo "Type 'runtests' to execute the automatic tests"
-echo "After creating the models, type 'sync' for code and database syncronization"
+echo "${GREEN}Congratulations!!! The project was successfully started and configured. =)${BLACK}"
+echo "A superuser with username ${BOLD}admin${BLACK} and password ${BOLD}senha${BLACK} was created"
+echo "Type ${CYAN}cd $PROJECT_NAME${BLACK} to access project's root directory"
+echo "Type ${CYAN}runserver${BLACK} to execute the application"
+echo "Type ${CYAN}runtests${BLACK} to run the automatic tests"
+echo "Type ${CYAN}sync${BLACK} to syncronize the models with database"
 
