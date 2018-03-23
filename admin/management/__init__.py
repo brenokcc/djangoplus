@@ -4,6 +4,7 @@ from django.apps import apps
 from django.contrib.auth.models import Permission, Group, ContentType
 from django.db.models import signals
 from django.contrib.auth.management import create_permissions
+from django.contrib.auth import get_user_model
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.cache import loader
 
@@ -11,7 +12,7 @@ from djangoplus.cache import loader
 def sync_permissions():
 
     default_permissions_names = dict(edit='Editar', add='Cadastrar', delete='Excluir', list='Listar', view='Visualizar')
-
+    get_user_model().objects.update(permission_mapping='{}')
     # Permission.objects.all().delete()
     # Group.objects.all().delete()
 

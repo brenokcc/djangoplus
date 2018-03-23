@@ -263,6 +263,10 @@ class Paginator(Component):
                         l.append('<li class="{}"><a href="javascript:" onclick="{}">{}</a></li>'.format(css, onclick, i))
                 l.append('<li class="disabled"><a href="#!"><i class="fa fa-chevron-right"></i></a></li></ul>')
             self.pagination = ''.join(l)
+
+        select_related = get_metadata(queryset.model, 'select_related')
+        if select_related:
+            queryset = queryset.select_related(*select_related)
         return queryset
     
     def get_q(self):
@@ -340,8 +344,7 @@ class Paginator(Component):
             tab_search_fields = subset['search_fields']
             tab_active = False
             if permissions.check_group_or_permission(self.request, tab_can_view):
-                tab_qs = tab_function()
-                tab_qs = tab_qs.all(self.request.user)
+                tab_qs = getattr(tab_function.im_self.all(self.request.user), tab_function.im_func.func_name)()
                 tab_active = self.current_tab == tab_name
                 self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order, tab_help_text])
                 if (tab_active or len(list_subsets) == 1) and tab_help_text:

@@ -134,7 +134,7 @@ def _check_local_keys():
     # print response
     if key not in response:
         _debug('Uploading private key to digital ocean...')
-        command = '''curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' -d '{"name":"{}","public_key":"{}"}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, 'Default', key, url)
+        command = '''curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' -d '{{"name":"{}","public_key":"{}"}}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, 'Default', key, url)
         response = local(command, capture=True)
         # print response
 
@@ -280,7 +280,7 @@ def _check_domain():
         if data.get('id', None) == 'not_found':
             _debug('Creating domain {}...'.format(settings.DIGITAL_OCEAN_DOMAIN))
             ip_address = env.hosts[0]
-            command = '''curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' -d '{"name":"{}","ip_address":"{}"}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, settings.DIGITAL_OCEAN_DOMAIN, ip_address, url)
+            command = '''curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' -d '{{"name":"{}","ip_address":"{}"}}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, settings.DIGITAL_OCEAN_DOMAIN, ip_address, url)
             data = json.loads(local(command, capture=True))
 
         ip_address = None
@@ -501,7 +501,7 @@ def _create_droplet():
 
         _debug('Creating droplet...')
         url = 'https://api.digitalocean.com/v2/droplets/'
-        command = '''curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' -d '{"name":"{}","region":"{}","size":"{}","image":"{}", "ssh_keys":{}}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, project_name, 'nyc3', '512mb', 'debian-8-x64', ssh_keys, url)
+        command = '''curl -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' -d '{{"name":"{}","region":"{}","size":"{}","image":"{}", "ssh_keys":{}}}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, project_name, 'nyc3', '512mb', 'debian-8-x64', ssh_keys, url)
         response = json.loads(local(command, capture=True))
         droplet_id = response['droplet']['id']
 
@@ -513,7 +513,7 @@ def _create_droplet():
         # print response
         ip_address = response['droplet']['networks']['v4'][0]['ip_address']
         _debug('Droplet created with IP {}!'.format(ip_address))
-        _update_settings_file(ip_address)
+        # _update_settings_file(ip_address)
         return _check_droplet()
 
     _debug('Please, set the DIGITAL_OCEAN_TOKEN value in settings.py file')

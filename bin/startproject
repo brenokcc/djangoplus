@@ -85,7 +85,7 @@ from djangoplus.decorators import action
 printf "# -*- coding: utf-8 -*-
 from djangoplus.db import models
 from django.core.exceptions import ValidationError
-from djangoplus.decorators import meta, action, subset
+from djangoplus.decorators import meta, action, subset, role
 
 " > $PROJECT_NAME/models.py
 

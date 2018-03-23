@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import traceback, copy
+import traceback
 from django.apps import apps
 from django.conf import settings
 from django.shortcuts import render
@@ -33,7 +33,7 @@ def listt(request, app, cls, subset=None):
     list_filter = None
     search_fields = None
     if subset:
-        subset_func = getattr(_model.objects.all(), subset)
+        subset_func = getattr(_model.objects.get_queryset(), subset)
         can_view = subset_func._metadata['{}:can_view'.format(subset)]
         list_display = subset_func._metadata['{}:list_display'.format(subset)]
         list_filter = subset_func._metadata['{}:list_filter'.format(subset)]
@@ -139,7 +139,6 @@ def listt(request, app, cls, subset=None):
                             paginator.add_action(action_title, url, action_css, None)
 
     paginator.add_actions()
-
     return render(request, 'default.html', locals())
 
 
@@ -155,6 +154,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 
     obj = pk and _model.objects.all(request.user).get(pk=pk) or _model()
     obj.request = request
+    obj._user = request.user
 
     title = pk and unicode(obj) or get_metadata(_model, 'verbose_name')
 
@@ -359,6 +359,7 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
 
     obj = _model.objects.all(request.user).get(pk=pk)
     obj.request = request
+    obj._user = request.user
 
     permission_name = '{}.delete_{}'.format(app, cls)
     if permissions.can_delete(request, obj) and permissions.check_group_or_permission(request, permission_name):

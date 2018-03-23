@@ -131,7 +131,7 @@ if not initialized:
                     subset_list_display = attr._metadata['{}:list_display'.format(attr_name)]
                     subset_list_filter = attr._metadata['{}:list_filter'.format(attr_name)]
                     subset_search_fields = attr._metadata['{}:search_fields'.format(attr_name)]
-                    subset_workflow = attr._metadata['{}:sequence'.format(attr_name)]
+                    subset_workflow = attr._metadata['{}:usecase'.format(attr_name)]
                     subset_url = '{}{}/'.format(url, attr.im_func.func_name)
 
                     item = dict(
@@ -180,7 +180,7 @@ if not initialized:
 
                     action_can_execute = action['can_execute']
                     action_title = action['title']
-                    action_workflow = action['sequence']
+                    action_workflow = action['usecase']
                     action_menu = action['menu']
                     action_inline = action['inline']
                     view_name = action['view_name']
@@ -198,7 +198,7 @@ if not initialized:
                     if action_menu:
                         url = '/action/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), attr)
                         action_view = dict(title=action_title, function=None, url=url, can_view=action_can_execute, menu=action_menu, icon=None,
-                              style='ajax', add_shortcut=False, doc=function.__doc__, sequence=None)
+                              style='ajax', add_shortcut=False, doc=function.__doc__, usecase=None)
                         views.append(action_view)
 
         # indexing the actions related to related whose model has the add_inline meta-attribute
@@ -233,7 +233,7 @@ if not initialized:
                     action_group = action['group']
                     view_name = action['view_name']
                     action_subset = action['inline']
-                    action_workflow = action['sequence']
+                    action_workflow = action['usecase']
                     if action_group not in class_actions[model]:
                         class_actions[model][action_group] = dict()
                     class_actions[model][action_group][view_name] = action
@@ -269,7 +269,7 @@ if not initialized:
                         action_function = action['function']
                         action_name = action['view_name']
                         action_title = action['title']
-                        action_workflow = action['sequence']
+                        action_workflow = action['usecase']
                         action_can_execute = action['can_execute']
                         action_inline = action['inline']
                         action_menu = action['menu']
@@ -298,7 +298,7 @@ if not initialized:
                     elif hasattr(function, '_view'):
                         views.append(function._view)
                         view_title = function._view['title']
-                        view_workflow = function._view['sequence']
+                        view_workflow = function._view['usecase']
                         view_can_view = function._view['can_view']
                         if view_workflow:
                             role = view_can_view and view_can_view[0] or 'Superusuário'
@@ -314,7 +314,7 @@ if not initialized:
         verbose_name = get_metadata(model, 'verbose_name')
         role_username = get_metadata(model, 'role_username')
         add_label = get_metadata(model, 'add_label', None)
-        workflow = get_metadata(model, 'sequence', 0)
+        workflow = get_metadata(model, 'usecase', 0)
         diagram_classes = get_metadata(model, 'class_diagram', None)
 
         # indexing role models

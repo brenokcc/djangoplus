@@ -75,7 +75,7 @@ class UseCase(object):
             self._login(name)
         elif name.startswith(_('List')):
             self._list(name)
-        elif name.startswith(_('Register')):
+        elif name.startswith(_('Register')) and _('in') not in name:
             self._register(name)
         elif name.startswith(_('Add')):
             self._add(name)
@@ -179,7 +179,7 @@ class UseCase(object):
                             if 'relations' in fieldset[1]:
                                 for item in fieldset[1]['relations']:
                                     relation = getattr(parent_model, item)
-                                    if relation.rel.related_model == model:
+                                    if hasattr(relation, 'rel') and relation.rel.related_model == model:
                                         panel_title = fieldset[0]
                                         break
                     if panel_title:
@@ -258,7 +258,6 @@ class UseCase(object):
         self._interactions.append(interaction)
 
     def _register(self, action):
-
         model = find_model_by_add_label(action)
         if model:
             verbose_name = get_metadata(model, 'verbose_name')
@@ -343,7 +342,7 @@ class UseCase(object):
                 if 'relations' in fieldset[1]:
                     for item in fieldset[1]['relations']:
                         tmp = getattr(model, item)
-                        if tmp.rel.related_model == related_model:
+                        if hasattr(tmp, 'rel') and tmp.rel.related_model == related_model:
                             relation_name = item
                 if 'inlines' in fieldset[1]:
                     for item in fieldset[1]['inlines']:

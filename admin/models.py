@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import sys
 import json
-import datetime
 import uuid
 from djangoplus.utils.mail import send_mail
 from djangoplus.db import models
@@ -255,7 +254,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         import json
         permission_mapping = json.loads(self.permission_mapping or '{}')
         permission_mapping_key = obj and '{}:{}'.format(model.__name__, type(obj).__name__) or model.__name__
-        if 0 and permission_mapping_key in permission_mapping:
+        if not settings.DEBUG and permission_mapping_key in permission_mapping:
             return permission_mapping[permission_mapping_key]
 
         organization_lookups = []

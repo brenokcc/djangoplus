@@ -8,7 +8,7 @@ from django.http.response import HttpResponseRedirect
 from djangoplus.utils.metadata import iterable
 
 
-def view(title, can_view=None, icon=None, menu=None, login_required=True, style='ajax', template=None, add_shortcut=False, sequence=0):
+def view(title, can_view=None, icon=None, menu=None, login_required=True, style='ajax', template=None, add_shortcut=False, usecase=None):
 
     def decorate(function):
         url = '/{}/{}/'.format(function.__module__.split('.')[-2], function.func_name)
@@ -38,7 +38,7 @@ def view(title, can_view=None, icon=None, menu=None, login_required=True, style=
             return f_return
 
         receive_function_args._view = dict(title=title, function=function, url=url, can_view=iterable(can_view), menu=menu, icon=icon,
-                              style=style, add_shortcut=add_shortcut, doc=function.__doc__, sequence=sequence)
+                              style=style, add_shortcut=add_shortcut, doc=function.__doc__, usecase=usecase)
         return receive_function_args
 
     return decorate
@@ -54,7 +54,7 @@ def dashboard(can_view=(), position='bottom'):
 
 
 def action(model, title, can_execute=(), condition=None, category='Ações',
-           style='ajax', message='Ação realizada com sucesso.', template=None, inline=False, icon=None, sequence=0,
+           style='ajax', message='Ação realizada com sucesso.', template=None, inline=False, icon=None, usecase=None,
            can_execute_by_organization=None, can_execute_by_unit=None, can_execute_by_role=None, redirect_to=None):
 
     def decorate(function):
@@ -84,7 +84,7 @@ def action(model, title, can_execute=(), condition=None, category='Ações',
 
         d = dict(title=title, can_execute=iterable(can_execute), condition=condition,
                  view_name=function.__name__, function=function, group=category, css=style, message=message, model=model, input=None,
-                 initial=None, choices=None, inline=inline, icon=icon, doc=function.__doc__, sequence=sequence,
+                 initial=None, choices=None, inline=inline, icon=icon, doc=function.__doc__, usecase=usecase,
                  can_execute_by_organization=iterable(can_execute_by_organization), can_execute_by_unit=iterable(can_execute_by_unit),
                  can_execute_by_role=iterable(can_execute_by_role), redirect_to=redirect_to, menu=None)
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import sys
 import cStringIO, shutil
 from decimal import Decimal
 from django.db import models
@@ -196,6 +197,8 @@ class ForeignKey(models.ForeignKey, FieldPlus):
             self.form_filter = self.form_filter.split('__')[-1], self.form_filter
         self.queryset_filter = kwargs.pop('queryset_filter', None)
         super(ForeignKey, self).__init__(*args, **kwargs)
+        if 'test' in sys.argv:
+            self.form_filter = None
 
     def formfield(self, **kwargs):
 
@@ -224,6 +227,8 @@ class ManyToManyField(models.ManyToManyField, FieldPlus):
             self.form_filter = self.form_filter.split('__')[-1], self.form_filter
         self.queryset_filter = kwargs.pop('queryset_filter', None)
         super(ManyToManyField, self).__init__(*args, **kwargs)
+        if 'test' in sys.argv:
+            self.form_filter = None
 
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.MultipleModelChoiceField)

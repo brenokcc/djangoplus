@@ -20,14 +20,14 @@ from django.contrib.auth import get_user_model
 setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'icon', 'verbose_female', 'order_by', 'pdf', 'menu',
     'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut', 'list_csv', 'list_xls', 'list_menu', 'list_lookups', 'list_pdf',
-    'add_label', 'add_form', 'add_inline', 'add_message', 'add_shortcut', 'select_template', 'select_display',
-    'role_name', 'role_username', 'role_email', 'role_scope', 'role_signup',
+    'add_label', 'add_form', 'add_inline', 'add_message', 'add_shortcut', 'select_template', 'select_display', 'select_related',
+    'role_name', 'role_username', 'role_email', 'role_scope', 'role_signup', 'role_active',
     'log', 'logging',
     'can_add', 'can_edit', 'can_delete', 'can_list', 'can_view', 'can_admin',
     'can_list_by_role', 'can_view_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
     'can_list_by_unit', 'can_view_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
     'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization', 'can_edit_by_organization', 'can_admin_by_organization',
-    'sequence', 'class_diagram',
+    'usecase', 'class_diagram',
 ))
 
 
@@ -73,14 +73,14 @@ class QueryStatistics(object):
 class ModelGeneratorWrapper:
     def __init__(self, generator, user):
         self.generator = generator
-        self.user = user
+        self._user = user
 
     def __iter__(self):
         return self
 
     def next(self):
         obj = self.generator.next()
-        obj._user = self.user
+        obj._user = self._user
         return obj
 
 
@@ -88,19 +88,19 @@ class ModelIterable(query.ModelIterable):
 
     def __iter__(self):
         generator = super(ModelIterable, self).__iter__()
-        return ModelGeneratorWrapper(generator, self.queryset.user)
+        return ModelGeneratorWrapper(generator, self.queryset._user)
 
 
 class QuerySet(query.QuerySet):
 
     def __init__(self, *args, **kwargs):
-        self.user = None
+        self._user = None
         super(QuerySet, self).__init__(*args, **kwargs)
         self._iterable_class = ModelIterable
 
     def _clone(self):
         clone = super(QuerySet, self)._clone()
-        clone.user = self.user
+        clone._user = self._user
         return clone
 
     def all(self, user=None, obj=None):
@@ -110,7 +110,7 @@ class QuerySet(query.QuerySet):
             if role_username:
                 user = get_user_model().objects.get(username=getattr(user, role_username))
         queryset = self._clone()
-        queryset.user = user
+        queryset._user = user
         if user:
             self_permission = '{}.view_{}'.format(app_label, self.model.__name__.lower())
             obj_permission = obj and '{}.view_{}'.format(get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())

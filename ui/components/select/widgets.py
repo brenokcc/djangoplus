@@ -69,7 +69,7 @@ AJAX_INIT_SCRIPT = '''{html}
 
 RELOAD_SCRIPT = '''
 <script>
-    function reload_({function_name}(){{
+    function reload_{function_name}(){{
         var pk = $('#id_{field_name}').val()
         if(!pk) pk = 0;
         $.ajax({{url:"/reload_options/{app_label}/{model_name}/{value}/{lookup}/"+pk+"/{lazy}/", dataType:'json', success:function( data ) {{
