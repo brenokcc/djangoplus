@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import qrcode
+import base64
+import cStringIO
 from decimal import Decimal
-from djangoplus.ui import Component
-from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
-from djangoplus.ui.components import forms
 from django.conf import settings
+from djangoplus.ui import Component
+from djangoplus.ui.components import forms
+from django.utils.safestring import mark_safe
+from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
+
 
 PERCENT_SYMBOL = '%'
 DOLLAR_SYMBOL = '$'
@@ -101,13 +106,22 @@ class Timeline(Component):
 
 
 class QrCode(Component):
-    def __init__(self, text, width=200, height=200):
+    def __init__(self, request, text, width=200, height=200):
         self.text = text
         self.width = width
-        super(QrCode, self).__init__()
+        super(QrCode, self).__init__(request)
 
     def __unicode__(self):
-        return self.render('qrcode.html')
+        if self.as_pdf:
+            qr = qrcode.QRCode()
+            qr.add_data(self.text)
+            image = qr.make_image()
+            io = cStringIO.StringIO()
+            image.save(io, format="JPEG")
+            img_str = base64.b64encode(io.getvalue())
+            return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))
+        else:
+            return self.render('qrcode.html')
 
 
 class ProgressBar(Component):

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import re
 import json
+import qrcode
 import datetime
 from decimal import Decimal
 from django import template
@@ -306,7 +307,6 @@ def is_image(value):
 
 @register.filter
 def qrcode64(text):
-    import qrcode
     qr = qrcode.QRCode()
     qr.add_data(text)
     image = qr.make_image()

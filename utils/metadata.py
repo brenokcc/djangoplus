@@ -326,6 +326,9 @@ def should_filter_or_display(request, model, to):
             get_metadata(model, 'can_admin', (), iterable=True) +
             get_metadata(model, 'can_admin_by_organization', (), iterable=True) +
             get_metadata(model,'can_admin_by_unit',(), iterable=True) +
+            get_metadata(model, 'can_list', (), iterable=True) +
+            get_metadata(model, 'can_list_by_organization', (), iterable=True) +
+            get_metadata(model, 'can_list_by_unit', (), iterable=True) +
             get_metadata(model, 'can_view', (), iterable=True) +
             get_metadata(model, 'can_view_by_organization', (), iterable=True) +
             get_metadata(model, 'can_view_by_unit', (), iterable=True))

@@ -10,8 +10,7 @@ class Component(object):
         self.id = self.id = abs(random.randint(0, 900))
         self.request = request
         self.response = None
-        self.as_pdf = False
+        self.as_pdf = request and 'pdf' in self.request.GET or False
 
     def render(self, template_name):
-        self.as_pdf = self.request and self.request.GET.get('pdf', False) or self.as_pdf
         return render_to_string(template_name, {'self': self})

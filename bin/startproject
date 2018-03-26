@@ -83,7 +83,10 @@ from djangoplus.decorators import action
 " > $PROJECT_NAME/forms.py
 
 printf "# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+import datetime
 from djangoplus.db import models
+from djangoplus.utils.mail import send_mail
 from django.core.exceptions import ValidationError
 from djangoplus.decorators import meta, action, subset, role
 

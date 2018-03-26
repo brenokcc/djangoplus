@@ -52,7 +52,8 @@ def box_chart(value, **kwargs):
 
 
 def qrcode(value, **kwargs):
-    return QrCode(value)
+    request = kwargs.get('request', None)
+    return QrCode(request, value)
 
 
 def progress(percentual):
