@@ -87,7 +87,7 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
             elif hasattr(field_or_function, 'field_name'):
                 field_or_function = model_or_field._meta.get_field(token)
         else:
-            field_or_function = model_or_field.remote_field.model
+            field_or_function = model_or_field
 
         if pronoun and l:
             l.append(pronoun)
