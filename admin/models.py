@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import sys
 import json
 import uuid
@@ -54,7 +54,7 @@ class Log(models.Model):
         icon = 'fa-history'
         list_per_page = 25
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Log #{}'.format(self.pk)
 
     def can_add(self):
@@ -96,7 +96,7 @@ class LogIndex(models.Model):
         verbose_name = 'Index'
         verbose_name_plural = 'Indexes'
 
-    def __unicode__(self):
+    def __str__(self):
         return 'Index #{}'.format(self.pk)
 
 
@@ -113,15 +113,15 @@ class Organization(models.AsciiModel):
         unit_subclass = Unit.subclass()
         if unit_subclass:
             for field in get_metadata(unit_subclass, 'fields'):
-                if hasattr(field, 'rel') and field.rel and hasattr(field.rel.to, 'organization_ptr'):
-                    return field.rel.related_model.objects.filter(**{field.name:self.pk})
+                if field.remote_field and hasattr(field.remote_field.model, 'organization_ptr'):
+                    return field.remote_field.model.objects.filter(**{field.name:self.pk})
         return Unit.objects.none()
 
-    def __unicode__(self):
+    def __str__(self):
         if self.pk == 0:
             return 'Todas'
         else:
-            return super(Organization, self).__unicode__()
+            return super(Organization, self).__str__()
 
 
 class Unit(models.AsciiModel):
@@ -137,15 +137,15 @@ class Unit(models.AsciiModel):
         organization_subclass = Organization.subclass()
         if organization_subclass:
             for field in get_metadata(type(self), 'fields'):
-                if hasattr(field, 'rel') and field.rel and hasattr(field.rel, 'to') and field.rel.to == organization_subclass:
+                if field.remote_field and field.remote_field.model == organization_subclass:
                     return getattr(self, field.name)
         return None
 
-    def __unicode__(self):
+    def __str__(self):
         if self.pk == 0:
             return 'Todas'
         else:
-            return super(Unit, self).__unicode__()
+            return super(Unit, self).__str__()
 
 
 class UserManager(DjangoUserManager):
@@ -219,7 +219,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.set_password(password)
         super(User, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name or self.username
 
     @action('Alterar Senha', input='ChangePasswordForm', inline=True)
@@ -227,7 +227,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.set_password(new_password)
         self.save()
 
-    @action(u'Enviar Convite de Acesso', inline=True, condition='email', category=None)
+    @action('Enviar Convite de Acesso', inline=True, condition='email', category=None)
     def send_access_invitation(self):
         project_name = Settings.default().initials
         subject = 'Acesso ao Sistema - "{}"'.format(project_name)
@@ -264,16 +264,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         for lookup in get_metadata(model, 'list_lookups', (), iterable=True):
             field = get_field(model, lookup)
-            if hasattr(field.rel.to, 'organization_ptr') or hasattr(field.rel.to, 'unit_ptr'):
-                if hasattr(field.rel.to, 'organization_ptr'):
+            if hasattr(field.remote_field.model, 'organization_ptr') or hasattr(field.remote_field.model, 'unit_ptr'):
+                if hasattr(field.remote_field.model, 'organization_ptr'):
                     organization_lookups.append(lookup)
-                if hasattr(field.rel.to, 'unit_ptr'):
+                if hasattr(field.remote_field.model, 'unit_ptr'):
                     unit_lookups.append(lookup)
             else:
-                role_username = get_metadata(field.rel.to, 'role_username')
+                role_username = get_metadata(field.remote_field.model, 'role_username')
                 if role_username:
-                    role_lookups[get_metadata(field.rel.to, 'verbose_name')] = '{}__{}'.format(lookup, role_username)
-                for subclass in field.rel.to.__subclasses__():
+                    role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(lookup, role_username)
+                for subclass in field.remote_field.model.__subclasses__():
                     role_username = get_metadata(subclass, 'role_username')
                     if role_username:
                         role_lookups[get_metadata(subclass, 'verbose_name')] = '{}__{}__{}'.format(
@@ -289,16 +289,16 @@ class User(AbstractBaseUser, PermissionsMixin):
             role_lookups[get_metadata(model, 'verbose_name')] = get_metadata(model, 'role_username')
 
         for field in get_metadata(model, 'fields'):
-            if hasattr(field, 'rel') and field.rel and hasattr(field.rel, 'to') and field.rel.to:
-                if field.rel.to in loader.role_models:
-                    role_lookups[get_metadata(field.rel.to, 'verbose_name')] = '{}__{}'.format(field.name, loader.role_models[field.rel.to]['username_field'])
-                if field.rel.to in loader.abstract_role_models:
-                    for to in loader.abstract_role_models[field.rel.to]:
+            if field.remote_field and field.remote_field.model:
+                if field.remote_field.model in loader.role_models:
+                    role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(field.name, loader.role_models[field.remote_field.model]['username_field'])
+                if field.remote_field.model in loader.abstract_role_models:
+                    for to in loader.abstract_role_models[field.remote_field.model]:
                         role_lookups[get_metadata(to, 'verbose_name')] = '{}__{}__{}'.format(
                             field.name, to.__name__.lower(), loader.role_models[to])
-                if hasattr(field.rel.to, 'unit_ptr_id') and field.name not in unit_lookups:
+                if hasattr(field.remote_field.model, 'unit_ptr_id') and field.name not in unit_lookups:
                     unit_lookups.append(field.name)
-                if hasattr(field.rel.to, 'organization_ptr_id') and field.name not in organization_lookups:
+                if hasattr(field.remote_field.model, 'organization_ptr_id') and field.name not in organization_lookups:
                     organization_lookups.append(field.name)
 
         for organization_lookup in organization_lookups:
@@ -405,7 +405,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
                 for actions_dict in (loader.actions, loader.class_actions):
                     for category in actions_dict.get(model, ()):
-                        for key in actions_dict[model][category].keys():
+                        for key in list(actions_dict[model][category].keys()):
                             execute_lookups = []
                             view_name = actions_dict[model][category][key]['view_name']
                             can_execute = group_name in loader.permissions_by_scope[model].get('{}'.format(view_name), [])
@@ -500,7 +500,7 @@ class Role(models.Model):
         list_display = role_list_display
         can_admin = 'Gerenciador de Usuários'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(self.group)
 
     @meta('Organizações')
@@ -544,7 +544,7 @@ class OrganizationRole(models.Model):
         verbose_name = 'Papel na Organização'
         verbose_name_plural = 'Papeis na Organização'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} - {}'.format(self.role, self.organization)
 
 
@@ -556,7 +556,7 @@ class UnitRole(models.Model):
         verbose_name = 'Função na Unidade'
         verbose_name_plural = 'Funções na Unidade'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} - {}'.format(self.role, self.unit)
 
 

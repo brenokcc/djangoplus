@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import json
 from django.apps import apps
 from django.http import HttpResponse
@@ -33,8 +33,8 @@ def autocomplete(request, app_name, class_name):
 
     # queryset = queryset.all(request.user)
     for obj in queryset[0:25]:
-        html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-        results.append(dict(id=obj.id, text=unicode(obj), html=html))
+        html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
+        results.append(dict(id=obj.id, text=str(obj), html=html))
     s = json.dumps(dict(q=q, results=results))
 
     return HttpResponse(s)
@@ -59,12 +59,12 @@ def reload_options(request, app_name, class_name, current_value, lookup, selecte
     if lazy:
         if pks:
             for obj in cls.objects.filter(pk__in=pks):
-                html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-                data['results'].append(dict(id=obj.id, text=unicode(obj), html=html))
+                html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
+                data['results'].append(dict(id=obj.id, text=str(obj), html=html))
     else:
         for obj in queryset:
-            html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
-            data['results'].append(dict(id=obj.id, text=unicode(obj), html=html))
+            html = (select_template or select_display) and render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
+            data['results'].append(dict(id=obj.id, text=str(obj), html=html))
     s = json.dumps(data)
 
     return HttpResponse(s)

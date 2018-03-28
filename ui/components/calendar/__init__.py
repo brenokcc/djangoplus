@@ -23,7 +23,7 @@ class Calendar(Component):
         item = dict(description=description, start=start, end=end, allday=allday)
         self.items.append(item)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('calendar.html')
     
     def set_initial_date(self, initial_date):

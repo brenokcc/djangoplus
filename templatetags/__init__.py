@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import re
 import json
 import qrcode
@@ -14,7 +14,7 @@ from djangoplus.utils.metadata import get_metadata, find_field_by_name, getattr2
 from uuid import uuid4
 from django.template.defaultfilters import slugify
 import base64
-import cStringIO
+import tempfile
 register = template.Library()
 
 
@@ -45,7 +45,7 @@ def do_uuid4():
 
 @register.simple_tag()
 def value_at(col_value, col_index, template_filters):
-    import utils
+    from . import utils
     value = col_value
 
     # Se há um template filter com o mesmo índice da coluna, então
@@ -236,7 +236,7 @@ def add_actions(paginator, obj):
 @register.filter
 def html(value):
     if value:
-        value = unicode(value)
+        value = str(value)
         value = value.replace('\n', '<br>').replace('  ', '&nbsp; ').replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
         return mark_safe(value)
     else:
@@ -245,7 +245,7 @@ def html(value):
 
 @register.filter
 def number(value):
-    return unicode(value)
+    return str(value)
 
 
 @register.filter
@@ -255,7 +255,7 @@ def tahoma(value):
 
 @register.filter
 def colspan(n):
-    return 12/n
+    return int(12/n)
 
 
 @register.filter
@@ -273,7 +273,7 @@ register.filter('normalyze', normalyze)
 @register.filter
 def sorted_items(d):
     items = []
-    keys = d.keys()
+    keys = list(d.keys())
     keys.sort()
     for key in keys:
         items.append((re.sub('^[0-9\.\- ]+', '', key).strip(), d[key]))
@@ -300,7 +300,7 @@ def set_request(obj, request):
 def is_image(value):
     if value:
         for ext in ('.png', '.jpg', '.jpeg', '.gif'):
-            if unicode(value).lower().endswith(ext):
+            if str(value).lower().endswith(ext):
                 return True
     return False
 
@@ -310,7 +310,8 @@ def qrcode64(text):
     qr = qrcode.QRCode()
     qr.add_data(text)
     image = qr.make_image()
-    buffer = cStringIO.StringIO()
+    file_path = tempfile.mktemp()
+    buffer = open(file_path, 'wb')
     image.save(buffer, format="JPEG")
-    img_str = base64.b64encode(buffer.getvalue())
+    img_str = base64.b64encode(open(file_path, 'rb').read()).decode('utf-8')
     return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import sys
-import cStringIO, shutil
+import shutil
 from decimal import Decimal
 from django.db import models
 from django.core.files.base import ContentFile
@@ -193,6 +193,7 @@ class ForeignKey(models.ForeignKey, FieldPlus):
         if self.tree:
             kwargs.update(null=True)
             kwargs.update(blank=True)
+        kwargs.update(on_delete=models.CASCADE)
         if self.form_filter and type(self.form_filter) not in (tuple, list):
             self.form_filter = self.form_filter.split('__')[-1], self.form_filter
         self.queryset_filter = kwargs.pop('queryset_filter', None)
@@ -293,6 +294,7 @@ class ImageFieldFile(ImageFieldFile):
 
     def generate_thumb(self, img, thumb_size, file_format):
         # return img
+        import io
         from PIL import Image
         img.seek(0)  # see http://code.djangoproject.com/ticket/8222 for details
         image = Image.open(img)
@@ -323,7 +325,7 @@ class ImageFieldFile(ImageFieldFile):
             image2 = image
             image2.thumbnail(thumb_size, Image.ANTIALIAS)
 
-        io = cStringIO.StringIO()
+        io = io.StringIO()
         # PNG and GIF are the same, JPG is JPEG
         if file_format.upper() == 'JPG':
             file_format = 'JPEG'
@@ -446,7 +448,7 @@ class SearchField(TextField):
                 if attr_name != 'ascii':
                     val = getattr2(model_instance, attr_name)
                     if val:
-                        search_text.append(unicode(to_ascii(val).upper().strip()))
+                        search_text.append(str(to_ascii(val).upper().strip()))
         return ' '.join(search_text)
 
 

@@ -51,7 +51,7 @@
                             action_names: '{{ item.action_names }}',
                         },
                         error: function() {
-                            alert('there was an error while fetching events!');
+                            console.log('there was an error while fetching events!');
                         },
                         success: function(items){
                             for(var i=0; i<items.length; i++) {

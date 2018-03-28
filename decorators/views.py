@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.shortcuts import render
 from djangoplus.utils import permissions
 from djangoplus.utils.http import PdfResponse
@@ -11,11 +11,11 @@ from djangoplus.utils.metadata import iterable
 def view(title, can_view=None, icon=None, menu=None, login_required=True, style='ajax', template=None, add_shortcut=False, usecase=None):
 
     def decorate(function):
-        url = '/{}/{}/'.format(function.__module__.split('.')[-2], function.func_name)
+        url = '/{}/{}/'.format(function.__module__.split('.')[-2], function.__name__)
 
         def receive_function_args(request, *args, **kwargs):
             without_permission = can_view and not permissions.check_group_or_permission(request, can_view)
-            without_authentication = login_required and not request.user.is_authenticated()
+            without_authentication = login_required and not request.user.is_authenticated
             if without_permission or without_authentication:
                     return HttpResponseRedirect('/admin/login/?next={}'.format(url))
             f_return = function(request, *args, **kwargs)
@@ -30,10 +30,10 @@ def view(title, can_view=None, icon=None, menu=None, login_required=True, style=
                     f_return['project_name'] = app_settings.initials
                     f_return['project_description'] = app_settings.name
                     f_return['today'] = datetime.now()
-                    template_list = ['{}.html'.format(function.func_name), 'report.html']
+                    template_list = ['{}.html'.format(function.__name__), 'report.html']
                     return PdfResponse(render_to_string(template_list, f_return, request=request))
                 else:
-                    template_list = [template or '{}.html'.format(function.func_name), 'default.html']
+                    template_list = [template or '{}.html'.format(function.__name__), 'default.html']
                     return render(request, template_list, f_return)
             return f_return
 
@@ -59,7 +59,7 @@ def action(model, title, can_execute=(), condition=None, category='Ações',
 
     def decorate(function):
         def receive_function_args(request, *args, **kwargs):
-            if can_execute and not permissions.check_group_or_permission(request, '{}.{}'.format(model._meta.app_label, function.func_name)):
+            if can_execute and not permissions.check_group_or_permission(request, '{}.{}'.format(model._meta.app_label, function.__name__)):
                 return HttpResponseRedirect('/admin/login/')
             f_return = function(request, *args, **kwargs)
             if 'title' not in f_return:
@@ -73,10 +73,10 @@ def action(model, title, can_execute=(), condition=None, category='Ações',
                     f_return['project_name'] = app_settings.initials
                     f_return['project_description'] = app_settings.name
                     f_return['today'] = datetime.now()
-                    template_list = ['{}.html'.format(function.func_name), 'report.html']
+                    template_list = ['{}.html'.format(function.__name__), 'report.html']
                     return PdfResponse(render_to_string(template_list, f_return, request=request))
                 else:
-                    template_list = ['{}.html'.format(function.func_name), 'default.html']
+                    template_list = ['{}.html'.format(function.__name__), 'default.html']
                     return render(request, template or template_list, f_return)
 
             else:

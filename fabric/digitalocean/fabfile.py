@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from __future__ import with_statement
+
+
 from fabric.api import *
 from fabric.contrib.files import exists, append, contains
 from os import path
@@ -9,7 +9,7 @@ import os
 import json
 import datetime
 import time
-import StringIO
+import io
 
 username = 'root'
 project_dir = os.getcwd()
@@ -94,7 +94,7 @@ source /usr/local/bin/virtualenvwrapper.sh
 
 
 def _debug(s):
-    print '[{}] {}\n'.format(datetime.datetime.now(), s)
+    print('[{}] {}\n'.format(datetime.datetime.now(), s))
 
 
 def _available_port():
@@ -250,7 +250,7 @@ def _setup_remote_env():
     if not exists(project_env_dir):
         with shell_env(WORKON_HOME=virtual_env_dir):
             _debug('Creating virtual env {}'.format(project_name))
-            run('source /usr/local/bin/virtualenvwrapper.sh && mkvirtualenv {}'.format(project_name))
+            run('source /usr/local/bin/virtualenvwrapper.sh && mkvirtualenv --python=/usr/bin/python3 {}'.format(project_name))
 
 
 def _setup_remote_project():
@@ -260,8 +260,8 @@ def _setup_remote_project():
             virtual_env_dir = '/var/opt/.virtualenvs'
             with shell_env(WORKON_HOME=virtual_env_dir):
                 _debug('Installing/Updating project requirements...')
-                run(
-                    'source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip install -U -r requirements.txt'.format(project_name))
+                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip install --upgrade pip'.format(project_name))
+                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip install -U -r requirements.txt'.format(project_name))
         _debug('Checking if necessary dirs (logs, media and static) were created...')
         run('mkdir -p logs')
         run('mkdir -p static')
@@ -288,7 +288,7 @@ def _check_domain():
         try:
             ip_address = local('dig {} a +short'.format(settings.DIGITAL_OCEAN_DOMAIN), capture=True).strip()
         except Exception as e:
-            print e
+            print(e)
 
         if ip_address != env.hosts[0]:
             _debug('The domain is not activated yet. The ip {} is going to be used for the deploy.'.format(env.hosts[0]))
@@ -299,9 +299,9 @@ def _check_domain():
 
 def _print_remote_url():
     file_path = '/etc/nginx/sites-enabled/{}'.format(project_name)
-    file_descriptor = StringIO.StringIO()
-    get(file_path, file_descriptor)
-    file_content = file_descriptor.getvalue()
+    local_file_path = '/tmp/nginx.tmp'
+    get(file_path, local_file_path)
+    file_content = open(local_file_path).read()
     server_name = None
     port = None
     for line in file_content.split('\n'):
@@ -312,7 +312,7 @@ def _print_remote_url():
     url = 'http://{}'.format(server_name)
     if int(port) != 80:
         url = '{}:{}'.format(url, port)
-    print('\n\n\nURL: {}\n\n'.format(url))
+    print(('\n\n\nURL: {}\n\n'.format(url)))
 
 
 def _setup_nginx_file():
@@ -320,9 +320,9 @@ def _setup_nginx_file():
     _debug('Checking nginx file {}...'.format(file_path))
     checked_domain = _check_domain()
     if exists(file_path):
-        file_descriptor = StringIO.StringIO()
-        get(file_path, file_descriptor)
-        file_content = file_descriptor.getvalue()
+        local_file_path = '/tmp/nginx.tmp'
+        get(file_path, local_file_path)
+        file_content = open(local_file_path, 'r').read()
         if checked_domain and checked_domain not in file_content:
             content = []
             for line in file_content.split('\n'):
@@ -331,7 +331,7 @@ def _setup_nginx_file():
                 elif 'listen ' in line:
                     line = '    listen 80;'
                 content.append(line)
-            file_descriptor = StringIO.StringIO()
+            file_descriptor = open('/tmp/nginx.tmp', 'w')
             file_descriptor.write('\n'.join(content))
             put(file_descriptor, file_path)
             _debug('Restarting nginx...')
@@ -514,6 +514,7 @@ def _create_droplet():
         ip_address = response['droplet']['networks']['v4'][0]['ip_address']
         _debug('Droplet created with IP {}!'.format(ip_address))
         # _update_settings_file(ip_address)
+        _execute_aptget()
         return _check_droplet()
 
     _debug('Please, set the DIGITAL_OCEAN_TOKEN value in settings.py file')
@@ -523,7 +524,7 @@ def _create_droplet():
 def _execute_aptget():
     with cd('/'):
         run('apt-get update')
-        run('apt-get -y install build-essential python-dev python-pip git nginx supervisor libncurses5-dev')
+        run('apt-get -y install python3 python3-pip build-essential python3-dev git nginx supervisor libncurses5-dev')
         run('apt-get -y install vim')
         run(
             'apt-get -y install libjpeg62-turbo-dev libopenjpeg-dev libfreetype6-dev libtiff5-dev liblcms2-dev libwebp-dev tk8.6-dev libjpeg-dev')
@@ -580,7 +581,6 @@ def backupdb():
 
 
 def deploy():
-    _execute_aptget()
     _check_remote_keys()
     _setup_local_repository()
     _push_local_changes()

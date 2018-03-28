@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 # list - Allows the user to access the Admin page to view all registered objects
 # add - Allows the user to add objects from the Admin page and the Relation tables

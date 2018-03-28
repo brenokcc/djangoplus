@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import os
 import json
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from djangoplus.cache import loader
 from django.contrib import auth
 from django.http.response import HttpResponse
@@ -89,7 +89,7 @@ def register(request, token=None, userid=None):
             url = 'https://graph.facebook.com/{}?fields=email,first_name,last_name&access_token={}'.format(userid, token)
         elif token:
             url = 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token={}'.format(token)
-        data = json.loads(urllib2.urlopen(url).read())
+        data = json.loads(urllib.request.urlopen(url).read())
         qs = User.objects.filter(username=data['email'])
         if qs.exists():
             user = qs[0]

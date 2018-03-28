@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import copy
 from djangoplus.ui.components import forms
 from djangoplus.ui import Component
@@ -90,7 +90,7 @@ class Paginator(Component):
             if self.list_filter is None:
                 self.list_filter = []
                 for field in get_metadata(self.qs.model, 'fields'):
-                    if hasattr(field, 'rel') and field.rel:
+                    if field.remote_field and field.remote_field.model:
                         if not field.name.endswith('_ptr') and field.name != self.rel:
                             self.list_filter.append(field.name)
                     elif hasattr(field, 'choices') and field.choices:
@@ -126,24 +126,24 @@ class Paginator(Component):
                     elif hasattr(field, 'choices') and field.choices:
                         form.fields[form_field_name] = forms.ChoiceField(choices=[['', '']] + field.choices, label=normalyze(field.verbose_name), initial=initial, required=False)
                     else:
-                        if self.request.user.unit_id and hasattr(field.rel.to, 'unit_ptr_id'):
+                        if self.request.user.unit_id and hasattr(field.remote_field.model, 'unit_ptr_id'):
                             continue
-                        if self.request.user.organization_id and hasattr(field.rel.to, 'organization_ptr_id'):
+                        if self.request.user.organization_id and hasattr(field.remote_field.model, 'organization_ptr_id'):
                             continue
-                        if field.rel and not should_filter_or_display(self.request, self.qs.model, field.rel.to):
+                        if field.remote_field and not should_filter_or_display(self.request, self.qs.model, field.remote_field.model):
                             continue
                         if initial:
                             if self.original_qs.query.can_filter():
                                 pks = self.original_qs.order_by(field_name).values_list(field_name, flat=True).distinct()
                             else:
                                 pks = self.original_qs.model.objects.all().order_by(field_name).values_list(field_name, flat=True).distinct()
-                            qs = field.rel.to.objects.get_queryset().filter(pk__in=pks)
+                            qs = field.remote_field.model.objects.get_queryset().filter(pk__in=pks)
                         else:
                             if self.qs.query.can_filter():
                                 pks = self.qs.order_by(field_name).values_list(field_name, flat=True).distinct()
                             else:
                                 pks = self.qs.model.objects.all().order_by(field_name).values_list(field_name, flat=True).distinct()
-                            qs = field.rel.to.objects.get_queryset().filter(pk__in=pks)
+                            qs = field.remote_field.model.objects.get_queryset().filter(pk__in=pks)
                         empty_label = ''
 
                         form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False)
@@ -153,7 +153,7 @@ class Paginator(Component):
                         value = form.fields[form_field_name].clean(initial)
                         if type(form.fields[form_field_name]) == forms.ChoiceField:
                             for x, y in form.fields[form_field_name].choices:
-                                if unicode(x) == unicode(value):
+                                if str(x) == str(value):
                                     value = y
                                     break
                         self.filters.append((label, value))
@@ -244,7 +244,7 @@ class Paginator(Component):
             l = []
             count = queryset.count()
             list_per_page = self._get_list_per_page()
-            page_numer = count / list_per_page + (((count % list_per_page) > 0 or count < list_per_page) and 1 or 0)
+            page_numer = int(count / list_per_page + (((count % list_per_page) > 0 or count < list_per_page) and 1 or 0))
             current_page = int(self._get_from_request('page', 1))
             start = current_page * list_per_page - list_per_page
             end = start + list_per_page
@@ -311,12 +311,12 @@ class Paginator(Component):
         for lookup in self.list_display:
             hide_field = False
             attr = getattr(self.qs.model, lookup.split('__')[0])
-            if hasattr(attr, 'field') and hasattr(attr.field, 'rel') and attr.field.rel and attr.field.rel.to:
-                if self.request.user.unit_id and hasattr(attr.field.rel.to, 'unit_ptr_id'):
+            if hasattr(attr, 'field') and attr.field.remote_field and attr.field.remote_field.model:
+                if self.request.user.unit_id and hasattr(attr.field.remote_field.model, 'unit_ptr_id'):
                     continue
-                if self.request.user.organization_id and hasattr(attr.field.rel.to, 'organization_ptr_id'):
+                if self.request.user.organization_id and hasattr(attr.field.remote_field.model, 'organization_ptr_id'):
                     continue
-                if not should_filter_or_display(self.request, self.qs.model, attr.field.rel.to):
+                if not should_filter_or_display(self.request, self.qs.model, attr.field.remote_field.model):
                     hide_field = True
             if not hide_field:
                 self.column_names.append(get_fiendly_name(self.qs.model, lookup, as_tuple=True))
@@ -344,7 +344,7 @@ class Paginator(Component):
             tab_search_fields = subset['search_fields']
             tab_active = False
             if permissions.check_group_or_permission(self.request, tab_can_view):
-                tab_qs = getattr(tab_function.im_self.all(self.request.user), tab_function.im_func.func_name)()
+                tab_qs = getattr(tab_function.__self__.all(self.request.user), tab_function.__func__.__name__)()
                 tab_active = self.current_tab == tab_name
                 self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order, tab_help_text])
                 if (tab_active or len(list_subsets) == 1) and tab_help_text:
@@ -371,7 +371,7 @@ class Paginator(Component):
 
     def _get_from_request(self, param_name, default='', suffix=''):
         key = '{}{}{}'.format(param_name, self.id, suffix)
-        value = self.request.GET.get(unicode(self.id)) and self.request.GET.get(key) or default
+        value = self.request.GET.get(str(self.id)) and self.request.GET.get(key) or default
         return value
 
     def _get_order_by(self):
@@ -458,5 +458,5 @@ class Paginator(Component):
         landscape = len(self.list_display) > 4
         return ReportResponse(self.title, self.request, [self], landscape)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('paginator.html')

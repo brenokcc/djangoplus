@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.conf import settings
 from djangoplus.ui.components import forms
 from django.apps import apps
@@ -24,11 +24,11 @@ def get_register_form(request, obj):
         Form = getattr(forms_module, form_name)
     else:
         if obj.pk:
-            form_title = 'Atualização de {}'.format(unicode(verbose_name))
+            form_title = 'Atualização de {}'.format(str(verbose_name))
             button_label = 'Atualizar'
         else:
             add_label = get_metadata(_model, 'add_label', None)
-            form_title = add_label or 'Cadastro de {}'.format(unicode(verbose_name))
+            form_title = add_label or 'Cadastro de {}'.format(str(verbose_name))
             button_label = add_label or 'Cadastrar'
 
         class Form(forms.ModelForm):
@@ -62,16 +62,16 @@ def get_register_form(request, obj):
 
 def get_one_to_many_form(request, obj, related_field_name, **kwargs):
     _model = type(obj)
-    rel = find_field_by_name(_model, related_field_name).rel
+    related_field = find_field_by_name(_model, related_field_name)
 
     class Form(forms.ModelForm):
         class Meta:
-            model = rel.to
-            fields = get_metadata(rel.to, 'form_fields', '__all__')
-            exclude = get_metadata(rel.to, 'exclude_fields', ())
-            submit_label = 'Adicionar {}'.format(get_metadata(rel.to, 'verbose_name'))
-            title = 'Adicionar {}'.format(get_metadata(rel.to, 'verbose_name'))
-            icon = get_metadata(rel.to, 'icon', None)
+            model = related_field.remote_field.model
+            fields = get_metadata(related_field.remote_field.model, 'form_fields', '__all__')
+            exclude = get_metadata(related_field.remote_field.model, 'exclude_fields', ())
+            submit_label = 'Adicionar {}'.format(get_metadata(related_field.remote_field.model, 'verbose_name'))
+            title = 'Adicionar {}'.format(get_metadata(related_field.remote_field.model, 'verbose_name'))
+            icon = get_metadata(related_field.remote_field.model, 'icon', None)
             is_inner = True
 
         def save(self, *args, **kwargs):
@@ -84,8 +84,7 @@ def get_one_to_many_form(request, obj, related_field_name, **kwargs):
 
 def get_many_to_one_form(request, obj, related_field_name, related_obj):
     _model = type(obj)
-    rel = getattr(_model, related_field_name).field.rel
-
+    rel = getattr(_model, related_field_name).rel
     add_label = get_metadata(rel.related_model, 'add_label')
     if add_label:
         form_title = add_label
@@ -119,7 +118,7 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
                 is_inner = True
 
     initial[related_field_name] = obj.pk
-    for key in initial.keys():
+    for key in list(initial.keys()):
         if hasattr(obj, key) and obj.pk and getattr(obj, key):
             del (initial[key])
 
@@ -137,28 +136,28 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
     _model = type(obj)
 
     related_field = find_field_by_name(_model, related_field_name)
-    related_object = related_pk and related_field.rel.to.objects.get(pk=related_pk)
+    related_object = related_pk and related_field.remote_field.model.objects.get(pk=related_pk)
 
-    initial = hasattr(related_field.rel.to, 'initial') and related_field.rel.to.initial() or {}
-    choices = hasattr(related_field.rel.to, 'choices') and related_field.rel.to.choices() or {}
+    initial = hasattr(related_field.remote_field.model, 'initial') and related_field.remote_field.model.initial() or {}
+    choices = hasattr(related_field.remote_field.model, 'choices') and related_field.remote_field.model.choices() or {}
 
     class Form(forms.ModelForm):
         class Meta:
-            model = related_field.rel.to
-            fields = get_metadata(related_field.rel.to, 'form_fields', '__all__')
-            exclude = get_metadata(related_field.rel.to, 'exclude_fields', ())
+            model = related_field.remote_field.model
+            fields = get_metadata(related_field.remote_field.model, 'form_fields', '__all__')
+            exclude = get_metadata(related_field.remote_field.model, 'exclude_fields', ())
             submit_label = 'Atualizar {}'.format(related_field.verbose_name)
             title = 'Atualizar {}'.format(related_field.verbose_name)
-            icon = get_metadata(related_field.rel.to, 'icon', None)
+            icon = get_metadata(related_field.remote_field.model, 'icon', None)
             is_inner = True
 
         def save(self, *args, **kwargs):
             super(Form, self).save(*args, **kwargs)
             setattr(obj, related_field_name, self.instance)
-            # obj.save()
+            _model.objects.filter(pk=obj.pk).update(**{related_field_name: self.instance})
 
     form = Form(request, instance=related_object, initial=initial, **kwargs)
-    form.name = '{}Form'.format(related_field.rel.to.__name__)
+    form.name = '{}Form'.format(related_field.remote_field.model.__name__)
     for field_name in choices:
         if field_name in form.fields:
             form.fields[field_name].queryset = choices[field_name]
@@ -171,7 +170,7 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
     initial = hasattr(obj, 'initial') and obj.initial() or {}
     choices = hasattr(obj, 'choices') and obj.choices() or {}
 
-    related_field_model = find_field_by_name(_model, related_field_name).rel.to
+    related_field_model = find_field_by_name(_model, related_field_name).remote_field.model
 
     class Form(forms.ModelForm):
         related_objects = forms.MultipleModelChoiceField(related_field_model.objects.all(),
@@ -204,27 +203,27 @@ def get_class_action_form(request, _model, action, func):
 
     if action_input:
         # it is a form name
-        if type(action_input) in [str, unicode] and '.' not in action_input:
+        if type(action_input) in [str, str] and '.' not in action_input:
             full_app_name = settings.APP_MAPPING.get(app_label, app_label)
             module = __import__('{}.forms'.format(full_app_name), fromlist=list(map(str, [app_label])))
             Form = getattr(module, action_input)
         # it is a model or model name
         else:
-            if type(action_input) in [str, unicode]:
+            if type(action_input) in [str, str]:
                 app_name, class_name = action_input.split('.')
                 action_input = apps.get_model(app_name, class_name)
 
             class Form(forms.ModelForm):
                 class Meta:
                     model = action_input
-                    fields = func.func_code.co_varnames[1:func.func_code.co_argcount]
+                    fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
                     title = action_title
                     submit_label = action_title
     else:
         class Form(forms.ModelForm):
             class Meta:
                 model = _model
-                fields = func.func_code.co_varnames[1:func.func_code.co_argcount]
+                fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
                 title = action_title
                 submit_label = action_title
 
@@ -240,7 +239,7 @@ def get_action_form(request, obj, action):
     action_input = action['input']
     action_choices = action['choices']
     app_label = get_metadata(type(obj), 'app_label')
-    func = getattr(obj, action_function.func_name, action_function)
+    func = getattr(obj, action_function.__name__, action_function)
 
     if initial and hasattr(obj, initial):
         initial = getattr(obj, initial)()
@@ -253,7 +252,7 @@ def get_action_form(request, obj, action):
 
     if action_input:
         # it is a form name
-        if type(action_input) in [str, unicode] and '.' not in action_input:
+        if type(action_input) in [str, str] and '.' not in action_input:
             full_app_name = settings.APP_MAPPING.get(app_label, app_label)
             fromlist = app_label
             module = __import__('{}.forms'.format(full_app_name), fromlist=list(map(str, [app_label])))
@@ -261,14 +260,14 @@ def get_action_form(request, obj, action):
 
         # it is a model or model name
         else:
-            if type(action_input) in [str, unicode]:
+            if type(action_input) in [str, str]:
                 app_name, class_name = action_input.split('.')
                 action_input = apps.get_model(app_name, class_name)
 
             class Form(forms.ModelForm):
                 class Meta:
                     model = action_input
-                    fields = func.func_code.co_varnames[1:func.func_code.co_argcount]
+                    fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
                     title = action_title
                     submit_label = action_title
 
@@ -277,15 +276,15 @@ def get_action_form(request, obj, action):
 
         class Form(forms.ModelForm):
             class Meta:
-                model = func.im_class
-                fields = func.func_code.co_varnames[1:func.func_code.co_argcount]
+                model = func.__self__.__class__
+                fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
                 title = action_title
                 submit_label = action_title
 
         form_cls = Form
 
     if issubclass(form_cls, forms.ModelForm):
-        for key in initial.keys():
+        for key in list(initial.keys()):
             if hasattr(obj, key) and obj.pk and getattr(obj, key):
                 del (initial[key])
         form = form_cls(request, instance=obj, initial=initial)

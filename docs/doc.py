@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import json
 from django.apps import apps
 from django.conf import settings
@@ -22,7 +22,7 @@ class Actor(object):
         self.description = description
         self.scope = scope
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def as_dict(self):
@@ -89,11 +89,11 @@ class UseCase(object):
         return self._request
 
     def _debug(self):
-        print '\n'.join(self._interactions)
-        print
-        print '\n'.join(self._test_function_code)
-        print
-        print '\n'.join(self._test_flow_code)
+        print('\n'.join(self._interactions))
+        print()
+        print('\n'.join(self._test_function_code))
+        print()
+        print('\n'.join(self._test_flow_code))
 
     def _login(self, action):
         verbose_name = action.split(_('as'))[-1].strip()
@@ -179,7 +179,7 @@ class UseCase(object):
                             if 'relations' in fieldset[1]:
                                 for item in fieldset[1]['relations']:
                                     relation = getattr(parent_model, item)
-                                    if hasattr(relation, 'rel') and relation.rel.related_model == model:
+                                    if hasattr(relation, 'field') and relation.field.remote_field.model == model:
                                         panel_title = fieldset[0]
                                         break
                     if panel_title:
@@ -342,13 +342,13 @@ class UseCase(object):
                 if 'relations' in fieldset[1]:
                     for item in fieldset[1]['relations']:
                         tmp = getattr(model, item)
-                        if hasattr(tmp, 'rel') and tmp.rel.related_model == related_model:
+                        if hasattr(tmp, 'field') and tmp.field.remote_field.model == model:
                             relation_name = item
                 if 'inlines' in fieldset[1]:
                     for item in fieldset[1]['inlines']:
                         inlines.append(item)
                         tmp = getattr(model, item)
-                        if tmp.rel.related_model == related_model:
+                        if hasattr(tmp, 'field') and tmp.field.remote_field.model == model:
                             relation_name = item
 
         # if the relation was defined in a fieldset
@@ -486,7 +486,7 @@ class UseCase(object):
         self._view(model, True)
         if hasattr(func, '_action'):
             button_label = func._action['title']
-            params = func.func_code.co_varnames[1:func.func_code.co_argcount]
+            params = func.__code__.co_varnames[1:func.__code__.co_argcount]
             if params:
                 interaction = _('The user clicks the button')
                 self._interactions.append('{} "{}"'.format(interaction, button_label))
@@ -534,7 +534,7 @@ class UseCase(object):
                     business_rules=self.business_rules, pre_conditions=self.pre_conditions,
                     post_condition=self.post_condition, scenario=self.get_interactions_as_string())
 
-    def __unicode__(self):
+    def __str__(self):
         l = list()
         l.append('')
         l.append('{}:\t\t\t{}'.format(terminal.info(_('Name')), self.name))
@@ -672,7 +672,7 @@ class Documentation(object):
                 self.usecases.append(usecase)
 
         # load class diagrams
-        for class_diagram_name, models in loader.class_diagrams.items():
+        for class_diagram_name, models in list(loader.class_diagrams.items()):
             class_diagram = ClassDiagram(class_diagram_name, models)
             self.class_diagrams.append(class_diagram)
 
@@ -684,7 +684,7 @@ class Documentation(object):
     def as_json(self):
         return json.dumps(self.as_dict())
 
-    def __unicode__(self):
+    def __str__(self):
         l = list()
         l.append(terminal.bold(_('Description:').upper()))
         l.append(terminal.info(self.description))

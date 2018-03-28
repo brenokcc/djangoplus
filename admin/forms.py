@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import datetime
 from djangoplus.ui.components import forms
 from django.contrib import auth
@@ -77,10 +77,10 @@ class LoginForm(forms.Form):
                     if not systemic_roles.exists() and (organizations.count() + units.count()) == 1:
                         if organizations:
                             organization_id = organizations[0]
-                            self.request.session['scope'] = unicode(Organization.objects.get(pk=organization_id))
+                            self.request.session['scope'] = str(Organization.objects.get(pk=organization_id))
                         else:
                             unit_id = units[0]
-                            self.request.session['scope'] = unicode(Unit.objects.get(pk=unit_id))
+                            self.request.session['scope'] = str(Unit.objects.get(pk=unit_id))
                         self.request.session.save()
                 user.save()
                 auth.login(self.request, user)

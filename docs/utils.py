@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import re
 import inspect
 from django.apps import apps
@@ -19,7 +19,7 @@ def extract_documentation(model):
 def extract_exception_messages(function):
     messages = []
     if function:
-        code = ''.join([x.decode('utf-8') for x in inspect.getsourcelines(function)[0]])
+        code = ''.join([x for x in inspect.getsourcelines(function)[0]])
         for message in re.findall('ValidationError.*\(.*\)', code):
             messages.append(
                 message[message.index('(') + 1:message.index(')') - 1].replace('u\'', '').replace('"', ''))

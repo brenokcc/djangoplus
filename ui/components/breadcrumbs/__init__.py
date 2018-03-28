@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from djangoplus.ui import Component
 from django.contrib import messages
 from django.http import HttpResponseRedirect, HttpResponse
@@ -46,7 +46,7 @@ class Breadcrumbs(Component):
                 request.session.save()
                 self.referrer = len(stack) > 1 and stack[-2][1]
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('breadcrumbs.html')
 
 

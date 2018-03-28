@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import uuid
 import re
 import base64
@@ -11,7 +11,6 @@ from django.core import validators
 from djangoplus.ui.components.forms import widgets
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from django.utils.encoding import smart_unicode
 
 
 # Base Fields #
@@ -290,10 +289,10 @@ class CnpjField(CharField):
             raise ValidationError(self.error_messages['max_digits'])
         orig_dv = value[-2:]
 
-        new_1dv = sum([i * int(value[idx]) for idx, i in enumerate(range(5, 1, -1) + range(9, 1, -1))])
+        new_1dv = sum([i * int(value[idx]) for idx, i in enumerate(list(range(5, 1, -1)) + list(range(9, 1, -1)))])
         new_1dv = self.dv(new_1dv % 11)
         value = value[:-2] + str(new_1dv) + value[-1]
-        new_2dv = sum([i * int(value[idx]) for idx, i in enumerate(range(6, 1, -1) + range(9, 1, -1))])
+        new_2dv = sum([i * int(value[idx]) for idx, i in enumerate(list(range(6, 1, -1)) + list(range(9, 1, -1)))])
         new_2dv = self.dv(new_2dv % 11)
         value = value[:-1] + str(new_2dv)
         if value[-2:] != orig_dv:
@@ -338,7 +337,7 @@ class PhoneField(CharField):
         super(PhoneField, self).clean(value)
         if value in validators.EMPTY_VALUES:
             return ''
-        value = re.sub('(\(|\)|\s+)', '', smart_unicode(value))
+        value = re.sub('(\(|\)|\s+)', '', str(value))
         m = PhoneField.PHONE_DIGITS_RE.search(value)
         if m:
             return '({}) {}-{}'.format(m.group(1), m.group(2), m.group(3))

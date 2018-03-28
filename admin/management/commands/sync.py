@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import os
 from djangoplus.conf import base_settings
 from django.conf import settings
@@ -12,8 +12,8 @@ from django.core.management.base import BaseCommand
 
 def print_and_call(command, *args, **kwargs):
     kwargs.setdefault('interactive', True)
-    print termcolors.make_style(fg='cyan', opts=('bold',))('>>> {} {}{}'.format(
-        command, ' '.join(args), ' '.join(['{}={}'.format(k, v) for k, v in kwargs.items()])))
+    print(termcolors.make_style(fg='cyan', opts=('bold',))('>>> {} {}{}'.format(
+        command, ' '.join(args), ' '.join(['{}={}'.format(k, v) for k, v in list(kwargs.items())]))))
     call_command(command, *args, **kwargs)
 
 

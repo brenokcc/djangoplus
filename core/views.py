@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import traceback
 from django.apps import apps
 from django.conf import settings
@@ -89,7 +89,7 @@ def listt(request, app, cls, subset=None):
                         char = '?' in request.get_full_path() and '&' or '?'
                         url = '{}{}{}'.format(request.get_full_path(), char, '{}='.format(view_name))
 
-                        has_input = func.func_code.co_argcount > 1
+                        has_input = func.__code__.co_argcount > 1
 
                         if not has_input:
                             action_css = action_css.replace('popup', '')
@@ -110,14 +110,14 @@ def listt(request, app, cls, subset=None):
                                 paginator = ''
                                 if form.is_valid():
                                     params = []
-                                    for param in func.func_code.co_varnames[1:func.func_code.co_argcount]:
+                                    for param in func.__code__.co_varnames[1:func.__code__.co_argcount]:
                                         if param in form.cleaned_data:
                                             params.append(form.cleaned_data[param])
                                     try:
                                         f_return = func(*params)
                                         redirect_url = '..'
-                                    except ValidationError, e:
-                                        form.add_error(None, unicode(e.message))
+                                    except ValidationError as e:
+                                        form.add_error(None, str(e.message))
                                 if not redirect_url:
                                     return render(request, 'default.html', locals())
                             else:
@@ -144,7 +144,7 @@ def listt(request, app, cls, subset=None):
 
 def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     try:
@@ -156,7 +156,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
     obj.request = request
     obj._user = request.user
 
-    title = pk and unicode(obj) or get_metadata(_model, 'verbose_name')
+    title = pk and str(obj) or get_metadata(_model, 'verbose_name')
 
     if not related_field_name:
 
@@ -200,7 +200,6 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
                     else:
                         if not permissions.has_add_permission(request, rel.related_model) or not permissions.can_add(request, related_obj):
                             return HttpResponseForbidden()
-
                     form = factory.get_many_to_one_form(request, obj, rel.get_accessor_name(), related_obj)
                     title = form.title
 
@@ -228,14 +227,14 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
                 else:
                     message = message or 'Cadastro realizado com sucesso'
             return httprr(request, url, message)
-        except ValidationError, e:
-            form.add_error(None, unicode(e.message))
+        except ValidationError as e:
+            form.add_error(None, str(e.message))
     return render(request, 'default.html', locals())
 
 
 def view(request, app, cls, pk, tab=None):
 
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     try:
@@ -256,7 +255,7 @@ def view(request, app, cls, pk, tab=None):
     if not permissions.can_view(request, obj):
         return HttpResponseForbidden()
 
-    title = unicode(obj)
+    title = str(obj)
     parent = request.GET.get('parent', None)
     panel = ModelPanel(request, obj, tab, parent)
 
@@ -290,7 +289,7 @@ def action(request, app, cls, action_name, pk=None):
     action_condition = form_action['condition']
     action_function = form_action['function']
     action_message = 'message' in form_action and form_action['message'] or None
-    action_permission = '{}.{}'.format(_model._meta.app_label, action_function.func_name)
+    action_permission = '{}.{}'.format(_model._meta.app_label, action_function.__name__)
     action_input = form_action['input']
     redirect_to = form_action['redirect_to']
 
@@ -301,45 +300,45 @@ def action(request, app, cls, action_name, pk=None):
 
     if check_condition(action_condition, obj) and (not action_can_execute or permissions.check_group_or_permission(request, action_permission)):
 
-        func = getattr(_model, action_function.func_name, action_function)
+        func = getattr(_model, action_function.__name__, action_function)
         form = factory.get_action_form(request, obj, form_action)
 
-        if func.func_code.co_argcount > 1 or action_input:
+        if func.__code__.co_argcount > 1 or action_input:
             if form.is_valid():
                 if 'instance' in form.fields:
                     obj = form.cleaned_data['instance']
-                func = getattr(obj, action_function.func_name, action_function)
+                func = getattr(obj, action_function.__name__, action_function)
                 params = []
-                for param in func.func_code.co_varnames[1:func.func_code.co_argcount]:
+                for param in func.__code__.co_varnames[1:func.__code__.co_argcount]:
                     if param in form.cleaned_data:
                         params.append(form.cleaned_data[param])
                 try:
                     f_return = func(*params)
                     if not redirect_to:
-                        if func.func_code.co_argcount > 1:
+                        if func.__code__.co_argcount > 1:
                             return httprr(request, '..', action_message)
                         else:
                             return httprr(request, '.', action_message)
                     else:
                         return httprr(request, Template(redirect_to).render(Context({'self': obj})), action_message)
-                except ValidationError, e:
-                    form.add_error(None, unicode(e.message))
+                except ValidationError as e:
+                    form.add_error(None, str(e.message))
         else:
             try:
                 if form.fields and form.is_valid() or not form.fields:
                     if form.fields:
                         obj = form.cleaned_data['instance']
-                    func = getattr(obj, action_function.func_name, action_function)
+                    func = getattr(obj, action_function.__name__, action_function)
                     f_return = func()
                     if not redirect_to:
-                        if func.func_code.co_argcount > 1:
+                        if func.__code__.co_argcount > 1:
                             return httprr(request, '..', action_message)
                         else:
                             return httprr(request, '.', action_message)
                     else:
                         return httprr(request, Template(redirect_to).render(Context({'self': obj})), action_message)
-            except ValidationError, e:
-                return httprr(request, '.', unicode(e.message))
+            except ValidationError as e:
+                return httprr(request, '.', str(e.message))
 
         if form.title == DEFAULT_FORM_TITLE:
             form.title = action_title
@@ -368,7 +367,7 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
             getattr(obj, related_field_name).remove(related_pk)
             return httprr(request, '..', 'Removido com sucesso')
         else:
-            title = 'Excluir {}'.format(unicode(obj))
+            title = 'Excluir {}'.format(str(obj))
             form = factory.get_delete_form(request, obj)
             if form.is_valid():
                 obj.delete()
@@ -416,7 +415,7 @@ def dispatcher(request, app, view_name, params):
     try:
         return func(request, *params)
     except Exception as e:
-        print e
+        print(e)
         traceback.print_exc()
         return server_error(request, 'error500.html')
 

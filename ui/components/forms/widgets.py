@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.forms import widgets
-from django.utils.encoding import force_unicode
 from djangoplus.ui.components.calendar.widgets import *
 from djangoplus.ui.components.editor.widgets import *
 from djangoplus.ui.components.select.widgets import *
@@ -149,7 +148,7 @@ class RenderableSelectMultiple(widgets.SelectMultiple):
         if value is None: value = []
         has_id = attrs and 'id' in attrs
         final_attrs = self.build_attrs(attrs, name=name)
-        str_values = set([force_unicode(v) for v in value])
+        str_values = set([str(v) for v in value])
         i = 0
         objects = []
 
@@ -160,7 +159,7 @@ class RenderableSelectMultiple(widgets.SelectMultiple):
                 final_attrs = dict(final_attrs, id='{}_{}'.format(attrs['id'], i))
             final_attrs['class'] = 'custom-checkbox'
             cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
-            option_value = force_unicode(option_value)
+            option_value = str(option_value)
             rendered_cb = cb.render(name, option_value)
             obj.widget = rendered_cb
             i += 1

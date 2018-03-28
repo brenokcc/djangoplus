@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from djangoplus import cache
 from djangoplus.utils.metadata import set_metadata, iterable
 
@@ -27,7 +27,7 @@ def subset(title, can_view=(), alert=False, notify=None, menu=None, usecase=None
         set_metadata(function, 'help_text', help_text)
         set_metadata(function, 'usecase', usecase)
         set_metadata(function, 'can_view', iterable(can_view))
-        set_metadata(function, 'name', function.func_name)
+        set_metadata(function, 'name', function.__name__)
         set_metadata(function, 'order', cache.next_number())
         set_metadata(function, 'dashboard', dashboard)
         set_metadata(function, 'list_display', list_display)

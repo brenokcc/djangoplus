@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import copy
 from django.conf import settings
 from djangoplus.cache import loader
@@ -27,7 +27,7 @@ def context_processor(request):
                 can_view = item['can_view']
                 alert = item['alert']
                 if alert and permissions.check_group_or_permission(request, can_view):
-                    attr_name = item['function'].im_func.func_name
+                    attr_name = item['function'].__func__.__name__
                     qs = model.objects.all(request.user)
                     qs = getattr(qs, attr_name)()
                     count = qs.count()

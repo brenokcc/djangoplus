@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import os
 import json
 from os import path
@@ -40,8 +40,8 @@ class Command(test.Command):
                 file_content = '{}\n{}'.format(file_content, '\n'.join(function_calls))
                 file_content = file_content.replace('\t', '    ')
                 open(test_file_path, 'w').write(file_content.encode('utf-8'))
-            except ZeroDivisionError, e:
-                print e
+            except ZeroDivisionError as e:
+                print(e)
 
         else:
             if options.pop('continue', False):
@@ -52,6 +52,6 @@ class Command(test.Command):
                     cache.LOGIN_COUNT = data.get('login_count', None)
                     username = data.get('username', None)
                     password = data.get('password', None)
-                    print 'Continuing from login #{} with user "{}" and password "{}"'.format(cache.LOGIN_COUNT, username, password)
+                    print('Continuing from login #{} with user "{}" and password "{}"'.format(cache.LOGIN_COUNT, username, password))
 
             super(Command, self).handle(*args, **options)

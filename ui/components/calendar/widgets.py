@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.forms import widgets
 from django.utils.safestring import mark_safe
 from djangoplus.utils.formatter import format_value
@@ -33,7 +33,7 @@ class DateWidget(widgets.DateInput):
 
     def _format_value(self, value):
         if value:
-            if type(value) in [unicode, str]:
+            if type(value) in [str, str]:
                 return value
             else:
                 return format_value(value)
@@ -56,7 +56,7 @@ class DateTimeWidget(widgets.DateTimeInput):
     def render(self, name, value, attrs=None):
         attrs['class'] = 'form-control'
         html = super(DateTimeWidget, self).render(name, value, attrs)
-        if type(value) not in [unicode, str]:
+        if type(value) not in [str, str]:
             js_value = value and 'new Date{}'.format((value.year, value.month-1, value.day, value.hour, value.minute),) or 'new Date()'
         else:
             js_value = "'{}'".format(value)
@@ -85,7 +85,7 @@ class DateTimeWidget(widgets.DateTimeInput):
         return mark_safe(html)
 
     def _format_value(self, value):
-        if type(value) in [unicode, str]:
+        if type(value) in [str, str]:
             return value
         else:
             return format_value(value)

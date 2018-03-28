@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import json
 import six
 import sys
@@ -16,6 +16,7 @@ from django.db.models.deletion import Collector
 from djangoplus.utils.metadata import get_metadata, getattr2, find_model, get_field
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
+from functools import reduce
 
 setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'icon', 'verbose_female', 'order_by', 'pdf', 'menu',
@@ -59,7 +60,7 @@ class QueryStatistics(object):
     def total(self):
         return sum(self.xtotal)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}\n{}\n{}'.format(self.labels, self.series, self.groups)
 
     def as_table(self, title=None, symbol=None):
@@ -78,8 +79,8 @@ class ModelGeneratorWrapper:
     def __iter__(self):
         return self
 
-    def next(self):
-        obj = self.generator.next()
+    def __next__(self):
+        obj = next(self.generator)
         obj._user = self._user
         return obj
 
@@ -148,11 +149,11 @@ class QuerySet(query.QuerySet):
             months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
             if horizontal_key:
-                iterator_model = get_field(self.model, horizontal_key).rel.to
+                iterator_model = get_field(self.model, horizontal_key).remote_field.model
                 iterators = iterator_model.objects.filter(pk__in=self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct())
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '{} anual por {}'.format(verbose_name, horizontal_field.verbose_name)
-                statistics = QueryStatistics([], [unicode(x) for x in iterators], months, title=title)
+                statistics = QueryStatistics([], [str(x) for x in iterators], months, title=title)
 
                 for iterator in iterators:
                     serie = []
@@ -188,7 +189,7 @@ class QuerySet(query.QuerySet):
                 vertical_choices = [(True, 'Sim'), (False, 'Não')]
             else:
                 vertical_model = find_model(self.model, vertical_key)
-                vertical_choices = [(o.pk, unicode(o)) for o in vertical_model.objects.filter(id__in=self.values_list(vertical_key, flat=True))]
+                vertical_choices = [(o.pk, str(o)) for o in vertical_model.objects.filter(id__in=self.values_list(vertical_key, flat=True))]
             if horizontal_key:
                 horizontal_field = get_field(self.model, horizontal_key)
                 if horizontal_field.choices:
@@ -197,7 +198,7 @@ class QuerySet(query.QuerySet):
                     vertical_choices = [(True, 'Sim'), (False, 'Não')]
                 else:
                     horizontal_model = find_model(self.model, horizontal_key)
-                    horizontal_choices = [(o.pk, unicode(o)) for o in horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))]
+                    horizontal_choices = [(o.pk, str(o)) for o in horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))]
 
                 title = '{} por {} e {}'.format(verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
                 statistics = QueryStatistics([], [choice[1] for choice in vertical_choices], [choice[1] for choice in horizontal_choices], title=title)
@@ -311,7 +312,7 @@ class ModelBase(base.ModelBase):
             if not hasattr(cls._meta, 'select_template'):
                 setattr(cls._meta, 'select_template', 'tree_node_option.html')
             if not declared_tree_index:
-                from fields import TreeIndexField
+                from .fields import TreeIndexField
                 cls.add_to_class('tree_index', TreeIndexField())
 
         return cls
@@ -331,12 +332,12 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
         self.request = None
         self._user = None
 
-    def __unicode__(self):
+    def __str__(self):
         for subclass in self.__class__.__subclasses__():
             if hasattr(self, subclass.__name__.lower()):
                 subinstance = getattr(self, subclass.__name__.lower())
-                if hasattr(subinstance, '__unicode__'):
-                    return subinstance.__unicode__()
+                if hasattr(subinstance, '__str__'):
+                    return subinstance.__str__()
         return '{}{}'.format(get_metadata(self.__class__, 'verbose_name'), self.pk and ' #{}'.format(self.pk or ''))
 
     @classmethod
@@ -359,7 +360,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
     @classmethod
     def get_parent_field(cls):
         for field in cls._meta.fields:
-            if hasattr(field, 'rel') and field.rel and field.rel.to == cls:
+            if field.remote_field and field.remote_field.model == cls:
                 return field
         return None
 
@@ -391,14 +392,14 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                 log.user = self._user
                 log.content_type = ContentType.objects.get_for_model(self.__class__)
                 log.object_id = self.pk
-                log.object_description = unicode(self)
+                log.object_description = str(self)
                 diff = []
 
                 for field in get_metadata(self, 'fields'):
                     o1 = getattr(old, field.name)
                     o2 = getattr(self, field.name)
-                    v1 = unicode(o1)
-                    v2 = unicode(o2)
+                    v1 = str(o1)
+                    v2 = str(o2)
                     if not hasattr(o2, '__iter__') and v1 != v2:
                         self._diff = True
                         diff.append((field.verbose_name, v1, v2))
@@ -456,7 +457,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             log.user = self._user
             log.content_type = ContentType.objects.get_for_model(self.__class__)
             log.object_id = self.pk
-            log.object_description = unicode(self)
+            log.object_description = str(self)
             log.content = '[]'
             log.save()
             log.create_indexes(self)
@@ -506,12 +507,12 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                         organization = None
                 else:
                     for field in concrete_fields:
-                        if hasattr(field, 'rel') and hasattr(field.rel, 'to'):
-                            if issubclass(field.rel.to, Organization):
+                        if field.remote_field and field.remote_field.model:
+                            if issubclass(field.remote_field.model, Organization):
                                 organization = getattr(self, field.name)
                                 unit = None
                                 break
-                            if issubclass(field.rel.to, Unit):
+                            if issubclass(field.remote_field.model, Unit):
                                 unit = getattr(self, field.name)
                                 organization = None
                                 break
@@ -523,8 +524,8 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
                 if unit and not organization:
                     for field in get_metadata(unit.__class__, 'concrete_fields'):
-                        if hasattr(field, 'rel') and hasattr(field.rel, 'to'):
-                            if issubclass(field.rel.to, Organization):
+                        if field.remote_field and field.remote_field.model:
+                            if issubclass(field.remote_field.model, Organization):
                                 organization = getattr(unit, field.name)
 
                 if saving:
@@ -532,12 +533,12 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     if qs.exists():
                         user = qs[0]
                         user.email = email
-                        user.name = name or unicode(self)
+                        user.name = name or str(self)
                         user.save()
                     else:
                         user = User()
                         user.username = username
-                        user.name = name or unicode(self)
+                        user.name = name or str(self)
                         user.email = email
                         user.save()
                         if user.email and not (settings.DEBUG or 'test' in sys.argv):
@@ -585,7 +586,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
             collector = Collector(using='default')
             collector.collect([self], keep_parents=False)
-            for cls, objs in collector.data.items():
+            for cls, objs in list(collector.data.items()):
                 content_type = ContentType.objects.get_for_model(cls)
                 for obj in objs:
                     log = Log()
@@ -593,12 +594,12 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     log.user = self._user
                     log.content_type = content_type
                     log.object_id = obj.pk
-                    log.object_description = unicode(obj)
+                    log.object_description = str(obj)
                     diff = []
                     for field in get_metadata(obj.__class__, 'fields'):
                         if not isinstance(field, models.FileField):
                             o1 = getattr(obj, field.name)
-                            v1 = unicode(o1)
+                            v1 = str(o1)
                             diff.append((field.verbose_name, v1))
 
                     log.content = json.dumps(diff)

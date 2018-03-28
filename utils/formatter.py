@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import re
 import datetime
 import unicodedata
@@ -9,7 +9,7 @@ from django.db.models.fields.files import FieldFile, ImageFieldFile as DjangoIma
 
 
 def normalyze(nome):
-    nome = unicode(nome)
+    nome = str(nome)
 
     if nome.isupper():
         return nome
@@ -58,11 +58,11 @@ def format_value(value, html=True):
             return format_decimal3(value)
         return format_decimal(value)
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
-        value = unicode(value)
+        value = str(value)
         url = '/static/' in value and value or '/media/{}'.format(value)
         return html and mark_safe('<img width="50px" class="materialboxed" src="{}"/>'.format(url)) or value
     elif isinstance(value, FieldFile):
-        value = unicode(value)
+        value = str(value)
         url = '/static/' in value and value or '/media/{}'.format(value)
         file_name = value.split('/')[-1]
         if url.lower().endswith('.pdf'):
@@ -87,16 +87,16 @@ def format_value(value, html=True):
         else:
             l = []
             for obj in value:
-                l.append(unicode(obj))
+                l.append(str(obj))
             return ', '.join(l)
     elif isinstance(value, tuple):
         return '{} {}'.format(value[0], value[1])
     else:
-        return unicode(value)
+        return str(value)
 
 
 def split_thousands(value, sep='.'):
-    if not isinstance(value, basestring):
+    if not isinstance(value, str):
         value = str(value)
     negativo = False
     if '-' in value:
@@ -145,8 +145,8 @@ def format_decimal3(value):
 
 
 def to_ascii(txt, codif='utf-8'):
-    if not isinstance(txt, basestring):
-        txt = unicode(txt)
-    if isinstance(txt, unicode):
+    if not isinstance(txt, str):
+        txt = str(txt)
+    if isinstance(txt, str):
         txt = txt.encode('utf-8')
     return unicodedata.normalize('NFKD', txt.decode(codif)).encode('ASCII', 'ignore')

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.apps import apps
 from django.contrib.auth.models import Permission, Group, ContentType
 from django.db.models import signals
@@ -33,7 +33,7 @@ def sync_permissions():
             else:
                 content_type = ContentType.objects.create(app_label=app_label, model=model)
 
-            for codename, name in default_permissions_names.items():
+            for codename, name in list(default_permissions_names.items()):
                 codename = '{}_{}'.format(codename, content_type.model)
                 name = '{} {}'.format(name, Model._meta.verbose_name)
                 qs_permission = Permission.objects.filter(codename=codename, content_type=content_type)
@@ -84,6 +84,7 @@ def sync_permissions():
 
                 for permission in permissions:
                     for group_name in group_names:
+
                         group_name = hasattr(group_name, '_meta') and group_name._meta.verbose_name or group_name
 
                         if group_name in loader.abstract_role_model_names:
@@ -101,12 +102,12 @@ def sync_permissions():
             can_view = view.get('can_view', ())
             if can_view:
                 content_type = ContentType.objects.get(app_label='admin', model='user')
-                qs_permission = Permission.objects.filter(codename=function.func_name, content_type=content_type)
+                qs_permission = Permission.objects.filter(codename=function.__name__, content_type=content_type)
                 if qs_permission.exists():
                     qs_permission.update(name=name)
                     permission = qs_permission[0]
                 else:
-                    permission = Permission.objects.create(codename=function.func_name, content_type=content_type, name=name)
+                    permission = Permission.objects.create(codename=function.__name__, content_type=content_type, name=name)
                 for group in Group.objects.filter(name__in=can_view):
                     group.permissions.add(permission)
 
@@ -115,7 +116,7 @@ def sync_permissions():
             app_label = get_metadata(model, 'app_label')
             content_type = ContentType.objects.get(app_label=app_label, model=model.__name__.lower())
             for category in actions_dict[model]:
-                for key in actions_dict[model][category].keys():
+                for key in list(actions_dict[model][category].keys()):
                     name = actions_dict[model][category][key]['title']
                     can_execute = []
                     for scope in ('', 'role', 'unit', 'organization'):

@@ -30,11 +30,13 @@
     {% endfor %}
 {% else %}
 <div class="model-panel">
-    {% if self.complete %}
+    {% if self.complete or self.drop_down.has_items %}
     <div id="{% uuid %}" class="action-bar">
+        {% if self.complete %}
         <div class="pull-left">
             <h2>{{ self.title }}</h2>
         </div>
+        {% endif %}
         {% if not self.request.GET.popup %}
         <div class="pull-right">
             {{ self.drop_down }}

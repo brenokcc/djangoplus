@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from djangoplus.utils.formatter import format_value
 from djangoplus.utils.metadata import get_metadata, get_fiendly_name, getattr2
 
@@ -17,7 +17,7 @@ def tolist(qs, add_header=True, list_display=()):
             fields.append(field_name)
     else:
         for field in get_metadata(model, 'fields'):
-            header.append(field.verbose_name.encode("latin-1"))
+            header.append(field.verbose_name)
             fields.append(field.name)
     if add_header:
         data.append(header)
@@ -28,7 +28,7 @@ def tolist(qs, add_header=True, list_display=()):
             val = getattr2(obj, field)
             if callable(val):
                 val = val()
-            row.append(unicode(format_value(val, False)).encode("latin-1"))
+            row.append(format_value(val, False))
         data.append(row)
 
     return data

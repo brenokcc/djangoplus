@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import copy
 from django.template import loader
 from djangoplus.ui.components.forms.fields import *
@@ -7,9 +7,9 @@ from djangoplus.ui.components.forms import widgets
 from django import forms as django_forms
 from django.forms.forms import BoundField
 from djangoplus.templatetags import mobile
-from django.utils.encoding import force_unicode
 from django.utils.html import conditional_escape
-from djangoplus.utils.metadata import get_metadata, iterable, is_one_to_many, is_one_to_one
+from djangoplus.utils.metadata import get_metadata, iterable
+from django.db.models.fields import NOT_PROVIDED
 
 ValidationError = django_forms.ValidationError
 DEFAULT_FORM_TITLE = 'Formulário'
@@ -135,7 +135,7 @@ class Form(django_forms.Form):
 
         one_to_one_fields = dict()
         one_to_many_fields = dict()
-        for name in self.fields:
+        for name in list(self.fields.keys()):
             field = self.fields[name]
             if type(field) == OneToOneField:
                 one_to_one_fields[name] = field
@@ -145,7 +145,7 @@ class Form(django_forms.Form):
                 del (self.fields[name])
 
         if not self.fieldsets:
-            fields = self.fields.keys() + one_to_one_fields.keys() + one_to_many_fields.keys()
+            fields = list(self.fields.keys()) + list(one_to_one_fields.keys()) + list(one_to_many_fields.keys())
             if self.inline:
                 self.fieldsets = (('', {'fields': (fields, )}),)
             else:
@@ -159,7 +159,7 @@ class Form(django_forms.Form):
             for name_or_tuple in tuple(field_names) + tuple(relation_names):
                 for name in iterable(name_or_tuple):
                     fieldset_field_names.append(name)
-        for field_name in self.fields.keys():
+        for field_name in list(self.fields.keys()):
             if field_name not in fieldset_field_names:
                 extra_fieldset_field_names.append(field_name)
         if extra_fieldset_field_names:
@@ -182,7 +182,7 @@ class Form(django_forms.Form):
                             hidden_fields.append(bf)
                         else:
                             if bf.label:
-                                label = conditional_escape(force_unicode(bf.label))
+                                label = conditional_escape(str(bf.label))
                                 if self.label_suffix:
                                     if label[-1] not in ':?.!':
                                         label += self.label_suffix
@@ -191,7 +191,7 @@ class Form(django_forms.Form):
                                 label = ''
 
                             help_text = field.help_text or ''
-                            label = force_unicode(label)[0:-1]
+                            label = str(label)[0:-1]
                             label = field.required and '{}<span class="text-danger">*</span>'.format(label) or label
 
                             d = dict(name=name, request=self.request, label=label, widget=bf,
@@ -255,7 +255,7 @@ class Form(django_forms.Form):
                 configured_fieldset['tuples'].append(fields)
 
             self.configured_fieldsets.append(configured_fieldset)
-        self.str_hidden = ''.join([unicode(x) for x in hidden_fields])
+        self.str_hidden = ''.join([str(x) for x in hidden_fields])
 
     def is_valid(self, *args, **kwargs):
         self.contextualize()
@@ -273,7 +273,7 @@ class Form(django_forms.Form):
                 return True
         return False
 
-    def __unicode__(self):
+    def __str__(self):
         if self.inline:
             for field_name in self.fields:
                 self.fields[field_name].widget.attrs['placeholder'] = self.fields[field_name].label
@@ -287,7 +287,7 @@ class ModelForm(Form, django_forms.ModelForm):
         setattr(self.instance, 'request', self.request)
         for model_field in get_metadata(self.instance, 'fields'):
             # Se para o campo em questão foi definido um valor default. Ex: BooleanField(default=True)
-            if unicode(model_field.default) != 'django.db.models.fields.NOT_PROVIDED':
+            if model_field.default != NOT_PROVIDED:
                 value = model_field.default
                 if callable(value):
                     value = value()

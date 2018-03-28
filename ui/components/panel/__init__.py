@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from decimal import Decimal
 
 from djangoplus.ui import Component
@@ -30,7 +30,7 @@ class Panel(Component):
     def set_icon(self, name, css='text-info', align='right'):
         self.icon = dict(name=name, css=css, align=align)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('panel.html')
 
 
@@ -41,7 +41,7 @@ class ModelPanel(Component):
 
         self.obj = obj
         self.request = request
-        self.title = unicode(obj)
+        self.title = obj.pk and str(obj) or get_metadata(type(obj), 'verbose_name')
         self.tabs = []
         self.current_tab = current_tab
         self.message = None
@@ -142,34 +142,33 @@ class ModelPanel(Component):
                     for relation_name in relations + inlines:
                         if relation_name in [field.name for field in get_metadata(model, 'get_fields')]:
                             relation_field = find_field_by_name(model, relation_name)
-                            relation = getattr(self.obj, relation_name)
+                            relation = getattr(self.obj, relation_name) or relation_field.remote_field.model()
                             if is_one_to_one(model, relation_name) or is_many_to_one(model, relation_name):
+                                fieldset_title = relation_field.verbose_name
+                                panel_fieldsets = None
                                 if relation:
-                                    fieldset_title = relation_field.verbose_name
                                     panel_fieldsets = get_metadata(type(relation), 'view_fieldsets', [])
                                     panel_fieldsets = ((fieldset_title, panel_fieldsets[0][1]), )
-                                    panel = ModelPanel(request, relation, fieldsets=panel_fieldsets, complete=False)
+                                panel = ModelPanel(request, relation, fieldsets=panel_fieldsets, complete=False)
 
-                                    if is_one_to_one(model, relation_name):
-                                        app_label = get_metadata(model, 'app_label')
-                                        model_name = model.__name__.lower()
-                                        related_model_name = type(relation).__name__.lower()
-                                        add_url = '/add/{}/{}/{}/{}'.format(app_label, model_name, self.obj.pk, relation_name)
-                                        delete_url = None
-                                        if relation.pk:
-                                            add_url = '{}/{}/'.format(add_url, relation.pk)
-                                            app_label = get_metadata(type(relation), 'app_label')
-                                            delete_url = '/delete/{}/{}/{}/'.format(app_label, related_model_name, relation.pk)
-                                        if permissions.has_add_permission(self.request, model) or permissions.has_edit_permission(self.request, model):
-                                            if delete_url:
-                                                panel.drop_down.add_action('Excluir {}'.format(relation_field.verbose_name),
-                                                                           delete_url, 'popup', 'fa-close', None)
-                                            panel.drop_down.add_action('Atualizar {}'.format(relation_field.verbose_name),
-                                                                       add_url, 'popup', 'fa-edit')
-
-                                else:
-                                    panel = Panel(request, relation_field.verbose_name, text='')
+                                if is_one_to_one(model, relation_name):
+                                    app_label = get_metadata(model, 'app_label')
+                                    model_name = model.__name__.lower()
+                                    related_model_name = type(relation).__name__.lower()
+                                    add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.obj.pk, relation_name)
+                                    delete_url = None
+                                    if relation.pk:
+                                        add_url = '{}{}/'.format(add_url, relation.pk)
+                                        app_label = get_metadata(type(relation), 'app_label')
+                                        delete_url = '/delete/{}/{}/{}/'.format(app_label, related_model_name, relation.pk)
+                                    if permissions.has_add_permission(self.request, model) or permissions.has_edit_permission(self.request, model):
+                                        if delete_url:
+                                            panel.drop_down.add_action('Excluir {}'.format(relation_field.verbose_name),
+                                                                       delete_url, 'popup', 'fa-close', None)
+                                        panel.drop_down.add_action('Atualizar {}'.format(relation_field.verbose_name),
+                                                                   add_url, 'popup', 'fa-edit')
                                 fieldset_dict['paginators'].append(panel)
+
                             else:
                                 fieldset_title = len(relations) > 1 and title or relation_field.verbose_name
 
@@ -180,10 +179,9 @@ class ModelPanel(Component):
 
                                 related_paginator = Paginator(self.request, relation.all(), title=fieldset_title, to=to, list_subsets=[])
 
-                                if not is_one_to_many(model, relation_name):
-                                    add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
-                                    if permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model):
-                                        related_paginator.add_action('Adicionar {}'.format(unicode(get_metadata(relation.model, 'verbose_name'))), add_url, 'popup', 'fa-plus')
+                                add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
+                                if permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model):
+                                    related_paginator.add_action('Adicionar {}'.format(str(get_metadata(relation.model, 'verbose_name'))), add_url, 'popup', 'fa-plus')
                                 fieldset_dict['paginators'].append(related_paginator)
                         else:
                             is_object_set = False
@@ -234,8 +232,8 @@ class ModelPanel(Component):
                                             try:
                                                 form.save()
                                                 self.message = 'Ação realizada com sucesso'
-                                            except ValidationError, e:
-                                                form.add_error(None, unicode(e.message))
+                                            except ValidationError as e:
+                                                form.add_error(None, str(e.message))
                                     else:
                                         add_url = '/add/{}/{}/{}/{}/'.format(
                                         get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk,
@@ -255,7 +253,7 @@ class ModelPanel(Component):
     def get_active_fieldsets(self):
         return self.fieldsets_without_tab_name + self.fieldsets_with_tab_name
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('model_panel.html')
 
 
@@ -271,7 +269,7 @@ class IconPanel(Component):
         item = dict(label=label, url=url, css=css, icon=icon or self.icon)
         self.items.append(item)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('icon_panel.html')
 
 
@@ -304,7 +302,7 @@ class ShortcutPanel(Component):
             item = dict(icon=icon, description=description, count=count, url=url or '#', style=style)
             self.items.append(item)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('shortcut_panel.html')
 
     def add_model(self, model):
@@ -350,7 +348,7 @@ class CardPanel(Component):
                         can_view = item['can_view']
                         # TODO False
                         if False and permissions.check_group_or_permission(self.request, can_view):
-                            attr_name = item['function'].im_func.func_name
+                            attr_name = item['function'].__func__.__name__
                             qs = model.objects.all(self.request.user)
                             qs = getattr(qs, attr_name)()
                             count = qs.count()
@@ -368,7 +366,7 @@ class CardPanel(Component):
             item = dict(icon=icon, title=title, count=count, url=url, css=css, description=description)
             self.items.append(item)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('card_panel.html')
 
     def add_model(self, model):
@@ -407,7 +405,7 @@ class DashboardPanel(Component):
                 can_view = item['can_view']
                 notify = item['notify']
                 if notify and permissions.check_group_or_permission(request, can_view):
-                    attr_name = item['function'].im_func.func_name
+                    attr_name = item['function'].__func__.__name__
                     qs = model.objects.all(request.user)
                     qs = getattr(qs, attr_name)()
                     count = qs.count()
@@ -434,7 +432,7 @@ class DashboardPanel(Component):
 
             l = []
             if type(dashboard) == dict:
-                for position, group_names in dashboard.items():
+                for position, group_names in list(dashboard.items()):
                     group_names = type(group_names) == tuple and group_names or (group_names,)
                     l.append((position, group_names))
             else:
@@ -451,17 +449,17 @@ class DashboardPanel(Component):
                         verbose_name = get_metadata(model, 'verbose_name_plural')
                         icon = get_metadata(model, 'icon')
                         panel = NumberPanel(request, verbose_name, f_return, title, icon)
-                        html = unicode(panel)
+                        html = str(panel)
 
                     if type(f_return).__name__ == 'QueryStatistics' and not formatter:
                         formatter = 'statistics'
 
                     if formatter:
                         func = loader.formatters[formatter]
-                        if len(func.func_code.co_varnames) == 1:
-                            html = unicode(func(f_return))
+                        if len(func.__code__.co_varnames) == 1:
+                            html = str(func(f_return))
                         else:
-                            html = unicode(func(f_return, request=self.request, verbose_name=title))
+                            html = str(func(f_return, request=self.request, verbose_name=title))
                     elif hasattr(f_return, 'model'):
                         compact = position in ('left', 'right')
                         app_label = get_metadata(model, 'app_label')
@@ -473,7 +471,7 @@ class DashboardPanel(Component):
                         paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[function], url=link and url or None)
                         if compact:
                             paginator.column_names = paginator.column_names[0:1]
-                        html = unicode(paginator)
+                        html = str(paginator)
 
                     if position == 'top':
                         self.top.append(html)
@@ -491,7 +489,7 @@ class DashboardPanel(Component):
                 function = item['function']
                 position = item['position']
                 f_return = function(request)
-                html = render_to_string(['{}.html'.format(function.func_name), 'widget.html'], f_return, request)
+                html = render_to_string(['{}.html'.format(function.__name__), 'widget.html'], f_return, request)
                 if position == 'top':
                     self.top.append(html)
                 elif position == 'center':
@@ -503,7 +501,7 @@ class DashboardPanel(Component):
                 elif position == 'bottom':
                     self.bottom.append(html)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('dashboard_panel.html')
 
 
@@ -516,7 +514,7 @@ class NumberPanel(Component):
         self.description = description
         self.icon = icon or 'fa-comment-o'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('number_panel.html')
 
 
@@ -530,5 +528,5 @@ class NotificationPanel(Component):
         self.description = description
         self.icon = icon or 'fa-bell-o'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('notification_panel.html')

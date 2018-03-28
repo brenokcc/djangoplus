@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.apps import apps
 from django.conf import settings
 from djangoplus.utils.metadata import get_metadata, get_scope
@@ -62,10 +62,10 @@ if not initialized:
             field_names.append(field.name)
             if hasattr(field, 'composition') and field.composition:
                 composition_fields[model] = field.name
-                if field.rel.to not in composition_relations:
-                    composition_relations[field.rel.to] = []
-                if model not in composition_relations[field.rel.to]:
-                    composition_relations[field.rel.to].append(model)
+                if field.remote_field.model not in composition_relations:
+                    composition_relations[field.remote_field.model] = []
+                if model not in composition_relations[field.remote_field.model]:
+                    composition_relations[field.remote_field.model].append(model)
 
         if model not in subsets:
             subsets[model] = []
@@ -132,7 +132,7 @@ if not initialized:
                     subset_list_filter = attr._metadata['{}:list_filter'.format(attr_name)]
                     subset_search_fields = attr._metadata['{}:search_fields'.format(attr_name)]
                     subset_workflow = attr._metadata['{}:usecase'.format(attr_name)]
-                    subset_url = '{}{}/'.format(url, attr.im_func.func_name)
+                    subset_url = '{}{}/'.format(url, attr.__func__.__name__)
 
                     item = dict(
                         title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
@@ -284,7 +284,7 @@ if not initialized:
                             role = action_can_execute and action_can_execute[0] or 'Superusuário'
                             action_model_verbose_name = get_metadata(action_model, 'verbose_name')
                             workflows[action_workflow] = dict(activity=action_title, role=role, model=action_model_verbose_name)
-                        if action_function.func_code.co_argcount > 1:
+                        if action_function.__code__.co_argcount > 1:
                             if action_group not in actions[action_model]:
                                 actions[action_model][action_group] = dict()
                             actions[action_model][action_group][action_name] = action
@@ -381,7 +381,7 @@ if not initialized:
 
         for actions_dict in (actions, class_actions):
             for category in actions_dict[model]:
-                for key in actions_dict[model][category].keys():
+                for key in list(actions_dict[model][category].keys()):
                     name = actions_dict[model][category][key]['title']
                     view_name = actions_dict[model][category][key]['view_name']
                     can_execute = []
@@ -408,7 +408,7 @@ if not initialized:
                 role = 'Superusuário'
 
             if model in composition_fields:
-                related_model = getattr(model, composition_fields[model]).field.rel.to
+                related_model = getattr(model, composition_fields[model]).field.remote_field.model
                 related_verbose_name = get_metadata(related_model, 'verbose_name')
                 related_add_label = get_metadata(model, 'add_label')
                 if related_add_label:
@@ -427,9 +427,9 @@ if not initialized:
             class_diagrams[verbose_name] = [model]
             if type(diagram_classes) == bool and diagram_classes:
                 for field in model._meta.get_fields():
-                    if hasattr(field, 'rel') and hasattr(field.rel, 'to') and field.rel.to:
-                        if field.rel.to not in class_diagrams[verbose_name]:
-                            class_diagrams[verbose_name].append(field.rel.to)
+                    if field.remote_field and field.remote_field.model:
+                        if field.remote_field.model not in class_diagrams[verbose_name]:
+                            class_diagrams[verbose_name].append(field.remote_field.model)
             else:
                 for model_name in diagram_classes:
                     try:
@@ -441,7 +441,7 @@ if not initialized:
                     if extra_model not in class_diagrams[verbose_name]:
                         class_diagrams[verbose_name].append(extra_model)
 
-    keys = workflows.keys()
+    keys = list(workflows.keys())
     keys.sort()
     l = []
     for key in keys:

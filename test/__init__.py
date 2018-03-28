@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import os
 import datetime
 from selenium import webdriver
@@ -8,6 +7,7 @@ from django.conf import settings
 from djangoplus.test import cache
 from django.core import serializers
 from django.core.management import call_command
+from selenium.webdriver.chrome.options import Options
 from django.utils.translation import ugettext_lazy as _
 from selenium.common.exceptions import WebDriverException
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -27,21 +27,15 @@ class TestCase(StaticLiveServerTestCase):
         super(TestCase, self).setUp()
         self.slowly = False
         self.username = None
+        options = Options()
+        options.add_argument("--window-size=1920x1080")
         if 'HEADLESS' in os.environ:
-            self.driver = webdriver.PhantomJS()
-        else:
-            try:
-                self.driver = webdriver.Chrome()
-            except Exception as e:
-                self.driver = webdriver.Firefox()
-
-        self.driver.set_window_size(1400, 1000)
+            options.add_argument("--headless")
+        self.driver = webdriver.Chrome(options=options, executable_path='/Users/breno/Downloads/chromedriver')
 
         data = '''[{"model": "admin.organization", "pk": 0, "fields": {"ascii": ""}}, {"model": "admin.unit", "pk": 0, "fields": {"ascii": ""}}]'''
         for obj in serializers.deserialize("json", data):
             obj.save()
-
-        settings.DEBUG = True
 
     def create_superuser(self, username, password):
         from djangoplus.admin.models import User
@@ -56,7 +50,7 @@ class TestCase(StaticLiveServerTestCase):
             self.watched = True
             self.driver.save_screenshot('/tmp/test.png')
             if 'HEADLESS' not in os.environ:
-                raw_input('Type enter to continue...')
+                input('Type enter to continue...')
 
     def slow_down(self):
         self.slowly = True
@@ -75,13 +69,13 @@ class TestCase(StaticLiveServerTestCase):
         if type(value) == datetime.date:
             value = value.strftime('%d/%m/%Y')
         if value:
-            print '{} "{}" for "{}"'.format('Entering', value, name)
+            print('{} "{}" for "{}"'.format('Entering', value, name))
         try:
             if submit:
                 self.driver.execute_script("enter('{}', '{}', 1)".format(name, value))
             else:
                 self.driver.execute_script("enter('{}', '{}')".format(name, value))
-        except WebDriverException, e:
+        except WebDriverException as e:
             if count:
                 self.wait()
                 self.enter(name, value, submit, count-1)
@@ -89,12 +83,12 @@ class TestCase(StaticLiveServerTestCase):
                 self.watch(e)
 
     def choose(self, name, value, count=2):
-        print '{} "{}" for "{}"'.format('Choosing', value, name)
+        print('{} "{}" for "{}"'.format('Choosing', value, name))
         try:
             headless = 'HEADLESS' in os.environ and 'true' or 'false'
             self.driver.execute_script("return choose('{}', '{}', {})".format(name, value, headless))
             self.wait(2)
-        except WebDriverException, e:
+        except WebDriverException as e:
             if count:
                 self.wait()
                 self.choose(name, value, count-1)
@@ -102,10 +96,10 @@ class TestCase(StaticLiveServerTestCase):
                 self.watch(e)
 
     def look_for(self, text, count=2):
-        print 'Looking for "{}"'.format(text)
+        print('Looking for "{}"'.format(text))
         try:
             assert text in self.driver.find_element_by_tag_name('body').text
-        except WebDriverException, e:
+        except WebDriverException as e:
             if count:
                 self.wait()
                 self.look_for(text, count-1)
@@ -113,10 +107,10 @@ class TestCase(StaticLiveServerTestCase):
                 self.watch(e)
 
     def look_at_popup_window(self, count=2):
-        print 'Looking at popup window'
+        print('Looking at popup window')
         try:
             self.driver.execute_script("lookAtPopupWindow()")
-        except WebDriverException, e:
+        except WebDriverException as e:
             if count:
                 self.wait()
                 self.look_at_popup_window(count-1)
@@ -124,10 +118,10 @@ class TestCase(StaticLiveServerTestCase):
                 self.watch(e)
 
     def look_at(self, text, count=2):
-        print 'Loking at "{}"'.format(text)
+        print('Loking at "{}"'.format(text))
         try:
             self.driver.execute_script("lookAt('{}')".format(text))
-        except WebDriverException, e:
+        except WebDriverException as e:
             if count:
                 self.wait()
                 self.look_at(text, count-1)
@@ -135,10 +129,10 @@ class TestCase(StaticLiveServerTestCase):
                 self.watch(e)
 
     def look_at_panel(self, text, count=2):
-        print 'Looking at panel "{}"'.format(text)
+        print('Looking at panel "{}"'.format(text))
         try:
             self.driver.execute_script("lookAtPanel('{}')".format(text))
-        except WebDriverException, e:
+        except WebDriverException as e:
             if count:
                 self.wait()
                 self.look_at_panel(text, count-1)
@@ -146,49 +140,49 @@ class TestCase(StaticLiveServerTestCase):
                 self.watch(e)
 
     def click_menu(self, *texts):
-        print 'Clicking menu "{}"'.format('->'.join(texts))
+        print('Clicking menu "{}"'.format('->'.join(texts)))
         for text in texts:
             self.wait()
             try:
                 self.driver.execute_script("clickMenu('{}')".format(text.strip()))
-            except WebDriverException, e:
+            except WebDriverException as e:
                 self.watch(e)
         self.wait()
 
     def click_link(self, text):
-        print 'Clicking link "{}"'.format(text)
+        print('Clicking link "{}"'.format(text))
         try:
             self.driver.execute_script("clickLink('{}')".format(text))
-        except WebDriverException, e:
+        except WebDriverException as e:
             self.watch(e)
         self.wait()
 
     def click_button(self, text):
-        print 'Clicking button "{}"'.format(text)
+        print('Clicking button "{}"'.format(text))
         try:
             self.driver.execute_script("clickButton('{}')".format(text))
-        except WebDriverException, e:
+        except WebDriverException as e:
             self.watch(e)
         self.wait()
 
     def click_tab(self, text):
-        print 'Clicking tab "{}"'.format(text)
+        print('Clicking tab "{}"'.format(text))
         try:
             self.driver.execute_script("clickTab('{}')".format(text))
-        except WebDriverException, e:
+        except WebDriverException as e:
             self.watch(e)
         self.wait()
 
     def click_icon(self, name):
-        print 'Clicking icon "{}"'.format(name)
+        print('Clicking icon "{}"'.format(name))
         try:
             self.driver.execute_script("clickIcon('{}')".format(name))
-        except WebDriverException, e:
+        except WebDriverException as e:
             self.watch(e)
         self.wait()
 
     def login(self, username, password):
-        print 'Logging as', username
+        print('Logging as', username)
         self.login_count += 1
         self.current_username = username
         self.current_password = password
@@ -210,7 +204,7 @@ class TestCase(StaticLiveServerTestCase):
             return False
 
     def logout(self):
-        print 'Logging out'
+        print('Logging out')
         self.click_icon('Configurações')
         self.click_link('Sair')
         self.wait()

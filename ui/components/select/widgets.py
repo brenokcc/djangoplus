@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import os
 from django.forms import widgets
 from django.utils.safestring import mark_safe
@@ -134,7 +134,7 @@ class SelectWidget(widgets.Select):
                         if tree_index_field:
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset:
-                        obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
+                        obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
                         templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
                     templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
 
@@ -209,7 +209,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                         if tree_index_field:
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset.all():
-                        obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or unicode(obj)
+                        obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
                         templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
                     templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
         html = super(SelectMultipleWidget, self).render(name, value, attrs)

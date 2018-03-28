@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.conf import settings
 from djangoplus.ui import Component
 from djangoplus.utils import permissions
@@ -51,15 +51,15 @@ class Menu(Component):
                     if can_view:
                         self.add(item['menu'], item['url'], item['icon'], item.get('style', 'ajax'))
 
-            for cls, itens in loader.subsets.items():
+            for cls, itens in list(loader.subsets.items()):
                 for item in itens:
                     if permissions.check_group_or_permission(self.request, item['can_view']):
                         if False:  # TODO False
                             self.add(item['menu'], item['url'], item['icon'], 'ajax')
 
             self.request.session['side_menu'] = self.render('menu.html')
-            self.request.session['side_menu_size'] = len(self.subitems.keys())
+            self.request.session['side_menu_size'] = len(list(self.subitems.keys()))
             self.request.session.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return mark_safe(self.request.session['side_menu'])

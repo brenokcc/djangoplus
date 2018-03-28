@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from tempfile import mktemp
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.conf import settings
@@ -19,29 +19,27 @@ def mobile(request):
 class XlsResponse(HttpResponse):
     def __init__(self, data, name='Listagem'):
         import xlwt
-        import StringIO
-        output = StringIO.StringIO()
         wb = xlwt.Workbook(encoding='iso8859-1')
         for title, rows in data:
             sheet = wb.add_sheet(title)
             for row_idx, row in enumerate(rows):
                 for col_idx, label in enumerate(row):
                     sheet.write(row_idx, col_idx, label=label)
-        wb.save(output)
-        HttpResponse.__init__(self, content=output.getvalue(), content_type='application/vnd.ms-excel')
+        file_name = mktemp()
+        wb.save(file_name)
+        HttpResponse.__init__(self, content=open(file_name, 'rb').read(), content_type='application/vnd.ms-excel')
         self['Content-Disposition'] = 'attachment; filename={}.xls'.format(name)
 
 
 class CsvResponse(HttpResponse):
     def __init__(self, rows, name='Listagem'):
-        import unicodecsv
-        import StringIO
-        output = StringIO.StringIO()
-        delimiter = os.sep == '/' and ',' or ';'
-        writer = unicodecsv.writer(output, delimiter=delimiter, encoding='iso8859-1')
-        for row in rows:
-            writer.writerow(row)
-        HttpResponse.__init__(self, content=output.getvalue(), content_type='application/csv')
+        import csv
+        file_name = mktemp()
+        with open(file_name, 'w', encoding='iso8859-1') as output:
+            writer = csv.writer(output)
+            for row in rows:
+                writer.writerow([col for col in row]) # .encode('iso8859-1')
+        HttpResponse.__init__(self, content=open(file_name, 'r').read(), content_type='application/csv')
         self['Content-Disposition'] = 'attachment; filename={}.xls'.format(name)
 
 
@@ -74,7 +72,7 @@ class PdfResponse(HttpResponse):
             html = html.replace('logo_if_portrait', 'logo_if_landscape')
         out = pisa.CreatePDF(html, tmp, link_callback=link_callback)
         out.dest.close()
-        tmp = file(file_name, "rb")
+        tmp = open(file_name, "rb")
         str_bytes = tmp.read()
         os.unlink(file_name)
         HttpResponse.__init__(self, str_bytes, content_type='application/pdf')

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import copy
 from collections import OrderedDict
 from datetime import datetime
@@ -31,7 +31,7 @@ class GroupDropDown(Component):
                 return True
         return False
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('dropdown.html')
 
 
@@ -72,8 +72,7 @@ class ModelDropDown(GroupDropDown):
                 url = url.format(self.obj.pk)
             else:
                 url = '{}{}/'.format(url, self.obj.pk)
-        item = dict(label=label, url=url, css=css, icon=icon)
-        self.actions[category].append(item)
+        super(ModelDropDown, self).add_action(label, url, css, icon, category)
 
     def add_actions(self, obj, inline=False, fieldset_title=None, subset_name=None):
         from djangoplus.cache import loader
@@ -109,12 +108,12 @@ class ModelDropDown(GroupDropDown):
                 action_inline = action['inline']
                 action_icon = action['icon']
 
-                action_name = action_function.func_name
+                action_name = action_function.__name__
                 is_action_view = not hasattr(self.model, action_name)
 
                 if action_name and action_css == 'popup' and not is_action_view:
                     func = getattr(self.model, action_name)
-                    action_css = (func.func_code.co_argcount > 1 or action_input) and action_css or 'ajax'
+                    action_css = (func.__code__.co_argcount > 1 or action_input) and action_css or 'ajax'
 
                 # it is a dropdown in a model panel
                 if fieldset_title is not None:
@@ -124,7 +123,7 @@ class ModelDropDown(GroupDropDown):
                     else:
                         # if the action was included in any fieldset it can not be displayed in page's action panel
                         add_action = True
-                        for fieldset_title2, action_names in loader.fieldset_actions[self.model].items():
+                        for fieldset_title2, action_names in list(loader.fieldset_actions[self.model].items()):
                             if action_name in action_names:
                                 add_action = False
                                 break

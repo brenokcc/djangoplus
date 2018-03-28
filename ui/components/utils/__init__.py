@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+import tempfile
 import qrcode
 import base64
-import cStringIO
 from decimal import Decimal
 from django.conf import settings
 from djangoplus.ui import Component
@@ -40,7 +39,7 @@ class Chart(Component):
         for i in range(len(self.colors), 16):
             self.colors.append('#FFFFFF')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('chart.html')
 
     def get_box_series(self):
@@ -100,7 +99,7 @@ class Timeline(Component):
     def add(self, status, date):
         self.items.append((status, date))
 
-    def __unicode__(self):
+    def __str__(self):
         self.width = str(100.0/len(self.items))
         return self.render('timeline.html')
 
@@ -111,14 +110,15 @@ class QrCode(Component):
         self.width = width
         super(QrCode, self).__init__(request)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.as_pdf:
             qr = qrcode.QRCode()
             qr.add_data(self.text)
             image = qr.make_image()
-            io = cStringIO.StringIO()
-            image.save(io, format="JPEG")
-            img_str = base64.b64encode(io.getvalue())
+            file_path = tempfile.mktemp()
+            buffer = open(file_path, 'wb')
+            image.save(buffer, format="JPEG")
+            img_str = base64.b64encode(open(file_path, 'rb').read()).decode('utf-8')
             return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))
         else:
             return self.render('qrcode.html')
@@ -129,7 +129,7 @@ class ProgressBar(Component):
         self.percentual = percentual
         super(ProgressBar, self).__init__()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('progress_bar.html')
 
 
@@ -142,7 +142,7 @@ class Table(Component):
         self.footer = footer
         self.enumerable = enumerable
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('table.html')
 
 
@@ -229,7 +229,7 @@ class ModelReport(Component):
                 if hasattr(field, 'choices') and field.choices:
                     form.fields[field_name] = forms.ChoiceField(choices=[['', '']]+field.choices, label=field.verbose_name, required=False)
                 else:
-                    form.fields[field_name] = forms.ModelChoiceField(field.rel.to.objects.all(), label=field.verbose_name, required=False)
+                    form.fields[field_name] = forms.ModelChoiceField(field.remote_field.model.objects.all(), label=field.verbose_name, required=False)
             if form.is_valid():
                 for field_name in list_filter:
                     value = form.cleaned_data[field_name]
@@ -251,7 +251,7 @@ class ModelReport(Component):
         if add_chart:
             self.components.append(component.as_chart())
 
-    def __unicode__(self):
+    def __str__(self):
         return self.render('model_report.html')
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import datetime, json
+import json
+import datetime
 from django.http.response import HttpResponse
 from djangoplus.templatetags import obj_icons
 from djangoplus.ui.components.dropdown import ModelDropDown
@@ -29,7 +29,7 @@ def populate(request):
     queryset = queryset.filter(**filters)
 
     for obj in queryset.all():
-        title = unicode(obj)
+        title = str(obj)
         start = getattr(obj, start_field)
         end = end_field and getattr(obj, end_field) or None
         if end:
@@ -51,7 +51,7 @@ def populate(request):
             html.append('{}'.format(fstart))
 
         html.append('<hr/>')
-        html.append(unicode(drop_down))
+        html.append(str(drop_down))
         html.append('</div>')
         html.append('<script>initialize("{}");</script>'.format(html_id))
         item = dict(id=html_id, title=title, start=str(start), end=end and str(end) or None, allDay=False, url='javascript:', html=''.join(html))

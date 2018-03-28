@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 # DJANGO FIELDS
 import inspect
 from django.utils.text import camel_case_to_spaces
@@ -62,8 +62,8 @@ def get_field(model, lookup):
 def get_field_recursively(field, tokens):
     if tokens:
         field_name = tokens.pop()
-        if hasattr(field, 'rel'):
-            field = find_field_by_name(field.rel.to, field_name)
+        if field.remote_field and field.remote_field.model:
+            field = find_field_by_name(field.remote_field.model, field_name)
         else:
             field = find_field_by_name(field.related_model, field_name)
         return get_field_recursively(field, tokens)
@@ -87,23 +87,23 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
             elif hasattr(field_or_function, 'field_name'):
                 field_or_function = model_or_field._meta.get_field(token)
         else:
-            field_or_function = model_or_field._meta.get_field(token)
+            field_or_function = model_or_field.remote_field.model
 
         if pronoun and l:
             l.append(pronoun)
 
-        if hasattr(field_or_function, 'rel') and field_or_function.rel:
+        if hasattr(field_or_function, 'field') and field_or_function.field.remote_field and field_or_function.field.remote_field.model:
 
-            pronoun = get_metadata(field_or_function.rel.to, 'verbose_female') and 'da' or 'do'
+            pronoun = get_metadata(field_or_function.field.remote_field.model, 'verbose_female') and 'da' or 'do'
 
             if tokens:
-                model_or_field = field_or_function.rel.to
+                model_or_field = field_or_function.field.remote_field.model
                 name = field_or_function.verbose_name
             else:
                 model_or_field = field_or_function
                 name = model_or_field.verbose_name
             sortable = True
-            to = field_or_function.rel.to
+            to = field_or_function.field.remote_field.model
 
         elif hasattr(field_or_function, 'verbose_name'):
             model_or_field = field_or_function
@@ -118,7 +118,7 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
             model_or_field = field_or_function
             name = token
             sortable = False
-        l.append(unicode(name))
+        l.append(str(name))
     l.reverse()
     verbose_name = ' '.join(l)
     verbose_name = l[0]
@@ -195,7 +195,7 @@ def get_metadata(model, attr, default=None, iterable=False):
 
     check_recursively = not _metadata
     if attr in ('verbose_name', 'verbose_name_plural'):
-        if unicode(_metadata) in (camel_case_to_spaces(model.__name__), '{}s'.format(camel_case_to_spaces(model.__name__))):
+        if str(_metadata) in (camel_case_to_spaces(model.__name__), '{}s'.format(camel_case_to_spaces(model.__name__))):
             check_recursively = True
     if attr in ('list_menu', 'verbose_female'):
         check_recursively = False
@@ -206,7 +206,7 @@ def get_metadata(model, attr, default=None, iterable=False):
 
     if iterable:
         if _metadata:
-            if not hasattr(_metadata, '__iter__'):
+            if not type(_metadata) in (tuple, list):
                 _metadata = _metadata,
         else:
             _metadata = ()
@@ -223,7 +223,7 @@ def iterable(string_or_iterable):
 
 
 def getattr2(obj, args):
-    if args == '__unicode__':
+    if args == '__str__':
         splitargs = [args]
     else:
         splitargs = args.split('__')
@@ -256,11 +256,11 @@ def getattr_rec(obj, args):
             if field:
                 if hasattr(field, 'formatter') and field.formatter:
                     func = loader.formatters[field.formatter]
-                    if len(func.func_code.co_varnames) == 1:
+                    if len(func.__code__.co_varnames) == 1:
                         value = func(value)
                     else:
                         value = func(value, request=obj.request, verbose_name=field.verbose_name, instance=obj)
-                    return mark_safe(unicode(value))
+                    return mark_safe(str(value))
                 elif hasattr(field, 'display') and field.display not in (True, False, None):
                     if hasattr(obj, field.display):
                         args[0] = field.display
@@ -284,11 +284,11 @@ def getattr_rec(obj, args):
                         formatter = _metadata.get('{}:formatter'.format(args[0]))
                         if formatter:
                             func = loader.formatters[formatter]
-                            if len(func.func_code.co_varnames) == 1:
+                            if len(func.__code__.co_varnames) == 1:
                                 value = func(value)
                             else:
                                 value = func(value, request=obj.request, verbose_name=verbose_name, instance=obj)
-                            return mark_safe(unicode(value))
+                            return mark_safe(str(value))
 
             if callable(value):
                 if type(value).__name__ in ('ManyRelatedManager' or 'RelatedManager'):
@@ -306,16 +306,16 @@ def get_scope(model, organization_model, unit_model):
     role_scope = get_metadata(model, 'role_scope')
     if role_scope:
         field = get_field(model, role_scope)
-        if field.rel.to == unit_model:
+        if field.remote_field.model == unit_model:
             scope = 'unit'
-        elif field.rel.to == organization_model:
+        elif field.remote_field.model == organization_model:
             scope = 'organization'
     else:
         for field in get_metadata(model, 'concrete_fields'):
-            if hasattr(field, 'rel') and hasattr(field.rel, 'to'):
-                if field.rel.to == unit_model:
+            if field.remote_field and field.remote_field.model:
+                if field.remote_field.model == unit_model:
                     scope = 'unit'
-                elif field.rel.to == organization_model:
+                elif field.remote_field.model == organization_model:
                     scope = 'organization'
     return scope
 
@@ -341,7 +341,7 @@ def find_action(model, action_name):
     from djangoplus.cache import loader
     for actions in (loader.actions, loader.class_actions):
         for action_group in actions[model]:
-            for func_name, action in actions[model][action_group].items():
+            for func_name, action in list(actions[model][action_group].items()):
                 if action['title'] == action_name:
                     return action
     return None
@@ -395,7 +395,7 @@ def find_model_recursively(cls, tokens):
         attr = getattr(cls, token)
         if not hasattr(attr, 'field'):
             return cls
-        return find_model_recursively(attr.field.rel.to, tokens)
+        return find_model_recursively(attr.field.remote_field.model, tokens)
     else:
         return cls
 

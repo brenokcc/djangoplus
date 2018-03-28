@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from djangoplus.admin.models import User
 from djangoplus.test import TestCase
 from django.conf import settings
