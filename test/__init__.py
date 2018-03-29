@@ -7,7 +7,7 @@ from django.conf import settings
 from djangoplus.test import cache
 from django.core import serializers
 from django.core.management import call_command
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from django.utils.translation import ugettext_lazy as _
 from selenium.common.exceptions import WebDriverException
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
@@ -31,7 +31,7 @@ class TestCase(StaticLiveServerTestCase):
         options.add_argument("--window-size=1920x1080")
         if 'HEADLESS' in os.environ:
             options.add_argument("--headless")
-        self.driver = webdriver.Chrome(options=options, executable_path='/Users/breno/Downloads/chromedriver')
+        self.driver = webdriver.Firefox(options=options)
 
         data = '''[{"model": "admin.organization", "pk": 0, "fields": {"ascii": ""}}, {"model": "admin.unit", "pk": 0, "fields": {"ascii": ""}}]'''
         for obj in serializers.deserialize("json", data):
@@ -212,7 +212,7 @@ class TestCase(StaticLiveServerTestCase):
 
     def tearDown(self):
         super(TestCase, self).tearDown()
-        #self.driver.close()
+        self.driver.close()
         self.driver.service.stop()
         # len(self._resultForDoCleanups.errors)>0
 

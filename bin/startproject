@@ -214,11 +214,12 @@ from djangoplus.fabric.tests.fabfile import *
 " > fabfile.py
 
 python manage.py sync
-echo ""
-echo "${GREEN}Congratulations!!! The project was successfully started and configured. =)${BLACK}"
-echo "A superuser with username ${BOLD}admin${BLACK} and password ${BOLD}senha${BLACK} was created"
-echo "Type ${CYAN}cd $PROJECT_NAME${BLACK} to access project's root directory"
-echo "Type ${CYAN}runserver${BLACK} to execute the application"
-echo "Type ${CYAN}runtests${BLACK} to run the automatic tests"
-echo "Type ${CYAN}sync${BLACK} to syncronize the models with database"
+printf "
+${GREEN}Congratulations\041\041\041${BLACK} The project was successfully started and configured. =)
+A superuser with username ${BOLD}admin${BLACK} and password ${BOLD}senha${BLACK} was created
+Type ${CYAN}cd $PROJECT_NAME${BLACK} to access project's root directory
+Type ${CYAN}runserver${BLACK} to execute the application
+Type ${CYAN}runtests${BLACK} to run the automatic tests
+Type ${CYAN}sync${BLACK} to syncronize the models with database
+"
 
