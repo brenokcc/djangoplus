@@ -7,6 +7,7 @@ from django.http.request import QueryDict
 
 
 class Breadcrumbs(Component):
+    """Used in the dashboard to show the sequence of pages the user has visited"""
     def __init__(self, request, view_title):
         super(Breadcrumbs, self).__init__(request)
         self.referrer = None

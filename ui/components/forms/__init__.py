@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
 import copy
+from django.db import transaction
 from django.template import loader
 from djangoplus.ui.components.forms.fields import *
 from djangoplus.ui.components.forms import widgets
@@ -10,7 +10,6 @@ from djangoplus.templatetags import mobile
 from django.utils.html import conditional_escape
 from djangoplus.utils.metadata import get_metadata, iterable
 from django.db.models.fields import NOT_PROVIDED
-
 ValidationError = django_forms.ValidationError
 DEFAULT_FORM_TITLE = 'Formulário'
 DEFAULT_SUBMIT_LABEL = 'Enviar'
@@ -219,8 +218,7 @@ class Form(django_forms.Form):
                         else:
                             qs = field.queryset.filter(pk=0)
                         count = qs.count()
-                        limit = 12
-                        for i in range(0, limit):
+                        for i in range(0, field.one_to_many_max):
                             instance = i < count and qs[i] or None
                             form = factory.get_one_to_many_form(self.request, self.instance, name, partial=True,
                                                                 inline=True, prefix='{}{}'.format(name, i),
@@ -295,10 +293,25 @@ class ModelForm(Form, django_forms.ModelForm):
                 # o valor default definido pelo desenvolvedor.
                 if getattr(self.instance, model_field.name) is None:
                     setattr(self.instance, model_field.name, value)
+
         kwargs.update(commit=False)
-        instance = super(ModelForm, self).save(*args, **kwargs)
-        instance._post_save_form = self
-        instance.save()
+
+        if len(self.inner_forms):
+            with transaction.atomic():
+                sid = transaction.savepoint()
+                instance = super(ModelForm, self).save(*args, **kwargs)
+                instance._post_save_form = self
+                try:
+                    instance.save()
+                    sid and transaction.savepoint_commit(sid)
+                except ValidationError as e:
+                    sid and transaction.savepoint_rollback(sid)
+                    raise e
+        else:
+            instance = super(ModelForm, self).save(*args, **kwargs)
+            instance._post_save_form = self
+            instance.save()
+
         return instance
 
     def save_121_and_12m(self):

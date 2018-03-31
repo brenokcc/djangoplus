@@ -1,4 +1,5 @@
 {% load i18n %}
+{% if self.as_pdf %}{% else %}
 {% if self.items %}
 <div class="panel panel-default">
     {% if self.description %}
@@ -33,4 +34,5 @@
     </div>
     <br/><br/>
 </div>
+{% endif %}
 {% endif %}

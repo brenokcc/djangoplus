@@ -1,4 +1,5 @@
 {% load i18n %}
+{% if self.as_pdf %}{% else %}
 <aside class="sidebar" role="navigation">
     <div class="sidebar-nav navbar-collapse collapse">
         {% if self.subitems %}
@@ -90,3 +91,4 @@
         }
     });
 </script>
+{% endif %}

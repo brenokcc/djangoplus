@@ -1,6 +1,9 @@
 {% load i18n %}
 {% if self.as_pdf %}
     {% with queryset=self.get_queryset %}
+    {% if not self.is_list_view %}
+        <h3>{{ self.title }} ({{ self.qs.count }})</h3>
+    {% endif %}
     {% if queryset.exists %}
     <table class="table">
         <thead>
@@ -29,9 +32,7 @@
     {% endif %}
     {% endwith %}
 {% else %}
-
 <div id="table{{ self.id }}" class="paginator paginator-{% if self.is_list_view %}admin{% endif %}">
-
     {% with queryset=self.get_queryset %}
             {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
             <div class="action-bar">

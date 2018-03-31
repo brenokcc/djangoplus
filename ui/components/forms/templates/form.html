@@ -1,5 +1,5 @@
 {% load i18n %}
-
+{% if self.as_pdf %}{% else %}
 {% if self.note %}
     <div class="alert alert-info">
         <strong>{% trans "Note" %}: </strong> {{ self.note }}
@@ -222,5 +222,5 @@
     </script>
 
 {% endif %}
-
+{% endif %}
 

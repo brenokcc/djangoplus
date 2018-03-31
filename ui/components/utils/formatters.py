@@ -23,6 +23,10 @@ def donut_chart(value, **kwargs):
     return chart(value, **kwargs).donut()
 
 
+def box_chart(value, **kwargs):
+    return chart(value, **kwargs).box()
+
+
 def bar_chart(value, **kwargs):
     return chart(value, **kwargs).bar()
 
@@ -56,6 +60,7 @@ def qrcode(value, **kwargs):
     return QrCode(request, value)
 
 
-def progress(percentual):
-    return ProgressBar(percentual)
+def progress(percentual, **kwargs):
+    request = kwargs.get('request', None)
+    return ProgressBar(request, percentual)
 

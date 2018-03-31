@@ -1,3 +1,4 @@
+{% if self.as_pdf %}{% else %}
 <div class="flex-container p-l-1">
 {% for item in self.items %}
 <div class="card-panel">
@@ -39,12 +40,12 @@
                     {% endif %}
                 </div>
             </div>
-
     </div>
     {% endif %}
     </a>
 </div>
 {% endfor %}
 </div>
+{% endif %}
 
 

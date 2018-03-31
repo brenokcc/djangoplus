@@ -2,7 +2,7 @@
 
 import copy
 from djangoplus.ui.components import forms
-from djangoplus.ui import Component
+from djangoplus.ui import Component, ComponentHasResponseException
 from djangoplus.utils import permissions
 from django.db.models.aggregates import Sum
 from djangoplus.utils.tabulardata import tolist
@@ -158,16 +158,6 @@ class Paginator(Component):
                                     break
                         self.filters.append((label, value))
         return form
-    
-    def get_response(self):
-        export = self.request.GET.get('export', None)
-        if export == 'pdf':
-            return self._get_pdf_response()
-        if export == 'csv':
-            return self._get_csv_response(self.get_selected_ids())
-        elif export == 'excel':
-            return self._get_xls_response(self.get_selected_ids())
-        return None
 
     def get_selected_ids(self):
         ids = self.request.GET.get('ids', None)
@@ -438,6 +428,15 @@ class Paginator(Component):
         if distinct:
             queryset = queryset.distinct()
         return queryset
+
+    def check_http_response(self):
+        export = self.request.GET.get('export', None)
+        if export == 'pdf':
+            raise ComponentHasResponseException(self._get_pdf_response())
+        if export == 'csv':
+            raise ComponentHasResponseException(self._get_csv_response(self.get_selected_ids()))
+        elif export == 'excel':
+            raise ComponentHasResponseException(self._get_xls_response(self.get_selected_ids()))
 
     def _get_csv_response(self, ids=()):
         list_csv = get_metadata(self.qs.model, 'list_csv')

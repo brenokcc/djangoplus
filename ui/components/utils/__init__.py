@@ -16,9 +16,9 @@ REAIS_SYMBOL = 'R$'
 
 
 class Chart(Component):
-    def __init__(self, labels, series, groups=[], symbol=None, title=None):
+    def __init__(self, request, labels, series, groups=[], symbol=None, title=None):
 
-        super(Chart, self).__init__()
+        super(Chart, self).__init__(request)
 
         self.type = 'bar'
         self.labels = labels
@@ -108,6 +108,7 @@ class QrCode(Component):
     def __init__(self, request, text, width=200, height=200):
         self.text = text
         self.width = width
+        self.base64 = None
         super(QrCode, self).__init__(request)
 
     def __str__(self):
@@ -118,16 +119,14 @@ class QrCode(Component):
             file_path = tempfile.mktemp()
             buffer = open(file_path, 'wb')
             image.save(buffer, format="JPEG")
-            img_str = base64.b64encode(open(file_path, 'rb').read()).decode('utf-8')
-            return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))
-        else:
-            return self.render('qrcode.html')
+            self.base64 = base64.b64encode(open(file_path, 'rb').read()).decode('utf-8')
+        return self.render('qrcode.html')
 
 
 class ProgressBar(Component):
-    def __init__(self, percentual):
+    def __init__(self, request, percentual):
         self.percentual = percentual
-        super(ProgressBar, self).__init__()
+        super(ProgressBar, self).__init__(request)
 
     def __str__(self):
         return self.render('progress_bar.html')
@@ -156,7 +155,8 @@ class ModelTable(Table):
             list_display = get_metadata(qs.model, 'list_display')
 
         for lookup in list_display:
-            header.append(get_fiendly_name(qs.model, lookup, as_tuple=False))
+            column_name = get_fiendly_name(qs.model, lookup, as_tuple=False)
+            header.append(column_name)
 
         for obj in qs:
             row = []
@@ -182,10 +182,10 @@ class StatisticsTable(Table):
                         row.append(queryset_statistics.xtotal[i])
                     rows.append(row)
                 if len(queryset_statistics.series) > 1:
-                    footer = [''] + queryset_statistics.ytotal + [queryset_statistics.total()]
-                    header = [''] + queryset_statistics.groups + ['']
+                    footer = [' '] + queryset_statistics.ytotal + [queryset_statistics.total()]
+                    header = [' '] + queryset_statistics.groups + [' ']
                 else:
-                    header = [''] + queryset_statistics.groups
+                    header = [' '] + queryset_statistics.groups
         else:
             header = []
             rows = []
@@ -202,9 +202,9 @@ class StatisticsTable(Table):
 
     def as_chart(self):
         if not self.queryset_statistics.groups:
-            return Chart(self.queryset_statistics.labels, self.queryset_statistics.series, symbol=self.symbol, title=self.title).donut()
+            return Chart(self.request, self.queryset_statistics.labels, self.queryset_statistics.series, symbol=self.symbol, title=self.title).donut()
         else:
-            chart = Chart(self.queryset_statistics.groups, self.queryset_statistics.series, self.queryset_statistics.labels, symbol=self.symbol, title=self.title)
+            chart = Chart(self.request, self.queryset_statistics.groups, self.queryset_statistics.series, self.queryset_statistics.labels, symbol=self.symbol, title=self.title)
             if self.queryset_statistics.labels and self.queryset_statistics.labels[0] == 'Jan':
                 return chart.line()
             else:
@@ -212,7 +212,7 @@ class StatisticsTable(Table):
 
 
 class ModelReport(Component):
-    def __init__(self, request, title, qs, list_display=(), list_filter=()):
+    def __init__(self, request, title, qs, list_display=(), list_filter=(), distinct=False):
         super(ModelReport, self).__init__(request)
         self.title = title
         self.qs = qs
@@ -237,6 +237,9 @@ class ModelReport(Component):
                         qs = qs.filter(**{field_name : value})
                         self.filters.append((form.fields[field_name].label, value))
             self.form = form
+        if distinct:
+            pks = qs.values_list('pk', flat=True).order_by('pk').distinct()
+            qs = qs.model.objects.filter(pk__in=pks)
 
         order_by = get_metadata(qs.model, 'order_by', iterable=True)
         if order_by:

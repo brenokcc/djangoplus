@@ -1,3 +1,4 @@
+{% if self.as_pdf %}{% else %}
 <div id="breadcrumb">
     <ul class="breadcrumb">
         <li><a href="/admin/" class="ajax"> Principal</a></li>
@@ -18,4 +19,5 @@
 <script>
     $(".referrer-link").prop("href", "{{ self.referrer }}");
 </script>
+{% endif %}
 {% endif %}

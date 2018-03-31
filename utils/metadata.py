@@ -71,6 +71,18 @@ def get_field_recursively(field, tokens):
         return field
 
 
+def get_fieldsets(model, title='Dados Gerais'):
+    fields = []
+    for field in get_metadata(model, 'fields')[1:]:
+        fields.append(field.name)
+
+    for field in get_metadata(model, 'local_many_to_many'):
+        fields.append(field.name)
+
+    fieldsets = ((title, dict(fields=fields)),)
+    return fieldsets
+
+
 def get_fiendly_name(model_or_field, lookup, as_tuple=False):
     l = []
     tokens = lookup.split('__')
@@ -92,18 +104,17 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
         if pronoun and l:
             l.append(pronoun)
 
-        if hasattr(field_or_function, 'field') and field_or_function.field.remote_field and field_or_function.field.remote_field.model:
-
-            pronoun = get_metadata(field_or_function.field.remote_field.model, 'verbose_female') and 'da' or 'do'
+        if hasattr(field_or_function, 'remote_field') and field_or_function.remote_field and field_or_function.remote_field.model:
+            pronoun = get_metadata(field_or_function.remote_field.model, 'verbose_female') and 'da' or 'do'
 
             if tokens:
-                model_or_field = field_or_function.field.remote_field.model
+                model_or_field = field_or_function.remote_field.model
                 name = field_or_function.verbose_name
             else:
                 model_or_field = field_or_function
                 name = model_or_field.verbose_name
             sortable = True
-            to = field_or_function.field.remote_field.model
+            to = field_or_function.remote_field.model
 
         elif hasattr(field_or_function, 'verbose_name'):
             model_or_field = field_or_function
@@ -275,7 +286,7 @@ def getattr_rec(obj, args):
                 elif hasattr(obj, 'get_{}_display'.format(args[0])):
                     return getattr(obj, 'get_{}_display'.format(args[0]))()
             else:
-                # it is a method decorated with @attr
+                # it is a method decorated with @meta
                 _metadata = hasattr(value, '_metadata') and getattr(value, '_metadata') or None
                 if _metadata:
                     verbose_name = _metadata.get('{}:verbose_name'.format(args[0]))

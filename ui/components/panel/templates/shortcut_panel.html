@@ -1,3 +1,4 @@
+{% if self.as_pdf %}{% else %}
 {% if self.items %}
     <div class="shortcut-wrapper">
         {% for item in self.items %}
@@ -12,4 +13,5 @@
             </a>
         {% endfor %}
     </div>
+{% endif %}
 {% endif %}

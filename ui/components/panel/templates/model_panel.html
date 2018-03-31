@@ -44,9 +44,7 @@
         {% endif %}
     </div>
     {% endif %}
-
     {% for fieldset in self.get_active_fieldsets %}
-
         {% if self.tabs and forloop.counter0 == self.fieldsets_without_tab_name|length %}
             <ul class="nav nav-tabs">
             {% for tab_name, url in self.tabs %}
@@ -54,14 +52,8 @@
             {% endfor %}
             </ul>
         {% endif %}
-        {% if fieldset.drop_down.has_items or fieldset.paginators|length > 1 and fieldset.fields %}
+        {% if fieldset.drop_down.has_items %}
             <div id="panel-{{ fieldset.title|slugify }}">
-                {% if fieldset.paginators|length > 1 and fieldset.fields %}
-                    <div class="pull-left">
-                        <h4>{{ fieldset.title }}</h4>
-                    </div>
-                {% endif %}
-
                 {% if not self.request.GET.popup %}
                     <div class="pull-right action-bar">
                         {{ fieldset.drop_down }}
@@ -69,7 +61,6 @@
                 {% endif %}
             </div>
         {% endif %}
-
         {% if fieldset.fields %}
             <div class="panel panel-default info-panel" id="panel-{{ fieldset.title|slugify }}">
                 <div class="panel-heading">{% if fieldset.icon %}<i class="fa {{ fieldset.icon }}"></i>{% endif %}{{ fieldset.title }}</div>
@@ -107,7 +98,6 @@
 
                 </div>
             </div>
-
         {% else %}
             {% if self.complete %}
                 {% for info in fieldset.extra %}

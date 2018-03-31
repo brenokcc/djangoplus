@@ -22,7 +22,13 @@ def view(title, can_view=None, icon=None, menu=None, login_required=True, style=
             if 'title' not in f_return:
                 f_return['title'] = title
             if type(f_return) == dict:
+                for key in f_return:
+                    if hasattr(f_return[key], 'check_http_response'):
+                        f_return[key].check_http_response()
                 if 'pdf' in style:
+                    request.GET._mutable = True
+                    request.GET['pdf'] = 1
+                    request.GET._mutable = False
                     from datetime import datetime
                     from djangoplus.admin.models import Settings
                     app_settings = Settings.default()
@@ -66,6 +72,9 @@ def action(model, title, can_execute=(), condition=None, category='Ações',
                 f_return['title'] = title
             if type(f_return) == dict:
                 if 'pdf' in style:
+                    request.GET._mutable = True
+                    request.GET['pdf'] = 1
+                    request.GET._mutable = False
                     from datetime import datetime
                     from djangoplus.admin.models import Settings
                     app_settings = Settings.default()
@@ -78,7 +87,6 @@ def action(model, title, can_execute=(), condition=None, category='Ações',
                 else:
                     template_list = ['{}.html'.format(function.__name__), 'default.html']
                     return render(request, template or template_list, f_return)
-
             else:
                 return f_return
 

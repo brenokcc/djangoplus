@@ -92,9 +92,6 @@ class ModelDropDown(GroupDropDown):
                             self.add_action(
                                 add_inline_action['title'], add_inline_action['url'], 'popup', 'fa fa-plus'
                             )
-        else:
-            if get_metadata(type(obj), 'pdf'):
-                self.add_action('Imprimir', '?pdf=', 'ajax', 'fa fa-print')
 
         for category in loader.actions[self.model]:
             for view_name in loader.actions[self.model][category]:

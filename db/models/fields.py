@@ -36,6 +36,9 @@ class AutoField(models.AutoField):
 class CharField(models.CharField, FieldPlus):
     def __init__(self, *args, **kwargs):
         max_length = kwargs.pop('max_length', 255)
+        choices = kwargs.get('choices')
+        if choices and type(choices[0]) not in (list, tuple):
+            kwargs.update(choices=[[choice, choice] for choice in choices])
         super(CharField, self).__init__(*args, max_length=max_length, **kwargs)
 
     def formfield(self, **kwargs):
@@ -248,12 +251,14 @@ class OneToManyField(ManyToManyField):
 
     def __init__(self, *args, **kwargs):
         self.one_to_many_count = kwargs.pop('count', None)
+        self.one_to_many_max = kwargs.pop('max', 3)
         super(OneToManyField, self).__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.OneToManyField)
         form_field = super(OneToManyField, self).formfield(**kwargs)
         form_field.one_to_many_count = self.one_to_many_count
+        form_field.one_to_many_max = self.one_to_many_max
         return form_field
 
 # File Fields #

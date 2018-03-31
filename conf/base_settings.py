@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'djangoplus.docs',
     'djangoplus.test',
     'djangoplus.admin',
+    'djangoplus.ui',
     'djangoplus.ui.components.forms',
     'djangoplus.ui.components.breadcrumbs',
     'djangoplus.ui.components.calendar',
@@ -56,13 +57,14 @@ APP_MAPPING = {
 }
 
 MIDDLEWARE = [
-'django.middleware.security.SecurityMiddleware',
-'django.contrib.sessions.middleware.SessionMiddleware',
-'django.middleware.common.CommonMiddleware',
-'django.middleware.csrf.CsrfViewMiddleware',
-'django.contrib.auth.middleware.AuthenticationMiddleware',
-'django.contrib.messages.middleware.MessageMiddleware',
-'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'djangoplus.ui.ComponenteResponseMiddleware',
 ]
 
 TEMPLATES = [

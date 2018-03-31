@@ -1,4 +1,4 @@
-
+{% if self.as_pdf %}{% else %}
 <div class="dashboard-wrapper">
 {% if self.top %}
   <div class="dashboard-header">
@@ -36,3 +36,4 @@
   </div>
 {% endif %}
 </div>
+{% endif %}

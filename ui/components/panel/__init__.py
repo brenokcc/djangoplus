@@ -9,58 +9,49 @@ from djangoplus.utils import permissions
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.ui.components.dropdown import ModelDropDown, GroupDropDown
 from django.template.loader import render_to_string
-from djangoplus.utils.metadata import get_metadata, list_related_objects,\
+from djangoplus.utils.metadata import get_metadata, list_related_objects, get_fieldsets,\
     find_field_by_name, get_fiendly_name, check_condition, is_one_to_one, is_one_to_many, is_many_to_many, \
-    is_one_to_many_reverse, is_many_to_one, should_filter_or_display
+    is_many_to_one, should_filter_or_display
 
 
 class Panel(Component):
 
-    def __init__(self, request, title=None, text=None):
+    def __init__(self, request, title=None, text=None, icon=None):
         super(Panel, self).__init__(request)
         self.title = title
         self.text = text
         self.labels = []
-        self.icon = None
-
-    def add_label(self, description, css='label-info'):
-        label = dict(description=description, css=css)
-        self.labels.append(label)
-
-    def set_icon(self, name, css='text-info', align='right'):
-        self.icon = dict(name=name, css=css, align=align)
+        self.icon = icon
 
     def __str__(self):
         return self.render('panel.html')
 
 
 class ModelPanel(Component):
-    def __init__(self, request, obj, current_tab=None, parent=None, fieldsets=None, complete=True):
+    def __init__(self, request, obj, current_tab=None, parent=None, fieldsets=None, complete=True, readonly=False, printable=True):
 
         super(ModelPanel, self).__init__(request=request)
 
         self.obj = obj
         self.request = request
         self.title = obj.pk and str(obj) or get_metadata(type(obj), 'verbose_name')
+        self.id = self.title
         self.tabs = []
         self.current_tab = current_tab
         self.message = None
         self.complete = complete
+        self.readonly = readonly
+        self.printable = printable
         self.drop_down = None
         fieldsets = fieldsets or get_metadata(type(obj), 'view_fieldsets', [])
         if not fieldsets:
-            fields = []
-            for field in get_metadata(type(obj), 'fields')[1:]:
-                fields.append(field.name)
-
-            for field in get_metadata(type(obj), 'local_many_to_many'):
-                fields.append(field.name)
-
-            fieldsets = (('Dados Gerais', dict(fields=fields)),)
+            fieldsets = get_fieldsets(type(obj))
 
         if self.complete:
             self.drop_down = ModelDropDown(self.request, type(self.obj))
             self.drop_down.add_actions(self.obj, fieldset_title='')
+            if self.printable:
+                self.drop_down.add_action('Imprimir', url='?pdf={}&pk='.format(self.id), css='ajax', icon='fa-print', category='Imprimir')
         else:
             self.drop_down = GroupDropDown(self.request)
 
@@ -148,7 +139,10 @@ class ModelPanel(Component):
                                 panel_fieldsets = None
                                 if relation:
                                     panel_fieldsets = get_metadata(type(relation), 'view_fieldsets', [])
-                                    panel_fieldsets = ((fieldset_title, panel_fieldsets[0][1]), )
+                                    if panel_fieldsets:
+                                        panel_fieldsets = ((fieldset_title, panel_fieldsets[0][1]), )
+                                    else:
+                                        panel_fieldsets = get_fieldsets(type(relation), fieldset_title)
                                 panel = ModelPanel(request, relation, fieldsets=panel_fieldsets, complete=False)
 
                                 if is_one_to_one(model, relation_name):
@@ -161,10 +155,9 @@ class ModelPanel(Component):
                                         add_url = '{}{}/'.format(add_url, relation.pk)
                                         app_label = get_metadata(type(relation), 'app_label')
                                         delete_url = '/delete/{}/{}/{}/'.format(app_label, related_model_name, relation.pk)
-                                    if permissions.has_add_permission(self.request, model) or permissions.has_edit_permission(self.request, model):
+                                    if not self.readonly and (permissions.has_add_permission(self.request, model) or permissions.has_edit_permission(self.request, model)):
                                         if delete_url:
-                                            panel.drop_down.add_action('Excluir {}'.format(relation_field.verbose_name),
-                                                                       delete_url, 'popup', 'fa-close', None)
+                                            panel.drop_down.add_action('Excluir {}'.format(relation_field.verbose_name), delete_url, 'popup', 'fa-close', None)
                                         panel.drop_down.add_action('Atualizar {}'.format(relation_field.verbose_name),
                                                                    add_url, 'popup', 'fa-edit')
                                 fieldset_dict['paginators'].append(panel)
@@ -180,7 +173,7 @@ class ModelPanel(Component):
                                 related_paginator = Paginator(self.request, relation.all(), title=fieldset_title, to=to, list_subsets=[])
 
                                 add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
-                                if permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model):
+                                if not self.readonly and (permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model)):
                                     related_paginator.add_action('Adicionar {}'.format(str(get_metadata(relation.model, 'verbose_name'))), add_url, 'popup', 'fa-plus')
                                 fieldset_dict['paginators'].append(related_paginator)
                         else:
@@ -240,10 +233,19 @@ class ModelPanel(Component):
                                         relation_name.replace('_set', ''))
                                         add_label = 'Adicionar {}'.format(get_metadata(qs.model, 'verbose_name'))
                                         add_label = get_metadata(qs.model, 'add_label', add_label)
-                                        related_paginator.add_action(add_label, add_url,
-                                                                     'popup', 'fa-plus')
+                                        if not self.readonly:
+                                            related_paginator.add_action(add_label, add_url, 'popup', 'fa-plus')
 
                             fieldset_dict['paginators'].append(related_paginator)
+
+                else:
+                    for relation_name in relations + inlines:
+                        if relation_name in [field.name for field in get_metadata(model, 'get_fields')]:
+                            relation_field = find_field_by_name(model, relation_name)
+                            if is_one_to_one(model, relation_name) or is_many_to_one(model, relation_name):
+                                fieldset_dict['fields'].append(
+                                    [dict(verbose_name=relation_field.verbose_name, name=relation_name)]
+                                )
 
                 if 'extra' in fieldset[1]:
                     fieldset_dict['extra'] = []

@@ -1,3 +1,4 @@
+{% if self.as_pdf %}{% else %}
 {% if self.type == "box" %}
 <div class="panel panel-default">
     <div class="panel-heading bg-info">
@@ -142,5 +143,5 @@
 </script>
 {% endif %}
 {% endif %}
-
+{% endif %}
 

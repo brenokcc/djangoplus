@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
 import traceback
 from django.apps import apps
 from django.conf import settings
 from django.shortcuts import render
 from djangoplus.cache import loader
 from django.http import HttpResponse
+from djangoplus.ui import ComponentHasResponseException
 from djangoplus.utils import permissions
 from djangoplus.ui.components.panel import ModelPanel
 from djangoplus.ui.components.breadcrumbs import httprr
@@ -58,9 +58,7 @@ def listt(request, app, cls, subset=None):
     list_subsets = subset and [subset] or None
 
     paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True, list_display=list_display, list_filter=list_filter, search_fields=search_fields)
-    response = paginator.get_response()
-    if response:
-        return response
+    paginator.check_http_response()
 
     if _model in loader.class_actions:
         for group in loader.class_actions[_model]:
@@ -242,9 +240,7 @@ def view(request, app, cls, pk, tab=None):
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
 
-    qs = _model.objects.all(request.user)
-
-    obj = qs.get(pk=pk)
+    obj = _model.objects.all(request.user).get(pk=pk)
     obj.request = request
     obj._user = request.user
 
@@ -257,11 +253,11 @@ def view(request, app, cls, pk, tab=None):
 
     title = str(obj)
     parent = request.GET.get('parent', None)
-    panel = ModelPanel(request, obj, tab, parent)
+    printable = get_metadata(_model, 'pdf', False)
+    panel = ModelPanel(request, obj, tab, parent, printable=printable)
+    panel.check_http_response()
 
-    if request.GET.get('pdf', False):
-        return ReportResponse(title, request, [panel])
-    elif panel.message:
+    if panel.message:
         return httprr(request, request.get_full_path(), panel.message)
 
     log_data = get_metadata(obj.__class__, 'log', False)
@@ -408,12 +404,16 @@ def dispatcher(request, app, view_name, params):
     try:
         views = __import__('{}.views'.format(full_app_name), fromlist=list(map(str, fromlist)))
         func = getattr(views, view_name)
+    except ComponentHasResponseException as e:
+        raise e
     except (ImportError, TypeError, AttributeError) as e:
         traceback.print_exc()
         return page_not_found(request, e, 'error404.html')
 
     try:
         return func(request, *params)
+    except ComponentHasResponseException as e:
+        raise e
     except Exception as e:
         print(e)
         traceback.print_exc()

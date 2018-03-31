@@ -1,3 +1,4 @@
+{% if self.as_pdf %}{% else %}
 <!-- Full Calender -->
 <script src='/static/js/moment.min.js'></script>
 <script src='/static/js/fullcalendar.min-3.3.1.js'></script>
@@ -127,3 +128,4 @@
         });
     });
 </script>
+{% endif %}

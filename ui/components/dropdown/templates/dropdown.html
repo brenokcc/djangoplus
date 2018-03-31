@@ -1,3 +1,4 @@
+{% if self.as_pdf %}{% else %}
 {% for group in self.actions %}
     {% with actions=self.actions|get_item:group %}
         {% if actions %}
@@ -30,3 +31,4 @@
         {% endif %}
     {% endwith %}
 {% endfor %}
+{% endif %}
