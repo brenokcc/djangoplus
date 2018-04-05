@@ -362,7 +362,6 @@ def getattr_rec(obj, args):
         return getattr_rec(getattr2(obj, attr), args)
     else:
         from django.core.exceptions import ObjectDoesNotExist
-        from djangoplus.cache import loader
 
         try:
             model = type(obj)
@@ -377,6 +376,7 @@ def getattr_rec(obj, args):
 
             if field:
                 if hasattr(field, 'formatter') and field.formatter:
+                    from djangoplus.cache import loader
                     func = loader.formatters[field.formatter]
                     if len(func.__code__.co_varnames) == 1:
                         value = func(value)
@@ -405,6 +405,7 @@ def getattr_rec(obj, args):
                         value = value()
                         formatter = _metadata.get('{}:formatter'.format(args[0]))
                         if formatter:
+                            from djangoplus.cache import loader
                             func = loader.formatters[formatter]
                             if len(func.__code__.co_varnames) == 1:
                                 value = func(value)
