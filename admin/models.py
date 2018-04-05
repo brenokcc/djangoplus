@@ -114,7 +114,7 @@ class Organization(models.AsciiModel):
         if unit_subclass:
             for field in get_metadata(unit_subclass, 'fields'):
                 if field.remote_field and hasattr(field.remote_field.model, 'organization_ptr'):
-                    return field.remote_field.model.objects.filter(**{field.name:self.pk})
+                    return unit_subclass.objects.filter(**{field.name:self.pk})
         return Unit.objects.none()
 
     def __str__(self):

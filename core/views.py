@@ -11,14 +11,13 @@ from djangoplus.ui.components.panel import ModelPanel
 from djangoplus.ui.components.breadcrumbs import httprr
 from django.template import Template, Context
 from djangoplus.ui.components.paginator import Paginator
-from djangoplus.utils.http import ReportResponse
 from django.views.defaults import page_not_found, server_error
 from django.core.exceptions import ValidationError
 from django.http.response import HttpResponseForbidden
 from django.contrib.contenttypes.models import ContentType
 from djangoplus.utils.metadata import list_related_objects, \
-    is_many_to_many, is_one_to_one, get_metadata, check_condition, is_one_to_many, getattr2
-from djangoplus.ui.components.forms import factory, DEFAULT_FORM_TITLE, DEFAULT_SUBMIT_LABEL, ModelChoiceField
+    is_many_to_many, is_one_to_one, get_metadata, check_condition, is_one_to_many, getattr2, is_one_to_many_reverse
+from djangoplus.ui.components.forms import factory, DEFAULT_FORM_TITLE, DEFAULT_SUBMIT_LABEL
 
 
 def listt(request, app, cls, subset=None):
@@ -156,7 +155,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 
     title = pk and str(obj) or get_metadata(_model, 'verbose_name')
 
-    if not related_field_name:
+    if related_field_name is None:
 
         if obj.pk:
             if not permissions.has_edit_permission(request, _model) or not permissions.can_edit(request, obj):
@@ -167,7 +166,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
 
         form = factory.get_register_form(request, obj)
         title = form.title
-        
+
     elif is_one_to_many(_model, related_field_name):
         if not permissions.can_add(request, obj) and not permissions.can_edit(request, obj):
             return HttpResponseForbidden()
@@ -177,6 +176,9 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
         if not permissions.can_add(request, obj) and not permissions.can_edit(request, obj):
             return HttpResponseForbidden()
         form = factory.get_many_to_many_form(request, obj, related_field_name, related_pk)
+
+    elif is_one_to_many_reverse(_model, related_field_name):
+        form = factory.get_many_to_many_reverse_form(request, obj, related_field_name)
 
     elif is_one_to_one(_model, related_field_name):
         if not permissions.can_add(request, obj) and not permissions.can_edit(request, obj):
@@ -353,12 +355,10 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
         return page_not_found(request, e, 'error404.html')
 
     obj = _model.objects.all(request.user).get(pk=pk)
-    obj.request = request
+    obj._request = request
     obj._user = request.user
 
-    permission_name = '{}.delete_{}'.format(app, cls)
-    if permissions.can_delete(request, obj) and permissions.check_group_or_permission(request, permission_name):
-
+    if permissions.can_delete(request, obj):
         if related_field_name:
             getattr(obj, related_field_name).remove(related_pk)
             return httprr(request, '..', 'Removido com sucesso')
@@ -368,9 +368,7 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
             if form.is_valid():
                 obj.delete()
                 return httprr(request, '..', 'Exclusão realizada com sucesso.')
-
             return render(request, 'delete.html', locals())
-
     else:
         return HttpResponseForbidden()
 

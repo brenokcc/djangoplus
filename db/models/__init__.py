@@ -13,7 +13,7 @@ from djangoplus.db.models.fields import *
 import django.db.models.options as options
 from django.db.models.aggregates import Sum, Avg
 from django.db.models.deletion import Collector
-from djangoplus.utils.metadata import get_metadata, getattr2, find_model, get_field
+from djangoplus.utils.metadata import get_metadata, getattr2, find_model, get_field, check_role
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from functools import reduce
@@ -462,120 +462,13 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
             log.save()
             log.create_indexes(self)
 
-        self._check_role()
+        check_role(self)
 
     def as_user(self):
         role_username = get_metadata(self.__class__, 'role_username')
         if role_username:
             return get_user_model().objects.get(username=getattr(self, role_username))
         return None
-
-    def _check_role(self, saving=True):
-        role_name = get_metadata(self.__class__, 'role_name')
-        role_username = get_metadata(self.__class__, 'role_username')
-        verbose_name = get_metadata(self.__class__, 'verbose_name')
-        concrete_fields = get_metadata(self.__class__, 'concrete_fields')
-        role_email = get_metadata(self.__class__, 'role_email', '')
-        role_scope = get_metadata(self.__class__, 'role_scope')
-
-        if role_username:
-
-            from django.contrib.auth.models import Group
-            from djangoplus.admin.models import Role, Organization, OrganizationRole, Unit, UnitRole
-
-            group_name = verbose_name
-            username = getattr2(self, role_username)
-            name = role_name and getattr2(self, role_name) or None
-
-            if username:
-                unit = Unit.objects.get(pk=0)
-                organization = organization = Organization.objects.get(pk=0)
-
-                if issubclass(self.__class__, Organization):
-                    organization = self
-                    unit = None
-                elif issubclass(self.__class__, Unit):
-                    unit = self
-                    organization = None
-                elif role_scope:
-                    scope = getattr2(self, role_scope)
-                    if issubclass(scope.__class__, Organization):
-                        organization = scope
-                        unit = None
-                    elif issubclass(scope.__class__, Unit):
-                        unit = scope
-                        organization = None
-                else:
-                    for field in concrete_fields:
-                        if field.remote_field and field.remote_field.model:
-                            if issubclass(field.remote_field.model, Organization):
-                                organization = getattr(self, field.name)
-                                unit = None
-                                break
-                            if issubclass(field.remote_field.model, Unit):
-                                unit = getattr(self, field.name)
-                                organization = None
-                                break
-
-                email = role_email and getattr2(self, role_email) or ''
-
-                User = get_user_model()
-                group = Group.objects.get_or_create(name=group_name)[0]
-
-                if unit and not organization:
-                    for field in get_metadata(unit.__class__, 'concrete_fields'):
-                        if field.remote_field and field.remote_field.model:
-                            if issubclass(field.remote_field.model, Organization):
-                                organization = getattr(unit, field.name)
-
-                if saving:
-                    qs = User.objects.filter(username=username)
-                    if qs.exists():
-                        user = qs[0]
-                        user.email = email
-                        user.name = name or str(self)
-                        user.save()
-                    else:
-                        user = User()
-                        user.username = username
-                        user.name = name or str(self)
-                        user.email = email
-                        user.save()
-                        if user.email and not (settings.DEBUG or 'test' in sys.argv):
-                            user.send_access_invitation()
-
-                    user.groups.add(group)
-                    if organization:
-                        role = Role.objects.get(user=user, group=group)
-                        if not OrganizationRole.objects.filter(role=role, organization=organization).exists():
-                            organization_role = OrganizationRole()
-                            organization_role.role = role
-                            organization_role.organization = organization
-                            organization_role.save()
-                    if unit:
-                        role = Role.objects.get(user=user, group=group)
-                        if not UnitRole.objects.filter(role=role, unit=unit).exists():
-                            unit_role = UnitRole()
-                            unit_role.role = role
-                            unit_role.unit = unit
-                            unit_role.save()
-                else:
-                    user = User.objects.get(username=username)
-                    if unit or organization:
-                        keep_in_group = False
-                        if organization:
-                            OrganizationRole.objects.filter(role__user=user, role__group=group, organization=organization).delete()
-                            if OrganizationRole.objects.filter(role__user=user, role__group=group).exists():
-                                keep_in_group=True
-                        if unit:
-                            UnitRole.objects.filter(role__user=user, role__group=group, unit=unit).delete()
-                            if UnitRole.objects.filter(role__user=user, role__group=group).exists():
-                                keep_in_group = True
-                        if not keep_in_group:
-                            user.groups.remove(group)
-                    else:
-                        UnitRole.objects.filter(role__user=user, role__group=group).delete()
-                        user.groups.remove(group)
 
     def delete(self, *args, **kwargs):
         log_data = get_metadata(self.__class__, 'log', False)
@@ -608,7 +501,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
         super(Model, self).delete(*args, **kwargs)
 
-        self._check_role(False)
+        check_role(self, False)
 
     def get_logs(self):
         content_type = ContentType.objects.get_for_model(self.__class__)

@@ -15,7 +15,7 @@ class Command(test.Command):
         super(Command, self).add_arguments(parser)
         parser.add_argument('--continue', action='store_true', dest='continue', default=False,
                             help='Continues from the last successfull login')
-        parser.add_argument('--generate', action='store_true', dest='generate', default=(),
+        parser.add_argument('--add', action='store_true', dest='add', default=(),
                             help='Adds test cases in test.py file')
         parser.add_argument('--watch', action='store_true', dest='watch', default=False,
                             help='Run test in browser intead of headless mode')
@@ -23,12 +23,12 @@ class Command(test.Command):
     def handle(self, *args, **options):
         if not options.pop('watch', False):
             os.environ['HEADLESS'] = '1'
-        if options.pop('generate', False):
+        if options.pop('add', False):
             workflow = Workflow()
             function_definitions = []
             function_calls = []
             test_file_path = path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'tests.py')
-            file_content = open(test_file_path).read().decode('utf-8')
+            file_content = open(test_file_path).read()
             try:
                 for task in workflow.tasks:
                     usecase = UseCase(task)
@@ -39,7 +39,7 @@ class Command(test.Command):
                 file_content = file_content.replace('(TestCase):', '(TestCase):\n\n{}'.format(function_definitions_code), 1)
                 file_content = '{}\n{}'.format(file_content, '\n'.join(function_calls))
                 file_content = file_content.replace('\t', '    ')
-                open(test_file_path, 'w').write(file_content.encode('utf-8'))
+                open(test_file_path, 'w').write(file_content)
             except ZeroDivisionError as e:
                 print(e)
 

@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if self.as_pdf %}{% else %}
 {% if self.type == "box" %}
 <div class="panel panel-default">
@@ -5,6 +6,7 @@
         <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
     </div>
     <div class="panel-body">
+        {% if self.display %}
         <table width="100%">
             <tr>
             {% for label, value, percentage in self.get_box_series %}
@@ -19,6 +21,9 @@
             {% endfor %}
             </tr>
         </table>
+        {% else %}
+            <div class="alert alert-warning">{% trans "No records found" %}.</div>
+        {% endif %}
     </div>
 </div>
 {% else %}
@@ -34,10 +39,14 @@
         <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
     </div>
     <div class="panel-body">
-        <div class="ct-chart{{ self.id }}" style="width: 100%; position: relative"></div>
+        {% if self.display %}
+            <div class="ct-chart{{ self.id }}" style="width: 100%; position: relative"></div>
+        {% else %}
+            <div class="alert alert-warning">{% trans "No records found" %}.</div>
+        {% endif %}
     </div>
 </div>
-{% if self.series %}
+{% if self.display %}
 <script>
     var charts = {pie : Chartist.Pie, donut: Chartist.Pie, bar:Chartist.Bar, horizontalbar: Chartist.Bar, stack:Chartist.Bar, horizontalstack: Chartist.Bar, line:Chartist.Line, area:Chartist.Line}
 

@@ -27,11 +27,14 @@ class Chart(Component):
         self.symbol = symbol or ''
         self.title = title
         self.color_index = 0
+        self.display = False
 
         for i, serie in enumerate(self.series):
             for j, valor in enumerate(serie):
                 if type(valor) == Decimal:
                     self.series[i][j] = float(valor)
+                if valor:
+                    self.display = True
 
         self.colors = []
         for color in settings.GRADIENT:

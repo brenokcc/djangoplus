@@ -237,7 +237,7 @@ class Form(django_forms.Form):
                                 one_to_many_count = field.one_to_many_count
                             else:
                                 app_label = get_metadata(qs.model, 'app_label')
-                                if '__' in field.one_to_many_count > 0:
+                                if '__' in field.one_to_many_count:
                                     tokens = field.one_to_many_count.split('__')
                                     model_name = self.fields[tokens[0]].queryset.model.__name__.lower()
                                     model_lookup = '__'.join(tokens[1:])

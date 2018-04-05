@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # DJANGO FIELDS
-import inspect
+import sys
 from django.utils.text import camel_case_to_spaces
 from django.utils.safestring import mark_safe
 
@@ -27,8 +27,8 @@ def is_many_to_one(model, name):
 
 
 def is_one_to_many_reverse(model, name):
-    attr = hasattr(model, name) and getattr(model, name) or None
-    return attr and attr.__class__.__name__ == 'ReverseManyToOneDescriptor' or False
+    attr = hasattr(model, '{}_set'.format(name)) and getattr(model, '{}_set'.format(name)) or None
+    return attr and attr.__class__.__name__ == 'ManyToManyDescriptor' or False
 
 
 def list_m2m_fields_with_model(cls):
@@ -224,6 +224,117 @@ def get_metadata(model, attr, default=None, iterable=False):
 
     return _metadata
 
+# ROLE
+
+
+def get_scope(model, organization_model, unit_model):
+    role_scope = get_metadata(model, 'role_scope')
+    if role_scope:
+        attr = getattr2(model, role_scope)
+        if hasattr(attr, 'model'):
+            return get_metadata(attr.model, 'verbose_name')
+        else:
+            field = get_field(model, role_scope)
+            return get_metadata(field.remote_field.model, 'verbose_name')
+    return None
+
+
+def check_role(self, saving=True):
+    role_name = get_metadata(self.__class__, 'role_name')
+    role_username = get_metadata(self.__class__, 'role_username')
+    verbose_name = get_metadata(self.__class__, 'verbose_name')
+    role_email = get_metadata(self.__class__, 'role_email', '')
+    role_scope = get_metadata(self.__class__, 'role_scope', False)
+
+    if role_username:
+        from django.conf import settings
+        from django.contrib.auth.models import Group
+        from djangoplus.admin.models import User, Role, Organization, OrganizationRole, Unit, UnitRole
+
+        group_name = verbose_name
+        username = getattr2(self, role_username)
+        name = role_name and getattr2(self, role_name) or None
+        email = role_email and getattr2(self, role_email) or ''
+
+        units = ()
+        organizations = ()
+
+        if username:
+            if role_scope is False:
+                units = Unit.objects.get(pk=0),
+                organizations = Organization.objects.get(pk=0),
+            elif role_scope:
+                value = getattr2(self, role_scope)
+                if hasattr(value, 'all'):
+                    if isinstance(value.model, Organization):
+                        organizations = value.all()
+                    else:
+                        units = value.all()
+                else:
+                    if isinstance(value, Organization):
+                        organizations = value,
+                    else:
+                        units = value,
+
+            group = Group.objects.get_or_create(name=group_name)[0]
+
+            if units and not organizations:
+                organizations = []
+                for unit in units:
+                    organization = unit.get_organization()
+                    if organization:
+                        organizations.append(organization)
+
+            if saving:
+                qs = User.objects.filter(username=username)
+                if qs.exists():
+                    user = qs[0]
+                    user.email = email
+                    user.name = name or str(self)
+                    user.save()
+                else:
+                    user = User()
+                    user.username = username
+                    user.name = name or str(self)
+                    user.email = email
+                    user.save()
+                    if user.email and not (settings.DEBUG or 'test' in sys.argv):
+                        user.send_access_invitation()
+                role = Role.objects.get_or_create(user=user, group=group)[0]
+                user.groups.add(group)
+
+                for organization in organizations:
+                    if not OrganizationRole.objects.filter(role=role, organization=organization).exists():
+                        organization_role = OrganizationRole()
+                        organization_role.role = role
+                        organization_role.organization = organization
+                        organization_role.save()
+
+                for unit in units:
+                    if not UnitRole.objects.filter(role=role, unit=unit).exists():
+                        unit_role = UnitRole()
+                        unit_role.role = role
+                        unit_role.unit = unit
+                        unit_role.save()
+            else:
+                user = User.objects.get(username=username)
+                if units or organizations:
+                    keep_in_group = False
+                    if organizations:
+                        OrganizationRole.objects.filter(role__user=user, role__group=group, organization__in=organizations).delete()
+                        if OrganizationRole.objects.filter(role__user=user, role__group=group).exists():
+                            keep_in_group = True
+                    if units:
+                        UnitRole.objects.filter(role__user=user, role__group=group, unit__in=units).delete()
+                        if UnitRole.objects.filter(role__user=user, role__group=group).exists():
+                            keep_in_group = True
+                    if not keep_in_group:
+                        user.groups.remove(group)
+                else:
+                    UnitRole.objects.filter(role__user=user, role__group=group).delete()
+                    user.groups.remove(group)
+
+
 # REFLECTION
 
 
@@ -312,23 +423,17 @@ def getattr_rec(obj, args):
             return None
 
 
-def get_scope(model, organization_model, unit_model):
-    scope = 'systemic'
-    role_scope = get_metadata(model, 'role_scope')
-    if role_scope:
-        field = get_field(model, role_scope)
-        if field.remote_field.model == unit_model:
-            scope = 'unit'
-        elif field.remote_field.model == organization_model:
-            scope = 'organization'
-    else:
-        for field in get_metadata(model, 'concrete_fields'):
-            if field.remote_field and field.remote_field.model:
-                if field.remote_field.model == unit_model:
-                    scope = 'unit'
-                elif field.remote_field.model == organization_model:
-                    scope = 'organization'
-    return scope
+def get_can_execute(action):
+    can_execute = []
+    for group_name in action.get('can_execute_by_role') or ():
+        can_execute.append(group_name)
+    for group_name in action.get('can_execute_by_unit') or ():
+        can_execute.append(group_name)
+    for group_name in action.get('can_execute_by_organization') or ():
+        can_execute.append(group_name)
+    for group_name in action.get('can_execute') or ():
+        can_execute.append(group_name)
+    return can_execute
 
 
 def should_filter_or_display(request, model, to):

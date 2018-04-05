@@ -195,6 +195,38 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
     return form
 
 
+def get_many_to_many_reverse_form(request, obj, related_field_name):
+    _model = type(obj)
+
+    initial = hasattr(obj, 'initial') and obj.initial() or {}
+    choices = hasattr(obj, 'choices') and obj.choices() or {}
+    field = getattr(_model, '{}_set'.format(related_field_name))
+    related_field_model = field.rel.remote_field.model
+
+    class Form(forms.ModelForm):
+        related_objects = forms.MultipleModelChoiceField(related_field_model.objects.all(),
+                                                         label=get_metadata(related_field_model, 'verbose_name'))
+
+        class Meta:
+            model = _model
+            fields = ()
+            title = 'Adicionar {}'.format(get_metadata(related_field_model, 'verbose_name'))
+            icon = get_metadata(related_field_model, 'icon', None)
+            is_inner = True
+
+        def save(self, *args, **kwargs):
+            for related_object in self.cleaned_data['related_objects']:
+                getattr(related_object, field.rel.remote_field.name).add(self.instance)
+            self.instance._check_role()
+
+    form = Form(request, instance=obj, initial=initial)
+    form.name = '{}Form'.format(_model.__name__)
+    for field_name in choices:
+        if field_name in form.fields:
+            form.fields[field_name].queryset = choices[field_name]
+    return form
+
+
 def get_class_action_form(request, _model, action, func):
     action_title = action['title']
     initial = action['initial']

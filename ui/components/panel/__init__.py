@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
 from decimal import Decimal
-
 from djangoplus.ui import Component
 from django.utils.text import slugify
 from djangoplus.ui.components.forms import ModelForm, ValidationError
@@ -129,114 +127,9 @@ class ModelPanel(Component):
                             fieldset_dict['fields'].append(attr_names)
 
                 if self.complete:
-
+                    from djangoplus.utils.relations import Relation
                     for relation_name in relations + inlines:
-                        if relation_name in [field.name for field in get_metadata(model, 'get_fields')]:
-                            relation_field = find_field_by_name(model, relation_name)
-                            relation = getattr(self.obj, relation_name) or relation_field.remote_field.model()
-                            if is_one_to_one(model, relation_name) or is_many_to_one(model, relation_name):
-                                fieldset_title = relation_field.verbose_name
-                                panel_fieldsets = None
-                                if relation:
-                                    panel_fieldsets = get_metadata(type(relation), 'view_fieldsets', [])
-                                    if panel_fieldsets:
-                                        panel_fieldsets = ((fieldset_title, panel_fieldsets[0][1]), )
-                                    else:
-                                        panel_fieldsets = get_fieldsets(type(relation), fieldset_title)
-                                panel = ModelPanel(request, relation, fieldsets=panel_fieldsets, complete=False)
-
-                                if is_one_to_one(model, relation_name):
-                                    app_label = get_metadata(model, 'app_label')
-                                    model_name = model.__name__.lower()
-                                    related_model_name = type(relation).__name__.lower()
-                                    add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.obj.pk, relation_name)
-                                    delete_url = None
-                                    if relation.pk:
-                                        add_url = '{}{}/'.format(add_url, relation.pk)
-                                        app_label = get_metadata(type(relation), 'app_label')
-                                        delete_url = '/delete/{}/{}/{}/'.format(app_label, related_model_name, relation.pk)
-                                    if not self.readonly and (permissions.has_add_permission(self.request, model) or permissions.has_edit_permission(self.request, model)):
-                                        if delete_url:
-                                            panel.drop_down.add_action('Excluir {}'.format(relation_field.verbose_name), delete_url, 'popup', 'fa-close', None)
-                                        panel.drop_down.add_action('Atualizar {}'.format(relation_field.verbose_name),
-                                                                   add_url, 'popup', 'fa-edit')
-                                fieldset_dict['paginators'].append(panel)
-
-                            else:
-                                fieldset_title = len(relations) > 1 and title or relation_field.verbose_name
-
-                                if is_one_to_many(model, relation_name) or is_many_to_many(model, relation_name):
-                                    to = model.__name__.lower()
-                                else:
-                                    to = relation_name
-
-                                related_paginator = Paginator(self.request, relation.all(), title=fieldset_title, to=to, list_subsets=[])
-
-                                add_url = '/add/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, relation_name)
-                                if not self.readonly and (permissions.has_add_permission(self.request, model) or permissions.has_relate_permission(self.request, model)):
-                                    related_paginator.add_action('Adicionar {}'.format(str(get_metadata(relation.model, 'verbose_name'))), add_url, 'popup', 'fa-plus')
-                                fieldset_dict['paginators'].append(related_paginator)
-                        else:
-                            is_object_set = False
-                            for related_object in list_related_objects(model):
-                                if hasattr(related_object, 'get_accessor_name') and relation_name == related_object.get_accessor_name():
-                                    is_object_set = True
-                                    break
-                            relation = getattr(self.obj, relation_name)
-                            if hasattr(relation, 'all'):
-                                qs = relation.all()
-                            elif hasattr(relation, '__call__'):
-                                qs = relation()
-                            else:
-                                qs = relation
-                            to = is_object_set and related_object.field.name or None
-
-                            fieldset_title = len(relations) > 1 and get_metadata(qs.model, 'verbose_name_plural') or title
-
-                            if hasattr(relation, '_metadata'):
-                                fieldset_title = relation._metadata['{}:verbose_name'.format(relation_name)]
-
-                            exclude = [is_object_set and related_object.field.name or '']
-
-                            related_paginator = Paginator(self.request, qs, fieldset_title, exclude=exclude, list_subsets=[], to=to, readonly=not is_object_set)
-                            if is_object_set and (permissions.has_add_permission(self.request, qs.model) or permissions.has_relate_permission(self.request, qs.model)):
-                                instance = qs.model()
-                                setattr(instance, related_object.field.name, self.obj)
-                                if permissions.can_add(self.request, instance):
-                                    if relation_name in inlines:
-                                        form_name = get_metadata(qs.model, 'add_form')
-                                        if form_name:
-                                            fromlist = get_metadata(qs.model, 'app_label')
-                                            forms_module = __import__('{}.forms'.format(fromlist), fromlist=list(map(str, [fromlist])))
-                                            Form = getattr(forms_module, form_name)
-                                        else:
-                                            class Form(ModelForm):
-                                                class Meta:
-                                                    model = qs.model
-                                                    fields = get_metadata(qs.model, 'form_fields', '__all__')
-                                                    exclude = get_metadata(qs.model, 'exclude_fields', ())
-                                                    submit_label = 'Adicionar'
-                                                    title = 'Adicionar {}'.format(get_metadata(qs.model, 'verbose_name'))
-                                        form = Form(self.request, instance=instance, inline=True)
-                                        if related_object.field.name in form.fields:
-                                            del(form.fields[related_object.field.name])
-                                        related_paginator.form = form
-                                        if form.is_valid():
-                                            try:
-                                                form.save()
-                                                self.message = 'Ação realizada com sucesso'
-                                            except ValidationError as e:
-                                                form.add_error(None, str(e.message))
-                                    else:
-                                        add_url = '/add/{}/{}/{}/{}/'.format(
-                                        get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk,
-                                        relation_name.replace('_set', ''))
-                                        add_label = 'Adicionar {}'.format(get_metadata(qs.model, 'verbose_name'))
-                                        add_label = get_metadata(qs.model, 'add_label', add_label)
-                                        if not self.readonly:
-                                            related_paginator.add_action(add_label, add_url, 'popup', 'fa-plus')
-
-                            fieldset_dict['paginators'].append(related_paginator)
+                        fieldset_dict['paginators'].append(Relation(self.obj, relation_name).get_component(self.request))
 
                 else:
                     for relation_name in relations + inlines:
@@ -442,8 +335,7 @@ class DashboardPanel(Component):
 
             for position, group_names in l:
                 if permissions.check_group_or_permission(request, group_names, ignore_superuser=True):
-                    qs = model.objects.all()
-                    qs.user = request.user
+                    qs = model.objects.all(request.user)
                     f_return = getattr(qs, function)()
                     html = ''
 

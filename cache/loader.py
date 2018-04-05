@@ -2,7 +2,7 @@
 
 from django.apps import apps
 from django.conf import settings
-from djangoplus.utils.metadata import get_metadata, get_scope
+from djangoplus.utils.metadata import get_metadata, get_scope, get_can_execute
 
 initialized = False
 
@@ -178,7 +178,7 @@ if not initialized:
                     action = getattr(function, '_action')
                     action_group = action['group']
 
-                    action_can_execute = action['can_execute']
+                    action_can_execute = get_can_execute(action)
                     action_title = action['title']
                     action_workflow = action['usecase']
                     action_menu = action['menu']
@@ -229,7 +229,7 @@ if not initialized:
                 if hasattr(attr, '_action'):
                     action = getattr(attr, '_action')
                     action_title = action['title']
-                    action_can_execute = action['can_execute']
+                    action_can_execute = get_can_execute(action)
                     action_group = action['group']
                     view_name = action['view_name']
                     action_subset = action['inline']
@@ -397,14 +397,14 @@ if not initialized:
             permissions_by_scope[model] = permission_by_scope
 
         if workflow:
-            role = permission_by_scope.get('add') and permission_by_scope.get('add')[0] or None
-            if not role:
-                role = permission_by_scope.get('add_by_role') and permission_by_scope.get('add_by_role')[0] or None
+            role = permission_by_scope.get('add_by_role') and permission_by_scope.get('add_by_role')[0] or None
             if not role:
                 role = permission_by_scope.get('add_by_unit') and permission_by_scope.get('add_by_unit')[0] or None
             if not role:
                 role = permission_by_scope.get('add_by_organization') and permission_by_scope.get('add_by_organization')[0] or None
             if not role:
+                role = permission_by_scope.get('add') and permission_by_scope.get('add')[0] or None
+            if not role or role == verbose_name:
                 role = 'Superusuário'
 
             if model in composition_fields:

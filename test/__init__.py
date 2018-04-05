@@ -141,6 +141,7 @@ class TestCase(StaticLiveServerTestCase):
 
     def click_menu(self, *texts):
         print('Clicking menu "{}"'.format('->'.join(texts)))
+        self.wait()
         for text in texts:
             self.wait()
             try:
@@ -206,6 +207,7 @@ class TestCase(StaticLiveServerTestCase):
     def logout(self):
         print('Logging out')
         self.click_icon('Configurações')
+        self.wait()
         self.click_link('Sair')
         self.wait()
         self.username = None

@@ -15,7 +15,7 @@ from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name,
 
 class Paginator(Component):
     def __init__(self, request, qs, title=None, list_display=None, list_filter=None, search_fields=None,
-                 list_per_page=25, list_subsets=None, exclude=None, to=None, readonly=False, is_list_view=False, help_text=None, url=None):
+                 list_per_page=25, list_subsets=None, exclude=None, relation=None, readonly=False, is_list_view=False, help_text=None, url=None):
 
         super(Paginator, self).__init__(request)
 
@@ -28,7 +28,7 @@ class Paginator(Component):
         self.list_per_page = list_per_page
         self.list_subsets = list_subsets
         self.exclude = exclude
-        self.to = to
+        self.relation = relation
         self.readonly = readonly
         self.is_list_view = is_list_view
         self.icon = get_metadata(qs.model, 'icon', None)
@@ -111,7 +111,7 @@ class Paginator(Component):
             else:
                 field_names = list_filter,
             for field_name in field_names:
-                if field_name == self.to:
+                if self.relation and field_name == self.relation.hidden_field_name:
                     continue
                 field = get_field(self.qs.model, field_name)
                 form_field_name = '{}{}'.format(field_name, self.id)
@@ -287,7 +287,10 @@ class Paginator(Component):
             if hasattr(attr, 'field_name'):
                 field = getattr(self.qs.model, '_meta').get_field(attr.field_name)
                 if hasattr(field, 'display') and not field.display:
-                        hidden_fields.append(field_name)
+                    hidden_fields.append(field_name)
+
+            if self.relation and field_name == self.relation.hidden_field_name:
+                hidden_fields.append(field_name)
 
         if self.exclude:
             for field_name in self.exclude:

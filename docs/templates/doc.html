@@ -92,7 +92,7 @@
                 <tr>
                     <th>{% trans "Group" %}</th>
                     <th>{% trans "Description" %}</th>
-                    {% if documentation.organization_name %}
+                    {% if documentation.organization_model or documentation.unit_model %}
                         <th>{% trans "Scope" %}</th>
                     {% endif %}
                 </tr>
@@ -105,8 +105,8 @@
                             {{ actor.name }}
                         </td>
                         <td>{{ actor.description|format }}</td>
-                        {% if documentation.organization_name %}
-                            <td>{{ actor.scope }}</td>
+                        {% if documentation.organization_model or documentation.unit_model %}
+                            <td>{{ actor.scope|format }}</td>
                         {% endif %}
                     </tr>
                     {% empty %}

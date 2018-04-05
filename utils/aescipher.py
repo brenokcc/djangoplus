@@ -4,7 +4,7 @@ cipher = Fernet(Fernet.generate_key())
 
 
 def encrypt(text):
-    return cipher.encrypt(text.encode('utf-8')).decode('utf-8')
+    return cipher.encrypt(str(text).encode('utf-8')).decode('utf-8')
 
 
 def decrypt(text):

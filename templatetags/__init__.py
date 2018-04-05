@@ -77,82 +77,56 @@ def tree_info(obj, queryset):
 
 @register.simple_tag()
 def paginator_icons(paginator, obj):
+    relation = paginator.relation
     edit = not paginator.readonly
     delete = not paginator.readonly
-    return obj_icons(paginator.request, obj, to=paginator.to, edit=edit, delete=delete)
+    return obj_icons(paginator.request, obj, relation=relation, edit=edit, delete=delete)
 
 
 @register.simple_tag()
-def obj_icons(request, obj, to=None, edit=True, delete=True, css='ajax'):
+def obj_icons(request, obj, relation=None, edit=True, delete=True, css='ajax'):
     l = []
-    model = obj.__class__
-    cls = model.__name__.lower()
-    app = get_metadata(model, 'app_label')
-    css = to and 'popup' or css
-    parent = to and hasattr(obj, to) and getattr(obj, to) or None
-    if hasattr(obj, 'get_absolute_url'):
-        view_url = obj.get_absolute_url()
+    if relation:
+        view_url = relation.view_url.format(obj.pk)
+        btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i></a>'
+        l.append(btn.format(slugify(view_url), 'ajax', view_url, 'Visualizar'))
+
+        if relation.edit_url:
+            edit_url = relation.edit_url.format(obj.pk)
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i></a>'
+            l.append(btn.format(slugify(edit_url), 'popup', edit_url, 'Editar'))
+
+        if relation.delete_url:
+            delete_url = relation.delete_url.format(obj.pk)
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i></a>'
+            l.append(btn.format(slugify(delete_url), 'popup', delete_url, 'Excluir'))
     else:
-        view_url = '/view/{}/{}/{}/'.format(app, cls, obj.pk)
-    url_id = slugify(view_url)
-    url_title = 'Visualizar'
+        model = type(obj)
+        cls = model.__name__.lower()
+        app = get_metadata(model, 'app_label')
 
-    if parent:
-        from djangoplus.cache import loader
-        can_spy = True
-        if type(obj) in loader.actions:
-            for category in loader.actions[type(obj)]:
-                for action_name in loader.actions[type(obj)][category]:
-                    action = loader.actions[type(obj)][category][action_name]
-                    if not action['inline']:
-                        can_spy = False
-                        break
-        fieldsets = get_metadata(obj, 'fieldsets')
-        if fieldsets:
-            for fieldset in fieldsets:
-                if '::' in fieldset[0]:
-                    can_spy = False
-                    break
+        tree_index_field = None
+        if hasattr(obj, 'get_tree_index_field'):
+            tree_index_field = obj.get_tree_index_field()
 
-        l.append('<a id="{}" class="{}" href="{}?parent={}" title="{}"><i class="fa fa-search fa-lg"></i></a>'.format(url_id, 'ajax', view_url, to, url_title))
-        if can_spy:
-            l.append('<a id="{}" class="{}" href="{}?parent={}" title="{}"><i class="fa fa-eye fa-lg"></i></a>'.format(url_id, 'popup', view_url, to, url_title))
-    else:
-        l.append('<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i></a>'.format(url_id, to and 'popup' or 'ajax', view_url, url_title))
+        view_url = hasattr(obj, 'get_absolute_url') and obj.get_absolute_url() or '/view/{}/{}/{}/'.format(app, cls, obj.pk)
+        btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i></a>'
+        l.append(btn.format(slugify(view_url), 'ajax', view_url, 'Visualizar'))
 
-    if edit or delete:
-        if parent and is_many_to_many(parent.__class__, to):
-            if edit and (not hasattr(obj, 'can_edit') or obj.can_edit()):
-                delete_url = '/delete/{}/{}/{}/{}/{}/'.format(app, parent.__class__.__name__.lower(), parent.pk, to, obj.pk)
-                url_id = slugify(delete_url)
-                url_title = 'Remover'
-                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-times fa-lg"></i></a>'.format(url_id, 'ajax', delete_url, url_title))
-        else:
-            if edit and permissions.has_edit_permission(request, type(obj)) and (not hasattr(obj, 'can_edit') or obj.can_edit()):
-                if parent:
-                    _app = get_metadata(parent.__class__, 'app_label')
-                    _cls = parent.__class__.__name__.lower()
-                    _related_field = find_field_by_name(obj.__class__, to).remote_field.get_accessor_name()
-                    edit_url = '/add/{}/{}/{}/{}/{}/'.format(_app, _cls, parent.pk, _related_field, obj.pk)
-                else:
-                    edit_url = '/add/{}/{}/{}/'.format(app, cls, obj.pk)
-                url_id = slugify(edit_url)
-                url_title = 'Editar'
-                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i></a>'.format(url_id, css, edit_url, url_title))
+        if edit and permissions.has_edit_permission(request, model) and (not hasattr(obj, 'can_edit') or obj.can_edit()):
+            edit_url = '/add/{}/{}/{}/'.format(app, cls, obj.pk)
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i></a>'
+            l.append(btn.format(slugify(edit_url), css, edit_url, 'Editar'))
 
-            if delete and permissions.has_delete_permission(request, type(obj)) and (not hasattr(obj, 'can_delete') or obj.can_delete()):
-                delete_url = '/delete/{}/{}/{}/'.format(app, cls, obj.pk)
-                url_id = slugify(delete_url)
-                url_title = 'Excluir'
-                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-trash-o fa-lg"></i></a>'.format(url_id, 'popup', delete_url, url_title))
+        if delete and permissions.has_delete_permission(request, model) and (not hasattr(obj, 'can_delete') or obj.can_delete()):
+            delete_url = '/delete/{}/{}/{}/'.format(app, cls, obj.pk)
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i></a>'
+            l.append(btn.format(slugify(delete_url), 'popup', delete_url, 'Excluir'))
 
-            tree_index_field = hasattr(obj, 'get_tree_index_field') and obj.get_tree_index_field() or None
-            if tree_index_field:
-                add_url = '/add/{}/{}/{}/{}/'.format(app, cls, obj.pk, cls)
-                url_id = slugify(view_url)
-                url_title = 'Adicionar'
-                l.append(' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-plus fa-lg"></i></a>'.format(
-                url_id, 'popup', add_url, url_title))
+        if tree_index_field:
+            add_url = '/add/{}/{}/{}/{}/'.format(app, cls, obj.pk, cls)
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-plus fa-lg"></i></a>'
+            l.append(btn.format(slugify(view_url), 'popup', add_url, 'Adicionar'))
 
     return mark_safe(''.join(l))
 

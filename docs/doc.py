@@ -121,10 +121,9 @@ class UseCase(object):
         click_str = []
         click_str_unicode = []
 
-        verbose_name = get_metadata(model, 'verbose_name')
         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
         list_shortcut = get_metadata(model, 'list_shortcut', [], iterable=True)
-        list_menu = get_metadata(model, 'list_menu')
+        menu = get_metadata(model, 'menu')
 
         if not loader.last_authenticated_role or True in list_shortcut or loader.last_authenticated_role in list_shortcut:
 
@@ -136,12 +135,12 @@ class UseCase(object):
             self._interactions.append(_('The system displays the listing page'))
 
             self._test_function_code.append('\t\tself.click_link(u\'{}\')'.format(verbose_name_plural))
+            return True
+        elif menu:
 
-        elif list_menu:
-
-            if type(list_menu) == tuple:
-                list_menu = list_menu[0]
-            for menu_item in list_menu.split('::'):
+            if type(menu) == tuple:
+                menu = menu[0]
+            for menu_item in menu.split('::'):
                 click_str.append('"{}"'.format(menu_item))
                 click_str_unicode.append("'{}'".format(menu_item))
 
@@ -149,40 +148,37 @@ class UseCase(object):
             self._interactions.append('{} {}'.format(interaction, ', '.join(click_str)))
 
             self._test_function_code.append('\t\tself.click_menu({})'.format(', '.join(click_str_unicode)))
-
-        else:
-            raise ValueError('There is no way to access the model "{}", please do one of the following things:\n '
-                             'i) Add the "list_menu" meta-attribute to model\n '
-                             'ii) Add the "list_shortcut" meta-attribute to model\n '
-                             'iii) Add the "composotion" field attribute to one of foreignkey fields of the model if '
-                             'it exists and the the relation on the foreignkey model'.format(verbose_name))
+            return True
+        return False
 
     def _view(self, model, recursive=False):
+        accessible = False
 
+        verbose_name = get_metadata(model, 'verbose_name')
         list_shortcut = get_metadata(model, 'list_shortcut', [])
-        list_menu = get_metadata(model, 'list_menu')
+        list_menu = get_metadata(model, 'menu')
 
         # if the model can be accessed by the menu or shortcut
-        if list_shortcut or list_menu:
-            self._find(model)
+        if (list_shortcut or list_menu) and self._find(model):
+            accessible = True
             self._interactions.append(_('The user locates the record and clicks the visualization icon'))
             self._interactions.append(_('The system displays the visualization page'))
             self._test_function_code.append("\t\tself.click_icon('{}')".format('Visualizar'))  # _('Visualize')
         else:
-            # the model can be accesses only by a parent model
+            # the model can be accessed only by a parent model
             for parent_model in loader.composition_relations:
                 if model in loader.composition_relations[parent_model]:
                     self._view(parent_model, True)
                     panel_title = None
                     if hasattr(parent_model, 'fieldsets'):
                         for fieldset in parent_model.fieldsets:
-                            if 'relations' in fieldset[1]:
-                                for item in fieldset[1]['relations']:
-                                    relation = getattr(parent_model, item)
-                                    if hasattr(relation, 'field') and relation.field.remote_field.model == model:
-                                        panel_title = fieldset[0]
-                                        break
+                            for item in fieldset[1].get('relations', ()) + fieldset[1].get('inlines', ()):
+                                relation = getattr(parent_model, item)
+                                if hasattr(relation, 'field') and relation.field.remote_field.related_model == model:
+                                    panel_title = fieldset[0]
+                                    break
                     if panel_title:
+                        accessible = True
                         if '::' in panel_title:
                             tab_name, panel_title = panel_title.split('::')
                             self._test_function_code.append("\t\tself.click_tab('{}')".format(tab_name))
@@ -197,6 +193,13 @@ class UseCase(object):
                         self._interactions.append(_('The user locates the record and clicks the visualization icon'))
                         self._interactions.append(_('The system displays the visualization page'))
                         self._test_function_code.append("\t\tself.click_icon('{}')".format('Visualizar'))  # _('Visualize')
+
+        if not accessible:
+            raise ValueError('There is no way to access the model "{}", please do one of the following things:\n '
+                             'i) Add the "list_menu" meta-attribute to the model\n '
+                             'ii) Add the "list_shortcut" meta-attribute to the model\n '
+                             'iii) Add the "composition" field attribute to one of foreignkey fields of the model if '
+                             'it exists and the the relation on the foreignkey model'.format(verbose_name))
 
     def _list(self, action):
         verbose_name_plural = action.replace(_('List'), '').strip()
@@ -453,7 +456,7 @@ class UseCase(object):
             # add the interactions recursively if the form inner forms
             for field, form, required, save in fieldset.get('one_to_one', ()):
                 self._fill_out(form, inline=field.label)
-            for field, one_to_many_forms in fieldset.get('one_to_many', ()):
+            for name, field, one_to_many_forms, one_to_many_count in fieldset.get('one_to_many', ()):
                 for form in one_to_many_forms[0:1]:
                     self._fill_out(form, inline=field.label)
 
@@ -646,22 +649,13 @@ class Documentation(object):
                 self.description = app_config.module.__doc__ and app_config.module.__doc__.strip() or None
 
         # load actors
-        organization_name = loader.organization_model and get_metadata(loader.organization_model, 'verbose_name') or None
-        unit_name = loader.unit_model and get_metadata(loader.unit_model, 'verbose_name') or None
+        self.organization_model = loader.organization_model
+        self.unit_model = loader.unit_model
 
         for model in loader.role_models:
-
             name = loader.role_models[model]['name']
+            scope = loader.role_models[model]['scope']
             description = utils.extract_documentation(model)
-            scope = ''
-            if organization_name:
-                scope = loader.role_models[model]['scope']
-                if scope == 'systemic':
-                    scope = _('Systemic')
-                elif scope == 'organization':
-                    scope = organization_name
-                elif scope == 'unit':
-                    scope = unit_name
             self.actors.append(Actor(name=name, scope=scope, description=description))
 
         # load usecases
@@ -679,7 +673,8 @@ class Documentation(object):
     def as_dict(self):
         return dict(description=self.description, actors=[actor.as_dict() for actor in self.actors],
                     usecases=[usecase.as_dict() for usecase in self.usecases],
-                    class_diagrams=[class_diagram.as_json() for class_diagram in self.class_diagrams])
+                    class_diagrams=[class_diagram.as_json() for class_diagram in self.class_diagrams],
+                    organization_model=self.organization_model, unit_model=self.unit_model)
 
     def as_json(self):
         return json.dumps(self.as_dict())
