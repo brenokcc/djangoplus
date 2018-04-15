@@ -237,7 +237,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='user',
             name='permission_mapping',
-            field=djangoplus.db.models.fields.TextField(default='{}', verbose_name='Mapeamento de Permiss\xe3o'),
+            field=djangoplus.db.models.fields.JsonField(null=True, verbose_name='Mapeamento de Permiss\xe3o'),
         ),
         migrations.AddField(
             model_name='user',

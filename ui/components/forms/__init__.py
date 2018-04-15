@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import copy
+import requests
+import json
+from django.conf import settings
 from django.db import transaction
 from django.template import loader
 from djangoplus.ui.components.forms.fields import *
@@ -34,6 +37,7 @@ class Form(django_forms.Form):
         self.submit_label = DEFAULT_SUBMIT_LABEL
         self.title = DEFAULT_FORM_TITLE
         self.is_inner = False
+        self.captcha = False
 
         if self.method.lower() == 'post':
             kwargs['data'] = request.POST or None
@@ -58,6 +62,7 @@ class Form(django_forms.Form):
             self.is_inner = hasattr(metaclass, 'is_inner') and metaclass.is_inner or False
             self.horizontal = hasattr(metaclass, 'horizontal') and metaclass.horizontal or False
             self.perm_or_group = hasattr(metaclass, 'perm_or_group') and iterable(metaclass.perm_or_group) or self.perm_or_group
+            self.captcha = hasattr(metaclass, 'captcha') and metaclass.captcha or False
 
             if hasattr(metaclass, 'submit_label'):
                 self.submit_label = metaclass.submit_label
@@ -254,6 +259,20 @@ class Form(django_forms.Form):
 
             self.configured_fieldsets.append(configured_fieldset)
         self.str_hidden = ''.join([str(x) for x in hidden_fields])
+
+    def clean(self, *args, **kwargs):
+        if self.request.POST and 'g-recaptcha-response' in self.request.POST:
+            captcha_response = self.request.POST.get('g-recaptcha-response')
+            captcha_url = 'https://www.google.com/recaptcha/api/siteverify'
+            captcha_secret = settings.CAPTCHA_SECRET
+            if captcha_response:
+                data = dict(secret=captcha_secret, response=captcha_response)
+                response = json.loads(requests.post(captcha_url, data).content)
+                if not response.get('success'):
+                    raise ValidationError('Confirme que você não é um robô.')
+            else:
+                raise ValidationError('Confirme que você não é um robô.')
+        return super(Form, self).clean(*args, **kwargs)
 
     def is_valid(self, *args, **kwargs):
         self.contextualize()

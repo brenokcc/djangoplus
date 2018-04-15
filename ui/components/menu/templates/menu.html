@@ -10,12 +10,6 @@
                 </div>
                 <div>
                     <p>Bem-vindo, <strong>{{ self.request.user.name }}</strong>.</p>
-                    {% if request.user.organization %}
-                        <p>{{ request.user.organization }}</p>
-                    {% endif %}
-                    {% if request.user.unit %}
-                        <p>{{ request.user.unit }}</p>
-                    {% endif %}
                 </div>
             </li>
             <li class="sidebar-search">

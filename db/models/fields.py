@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import json
 import sys
 import shutil
 from decimal import Decimal
@@ -70,6 +70,27 @@ class TextField(models.TextField, FieldPlus):
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.TextField)
         return super(TextField, self).formfield(**kwargs)
+
+
+class JsonField(TextField, FieldPlus):
+
+    def get_prep_value(self, value):
+        if not value:
+            return '{}'
+        if isinstance(value, dict):
+            return json.dumps(value)
+        else:
+            return value
+
+    def to_python(self, value):
+        if isinstance(value, dict):
+            return value
+        if not value:
+            return {}
+        return json.loads(value)
+
+    def from_db_value(self, value, *args, **kwargs):
+        return self.to_python(value)
 
 
 class FormattedTextField(models.TextField, FieldPlus):

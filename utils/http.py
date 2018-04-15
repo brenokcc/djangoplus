@@ -91,3 +91,10 @@ class ReportResponse(PdfResponse):
                        unit_or_organization=unit_or_organization)
         html = render_to_string([template], context, request=request)
         super(ReportResponse, self).__init__(html, landscape)
+
+
+class ComponentResponse(HttpResponse):
+    def __init__(self, component):
+        super(ComponentResponse, self).__init__(
+            render_to_string('default.html', context=dict(paginator=component), request=component.request)
+        )

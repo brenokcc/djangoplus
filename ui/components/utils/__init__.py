@@ -2,11 +2,14 @@
 import tempfile
 import qrcode
 import base64
+import json
 from decimal import Decimal
 from django.conf import settings
-from djangoplus.ui import Component
+from django.http import HttpResponse
+from djangoplus.ui import Component, ComponentHasResponseException
 from djangoplus.ui.components import forms
-from django.utils.safestring import mark_safe
+
+from djangoplus.utils.http import ComponentResponse
 from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
 
 
@@ -28,7 +31,27 @@ class Chart(Component):
         self.title = title
         self.color_index = 0
         self.display = False
+        self.clickable = False
 
+    def load(self, queryset_statistics):
+
+        if self.request and 'uuid' in self.request.GET and self.request.GET['uuid'] == self.title:
+            i, j = self.request.GET['position'].split('x')
+            qs = queryset_statistics.querysets[int(i)][int(j)]
+            title = get_metadata(qs.model, 'verbose_name_plural')
+            component = ModelTable(self.request, title, qs)
+            raise ComponentHasResponseException(ComponentResponse(component))
+
+        for group in queryset_statistics.groups:
+            self.groups.append(group)
+        for label in queryset_statistics.labels:
+            self.labels.append(label)
+        for serie in queryset_statistics.series:
+            self.series.append(serie)
+
+        self.clickable = self.request is not None
+
+    def __str__(self):
         for i, serie in enumerate(self.series):
             for j, valor in enumerate(serie):
                 if type(valor) == Decimal:
@@ -41,8 +64,6 @@ class Chart(Component):
             self.colors.append(color)
         for i in range(len(self.colors), 16):
             self.colors.append('#FFFFFF')
-
-    def __str__(self):
         return self.render('chart.html')
 
     def get_box_series(self):
@@ -105,6 +126,40 @@ class Timeline(Component):
     def __str__(self):
         self.width = str(100.0/len(self.items))
         return self.render('timeline.html')
+
+
+class RoleSelector(Component):
+
+    def __init__(self, request):
+        super(RoleSelector, self).__init__(request)
+        self.groups = []
+        if request.user.is_authenticated:
+            self.scope = json.dumps(request.user.permission_mapping.get('scope', []))
+            from djangoplus.admin.models import Group, Role
+            for group in Group.objects.filter(role__user=request.user).distinct():
+                group.scopes = 0
+                group.roles = Role.objects.filter(group=group, user=request.user).distinct()
+                for role in group.roles:
+                    if role.units.exists():
+                        group.scopes += role.units.count()
+                    elif role.organizations.exists():
+                        group.scopes += role.organizations.count()
+                self.groups.append(group)
+            self.check_request()
+
+    def check_request(self):
+        if 'data[]' in self.request.GET:
+            values = []
+            for value in self.request.GET.getlist('data[]'):
+                if value:
+                    values.append('[{}]'.format(value))
+            scope = json.loads('[{}]'.format(', '.join(values)))
+            self.request.user.permission_mapping = json.dumps(dict(scope=scope))
+            self.request.user.save()
+            raise ComponentHasResponseException(HttpResponse())
+
+    def __str__(self):
+        return self.render('role_selector.html')
 
 
 class QrCode(Component):
@@ -204,10 +259,14 @@ class StatisticsTable(Table):
         self.symbol = symbol
 
     def as_chart(self):
+
         if not self.queryset_statistics.groups:
-            return Chart(self.request, self.queryset_statistics.labels, self.queryset_statistics.series, symbol=self.symbol, title=self.title).donut()
+            chart = Chart(self.request, [], [], symbol=self.symbol, title=self.title)
+            chart.load(self.queryset_statistics)
+            return chart.donut()
         else:
-            chart = Chart(self.request, self.queryset_statistics.groups, self.queryset_statistics.series, self.queryset_statistics.labels, symbol=self.symbol, title=self.title)
+            chart = Chart(self.request, [], [], [], symbol=self.symbol, title=self.title)
+            chart.load(self.queryset_statistics)
             if self.queryset_statistics.labels and self.queryset_statistics.labels[0] == 'Jan':
                 return chart.line()
             else:

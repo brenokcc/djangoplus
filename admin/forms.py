@@ -48,8 +48,9 @@ class LoginForm(forms.Form):
         self.unit = unit
 
     def clean(self):
-        username = self.cleaned_data.get('username')
-        password = self.cleaned_data.get('password')
+        cleaned_data = super(LoginForm, self).clean()
+        username = cleaned_data.get('username')
+        password = cleaned_data.get('password')
         if not User.objects.filter(username=username).exists():
             raise forms.ValidationError('Usuário não cadastrado.')
         user = auth.authenticate(username=username, password=password)
@@ -59,12 +60,12 @@ class LoginForm(forms.Form):
                 user.organization = None
                 user.unit = None
                 if self.scope == LoginForm.ORGANIZATION:
-                    user.organization = self.cleaned_data.get('login_scope', self.organization)
+                    user.organization = cleaned_data.get('login_scope', self.organization)
                     is_organization_user = user.role_set.filter(organizations__in=(user.organization, 0)).exists()
                     if not is_organization_user:
                         raise forms.ValidationError('{} não é usuário de {}'.format(username, user.organization))
                 elif self.scope == LoginForm.UNIT:
-                    user.unit = self.cleaned_data.get('login_scope', self.unit)
+                    user.unit = cleaned_data.get('login_scope', self.unit)
                     is_unit_user = user.role_set.filter(units__in=(user.unit, 0)).exists()
                     is_organization_user = loader.organization_model and user.role_set.filter(organizations__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:
@@ -84,7 +85,7 @@ class LoginForm(forms.Form):
                         self.request.session.save()
                 user.save()
                 auth.login(self.request, user)
-                return self.cleaned_data
+                return cleaned_data
             else:
                 raise forms.ValidationError('Usuário inativo.')
         else:
@@ -149,6 +150,7 @@ class RegisterForm(forms.Form):
         title = 'Novo Usuário'
         icon = 'fa-user'
         submit_label = 'Cadastrar'
+        captcha = True
 
     fieldsets = (
         ('Dados Gerais', {'fields': ('name', 'email')}),
@@ -212,13 +214,17 @@ class ChangePasswordForm(forms.ModelForm):
 class RecoverPassowordForm(forms.Form):
     email = forms.EmailField(label='E-mail')
 
+    class Meta:
+        captcha = True
+
     def clean(self):
+        cleaned_data = super(RecoverPassowordForm, self).clean()
         qs = User.objects.filter(
-            email=self.cleaned_data['email']
+            email=cleaned_data['email']
         )
         if qs.exists():
             qs[0].send_access_invitation()
-            return self.cleaned_data
+            return cleaned_data
         else:
             raise forms.ValidationError('Usuário não encontrado')
 

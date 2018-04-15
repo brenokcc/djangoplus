@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-
-import copy
 from django.conf import settings
 from djangoplus.cache import loader
 from djangoplus.ui.components.menu import Menu
 from djangoplus.admin.models import Settings
+from djangoplus.ui.components.utils import RoleSelector
 from djangoplus.utils import permissions
 from djangoplus.utils.metadata import get_metadata
 
@@ -38,6 +37,7 @@ def context_processor(request):
                         alerts.append(item)
 
     return dict(
+        role_selector=RoleSelector(request),
         username_mask=settings.USERNAME_MASK,
         js_files=settings.EXTRA_JS,
         css_files=settings.EXTRA_CSS,

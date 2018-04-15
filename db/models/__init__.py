@@ -38,13 +38,17 @@ class QueryStatistics(object):
         self.labels = labels
         self.groups = groups
         self.series = []
+        self.querysets = []
         self.xtotal = []
         self.ytotal = []
 
         for serie in series:
             self.add(serie)
 
-    def add(self, serie, avg=False):
+    def add(self, data, avg=False):
+        qss = [value[0] for value in data]
+        serie = [value[1] for value in data]
+        self.querysets.append(qss)
         self.series.append(serie)
         if avg:
             self.xtotal.append(sum(serie)/len(serie))
@@ -63,12 +67,12 @@ class QueryStatistics(object):
     def __str__(self):
         return '{}\n{}\n{}'.format(self.labels, self.series, self.groups)
 
-    def as_table(self, title=None, symbol=None):
+    def as_table(self, title=None, symbol=None, request=None):
         from djangoplus.ui.components.utils import StatisticsTable
-        return StatisticsTable(None, self.title, self, symbol=symbol)
+        return StatisticsTable(request, self.title, self, symbol=symbol)
 
-    def as_chart(self, title=None, symbol=None):
-        return self.as_table(title=title, symbol=symbol).as_chart()
+    def as_chart(self, title=None, symbol=None, request=None):
+        return self.as_table(title=title, symbol=symbol, request=request).as_chart()
 
 
 class ModelGeneratorWrapper:
@@ -159,7 +163,7 @@ class QuerySet(query.QuerySet):
                     serie = []
                     for i, month in enumerate(months):
                         qs = self.filter(**{'{}__month'.format(vertical_key): i+1, horizontal_key: iterator.pk})
-                        serie.append(qs.count())
+                        serie.append((qs, qs.count()))
                     statistics.add(serie)
                 return statistics
             else:
@@ -171,15 +175,18 @@ class QuerySet(query.QuerySet):
                         total = 0
                         mode, attr = aggregate
                         if mode == 'sum':
-                            total = self.filter(**{'{}__month'.format(vertical_key): i+1}).aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
+                            qs = self.filter(**{'{}__month'.format(vertical_key): i+1})
+                            total = qs.aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                         elif mode == 'avg':
-                            total = self.filter(**{'{}__month'.format(vertical_key): i+1}).aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
+                            qs = self.filter(**{'{}__month'.format(vertical_key): i+1})
+                            total = qs.aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                         aggregation_field = get_field(self.model, attr)
                         if type(aggregation_field).__name__ in ('DecimalField',):
                             total = Decimal(total)
                     else:
-                        total = self.filter(**{'{}__month'.format(vertical_key): i+1}).count()
-                    serie.append(total)
+                        qs = self.filter(**{'{}__month'.format(vertical_key): i+1})
+                        total = qs.count()
+                    serie.append((qs, total))
                 statistics.add(serie)
                 return statistics
         else:
@@ -208,19 +215,20 @@ class QuerySet(query.QuerySet):
                     for horizontal_choice in horizontal_choices:
                         value = 0
                         lookup = {vertical_key: vertical_choice[0], horizontal_key: horizontal_choice[0]}
+                        qs = self.filter(**lookup)
                         if aggregate:
                             mode, attr = aggregate
                             if mode == 'sum':
-                                value = self.filter(**lookup).aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
+                                value = qs.aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                             elif mode == 'avg':
                                 avg = True
-                                value = self.filter(**lookup).aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
+                                value = qs.aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                             aggregation_field = get_field(self.model, attr)
                             if type(aggregation_field).__name__ in ('DecimalField',):
                                 value = Decimal(value)
                         else:
-                            value = self.filter(**lookup).values('id').count()
-                        serie.append(value)
+                            value = qs.values('id').count()
+                        serie.append((qs, value))
                     statistics.add(serie, avg)
                 return statistics
             else:
@@ -231,19 +239,20 @@ class QuerySet(query.QuerySet):
                 for vertical_choice in vertical_choices:
                     lookup = {vertical_key: vertical_choice[0]}
                     value = 0
+                    qs = self.filter(**lookup)
                     if aggregate:
                         mode, attr = aggregate
                         if mode == 'sum':
-                            value = self.filter(**lookup).aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
+                            value = qs.aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                         elif mode == 'avg':
                             avg = True
-                            value = self.filter(**lookup).aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
+                            value = qs.aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                         aggregation_field = get_field(self.model, attr)
                         if type(aggregation_field).__name__ in ('DecimalField',):
                             value = Decimal(value)
                     else:
-                        value = self.filter(**lookup).count()
-                    serie.append(value)
+                        value = qs.count()
+                    serie.append((qs, value))
                 statistics.add(serie, avg)
                 return statistics
 

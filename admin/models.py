@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
 import sys
 import json
 import uuid
+from djangoplus.utils.aescipher import encrypt
 from djangoplus.utils.mail import send_mail
 from djangoplus.db import models
 from django.conf import settings
@@ -189,7 +189,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     active = models.BooleanField(verbose_name='Ativo?', default=True, filter=True)
     photo = models.ImageField(upload_to='profiles', null=True, blank=True, default='', verbose_name='Foto', exclude=True)
 
-    permission_mapping = models.TextField(verbose_name='Mapeamento de Permissão', default='{}', exclude=True, display=False)
+    permission_mapping = models.JsonField(verbose_name='Mapeamento de Permissão', exclude=True, display=False)
     organization = models.ForeignKey(Organization, verbose_name='Organização', null=True, blank=True, display=False)
     unit = models.ForeignKey(Unit, verbose_name='Unidade', null=True, blank=True, display=False)
 
@@ -209,6 +209,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         add_form = 'UserForm'
         can_admin = 'Gerenciador de Usuários'
         icon = 'fa-user'
+
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         if not self.password:
@@ -234,7 +237,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         message = '''Você está cadastro no sistema <b>{}</b>.
             Para (re)definir sua senha de acesso, clique no botão abaixo.
         '''.format(project_name)
-        actions = [('Acessar agora!', '/admin/password/{}/{}/'.format(self.pk, self.password.encode('hex')))]
+        actions = [('Acessar agora!', '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
         send_mail(subject, message, self.email, actions=actions)
 
     def units(self, group_name=None):
@@ -251,11 +254,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_permission_mapping(self, model, obj=None):
         from djangoplus.cache import loader
-        import json
-        permission_mapping = json.loads(self.permission_mapping or '{}')
+        scope = self.permission_mapping.get('scope', [])
         permission_mapping_key = obj and '{}:{}'.format(model.__name__, type(obj).__name__) or model.__name__
-        if not settings.DEBUG and permission_mapping_key in permission_mapping:
-            return permission_mapping[permission_mapping_key]
+        if not settings.DEBUG and permission_mapping_key in self.permission_mapping:
+            return self.permission_mapping[permission_mapping_key]
 
         organization_lookups = []
         unit_lookups = []
@@ -303,32 +305,52 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         for organization_lookup in organization_lookups:
             if loader.unit_model:
-                if organization_lookup == 'id':
-                    unit_lookup = loader.unit_model.__name__.lower()
-                else:
-                    unit_lookup = '{}__{}'.format(organization_lookup, loader.unit_model.__name__.lower())
-                if unit_lookup not in unit_lookups and not hasattr(model, 'unit_ptr'):
-                    unit_lookups.append(unit_lookup)
+                for field in get_metadata(loader.organization_model, 'fields'):
+                    if field.remote_field and hasattr(field.remote_field.model, 'unit_ptr'):
+                        if organization_lookup == 'id':
+                            unit_lookup = field.name
+                        else:
+                            unit_lookup = '{}__{}'.format(organization_lookup, field.name)
+                        if unit_lookup not in unit_lookups and not hasattr(model, 'unit_ptr'):
+                            unit_lookups.append(unit_lookup)
+                        break
 
         for unit_lookup in unit_lookups:
             if loader.organization_model:
-                if unit_lookup == 'id':
-                    organization_lookup = loader.organization_model.__name__.lower()
-                else:
-                    organization_lookup = '{}__{}'.format(unit_lookup, loader.organization_model.__name__.lower())
-                if organization_lookup not in organization_lookups and not hasattr(model, 'organization_ptr'):
-                    organization_lookups.append(organization_lookup)
+                for field in get_metadata(loader.unit_model, 'fields'):
+                    if field.remote_field and hasattr(field.remote_field.model, 'organization_ptr'):
+                        if unit_lookup == 'id':
+                            organization_lookup = field.name
+                        else:
+                            organization_lookup = '{}__{}'.format(unit_lookup, field.name)
+                        if organization_lookup not in organization_lookups and not hasattr(model, 'organization_ptr'):
+                            organization_lookups.append(organization_lookup)
 
         groups = dict()
+
+        def should_add_role(__group_name, __organization_id, __unit_id):
+            if scope:
+                for _group_name, _organization_id, _unit_id in scope:
+                    if _group_name == __group_name:
+                        if unit_id:
+                            if _unit_id == __unit_id:
+                                return True
+                        else:
+                            if _organization_id == __organization_id:
+                                return True
+                return False
+            return True
+
         for group_name, organization_id, unit_id in self.role_set.values_list('group__name', 'organizations', 'units'):
+            add = should_add_role(group_name, organization_id, unit_id)
             if group_name not in groups:
                 groups[group_name] = dict(username_lookups=[], organization_ids=[], unit_ids=[])
             if group_name in role_lookups:
                 groups[group_name]['username_lookups'].append(role_lookups[group_name])
             if organization_id and not self.unit_id and (organization_id == self.organization_id or not self.organization_id):
-                groups[group_name]['organization_ids'].append(organization_id)
+                groups[group_name]['organization_ids'].append(not add and -1 or organization_id)
             if self.unit_id or unit_id:
-                groups[group_name]['unit_ids'].append(self.unit_id or unit_id)
+                groups[group_name]['unit_ids'].append(not add and -1 or (self.unit_id or unit_id))
 
         if model in loader.permissions_by_scope:
             for group_name in groups:
@@ -438,11 +460,10 @@ class User(AbstractBaseUser, PermissionsMixin):
                 if loader.permissions_by_scope[model].get('{}_by_role'.format(codename)) and not role_lookups:
                     raise Exception('A "lookup" meta-attribute must point to a role model in {}'.format(model))
 
-        permission_mapping[permission_mapping_key] = lookups
-        self.permission_mapping = json.dumps(permission_mapping)
+        self.permission_mapping[permission_mapping_key] = lookups
         self.save()
 
-        return permission_mapping[permission_mapping_key]
+        return self.permission_mapping[permission_mapping_key]
 
     # gieve a set of group or permission names, this method returns the groups the user belongs to
     def find_groups(self, perm_or_group, exclude=None):

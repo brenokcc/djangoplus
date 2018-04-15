@@ -79,7 +79,7 @@ def format_value(value, html=True):
         return value.strftime('%d/%m/%Y %H:%M')
     elif type(value).__name__ in ('QuerySet',) or type(value) == list:
         if html:
-            l = ['<ul>']
+            l = ['<ul style="display: inline-block; padding-left:20px">']
             for obj in value:
                 l.append('<li style="list-style-type:square">{}</li>'.format(obj))
             l.append('</ul>')

@@ -270,7 +270,7 @@ def check_role(self, saving=True):
                         organizations = value.all()
                     else:
                         units = value.all()
-                else:
+                elif value:
                     if isinstance(value, Organization):
                         organizations = value,
                     else:
@@ -281,9 +281,10 @@ def check_role(self, saving=True):
             if units and not organizations:
                 organizations = []
                 for unit in units:
-                    organization = unit.get_organization()
-                    if organization:
-                        organizations.append(organization)
+                    if unit:
+                        organization = unit.get_organization()
+                        if organization:
+                            organizations.append(organization)
 
             if saving:
                 qs = User.objects.filter(username=username)

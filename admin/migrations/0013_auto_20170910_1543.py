@@ -48,6 +48,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='permission_mapping',
-            field=djangoplus.db.models.fields.TextField(default=b'{}', verbose_name='Mapeamento de Permiss\xe3o'),
+            field=djangoplus.db.models.fields.JsonField(verbose_name='Mapeamento de Permiss\xe3o', null=True),
         ),
     ]

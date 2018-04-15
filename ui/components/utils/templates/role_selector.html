@@ -1,0 +1,65 @@
+{% for group in self.groups %}
+    <div>
+        {% if not group.scopes == 1 %}
+        <input  id="{{ group }}Checkbox" class="roles" type="checkbox" value='{% if not group.scopes %}"{{ group }}",null,null{% endif %}' onclick="configureCheckBoxes(this)"/>
+        <span class="custom-checkbox"></span>
+        <label style="display: initial">{{ group }}</label><br>
+        {% endif %}
+        <div id="{{ group }}Checkboxes">
+            {% for role in group.roles %}
+                {% if role.units.exists %}
+                    {% for unit in role.units.all %}
+                        <div style="{% if not group.scopes == 1 %}padding-left: 20px{% endif %}">
+                            <input class="roles" type="checkbox" value='"{{ group }}",null,{{ unit.pk }}' onchange="configureCheckBox('{{ group }}')"/>
+                            <span class="custom-checkbox"></span>
+                            <label style="display: initial">{% if group.scopes == 1 %}{{ group }} - {{ unit }}{% else %}{{ unit }}{% endif %}</label>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    {% for organization in role.organizations.all %}
+                        <div style="{% if not group.scopes == 1 %}padding-left: 20px{% endif %}">
+                            <input class="roles" type="checkbox" value='"{{ group }}",{{ organization.pk }},null' onchange="configureCheckBox('{{ group }}')"/>
+                            <span class="custom-checkbox"></span>
+                            <label style="display: initial">{% if group.scopes == 1 %}{{ group }} - {{ organization }}{% else %}{{ organization }}{% endif %}</label>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+{% endfor %}
+<div style="margin: 10px; text-align: center"><button id="reloadScopeButton" class="btn btn-default" onclick="reloadScope()">Aplicar</button></div>
+<script>
+    function reloadScope(){
+        var data = $('.roles:checked').map(function(){return this.value}).get()
+        $.get(document.location.href, {data: data}, function(){loadUrl(document.location.href)});
+    }
+    function configureCheckBox(group){
+        $('#'+group+'Checkbox').prop('checked', $('#'+group+'Checkboxes').find('.roles:checked').length>0);
+        configureReloadScopeButton()
+    }
+    function configureCheckBoxes(checkbox){
+        $(checkbox).parent().find('.roles').prop('checked', checkbox.checked);
+        configureReloadScopeButton()
+    }
+    function configureReloadScopeButton(){
+        if($('.roles:checked').length > 0) $('#reloadScopeButton').removeClass('disabled');
+        else $('#reloadScopeButton').addClass('disabled')
+    }
+    function initializeRoleCheckboxes() {
+        var scope = {{ self.scope|safe }};
+        if (scope.length) {
+            $.each($('.roles'), function (i, el) {
+                $.each(scope, function (j, val) {
+                    if(String(eval('[' + el.value + ']')) == String(val)){
+                       $(el).prop('checked', true).trigger('change');
+                    }
+                });
+            });
+        } else {
+            $('.roles').prop('checked', true);
+        }
+        configureReloadScopeButton();
+    }
+    initializeRoleCheckboxes();
+</script>

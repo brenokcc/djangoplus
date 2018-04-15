@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
 import re
 import json
 import qrcode
 import datetime
 from decimal import Decimal
 from django import template
+from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.template.loader import render_to_string
 from djangoplus.utils import permissions, http
@@ -92,14 +92,24 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css='ajax'):
         l.append(btn.format(slugify(view_url), 'ajax', view_url, 'Visualizar'))
 
         if relation.edit_url:
-            edit_url = relation.edit_url.format(obj.pk)
-            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i></a>'
-            l.append(btn.format(slugify(edit_url), 'popup', edit_url, 'Editar'))
+            if relation.is_one_to_many or relation.is_many_to_many:
+                has_edit_permission = permissions.has_edit_permission(request, relation.model)
+            else:
+                has_edit_permission = permissions.has_edit_permission(request, relation.relation_model)
+            if has_edit_permission and (not hasattr(obj, 'can_edit') or obj.can_edit()):
+                edit_url = relation.edit_url.format(obj.pk)
+                btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i></a>'
+                l.append(btn.format(slugify(edit_url), 'popup', edit_url, 'Editar'))
 
         if relation.delete_url:
-            delete_url = relation.delete_url.format(obj.pk)
-            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i></a>'
-            l.append(btn.format(slugify(delete_url), 'popup', delete_url, 'Excluir'))
+            if relation.is_one_to_many or relation.is_many_to_many:
+                has_delete_permission = permissions.has_delete_permission(request, relation.model)
+            else:
+                has_delete_permission = permissions.has_delete_permission(request, relation.relation_model)
+            if has_delete_permission and (not hasattr(obj, 'can_delete') or obj.can_delete()):
+                delete_url = relation.delete_url.format(obj.pk)
+                btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i></a>'
+                l.append(btn.format(slugify(delete_url), 'popup', delete_url, 'Excluir'))
     else:
         model = type(obj)
         cls = model.__name__.lower()
@@ -289,3 +299,14 @@ def qrcode64(text):
     image.save(buffer, format="JPEG")
     img_str = base64.b64encode(open(file_path, 'rb').read()).decode('utf-8')
     return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))
+
+
+@register.simple_tag()
+def captcha(form):
+    return form.captcha and mark_safe('''
+        <div align="center">
+            <script src="https://www.google.com/recaptcha/api.js?hl={}"></script>
+            <div style="width: 100%" class="g-recaptcha" data-sitekey="{}"></div>
+        </div>
+        <hr/>
+    '''.format(settings.LANGUAGE_CODE, settings.CAPTCHA_KEY)) or ''

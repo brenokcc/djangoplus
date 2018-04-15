@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
 import os
 import json
 import urllib.request, urllib.error, urllib.parse
 from djangoplus.cache import loader
 from django.contrib import auth
+from djangoplus.utils.aescipher import decrypt
 from django.http.response import HttpResponse
 from djangoplus.decorators.views import view
 from djangoplus.ui.components.breadcrumbs import httprr
@@ -54,7 +54,7 @@ def error(request):
 @view('Alteração de Senha', login_required=False, template='login/password.html')
 def password(request, pk, token):
     title = 'Alterar Senha'
-    user = User.objects.get(pk=pk)
+    user = User.objects.get(pk=pk, password=decrypt(token))
     form = ChangePasswordForm(request, instance=user)
     if form.is_valid():
         form.save()
@@ -165,7 +165,6 @@ def toggle_menu(request):
         request.session['hidden_menu'] = True
     request.session.save()
     return HttpResponse()
-
 
 
 

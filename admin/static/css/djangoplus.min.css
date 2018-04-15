@@ -5,6 +5,7 @@
 .copyright{
     margin: 20px;
 }
+
 /* general */
 aside,
 #page-wrapper {
@@ -125,6 +126,7 @@ header .navbar-header a:hover{
 .navbar-top-links .dropdown-user {
     right: 0;
     left: auto;
+    padding: 0;
 }
 
 .sidebar .sidebar-nav.navbar-collapse {
@@ -511,6 +513,7 @@ li {
 .panel.panel-default .panel-heading {
     font-size: 130%;
     padding: 10px 20px;
+    background-color: white;
 }
 
 .panel.info-panel label {

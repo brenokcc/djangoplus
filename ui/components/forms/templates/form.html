@@ -186,6 +186,9 @@
 {% endfor %}
 
 {% if not self.partial %}
+
+    {% captcha self %}
+
     <div class="seperator"></div>
     {% if not self.request.GET.popup %}
         <div class="pull-right">

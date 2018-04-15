@@ -2,7 +2,7 @@
 {% if self.as_pdf %}{% else %}
 {% if self.type == "box" %}
 <div class="panel panel-default">
-    <div class="panel-heading bg-info">
+    <div class="panel-heading">
         <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
     </div>
     <div class="panel-body">
@@ -35,7 +35,7 @@
     {% include "chart_colors.css" %}
 </style>
 <div class="panel panel-default">
-    <div class="panel-heading bg-info">
+    <div class="panel-heading">
         <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
     </div>
     <div class="panel-body">
@@ -74,7 +74,7 @@
                 if(groups{{ self.id }}.length > 0){
                     meta = groups{{ self.id }}[i] + ': ' + formated;
                 }
-                serie.push({value: value, meta: meta})
+                serie.push({value: value, meta: meta+'::'+i+'x'+j})
                 if (value < low{{ self.id }}) low{{ self.id }} = value;
                 if (heigh{{ self.id }} == null || value > heigh{{ self.id }}) heigh{{ self.id }} = value;
             }
@@ -148,6 +148,16 @@
             });
         }
     });
+    {% if self.clickable %}
+        $('.ct-chart{{ self.id }}').css('cursor', 'pointer');
+        $('.ct-chart{{ self.id }}').click(function(e){
+            var position = e.target.getAttribute('ct:meta').split('::')[1];
+            var url = document.location.href;
+            if(url.indexOf('?')>0) url+='&uuid=1&position='+position;
+            else url+='?uuid={{ self.title }}&position='+position;
+            popup(url, false)
+        });
+    {% endif %}
 
 </script>
 {% endif %}

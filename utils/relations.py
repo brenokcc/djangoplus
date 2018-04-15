@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from djangoplus.utils import permissions
 from djangoplus.ui.components.panel import ModelPanel
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.utils.metadata import get_fieldsets, get_metadata
@@ -151,10 +152,10 @@ class Relation(object):
             if self.view_url:
                 label = 'Detalhar {}'.format(verbose_name)
                 component.drop_down.add_action(label, self.view_url, 'popup', 'fa-eye', category=label)
-            if self.add_url:
+            if self.add_url and permissions.has_edit_permission(request, self.model):
                 label = 'Atualizar {}'.format(verbose_name)
                 component.drop_down.add_action(label, self.add_url, 'popup', 'fa-edit', category=label)
-            if self.delete_url:
+            if self.delete_url and permissions.has_edit_permission(request, self.model):
                 label = 'Excluir {}'.format(verbose_name)
                 component.drop_down.add_action(label, self.delete_url, 'popup', 'fa-close', category=label)
         else:
@@ -169,41 +170,47 @@ class Relation(object):
                     inlines.append(inline)
                 if self.relation_name in fieldset_relations or self.relation_name in fieldset_inlines or self.relation_name in fieldset_fields:
                     if len(fieldset_relations) + len(fieldset_inlines) + len(fieldset_fields) == 1:
-                        title = fieldset[0]
+                        title = fieldset[0].split('::')[-1]
 
             component = Paginator(request, self.relation_value, title, relation=self, list_subsets=[])
 
-            if self.add_url:
-                add_label = get_metadata(self.relation_model, 'add_label')
-                label = add_label or 'Adicionar {}'.format(verbose_name)
-                component.add_action(label, self.add_url, 'popup', 'fa-plus')
+            if self.is_one_to_many or self.is_many_to_many:
+                has_add_permission = permissions.has_add_permission(request, self.model)
+            else:
+                has_add_permission = permissions.has_add_permission(request, self.relation_model)
 
-            if self.relation_name in inlines:
-                instance = self.relation_model()
-                setattr(instance, self.hidden_field_name, self.instance)
-                form_name = get_metadata(self.relation_model, 'add_form')
-                if form_name:
-                    fromlist = get_metadata(self.relation_model, 'app_label')
-                    forms_module = __import__('{}.forms'.format(fromlist), fromlist=list(map(str, [fromlist])))
-                    Form = getattr(forms_module, form_name)
+            if self.add_url and has_add_permission:
+                if self.relation_name in inlines:
+                    instance = self.relation_model()
+                    setattr(instance, self.hidden_field_name, self.instance)
+                    if not hasattr(instance, 'can_add') or instance.can_add():
+                        form_name = get_metadata(self.relation_model, 'add_form')
+                        if form_name:
+                            fromlist = get_metadata(self.relation_model, 'app_label')
+                            forms_module = __import__('{}.forms'.format(fromlist), fromlist=list(map(str, [fromlist])))
+                            Form = getattr(forms_module, form_name)
+                        else:
+                            class Form(ModelForm):
+                                class Meta:
+                                    model = self.relation_model
+                                    fields = get_metadata(self.relation_model, 'form_fields', '__all__')
+                                    exclude = get_metadata(self.relation_model, 'exclude_fields', ())
+                                    submit_label = 'Adicionar'
+                                    title = 'Adicionar {}'.format(get_metadata(self.relation_model, 'verbose_name'))
+                        form = Form(request, instance=instance, inline=True)
+                        if self.hidden_field_name in form.fields:
+                            del (form.fields[self.hidden_field_name])
+                        component.form = form
+                        if form.is_valid():
+                            try:
+                                form.save()
+                                component.message = 'Ação realizada com sucesso'
+                            except ValidationError as e:
+                                form.add_error(None, str(e.message))
                 else:
-                    class Form(ModelForm):
-                        class Meta:
-                            model = self.relation_model
-                            fields = get_metadata(self.relation_model, 'form_fields', '__all__')
-                            exclude = get_metadata(self.relation_model, 'exclude_fields', ())
-                            submit_label = 'Adicionar'
-                            title = 'Adicionar {}'.format(get_metadata(self.relation_model, 'verbose_name'))
-                form = Form(request, instance=instance, inline=True)
-                if self.hidden_field_name in form.fields:
-                    del (form.fields[self.hidden_field_name])
-                component.form = form
-                if form.is_valid():
-                    try:
-                        form.save()
-                        component.message = 'Ação realizada com sucesso'
-                    except ValidationError as e:
-                        form.add_error(None, str(e.message))
+                    add_label = get_metadata(self.relation_model, 'add_label')
+                    label = add_label or 'Adicionar {}'.format(verbose_name)
+                    component.add_action(label, self.add_url, 'popup', 'fa-plus')
         return component
 
     def debug(self):
