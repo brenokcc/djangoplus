@@ -137,7 +137,7 @@
                                 </ul>
                             </div>
                     </div>
-                    {% if role_selector.groups %}
+                    {% if role_selector.groups|length > 1 %}
                     <div class="padding-md" style="min-height:150px; border-top: 1px solid #e5e5e5">
                         <h4 align="center">Vínculos</h4>
                         {{ role_selector }}
