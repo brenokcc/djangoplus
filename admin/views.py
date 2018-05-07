@@ -7,7 +7,7 @@ from django.contrib import auth
 from djangoplus.utils.aescipher import decrypt
 from django.http.response import HttpResponse
 from djangoplus.decorators.views import view
-from djangoplus.ui.components.breadcrumbs import httprr
+from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.admin.models import User, Unit, Organization
 from djangoplus.ui.components.panel import DashboardPanel
 from djangoplus.admin.forms import ProfileForm, ChangePasswordForm, SettingsForm, LoginForm, RecoverPassowordForm

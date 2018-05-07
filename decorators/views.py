@@ -23,8 +23,8 @@ def view(title, can_view=None, icon=None, menu=None, login_required=True, style=
                 f_return['title'] = title
             if type(f_return) == dict:
                 for key in f_return:
-                    if hasattr(f_return[key], 'check_http_response'):
-                        f_return[key].check_http_response()
+                    if hasattr(f_return[key], 'process_request'):
+                        f_return[key].process_request()
                 if 'pdf' in style:
                     request.GET._mutable = True
                     request.GET['pdf'] = 1

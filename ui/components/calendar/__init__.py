@@ -2,17 +2,16 @@ import datetime
 
 from djangoplus.utils.permissions import has_add_permission
 
-from djangoplus.ui import Component
+from djangoplus.ui import RequestComponent
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.utils.serialization import dumps_qs_query
 
 
-class Calendar(Component):
+class Calendar(RequestComponent):
     def __init__(self, request, title, url=None):
-        super(Calendar, self).__init__(request)
+        super(Calendar, self).__init__(title, request)
         self.title = title
         self.items = []
-        self.id = hash(self)
         self.lazy = False
         self.initial_date = None
         self.url = url
@@ -22,9 +21,6 @@ class Calendar(Component):
     def add(self, description, start, end=None, url=None, allday=True):
         item = dict(description=description, start=start, end=end, allday=allday)
         self.items.append(item)
-
-    def __str__(self):
-        return self.render('calendar.html')
     
     def set_initial_date(self, initial_date):
         self.initial_date = initial_date

@@ -1,37 +1,31 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
-from djangoplus.ui import Component
+from djangoplus.ui import RequestComponent
 from django.utils.text import slugify
-from djangoplus.ui.components.forms import ModelForm, ValidationError
 from djangoplus.utils import permissions
-from djangoplus.ui.components.paginator import Paginator
-from djangoplus.ui.components.dropdown import ModelDropDown, GroupDropDown
 from django.template.loader import render_to_string
-from djangoplus.utils.metadata import get_metadata, list_related_objects, get_fieldsets,\
-    find_field_by_name, get_fiendly_name, check_condition, is_one_to_one, is_one_to_many, is_many_to_many, \
-    is_many_to_one, should_filter_or_display
+from djangoplus.ui.components.paginator import Paginator
+from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
+from djangoplus.utils.metadata import get_metadata, get_fieldsets, find_field_by_name, get_fiendly_name, \
+    check_condition, is_one_to_one, is_many_to_one, should_filter_or_display
 
 
-class Panel(Component):
+class Panel(RequestComponent):
 
     def __init__(self, request, title=None, text=None, icon=None):
-        super(Panel, self).__init__(request)
+        super(Panel, self).__init__(title, request)
         self.title = title
         self.text = text
         self.labels = []
         self.icon = icon
 
-    def __str__(self):
-        return self.render('panel.html')
 
-
-class ModelPanel(Component):
+class ModelPanel(RequestComponent):
     def __init__(self, request, obj, current_tab=None, parent=None, fieldsets=None, complete=True, readonly=False, printable=True):
 
-        super(ModelPanel, self).__init__(request=request)
+        super(ModelPanel, self).__init__(obj.pk, request)
 
         self.obj = obj
-        self.request = request
         self.title = obj.pk and str(obj) or get_metadata(type(obj), 'verbose_name')
         self.id = self.title
         self.tabs = []
@@ -129,7 +123,8 @@ class ModelPanel(Component):
                 if self.complete:
                     from djangoplus.utils.relations import Relation
                     for relation_name in relations + inlines:
-                        fieldset_dict['paginators'].append(Relation(self.obj, relation_name).get_component(self.request))
+                        component = Relation(self.obj, relation_name).get_component(self.request, self.as_pdf)
+                        fieldset_dict['paginators'].append(component)
 
                 else:
                     for relation_name in relations + inlines:
@@ -148,14 +143,11 @@ class ModelPanel(Component):
     def get_active_fieldsets(self):
         return self.fieldsets_without_tab_name + self.fieldsets_with_tab_name
 
-    def __str__(self):
-        return self.render('model_panel.html')
 
-
-class IconPanel(Component):
+class IconPanel(RequestComponent):
 
     def __init__(self, request, title, icon=None):
-        super(IconPanel, self).__init__(request)
+        super(IconPanel, self).__init__('iconpanel', request)
         self.title = title
         self.icon = icon
         self.items = []
@@ -164,15 +156,12 @@ class IconPanel(Component):
         item = dict(label=label, url=url, css=css, icon=icon or self.icon)
         self.items.append(item)
 
-    def __str__(self):
-        return self.render('icon_panel.html')
 
-
-class ShortcutPanel(Component):
+class ShortcutPanel(RequestComponent):
 
     def __init__(self, request):
         from djangoplus.cache import loader
-        super(ShortcutPanel, self).__init__(request)
+        super(ShortcutPanel, self).__init__('shortcutpanel', request)
         self.items = []
 
         for model, add_shortcut in loader.icon_panel_models:
@@ -197,9 +186,6 @@ class ShortcutPanel(Component):
             item = dict(icon=icon, description=description, count=count, url=url or '#', style=style)
             self.items.append(item)
 
-    def __str__(self):
-        return self.render('shortcut_panel.html')
-
     def add_model(self, model):
         icon = get_metadata(model, 'icon')
         prefix = get_metadata(model, 'verbose_female') and 'Nova' or 'Novo'
@@ -214,13 +200,18 @@ class ShortcutPanel(Component):
             self.add_model(model)
 
 
-class CardPanel(Component):
+class CardPanel(RequestComponent):
+
+    class Media:
+        pass
+        # css = {'all': ('/static/css/cardpanel.css',)}
 
     def __init__(self, request):
-        from djangoplus.cache import loader
-        super(CardPanel, self).__init__(request)
+        super(CardPanel, self).__init__('cardpanel', request)
+
         self.items = []
 
+        from djangoplus.cache import loader
         for model, list_shortcut in loader.card_panel_models:
 
             if type(list_shortcut) == bool:
@@ -261,9 +252,6 @@ class CardPanel(Component):
             item = dict(icon=icon, title=title, count=count, url=url, css=css, description=description)
             self.items.append(item)
 
-    def __str__(self):
-        return self.render('card_panel.html')
-
     def add_model(self, model):
         self.add_models(model)
 
@@ -278,11 +266,11 @@ class CardPanel(Component):
             self.add(icon, title, None, url, 'bg-info', permission)
 
 
-class DashboardPanel(Component):
+class DashboardPanel(RequestComponent):
 
     def __init__(self, request):
 
-        super(DashboardPanel, self).__init__(request)
+        super(DashboardPanel, self).__init__('dashboard', request)
         self.top = []
         self.center = []
         self.left = []
@@ -383,7 +371,7 @@ class DashboardPanel(Component):
                 function = item['function']
                 position = item['position']
                 f_return = function(request)
-                html = render_to_string(['{}.html'.format(function.__name__), 'widget.html'], f_return, request)
+                html = render_to_string(['{}.html'.format(function.__name__), 'dashboard.html'], f_return, request)
                 if position == 'top':
                     self.top.append(html)
                 elif position == 'center':
@@ -395,32 +383,23 @@ class DashboardPanel(Component):
                 elif position == 'bottom':
                     self.bottom.append(html)
 
-    def __str__(self):
-        return self.render('dashboard_panel.html')
 
-
-class NumberPanel(Component):
+class NumberPanel(RequestComponent):
 
     def __init__(self, request, title, number, description, icon=None):
-        super(NumberPanel, self).__init__(request)
+        super(NumberPanel, self).__init__(title, request)
         self.title = title
         self.number = number
         self.description = description
         self.icon = icon or 'fa-comment-o'
 
-    def __str__(self):
-        return self.render('number_panel.html')
 
-
-class NotificationPanel(Component):
+class NotificationPanel(RequestComponent):
 
     def __init__(self, request, title, count, url, description, icon=None):
-        super(NotificationPanel, self).__init__(request)
+        super(NotificationPanel, self).__init__(title, request)
         self.title = title
         self.count = count
         self.url = url
         self.description = description
         self.icon = icon or 'fa-bell-o'
-
-    def __str__(self):
-        return self.render('notification_panel.html')

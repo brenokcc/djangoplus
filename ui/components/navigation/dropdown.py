@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-
 import copy
 from collections import OrderedDict
 from datetime import datetime
-from djangoplus.ui import Component
+from djangoplus.ui import RequestComponent
 from djangoplus.utils import permissions
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.utils.metadata import check_condition
 from djangoplus.utils import http
 
 
-class GroupDropDown(Component):
+class GroupDropDown(RequestComponent):
     def __init__(self, request):
-        super(GroupDropDown, self).__init__(request)
+        super(GroupDropDown, self).__init__('groupdropdown', request)
         self.actions = OrderedDict()
         self.mobile = http.mobile(self.request)
         self.actions['Ações'] = []
@@ -30,9 +29,6 @@ class GroupDropDown(Component):
             if self.actions[category]:
                 return True
         return False
-
-    def __str__(self):
-        return self.render('dropdown.html')
 
 
 class ModelDropDown(GroupDropDown):
@@ -74,7 +70,7 @@ class ModelDropDown(GroupDropDown):
                 url = '{}{}/'.format(url, self.obj.pk)
         super(ModelDropDown, self).add_action(label, url, css, icon, category)
 
-    def add_actions(self, obj, inline=False, fieldset_title=None, subset_name=None):
+    def add_actions(self, obj, inline=False, fieldset_title=None, subset_name=None, category=None):
         from djangoplus.cache import loader
         obj.request = self.request
         if not self.actions_cache:
@@ -93,9 +89,9 @@ class ModelDropDown(GroupDropDown):
                                 add_inline_action['title'], add_inline_action['url'], 'popup', 'fa fa-plus'
                             )
 
-        for category in loader.actions[self.model]:
-            for view_name in loader.actions[self.model][category]:
-                action = loader.actions[self.model][category][view_name]
+        for action_category in loader.actions[self.model]:
+            for view_name in loader.actions[self.model][action_category]:
+                action = loader.actions[self.model][action_category][view_name]
                 action_function = action.get('function')
                 action_title = action['title']
                 action_can_execute = action['can_execute']
@@ -141,4 +137,5 @@ class ModelDropDown(GroupDropDown):
                     action_url = '/{}/{}/'.format(get_metadata(self.model, 'app_label'), action_name)
                 else:
                     action_url = '/action/{}/{}/{}/'.format(get_metadata(self.model, 'app_label'), self.model.__name__.lower(), view_name)
-                self.add_action(action_title, action_url, action_css, action_icon, category)
+
+                self.add_action(action_title, action_url, action_css, action_icon, category or action_category)

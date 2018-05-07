@@ -248,6 +248,8 @@ class ManyToManyField(models.ManyToManyField, FieldPlus):
         self.lazy = kwargs.pop('lazy', False)
         self.ignore_lookup = kwargs.pop('ignore_lookup', False)
         self.form_filter = kwargs.pop('form_filter', None)
+        self.add_label = kwargs.pop('add_label', None)
+        self.can_add = kwargs.pop('can_add', None)
         if self.form_filter and type(self.form_filter) not in (tuple, list):
             self.form_filter = self.form_filter.split('__')[-1], self.form_filter
         self.queryset_filter = kwargs.pop('queryset_filter', None)

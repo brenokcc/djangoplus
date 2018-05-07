@@ -17,7 +17,7 @@ class Command(BaseCommand):
         doc = Documentation()
         translation.activate(settings.LANGUAGE_CODE)
 
-        task = (' '.join([x.decode('utf-8') for x in options['task']])).strip()
+        task = (' '.join([x for x in options['task']])).strip()
 
         if task:
             if task.isdigit():

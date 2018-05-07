@@ -63,13 +63,15 @@
         {% endif %}
         {% if fieldset.fields %}
             <div class="panel panel-default info-panel" id="panel-{{ fieldset.title|slugify }}">
-                <div class="panel-heading">{% if fieldset.icon %}<i class="fa {{ fieldset.icon }}"></i>{% endif %}{{ fieldset.title }}</div>
+                <div class="panel-heading">
+                    {% if fieldset.icon %}<i class="fa {{ fieldset.icon }}"></i>{% endif %}{{ fieldset.title }}
+                </div>
                 <div class="panel-body">
 
                     {% if fieldset.image or fieldset.extra  %}
                         {% if fieldset.image %}
                         <div style="float: left; margin-right: 10px">
-                            <img class="materialboxed" src="/media/{{ self.obj|getattr:fieldset.image }}"/>
+                            {{ self.obj|getattr:fieldset.image|format }}
                         </div>
                         {% else %}
                             <div style="float: right; margin-left: 10px">

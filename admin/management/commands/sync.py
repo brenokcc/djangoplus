@@ -39,7 +39,3 @@ class Command(BaseCommand):
         # if it is the production enverinoment, lets collect static files
         if os.path.exists(os.path.join(settings.BASE_DIR, 'logs')):
             print_and_call('collectstatic', clear=True, verbosity=0, interactive=False)
-
-        data = '''[{"model": "admin.organization", "pk": 0, "fields": {"ascii": ""}}, {"model": "admin.unit", "pk": 0, "fields": {"ascii": ""}}]'''
-        for obj in serializers.deserialize("json", data):
-            obj.save()

@@ -2,14 +2,12 @@
 import tempfile
 import qrcode
 import base64
-import json
 from decimal import Decimal
 from django.conf import settings
 from django.http import HttpResponse
-from djangoplus.ui import Component, ComponentHasResponseException
 from djangoplus.ui.components import forms
-
 from djangoplus.utils.http import ComponentResponse
+from djangoplus.ui import RequestComponent, ComponentHasResponseException
 from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
 
 
@@ -18,10 +16,10 @@ DOLLAR_SYMBOL = '$'
 REAIS_SYMBOL = 'R$'
 
 
-class Chart(Component):
+class Chart(RequestComponent):
     def __init__(self, request, labels, series, groups=[], symbol=None, title=None):
 
-        super(Chart, self).__init__(request)
+        super(Chart, self).__init__(None, request)
 
         self.type = 'bar'
         self.labels = labels
@@ -32,24 +30,6 @@ class Chart(Component):
         self.color_index = 0
         self.display = False
         self.clickable = False
-
-    def load(self, queryset_statistics):
-
-        if self.request and 'uuid' in self.request.GET and self.request.GET['uuid'] == self.title:
-            i, j = self.request.GET['position'].split('x')
-            qs = queryset_statistics.querysets[int(i)][int(j)]
-            title = get_metadata(qs.model, 'verbose_name_plural')
-            component = ModelTable(self.request, title, qs)
-            raise ComponentHasResponseException(ComponentResponse(component))
-
-        for group in queryset_statistics.groups:
-            self.groups.append(group)
-        for label in queryset_statistics.labels:
-            self.labels.append(label)
-        for serie in queryset_statistics.series:
-            self.series.append(serie)
-
-        self.clickable = self.request is not None
 
     def __str__(self):
         for i, serie in enumerate(self.series):
@@ -64,7 +44,8 @@ class Chart(Component):
             self.colors.append(color)
         for i in range(len(self.colors), 16):
             self.colors.append('#FFFFFF')
-        return self.render('chart.html')
+
+        return super(Chart, self).__str__()
 
     def get_box_series(self):
         l = []
@@ -112,10 +93,52 @@ class Chart(Component):
         return self.change_type('box')
 
 
-class Timeline(Component):
+class QueryStatisticsChart(Chart):
+
+    def __init__(self, request, queryset_statistics):
+
+        groups = []
+        labels = []
+        series = []
+
+        if queryset_statistics.groups:
+            for label in queryset_statistics.labels:
+                labels.append(label)
+            for group in queryset_statistics.groups:
+                groups.append(group)
+        else:
+            for label in queryset_statistics.labels:
+                labels.append(label)
+
+        for serie in queryset_statistics.series:
+            series.append(serie)
+
+        symbol = queryset_statistics.symbol
+        title = queryset_statistics.title
+
+        super(QueryStatisticsChart, self).__init__(request, labels, series, groups, symbol, title)
+
+        self.clickable = self.request is not None
+        self.queryset_statistics = queryset_statistics
+        self.process_request()
+
+    def process_request(self):
+        super(Chart, self).process_request()
+        if self.request and 'uuid' in self.request.GET and self.request.GET['uuid'] == self.title:
+            i, j = self.request.GET['position'].split('x')
+            qs = self.queryset_statistics.querysets[int(i)][int(j)]
+            title = get_metadata(qs.model, 'verbose_name_plural')
+            component = ModelTable(self.request, title, qs)
+            raise ComponentHasResponseException(ComponentResponse(component))
+
+
+class Timeline(RequestComponent):
+
+    class Media:
+        css = {'all': ('/static/css/timeline.css',)}
 
     def __init__(self, request, description, items=[]):
-        super(Timeline, self).__init__(request)
+        super(Timeline, self).__init__(description, request)
         self.items = items
         self.description = description
         self.width = 0
@@ -128,46 +151,41 @@ class Timeline(Component):
         return self.render('timeline.html')
 
 
-class RoleSelector(Component):
+class RoleSelector(RequestComponent):
 
     def __init__(self, request):
-        super(RoleSelector, self).__init__(request)
+        super(RoleSelector, self).__init__('roleselector', request)
         self.groups = []
-        if request.user.is_authenticated:
-            self.scope = json.dumps(request.user.permission_mapping.get('scope', []))
-            from djangoplus.admin.models import Group, Role
-            for group in Group.objects.filter(role__user=request.user).distinct():
-                group.scopes = 0
-                group.roles = Role.objects.filter(group=group, user=request.user).distinct()
-                for role in group.roles:
-                    if role.units.exists():
-                        group.scopes += role.units.count()
-                    elif role.organizations.exists():
-                        group.scopes += role.organizations.count()
-                self.groups.append(group)
-            self.check_request()
+        self.process_request()
+        self._load()
 
-    def check_request(self):
+    def _load(self):
+        if self.request.user.is_authenticated:
+            from djangoplus.admin.models import Group, Role
+            pks = self.request.user.role_set.values_list('group', flat=True).distinct()
+            for group in Group.objects.filter(pk__in=pks).distinct():
+                group.roles = Role.objects.filter(group=group, user=self.request.user).distinct()
+                group.scopes = group.roles.filter(scope__isnull=False).count()
+                self.groups.append(group)
+
+    def process_request(self):
         if 'data[]' in self.request.GET:
-            values = []
+            pks = []
             for value in self.request.GET.getlist('data[]'):
-                if value:
-                    values.append('[{}]'.format(value))
-            scope = json.loads('[{}]'.format(', '.join(values)))
-            self.request.user.permission_mapping = json.dumps(dict(scope=scope))
-            self.request.user.save()
+                if value.strip():
+                    pks.append(value)
+            self.request.user.role_set.update(active=False)
+            self.request.user.role_set.filter(pk__in=pks).update(active=True)
+            self.request.user.check_role_groups()
             raise ComponentHasResponseException(HttpResponse())
 
-    def __str__(self):
-        return self.render('role_selector.html')
 
-
-class QrCode(Component):
+class QrCode(RequestComponent):
     def __init__(self, request, text, width=200, height=200):
+        super(QrCode, self).__init__(text, request)
         self.text = text
         self.width = width
         self.base64 = None
-        super(QrCode, self).__init__(request)
 
     def __str__(self):
         if self.as_pdf:
@@ -178,29 +196,23 @@ class QrCode(Component):
             buffer = open(file_path, 'wb')
             image.save(buffer, format="JPEG")
             self.base64 = base64.b64encode(open(file_path, 'rb').read()).decode('utf-8')
-        return self.render('qrcode.html')
+        return super(QrCode, self).__str__()
 
 
-class ProgressBar(Component):
+class ProgressBar(RequestComponent):
     def __init__(self, request, percentual):
         self.percentual = percentual
-        super(ProgressBar, self).__init__(request)
-
-    def __str__(self):
-        return self.render('progress_bar.html')
+        super(ProgressBar, self).__init__(percentual, request)
 
 
-class Table(Component):
-    def __init__(self, request, title, header=[], rows=[], footer=[], enumerable=True):
-        super(Table, self).__init__(request)
+class Table(RequestComponent):
+    def __init__(self, request, title, header=list(), rows=list(), footer=list(), enumerable=True):
+        super(Table, self).__init__(title, request)
         self.title = title
         self.header = header
         self.rows = rows
         self.footer = footer
         self.enumerable = enumerable
-
-    def __str__(self):
-        return self.render('table.html')
 
 
 class ModelTable(Table):
@@ -225,15 +237,15 @@ class ModelTable(Table):
         super(ModelTable, self).__init__(request, title, header, rows)
 
 
-class StatisticsTable(Table):
-    def __init__(self, request, title, queryset_statistics, symbol=None):
+class QueryStatisticsTable(Table):
+    def __init__(self, request, queryset_statistics):
         if queryset_statistics.groups:
             header = []
             rows = []
             footer = []
             if queryset_statistics.series:
-                for i, label in enumerate(queryset_statistics.labels):
-                    row = [label]
+                for i, group in enumerate(queryset_statistics.groups):
+                    row = [group]
                     for value in queryset_statistics.series[i]:
                         row.append(value)
                     if len(queryset_statistics.series) > 1:
@@ -241,9 +253,9 @@ class StatisticsTable(Table):
                     rows.append(row)
                 if len(queryset_statistics.series) > 1:
                     footer = [' '] + queryset_statistics.ytotal + [queryset_statistics.total()]
-                    header = [' '] + queryset_statistics.groups + [' ']
+                    header = [' '] + queryset_statistics.labels + [' ']
                 else:
-                    header = [' '] + queryset_statistics.groups
+                    header = [' '] + queryset_statistics.labels
         else:
             header = []
             rows = []
@@ -254,28 +266,15 @@ class StatisticsTable(Table):
                 if len(queryset_statistics.series[0]) > 1:
                     footer.append('')
                     footer.append(queryset_statistics.total())
-        super(StatisticsTable, self).__init__(request, title, header, rows, footer, enumerable=False)
+        title = queryset_statistics.title
+        super(QueryStatisticsTable, self).__init__(request, title, header, rows, footer, enumerable=False)
         self.queryset_statistics = queryset_statistics
-        self.symbol = symbol
-
-    def as_chart(self):
-
-        if not self.queryset_statistics.groups:
-            chart = Chart(self.request, [], [], symbol=self.symbol, title=self.title)
-            chart.load(self.queryset_statistics)
-            return chart.donut()
-        else:
-            chart = Chart(self.request, [], [], [], symbol=self.symbol, title=self.title)
-            chart.load(self.queryset_statistics)
-            if self.queryset_statistics.labels and self.queryset_statistics.labels[0] == 'Jan':
-                return chart.line()
-            else:
-                return chart.bar()
+        self.symbol = queryset_statistics.symbol
 
 
-class ModelReport(Component):
+class ModelReport(RequestComponent):
     def __init__(self, request, title, qs, list_display=(), list_filter=(), distinct=False):
-        super(ModelReport, self).__init__(request)
+        super(ModelReport, self).__init__(title, request)
         self.title = title
         self.qs = qs
         self.components = []
@@ -310,14 +309,14 @@ class ModelReport(Component):
         self.table = ModelTable(request, table_description, qs, list_display)
 
     def count(self, vertical_key, horizontal_key=None, symbol=None, add_table=True, add_chart=False):
-        component = StatisticsTable(self.request, 'Resumo', self.qs.count(vertical_key, horizontal_key), symbol)
+        statistics = self.qs.count(vertical_key, horizontal_key)
+        statistics.title = 'Resumo'
+        statistics.symbol = symbol
         if add_table:
-            self.components.append(component)
+            self.components.append(statistics.as_table(self.request))
         if add_chart:
-            self.components.append(component.as_chart())
+            self.components.append(statistics.as_chart(self.request))
 
-    def __str__(self):
-        return self.render('model_report.html')
 
 
 

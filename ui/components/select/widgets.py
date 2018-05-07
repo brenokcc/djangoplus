@@ -45,21 +45,34 @@ AJAX_INIT_SCRIPT = '''{html}
             url:'/autocomplete/{app_label}/{model_name}/',
             data: function (params) {{return {{qs: window['qs_{name}'], q:params.term}}}},
             cache: true,
+            transport: function (params, success, failure) {{
+                if({minimum_input_length}==0 && $('#id_{name}').prop('cache')){{
+                    success($('#id_{name}').prop('cache'));
+                }} else {{
+                    var request = $.ajax(params);
+                    request.then(success);
+                    request.fail(failure);
+                    return request;
+                }}
+            }},
             success: function(data){{
+                if({minimum_input_length}==0) $('#id_{name}').prop('cache', data);
                 var values = $('#id_{name}').val();
-                //$('#id_{name}').empty();
                 $('#id_{name}').append($('<option></option>').attr("value", "").text(""));
                 for(var i=0; i<data.results.length; i++){{
                     var option = $('<option></option>').attr("value", data.results[i].id).text(data.results[i].text)
-                    //if(values.indexOf(String(data.results[i].id))>-1) option.attr("selected", true)
                     $('#id_{name}').append(option);
                 }}
             }}
         }},
-        minimumInputLength: 1,
+        minimumInputLength: {minimum_input_length},
         templateResult: function (item) {{if (item.loading) return item.text; return item.html;}}
         }}
     );
+    $('#id_{name}').on("select2:unselecting", function (e) {{
+        $('#id_{name}').val('').trigger("change");
+        e.preventDefault();
+    }});
     function load{function_name}(value, text){{
         var option = $('<option></option>').attr("value", value).text(text).attr("selected", true);
         $('#id_{name}').append(option);
@@ -102,6 +115,7 @@ class SelectWidget(widgets.Select):
         super(SelectWidget, self).__init__(*args, **kwargs)
         self.lazy = False
         self.form_filters = []
+        self.minimum_input_length = 3
 
     def render(self, name, value, attrs=None):
 
@@ -153,7 +167,7 @@ class SelectWidget(widgets.Select):
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
             qs_dump = dumps_qs_query(queryset)
-            html = AJAX_INIT_SCRIPT.format(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links))
+            html = AJAX_INIT_SCRIPT.format(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links), minimum_input_length=self.minimum_input_length)
         else:
             html = INIT_SCRIPT.format(html=html, name=name, function_name=function_name, links=''.join(links), templates=''.join(templates))
 
@@ -184,6 +198,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
         super(SelectMultipleWidget, self).__init__(*args, **kwargs)
         self.lazy = False
         self.form_filters = []
+        self.minimum_input_length = 3
 
     def render(self, name, value, attrs=None):
 
@@ -229,7 +244,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
             app_label = get_metadata(queryset.model, 'app_label')
             model_name = queryset.model.__name__.lower()
             qs_dump = dumps_qs_query(queryset)
-            html = AJAX_INIT_SCRIPT.format(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links))
+            html = AJAX_INIT_SCRIPT.format(html=html, name=name, function_name=function_name, qs_dump=qs_dump, app_label=app_label, model_name=model_name, links=''.join(links), minimum_input_length=self.minimum_input_length)
         else:
             html = INIT_SCRIPT.format(html=html, name=name, function_name=function_name, links=''.join(links), templates=''.join(templates))
 

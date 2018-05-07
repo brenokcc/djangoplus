@@ -1,0 +1,39 @@
+<div class="paginator-image-rows">
+    {% for obj in self.get_queryset %}
+        <div class="col-lg-12 image-rows-row">
+            <div class="image-rows-container">
+                {% for verbose_name, lookup, sortable, to in self.column_names %}
+                    <div>
+                        {% if forloop.first  %}
+                            <p class="image-rows-title">
+                                {% paginator_checkboxes self obj False %}
+                                {{ obj|getattr:lookup|format }}
+                            </p>
+                        {% else %}
+                            <p>{{ verbose_name }} : {{ obj|getattr:lookup|format }}</p>
+                        {% endif %}
+
+                        {% if forloop.last %}
+                        <div class="pull-right paginator-actions">
+                            {% paginator_icons self obj True %}
+                            {% add_actions self obj %}
+                            {{ self.drop_down }}
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<style>
+    .image-rows-row{
+        padding-left:0
+    }
+    .image-rows-container{
+        border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px; overflow: auto; vertical-align: top;
+    }
+    .image-rows-title{
+        font-size: 130%; font-weight: bold;
+    }
+</style>

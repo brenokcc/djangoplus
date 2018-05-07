@@ -10,7 +10,7 @@
 def has_permission(request, model, perm):
     app_label = getattr(model, '_meta').app_label
     model_name = model.__name__.lower()
-    return perm == 'view' or request.user.has_perm('{}.{}_{}'.format(app_label, perm, model_name))
+    return request.user.has_perm('{}.{}_{}'.format(app_label, perm, model_name))
 
 
 def has_list_permission(request, model):

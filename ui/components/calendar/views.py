@@ -2,8 +2,8 @@
 import json
 import datetime
 from django.http.response import HttpResponse
-from djangoplus.templatetags import obj_icons
-from djangoplus.ui.components.dropdown import ModelDropDown
+from djangoplus.ui.components.paginator.templatetags import obj_icons
+from djangoplus.ui.components.navigation.dropdown import ModelDropDown
 from django.views.decorators.csrf import csrf_exempt
 from djangoplus.utils.serialization import loads_qs_query
 

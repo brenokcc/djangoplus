@@ -151,7 +151,7 @@ msgstr "O sistema exibte uma janela pop-up"
 
 #: doc.py:389
 msgid "The system displays the input form"
-msgstr "O sistema execute o formulário"
+msgstr "O sistema exibe o formulário"
 
 #: doc.py:397
 msgid "The user looks at fieldset"

@@ -100,7 +100,13 @@ class LogIndex(models.Model):
         return 'Index #{}'.format(self.pk)
 
 
-class Organization(models.AsciiModel):
+class Scope(models.AsciiModel):
+    class Meta:
+        verbose_name = 'Scope'
+        verbose_name_plural = 'Scopes'
+
+
+class Organization(Scope):
     class Meta:
         verbose_name = 'Organização'
         verbose_name_plural = 'Organizações'
@@ -117,14 +123,8 @@ class Organization(models.AsciiModel):
                     return unit_subclass.objects.filter(**{field.name:self.pk})
         return Unit.objects.none()
 
-    def __str__(self):
-        if self.pk == 0:
-            return 'Todas'
-        else:
-            return super(Organization, self).__str__()
 
-
-class Unit(models.AsciiModel):
+class Unit(Scope):
     class Meta:
         verbose_name = 'Unidade'
         verbose_name_plural = 'Unidades'
@@ -141,11 +141,15 @@ class Unit(models.AsciiModel):
                     return getattr(self, field.name)
         return None
 
-    def __str__(self):
-        if self.pk == 0:
-            return 'Todas'
-        else:
-            return super(Unit, self).__str__()
+    @classmethod
+    def get_organization_field_name(cls):
+        organization_subclass = Organization.subclass()
+        unit_subclass = cls.subclass()
+        if organization_subclass and unit_subclass:
+            for field in get_metadata(unit_subclass, 'fields'):
+                if field.remote_field and field.remote_field.model == organization_subclass:
+                    return field.name
+        return None
 
 
 class UserManager(DjangoUserManager):
@@ -187,28 +191,26 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField('Login', max_length=30, unique=True, search=True)
     email = models.CharField('E-mail', max_length=75, blank=True, default='')
     active = models.BooleanField(verbose_name='Ativo?', default=True, filter=True)
-    photo = models.ImageField(upload_to='profiles', null=True, blank=True, default='', verbose_name='Foto', exclude=True)
+    photo = models.ImageField(upload_to='profiles', null=True, blank=True, default='/static/images/user.png', verbose_name='Foto', exclude=True)
 
     permission_mapping = models.JsonField(verbose_name='Mapeamento de Permissão', exclude=True, display=False)
-    organization = models.ForeignKey(Organization, verbose_name='Organização', null=True, blank=True, display=False)
-    unit = models.ForeignKey(Unit, verbose_name='Unidade', null=True, blank=True, display=False)
-
     objects = UserManager()
 
     fieldsets = (
-        ('Identificação', {'fields': (('name', 'email'),)}),
+        ('Identificação', {'fields': (('name', 'email'),), 'image':'photo'}),
         ('Acesso', {'fields': (('username', 'is_superuser'), ('active',))}),
         ('Funções', {'relations': ('role_set',)}),
-        ('Mapeamento de Permissão', {'fields': (('organization', 'unit'), 'permission_mapping')}),
+        ('Mapeamento de Permissão', {'fields': ('permission_mapping',)}),
     )
 
     class Meta():
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
-        list_display = 'username', 'name', 'groups'
+        list_display = 'photo', 'username', 'name', 'groups'
         add_form = 'UserForm'
         can_admin = 'Gerenciador de Usuários'
-        icon = 'fa-user'
+        icon = 'fa-users'
+        # list_template = 'image_cards.html'
 
     def __init__(self, *args, **kwargs):
         super(User, self).__init__(*args, **kwargs)
@@ -254,7 +256,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_permission_mapping(self, model, obj=None):
         from djangoplus.cache import loader
-        scope = self.permission_mapping.get('scope', [])
         permission_mapping_key = obj and '{}:{}'.format(model.__name__, type(obj).__name__) or model.__name__
         if not settings.DEBUG and permission_mapping_key in self.permission_mapping:
             return self.permission_mapping[permission_mapping_key]
@@ -327,32 +328,28 @@ class User(AbstractBaseUser, PermissionsMixin):
                             organization_lookups.append(organization_lookup)
 
         groups = dict()
-
-        def should_add_role(__group_name, __organization_id, __unit_id):
-            if scope:
-                for _group_name, _organization_id, _unit_id in scope:
-                    if _group_name == __group_name:
-                        if unit_id:
-                            if _unit_id == __unit_id:
-                                return True
-                        else:
-                            if _organization_id == __organization_id:
-                                return True
-                return False
-            return True
-
-        for group_name, organization_id, unit_id in self.role_set.values_list('group__name', 'organizations', 'units'):
-            add = should_add_role(group_name, organization_id, unit_id)
+        unit_organization_lookup = 'scope__organization'
+        unit_organization_field_name = Unit.get_organization_field_name()
+        if loader.unit_model and unit_organization_field_name:
+            unit_organization_lookup = 'scope__unit__{}__{}'.format(
+                loader.unit_model.__name__.lower(), unit_organization_field_name
+            )
+        scope_queryset = self.role_set.filter(
+            active=True).values_list('group__name', 'scope__organization', 'scope__unit', unit_organization_lookup)
+        for group_name, organization_id, unit_id, unit_organization_id in scope_queryset:
             if group_name not in groups:
                 groups[group_name] = dict(username_lookups=[], organization_ids=[], unit_ids=[])
             if group_name in role_lookups:
                 groups[group_name]['username_lookups'].append(role_lookups[group_name])
-            if organization_id and not self.unit_id and (organization_id == self.organization_id or not self.organization_id):
-                groups[group_name]['organization_ids'].append(not add and -1 or organization_id)
-            if self.unit_id or unit_id:
-                groups[group_name]['unit_ids'].append(not add and -1 or (self.unit_id or unit_id))
+            if organization_id:
+                groups[group_name]['organization_ids'].append(organization_id)
+            if unit_id:
+                groups[group_name]['unit_ids'].append(unit_id)
+                if unit_organization_id:
+                    groups[group_name]['organization_ids'].append(unit_organization_id)
 
         if model in loader.permissions_by_scope:
+            can_view_globally = can_edit_globally = can_delete_globally = False
             for group_name in groups:
 
                 username_lookups = groups[group_name]['username_lookups']
@@ -375,17 +372,17 @@ class User(AbstractBaseUser, PermissionsMixin):
                     can_view_by_organization = group_name in loader.permissions_by_scope[model].get('view_by_organization', [])
 
                 if can_view:
-                    lookups['list_lookups'] = []
+                    can_view_globally = True
                 else:
                     if can_view_by_role:
                         for username_lookup in username_lookups:
                             lookups['list_lookups'].append((username_lookup, (self.username,)))
-                    if can_view_by_unit or self.unit_id:
-                        if unit_ids and 0 not in unit_ids:
+                    if can_view_by_unit:
+                        if unit_ids:
                             for unit_lookup in unit_lookups:
                                 lookups['list_lookups'].append(('{}'.format(unit_lookup), unit_ids))
                     if can_view_by_organization:
-                        if organization_ids and 0 not in organization_ids:
+                        if organization_ids:
                             for organization_lookup in organization_lookups:
                                 lookups['list_lookups'].append(('{}'.format(organization_lookup), organization_ids))
 
@@ -395,7 +392,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 can_edit_by_organization = group_name in loader.permissions_by_scope[model].get('edit_by_organization', [])
 
                 if can_edit:
-                    lookups['edit_lookups'] = None
+                    can_edit_globally = True
                 else:
                     if can_edit_by_role:
                         for username_lookup in username_lookups:
@@ -413,7 +410,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 can_delete_by_organization = group_name in loader.permissions_by_scope[model].get('delete_by_organization', [])
 
                 if can_delete:
-                    lookups['delete_lookups'] = None
+                    can_delete_globally = True
                 else:
                     if can_delete_by_role:
                         for username_lookup in username_lookups:
@@ -450,6 +447,13 @@ class User(AbstractBaseUser, PermissionsMixin):
                                 if view_name not in lookups:
                                     lookups[view_name] = []
                                 lookups[view_name] += execute_lookups
+
+            if can_view_globally:
+                lookups['list_lookups'] = []
+            if can_edit_globally:
+                lookups['edit_lookups'] = []
+            if can_delete_globally:
+                lookups['delete_lookups'] = []
 
         for codename in ('view', 'list'):
             if model in loader.permissions_by_scope:
@@ -488,27 +492,21 @@ class User(AbstractBaseUser, PermissionsMixin):
     def email_user(self, subject, message, from_email=None, **kwargs):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
-
-def role_list_display():
-    from djangoplus.cache import loader
-    list_display = ['user', 'group']
-    if loader.organization_model:
-        list_display.append('get_organizations')
-    if loader.unit_model:
-        list_display.append('get_units')
-    return list_display
+    def check_role_groups(self):
+        for group in self.groups.all():
+            self.groups.remove(group)
+        for group in self.role_set.filter(active=True).values_list('group', flat=True).distinct():
+            self.groups.add(group)
 
 
 class Role(models.Model):
     user = models.ForeignKey('admin.User', verbose_name='Usuário', composition=True)
     group = models.ForeignKey('admin.Group', verbose_name='Grupo')
-    organizations = models.ManyToManyField(Organization, through='admin.OrganizationRole', verbose_name='Organizações', exclude=True, blank=True)
-    units = models.ManyToManyField(Unit, through='admin.UnitRole', verbose_name='Unidades', exclude=True, blank=True)
-
+    scope = models.ForeignKey('admin.Scope', verbose_name='Scope', null=True, blank=True)
+    active = models.BooleanField(verbose_name='Active', default=True)
     fieldsets = (
         ('Dados Gerais', {'fields': ('user', 'group')}),
-        ('Organizações', {'fields': ('organizations',)}),
-        ('Unidades', {'fields': ('units',)}),
+        ('Scope', {'fields': ('scope', 'active')}),
     )
 
     objects = models.Manager()
@@ -516,69 +514,16 @@ class Role(models.Model):
     class Meta:
         verbose_name = 'Função'
         verbose_name_plural = 'Funções'
-        db_table = 'admin_user_groups'
-        managed = False
-        list_display = role_list_display
         can_admin = 'Gerenciador de Usuários'
+
+    def save(self, *args, **kwargs):
+        super(Role, self).save(*args, **kwargs)
+        if self.active:
+            self.user.groups.add(self.group)
 
     def __str__(self):
         return '{}'.format(self.group)
 
-    @meta('Organizações')
-    def get_organizations(self):
-        return self.organizations.all()
-
-    @meta('Unidades')
-    def get_units(self):
-        return self.units.all()
-
-    def can_edit(self):
-        return False
-
-    def can_add(self):
-        return True
-
-    def can_define_organizations(self):
-        return Organization.objects.exclude(pk=0).exists()
-
-    def can_define_roles(self):
-        return Unit.objects.exclude(pk=0).exists()
-
-    @action('Definir Organizações', condition='can_define_organizations', message='Organização(ões) definida(s) com sucesso.', inline=True)
-    def define_organizations(self, organizations):
-        self.organizationrole_set.all().delete()
-        for organization in organizations:
-            OrganizationRole.objects.get_or_create(role=self, organization=organization)
-
-    @action('Definir Unidades', condition='can_define_roles', message='Unidade(s) definida(s) com sucesso.', inline=True)
-    def define_units(self, units):
-        self.unitrole_set.all().delete()
-        for unit in units:
-            UnitRole.objects.get_or_create(role=self, unit=unit)
-
-
-class OrganizationRole(models.Model):
-    role = models.ForeignKey(Role, verbose_name='Função', composition=True)
-    organization = models.ForeignKey(Organization, verbose_name='Organização')
-
-    class Meta:
-        verbose_name = 'Papel na Organização'
-        verbose_name_plural = 'Papeis na Organização'
-
-    def __str__(self):
-        return '{} - {}'.format(self.role, self.organization)
-
-
-class UnitRole(models.Model):
-    role = models.ForeignKey(Role, verbose_name='Função', composition=True)
-    unit = models.ForeignKey(Unit, verbose_name='Unidade')
-
-    class Meta:
-        verbose_name = 'Função na Unidade'
-        verbose_name_plural = 'Funções na Unidade'
-
-    def __str__(self):
-        return '{} - {}'.format(self.role, self.unit)
 
 
 class PermissionManager(models.Manager):
@@ -675,10 +620,10 @@ class Settings(models.Model):
 
     @staticmethod
     def default():
-        qs = Settings.objects.all()
-        if qs.exists():
-            return qs[0]
-        else:
+        from djangoplus.cache import loader
+        if not loader.settings_instance:
+            loader.settings_instance = Settings.objects.first()
+        if not loader.settings_instance:
             settings = Settings()
             settings.initials = 'Sistema'
             settings.name = 'Sistema de gerenciamento online, responsivo e multiplataforma'
@@ -695,4 +640,10 @@ class Settings(models.Model):
             settings.email = ''
             settings.version = '1.0'
             settings.save()
-            return settings
+            loader.settings_instance = settings
+        return loader.settings_instance
+
+    def save(self, *args, **kwargs):
+        from djangoplus.cache import loader
+        super(Settings, self).save(*args, **kwargs)
+        loader.settings_instance = self

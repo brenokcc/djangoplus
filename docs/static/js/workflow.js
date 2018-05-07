@@ -129,10 +129,11 @@ function workflow(id, data){
     }
     var cols = '';
     for(var i=0; i<dict.length; i++) cols+='<td style="width: 200px"></td>';
-    $("<table id='"+containerId+"'><thead><tr><td colspan='"+dict.length+"'>Visão Geral</td></tr><tr>"+cols+"</tr></thead><tbody><tr>"+cols+"</tr></tbody></table>").insertBefore(paperSelector);
+    $("<table id='"+containerId+"'><tbody><tr>"+cols+"</tr></tbody></table>").insertBefore(paperSelector);
+    //$("<table id='"+containerId+"'><thead><tr><td colspan='"+dict.length+"'>Visão Geral</td></tr><tr>"+cols+"</tr></thead><tbody><tr>"+cols+"</tr></tbody></table>").insertBefore(paperSelector);
     $(containerSelector).css('margin', 'auto').css('width', (width)+'px');
     $(containerSelector).find('td').css('border', 'solid 1px #000');
-    $(containerSelector).find('thead').find('tr').css('height', '30px').css('text-align', 'center');
+    //$(containerSelector).find('thead').find('tr').css('height', '30px').css('text-align', 'center');
     $(containerSelector).find('tbody').find('tr').css('height', height+'px');
     $(paperSelector).css('margin', 'auto').css('background', 'transparent');
     $(paperSelector).css('margin-top', '-'+(height+35)+'px');

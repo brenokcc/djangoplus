@@ -67,7 +67,7 @@
                     },
                     {% endfor %}
                 ],
-                {% if self.editable %}
+
                 eventRender: function(event, element) {
                     $(element).popover({
                         html: true,
@@ -100,7 +100,7 @@
                     $(this).popover("toggle");
                 },
                 {% endif %}
-                {% endif %}
+
             {% else %}
                 events : [
                     {% for item in self.items %}

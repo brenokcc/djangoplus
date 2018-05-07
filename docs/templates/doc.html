@@ -30,6 +30,28 @@
             content: counters(item, ".") ". ";
             margin-left: -20px;
         }
+
+        .usecase td:nth-child(odd){
+            font-weight: bold;
+        }
+
+        @media print {
+            .tab-content > .tab-pane {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            }
+            .nav-tabs{
+                display: none;
+            }
+            h3 {
+                page-break-before: always;
+            }
+            .class-diagram:nth-child(odd){
+                page-break-after: always;
+            }
+        }
+
     </style>
 {% endblock %}
 {% block body %}
@@ -70,6 +92,7 @@
                             {% for usecase in documentation.usecases %}
                                 <li>
                                     <a href="javascript:$('#{{ usecase.name|slugify }}tab').tab('show');$('html, body').animate({scrollTop: $('#{{ usecase.name|slugify }}tab').offset().top }, 2000);">{{ usecase.name }}</a>
+                                    <!--<a href="#{{ usecase.name|slugify }}">{{ usecase.name }}</a>-->
                                 </li>
                             {% endfor %}
                         </ol>
@@ -119,6 +142,7 @@
         {% endif %}
 
         <h3 id="fluxograma">Fluxograma</h3>
+        <br>
         {% if workflow_data != '[]' %}
             <div id="workflow"></div>
             <script src="/static/js/workflow.js"></script>
@@ -134,7 +158,7 @@
             <script src="/static/js/classes.js"></script>
             {% for class_diagram in documentation.class_diagrams %}
                 <h4 align="center" id="diagram-{{ class_diagram.name|slugify }}">{{ class_diagram.name }}</h4>
-                <div id="class-diagram{{ class_diagram.name|slugify }}"></div>
+                <div id="class-diagram{{ class_diagram.name|slugify }}" class="class-diagram"></div>
                 <script>
                     classDiagram('class-diagram{{ class_diagram.name|slugify }}', {{ class_diagram.as_json|safe }});
                 </script>
@@ -156,8 +180,8 @@
             {% for usecase in documentation.usecases %}
                 <div class="tab-pane {% if forloop.first %}active{% endif %}" id="{{ usecase.name|slugify }}"
                      role="tabpanel">
-                    <h5>UC-{{ usecase.name|slugify|upper }}</h5>
-                    <table class="table table-striped table-bordered table-hover">
+                    <h4>{{ usecase.name|upper }}</h4>
+                    <table class="table table-striped table-bordered table-hover usecase">
                         <tbody>
                         <tr>
                             <td align="right" valign="middle" nowrap="nowrap" width="20%">ID:</td>

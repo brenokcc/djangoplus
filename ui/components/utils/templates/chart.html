@@ -11,7 +11,7 @@
             <tr>
             {% for label, value, percentage in self.get_box_series %}
                 <td align="center">
-                <div data-toggle="tooltip" title="{{ value }} {{ label }}, {{ percentage }}%" style="background-color: {{ self.next_color }}; min-width: 100px; margin: 5px; color:white; border-radius: 15px;">
+                <div data-meta="{{ label }}:{{ value }}::0x{{ forloop.counter0 }}" class="ct-chart{{ self.id }}" data-toggle="tooltip" title="{{ value }} {{ label }}, {{ percentage }}%" style="background-color: {{ self.next_color }}; min-width: 100px; margin: 5px; color:white; border-radius: 15px;">
                     <div style="font-size: 700%">{{ value }}</div>
                     <div style="font-size: 150%">{{ label }}</div>
                     <div>{{ percentage }}%</div>
@@ -148,19 +148,22 @@
             });
         }
     });
-    {% if self.clickable %}
+</script>
+{% endif %}
+{% endif %}
+{% if self.clickable %}
+    <script>
         $('.ct-chart{{ self.id }}').css('cursor', 'pointer');
         $('.ct-chart{{ self.id }}').click(function(e){
-            var position = e.target.getAttribute('ct:meta').split('::')[1];
+            var position = null;
+            if(e.target.hasAttribute('ct:meta')) position = e.target.getAttribute('ct:meta').split('::')[1];
+            else position = $(e.target).closest('.ct-chart{{ self.id }}')[0].getAttribute('data-meta').split('::')[1];
             var url = document.location.href;
             if(url.indexOf('?')>0) url+='&uuid=1&position='+position;
             else url+='?uuid={{ self.title }}&position='+position;
             popup(url, false)
         });
-    {% endif %}
-
-</script>
-{% endif %}
+    </script>
 {% endif %}
 {% endif %}
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from djangoplus.ui.components.utils import Timeline, StatisticsTable, QrCode, ProgressBar
+from djangoplus.ui.components.utils import Timeline, QrCode, ProgressBar
 
 
 def timeline(value, **kwargs):
@@ -8,11 +8,13 @@ def timeline(value, **kwargs):
 
 
 def statistics(value, **kwargs):
-    return StatisticsTable(kwargs.get('request'), kwargs.get('verbose_name'), value)
+    value.title = kwargs.get('verbose_name')
+    return value.as_table(kwargs.get('request'))
 
 
 def chart(value, **kwargs):
-    return StatisticsTable(kwargs.get('request'), kwargs.get('verbose_name'), value).as_chart()
+    value.title = kwargs.get('verbose_name')
+    return value.as_chart(kwargs.get('request'))
 
 
 def pie_chart(value, **kwargs):

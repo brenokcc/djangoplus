@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^homologate/$', homologate),
 
     url(r'', include('djangoplus.ui.components.calendar.urls')),
-    url(r'', include('djangoplus.ui.components.breadcrumbs.urls')),
+    url(r'', include('djangoplus.ui.components.navigation.urls')),
     url(r'', include('djangoplus.ui.components.select.urls')),
 
     url(r'', include('djangoplus.core.urls')),

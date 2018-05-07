@@ -49,16 +49,15 @@ def format_bool(value):
 
 def format_value(value, html=True):
     from djangoplus.db.models.fields import ImageFieldFile
-    if value is None or value == '' or value == ():
-        return '-'
-    elif type(value) == str:
+
+    if type(value) == str:
         return value
     elif isinstance(value, Decimal):
         if hasattr(value, 'decimal3'):
             return format_decimal3(value)
         return format_decimal(value)
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
-        value = str(value)
+        value = value and str(value) or value.field.default
         url = '/static/' in value and value or '/media/{}'.format(value)
         return html and mark_safe('<img width="50px" class="materialboxed" src="{}"/>'.format(url)) or value
     elif isinstance(value, FieldFile):
@@ -73,6 +72,8 @@ def format_value(value, html=True):
             return html and mark_safe('<a target="_blank" href="{}">{}</a>'.format(url, file_name)) or url
     elif isinstance(value, bool):
         return value and 'Sim' or 'Não'
+    elif value is None or value == '' or value == ():
+        return '-'
     elif value.__class__ == datetime.date:
         return value.strftime('%d/%m/%Y')
     elif value.__class__ == datetime.datetime:

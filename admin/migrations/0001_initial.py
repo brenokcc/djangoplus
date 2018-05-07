@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                 ('username', djangoplus.db.models.fields.CharField(max_length=30, unique=True, verbose_name='Login')),
                 ('email', djangoplus.db.models.fields.CharField(blank=True, default=b'', max_length=75, verbose_name='E-mail')),
                 ('active', djangoplus.db.models.fields.BooleanField(default=True, verbose_name='Ativo?')),
-                ('photo', djangoplus.db.models.fields.ImageField(blank=True, default=b'', null=True, upload_to=b'profiles', verbose_name='Foto')),
+                ('photo', djangoplus.db.models.fields.ImageField(blank=True, default=b'/static/images/user.png', null=True, upload_to=b'profiles', verbose_name='Foto')),
             ],
             options={
                 'verbose_name': 'Usu\xe1rio',

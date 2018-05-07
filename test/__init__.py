@@ -33,10 +33,6 @@ class TestCase(StaticLiveServerTestCase):
             options.add_argument("--headless")
         self.driver = webdriver.Firefox(options=options)
 
-        data = '''[{"model": "admin.organization", "pk": 0, "fields": {"ascii": ""}}, {"model": "admin.unit", "pk": 0, "fields": {"ascii": ""}}]'''
-        for obj in serializers.deserialize("json", data):
-            obj.save()
-
     def create_superuser(self, username, password):
         from djangoplus.admin.models import User
         if not User.objects.filter(username=username).exists():

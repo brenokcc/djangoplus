@@ -208,7 +208,7 @@ def get_metadata(model, attr, default=None, iterable=False):
     if attr in ('verbose_name', 'verbose_name_plural'):
         if str(_metadata) in (camel_case_to_spaces(model.__name__), '{}s'.format(camel_case_to_spaces(model.__name__))):
             check_recursively = True
-    if attr in ('list_menu', 'verbose_female'):
+    if attr in ('list_menu', 'verbose_female', 'class_diagram'):
         check_recursively = False
 
     if check_recursively:
@@ -249,42 +249,25 @@ def check_role(self, saving=True):
     if role_username:
         from django.conf import settings
         from django.contrib.auth.models import Group
-        from djangoplus.admin.models import User, Role, Organization, OrganizationRole, Unit, UnitRole
+        from djangoplus.admin.models import User, Role, Organization, Unit
 
         group_name = verbose_name
         username = getattr2(self, role_username)
         name = role_name and getattr2(self, role_name) or None
         email = role_email and getattr2(self, role_email) or ''
 
-        units = ()
-        organizations = ()
+        scopes = []
 
         if username:
-            if role_scope is False:
-                units = Unit.objects.get(pk=0),
-                organizations = Organization.objects.get(pk=0),
-            elif role_scope:
+            if role_scope:
                 value = getattr2(self, role_scope)
                 if hasattr(value, 'all'):
-                    if isinstance(value.model, Organization):
-                        organizations = value.all()
-                    else:
-                        units = value.all()
+                    for scope in value.all():
+                        scopes.append(scope)
                 elif value:
-                    if isinstance(value, Organization):
-                        organizations = value,
-                    else:
-                        units = value,
+                    scopes.append(value)
 
             group = Group.objects.get_or_create(name=group_name)[0]
-
-            if units and not organizations:
-                organizations = []
-                for unit in units:
-                    if unit:
-                        organization = unit.get_organization()
-                        if organization:
-                            organizations.append(organization)
 
             if saving:
                 qs = User.objects.filter(username=username)
@@ -301,39 +284,22 @@ def check_role(self, saving=True):
                     user.save()
                     if user.email and not (settings.DEBUG or 'test' in sys.argv):
                         user.send_access_invitation()
-                role = Role.objects.get_or_create(user=user, group=group)[0]
+
                 user.groups.add(group)
-
-                for organization in organizations:
-                    if not OrganizationRole.objects.filter(role=role, organization=organization).exists():
-                        organization_role = OrganizationRole()
-                        organization_role.role = role
-                        organization_role.organization = organization
-                        organization_role.save()
-
-                for unit in units:
-                    if not UnitRole.objects.filter(role=role, unit=unit).exists():
-                        unit_role = UnitRole()
-                        unit_role.role = role
-                        unit_role.unit = unit
-                        unit_role.save()
-            else:
-                user = User.objects.get(username=username)
-                if units or organizations:
-                    keep_in_group = False
-                    if organizations:
-                        OrganizationRole.objects.filter(role__user=user, role__group=group, organization__in=organizations).delete()
-                        if OrganizationRole.objects.filter(role__user=user, role__group=group).exists():
-                            keep_in_group = True
-                    if units:
-                        UnitRole.objects.filter(role__user=user, role__group=group, unit__in=units).delete()
-                        if UnitRole.objects.filter(role__user=user, role__group=group).exists():
-                            keep_in_group = True
-                    if not keep_in_group:
-                        user.groups.remove(group)
+                if scopes:
+                    for scope in scopes:
+                        Role.objects.get_or_create(user=user, group=group, scope=scope)
                 else:
-                    UnitRole.objects.filter(role__user=user, role__group=group).delete()
-                    user.groups.remove(group)
+                    Role.objects.get_or_create(user=user, group=group)
+            else:
+                user = User.objects.filter(username=username).first()
+                if user:
+                    if scopes:
+                        for scope in scopes:
+                            Role.objects.filter(user=user, group=group, scope=scope).delete()
+                    else:
+                        Role.objects.filter(user=user, group=group).delete()
+                    user.check_role_groups()
 
 
 # REFLECTION

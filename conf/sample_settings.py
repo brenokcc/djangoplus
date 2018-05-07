@@ -46,9 +46,6 @@ if exists(join(BASE_DIR, 'logs')):
 
     DROPBOX_TOKEN = ''
     BACKUP_FILES = ['media', 'sqlite.db']
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-    EMAIL_FILE_PATH = join(BASE_DIR, 'mail')
 
 
 EXTRA_JS = ['/static/js/$PROJECT_NAME.js']

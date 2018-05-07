@@ -14,7 +14,7 @@ from djangoplus.utils.metadata import get_metadata
 @csrf_exempt
 def autocomplete(request, app_name, class_name):
     results = []
-    q = request.POST['q']
+    q = request.POST.get('q')
     qs = loads_qs_query(request.POST['qs[qs]'])
     search_fields = get_metadata(qs.model, 'search_fields', [])
     select_template = get_metadata(qs.model, 'select_template')

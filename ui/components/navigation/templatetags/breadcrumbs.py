@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django import template
-from djangoplus.ui.components.breadcrumbs import Breadcrumbs
+from djangoplus.ui.components.navigation.breadcrumbs import Breadcrumbs
 
 register = template.Library()
 

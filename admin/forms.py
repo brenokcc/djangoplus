@@ -5,9 +5,9 @@ from djangoplus.ui.components import forms
 from django.contrib import auth
 from django.conf import settings
 from djangoplus.cache import loader
-from djangoplus.ui.components.breadcrumbs import httprr
+from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.utils.aescipher import encrypt
-from djangoplus.admin.models import Group, User, Unit, Role, Settings, Organization
+from djangoplus.admin.models import Group, User, Unit, Settings, Organization
 from django.contrib.auth.hashers import make_password
 
 
@@ -30,7 +30,7 @@ class LoginForm(forms.Form):
                 if organization:
                     self.scope_display = organization
                 else:
-                    organizations = Organization.objects.exclude(pk=0)
+                    organizations = Organization.objects.all()
                     self.fields['login_scope'] = forms.ModelChoiceField(organizations)
                 self.scope = LoginForm.ORGANIZATION
             elif scope == LoginForm.UNIT or scope == (loader.unit_model and loader.unit_model.__name__.lower()):
@@ -41,7 +41,7 @@ class LoginForm(forms.Form):
                         self.scope_display = organization
                         units = organization.get_units()
                     else:
-                        units = Unit.objects.exclude(pk=0)
+                        units = Unit.objects.all()
                     self.fields['login_scope'] = forms.ModelChoiceField(units)
                 self.scope = LoginForm.UNIT
         self.organization = organization
@@ -71,18 +71,12 @@ class LoginForm(forms.Form):
                     if not is_unit_user and not is_organization_user:
                         raise forms.ValidationError('{} não é usuário de {}'.format(username, user.unit))
                 else:
-                    systemic_roles = user.role_set.filter(organizations__isnull=True, units__isnull=True)
-                    organizations = user.role_set.filter(organizations__isnull=False).values_list('organizations', flat=True).distinct()
-                    units = user.role_set.filter(units__isnull=False).values_list('units', flat=True).distinct()
-                    # if the user has no systemic roles and is associated to only one organization or unit
-                    if not systemic_roles.exists() and (organizations.count() + units.count()) == 1:
-                        if organizations:
-                            organization_id = organizations[0]
-                            self.request.session['scope'] = str(Organization.objects.get(pk=organization_id))
-                        else:
-                            unit_id = units[0]
-                            self.request.session['scope'] = str(Unit.objects.get(pk=unit_id))
-                        self.request.session.save()
+                    roles = user.role_set.all()
+                    if roles.count() == 1:
+                        role = roles.first()
+                        if role.scope:
+                            self.request.session['scope'] = str(role.scope)
+                            self.request.session.save()
                 user.save()
                 auth.login(self.request, user)
                 return cleaned_data
@@ -113,7 +107,7 @@ class UserForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('username', 'name', 'active', 'email', 'is_superuser')
+        fields = ('username', 'name', 'active', 'email', 'is_superuser', 'photo')
         title = 'Cadastro de Usuário'
         submit_label = 'Cadastrar'
         icon = 'fa-user'
@@ -123,12 +117,12 @@ class UserForm(forms.ModelForm):
         if not args[0].user.is_superuser:
             del (self.fields['is_superuser'])
             self.fieldsets = (
-                ('Identificação', {'fields': ('name', 'email',)}),
+                ('Identificação', {'fields': (('name', 'email',), 'photo')}),
                 ('Acesso', {'fields': (('username', 'new_password'), ('active',))}),
             )
         else:
             self.fieldsets = (
-                ('Identificação', {'fields': ('name', 'email',)}),
+                ('Identificação', {'fields': (('name', 'email',), 'photo')}),
                 ('Acesso', {'fields': (('username', 'new_password'), ('active', 'is_superuser'))}),
             )
 
@@ -236,13 +230,13 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('name', 'photo', 'username')
+        fields = ('name', 'photo', 'username', 'email')
         title = 'Atualização de Perfil'
         submit_label = 'Atualizar Perfil'
-        icon = 'fa-edit'
+        icon = 'fa-user'
 
     fieldsets = (
-        ('Dados do Usuário', {'fields': (('name', 'username'), 'photo')}),
+        ('Dados do Usuário', {'fields': (('name', 'username'), 'email', 'photo')}),
         ('Senha de Acesso', {'fields': (('new_password', 'confirm_password'),)}),
     )
 
@@ -272,18 +266,6 @@ class ProfileForm(forms.ModelForm):
             for model in loader.role_models:
                 attr = loader.role_models[model]['username_field']
                 model.objects.filter(**{attr: self.username}).update(**{attr: self.request.user.username})
-
-
-class RoleForm(forms.ModelForm):
-    units = forms.MultipleModelChoiceField(Unit.objects.all(), label='Unidades', required=False)
-
-    class Meta():
-        model = Role
-        fields = ('id',)
-
-    def __init__(self, *args, **kwargs):
-        super(RoleForm, self).__init__(*args, **kwargs)
-        self.fields['units'].initial = self.instance.units.values_list('id', flat=True)
 
 
 class SettingsForm(forms.ModelForm):

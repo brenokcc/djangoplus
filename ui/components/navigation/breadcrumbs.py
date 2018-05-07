@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-
-from djangoplus.ui import Component
+from djangoplus.ui import RequestComponent
 from django.contrib import messages
 from django.http import HttpResponseRedirect, HttpResponse
-from django.http.request import QueryDict
 
 
-class Breadcrumbs(Component):
+class Breadcrumbs(RequestComponent):
     """Used in the dashboard to show the sequence of pages the user has visited"""
     def __init__(self, request, view_title):
-        super(Breadcrumbs, self).__init__(request)
+        super(Breadcrumbs, self).__init__('breadcrumbs', request)
         self.referrer = None
         if view_title:
             path = request.get_full_path()
@@ -46,9 +44,6 @@ class Breadcrumbs(Component):
 
                 request.session.save()
                 self.referrer = len(stack) > 1 and stack[-2][1]
-
-    def __str__(self):
-        return self.render('breadcrumbs.html')
 
 
 def httprr(request, url, message='', error=False):

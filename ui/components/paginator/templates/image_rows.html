@@ -1,42 +1,50 @@
 <div class="paginator-image-rows">
-    {% for obj in paginator.get_queryset %}
-        <div class="col-lg-12" style="padding-left:0">
-            <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px; overflow: auto">
-                <div style="vertical-align: top; margin-left: 10px;">
-                    <div style="float:left;">
-                        <div style="margin-right: 20px">
-                            {{ obj|getattr:paginator.list_display.0|format }}
+    {% for obj in self.get_queryset %}
+        <div class="col-lg-12 image-rows-row">
+            <div class="image-rows-container">
+                {% for verbose_name, lookup, sortable, to in self.column_names %}
+                    {% if forloop.first %}
+                        <div class="image-rows-image-container">
+                            {{ obj|getattr:lookup|format }}
                         </div>
-                    </div>
+                    {% else %}
                     <div>
-                        <p style="font-size: 130%; font-weight: bold">
-                            {{ obj|getattr:paginator.list_display.1|format|format }}
-                        </p>
-                        <div>
-                            {% paginator_icons paginator obj %}
-                        </div>
-                        {% if paginator.list_display|length > 2 %}
-                            <p>{{ obj|getattr:paginator.list_display.2|format }}</p>
+                        {% if forloop.counter == 2  %}
+                            <p class="image-rows-title">
+                                {% paginator_checkboxes self obj False %}
+                                {{ obj|getattr:lookup|format|format }}
+                            </p>
+                        {% else %}
+                            <p>{{ verbose_name }} : {{ obj|getattr:lookup|format|format }}</p>
                         {% endif %}
-                        {% if paginator.list_display|length > 3 %}
-                            <p>{{ obj|getattr:paginator.list_display.3|format }}</p>
-                        {% endif %}
-                        {% if paginator.list_display|length > 4 %}
-                            <p>{{ obj|getattr:paginator.list_display.4|format }}</p>
+                        {% if forloop.last %}
+                            <div class="pull-right paginator-actions">
+                                {% paginator_icons self obj True %}
+                                {% add_actions self obj %}
+                                {{ self.drop_down }}
+                            </div>
                         {% endif %}
                     </div>
-                    <div>
-                        <div style="text-align: right">
-                            {{ paginator|add_actions:obj }}
-                            {{ paginator.drop_down }}
-                        </div>
-                    </div>
-                </div>
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
     {% endfor %}
 </div>
 <style>
+    .image-rows-row{
+        padding-left:0; min-height: 100px
+    }
+    .image-rows-container{
+        border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px; overflow: auto; vertical-align: top;
+    }
+    .image-rows-title{
+        font-size: 130%; font-weight: bold
+    }
+    .image-rows-image-container{
+        float:left;
+        margin-right: 20px;
+    }
     .paginator-image-rows img {
         width: 150px;
     }

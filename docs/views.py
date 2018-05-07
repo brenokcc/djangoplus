@@ -37,7 +37,7 @@ def tests(request):
 @view('Homologação', login_required=False)
 def homologate(request):
     title = 'Homologação'
-    groups = Group.objects.filter(role__units=0, role__organizations=0).order_by('name').distinct()
+    groups = Group.objects.filter(role__scope__isnull=True).order_by('name').distinct()
 
     http_host = request.META['HTTP_HOST']
     if loader.organization_model:
@@ -59,7 +59,7 @@ def homologate(request):
     unit_groups = Group.objects.filter(name__in=unit_group_names).order_by('name').distinct()
 
     organizations = []
-    for organization in Organization.objects.exclude(pk=0):
+    for organization in Organization.objects.all():
 
         organization.users = []
         for group in organization_groups:

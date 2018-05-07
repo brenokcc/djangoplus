@@ -5,6 +5,7 @@ from django.conf import settings
 from djangoplus.utils.metadata import get_metadata, get_scope, get_can_execute
 
 initialized = False
+settings_instance = None
 
 # user interface
 views = []
@@ -270,7 +271,7 @@ if not initialized:
                         action_name = action['view_name']
                         action_title = action['title']
                         action_workflow = action['usecase']
-                        action_can_execute = action['can_execute']
+                        action_can_execute = get_can_execute(action)
                         action_inline = action['inline']
                         action_menu = action['menu']
 

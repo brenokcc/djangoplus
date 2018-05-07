@@ -33,46 +33,75 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
 
 
 class QueryStatistics(object):
-    def __init__(self, series, labels, groups=list(), title=None):
+    def __init__(self, title, symbol=None):
         self.title = title
-        self.labels = labels
-        self.groups = groups
+        self.symbol = symbol
+        self.labels = []
+        self.groups = []
         self.series = []
         self.querysets = []
         self.xtotal = []
         self.ytotal = []
+        self.avg = False
 
-        for serie in series:
-            self.add(serie)
+    def add(self, label, qs, value=None, group=None, avg=False):
 
-    def add(self, data, avg=False):
-        qss = [value[0] for value in data]
-        serie = [value[1] for value in data]
-        self.querysets.append(qss)
-        self.series.append(serie)
-        if avg:
-            self.xtotal.append(sum(serie)/len(serie))
+        if label not in self.labels:
+            self.labels.append(label)
+
+        # if the group changed or there is no series and querysets, the lists must be initilized
+        if group and group not in self.groups or not self.series:
+            self.series.append([])
+            self.querysets.append([])
+
+        # when the group changes, it must be inserted in the group list
+        if group and group not in self.groups:
+            self.groups.append(group)
+
+        # add queryset and value to the end of the respective lists
+        if value is None:
+            value = qs.count()
+        self.series[-1].append(value)
+        self.querysets[-1].append(qs)
+
+        # indicate if the value is an avarage value
+        self.avg = avg
+
+    def _totalize(self, avg=False):
+        for serie in self.series:
+            if avg:
+                self.xtotal.append(sum(serie) / len(serie))
+            else:
+                self.xtotal.append(sum(serie))
+            if not self.ytotal:
+                for value in serie:
+                    self.ytotal.append(value)
+            else:
+                for i, value in enumerate(serie):
+                    self.ytotal[i] += value
+
+    def as_table(self, request=None):
+        from djangoplus.ui.components.utils import QueryStatisticsTable
+        self._totalize()
+        return QueryStatisticsTable(request, self)
+
+    def as_chart(self, request=None):
+        from djangoplus.ui.components.utils import QueryStatisticsChart
+        if not self.groups:
+            chart = QueryStatisticsChart(request, self)
+            return chart.donut()
         else:
-            self.xtotal.append(sum(serie))
-        if not self.ytotal:
-            for value in serie:
-                self.ytotal.append(value)
-        else:
-            for i, value in enumerate(serie):
-                self.ytotal[i] += value
+            chart = QueryStatisticsChart(request, self)
+            if self.labels and self.labels[0] == 'Jan':
+                return chart.line()
+            else:
+                return chart.bar()
 
     def total(self):
         return sum(self.xtotal)
 
     def __str__(self):
         return '{}\n{}\n{}'.format(self.labels, self.series, self.groups)
-
-    def as_table(self, title=None, symbol=None, request=None):
-        from djangoplus.ui.components.utils import StatisticsTable
-        return StatisticsTable(request, self.title, self, symbol=symbol)
-
-    def as_chart(self, title=None, symbol=None, request=None):
-        return self.as_table(title=title, symbol=symbol, request=request).as_chart()
 
 
 class ModelGeneratorWrapper:
@@ -123,7 +152,7 @@ class QuerySet(query.QuerySet):
         else:
             has_perm = True
         if has_perm:
-            if user and (user.organization_id or user.unit_id or not user.is_superuser):
+            if user and not user.is_superuser:
                 permission_mapping = user.get_permission_mapping(self.model, obj)
                 if 'list_lookups' in permission_mapping and permission_mapping['list_lookups']:
                     l = []
@@ -157,20 +186,20 @@ class QuerySet(query.QuerySet):
                 iterators = iterator_model.objects.filter(pk__in=self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct())
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '{} anual por {}'.format(verbose_name, horizontal_field.verbose_name)
-                statistics = QueryStatistics([], [str(x) for x in iterators], months, title=title)
-
+                statistics = QueryStatistics(title)
                 for iterator in iterators:
-                    serie = []
+                    group = str(iterator)
                     for i, month in enumerate(months):
+                        label = month
                         qs = self.filter(**{'{}__month'.format(vertical_key): i+1, horizontal_key: iterator.pk})
-                        serie.append((qs, qs.count()))
-                    statistics.add(serie)
+                        statistics.add(label, qs, qs.count(), group)
                 return statistics
             else:
                 title = '{} Anual'.format(verbose_name)
-                statistics = QueryStatistics([], months, title=title)
-                serie = []
+                statistics = QueryStatistics(title)
                 for i, month in enumerate(months):
+                    label = month
+                    avg = False
                     if aggregate:
                         total = 0
                         mode, attr = aggregate
@@ -178,6 +207,7 @@ class QuerySet(query.QuerySet):
                             qs = self.filter(**{'{}__month'.format(vertical_key): i+1})
                             total = qs.aggregate(Sum(attr)).get('{}__sum'.format(attr)) or 0
                         elif mode == 'avg':
+                            avg = True
                             qs = self.filter(**{'{}__month'.format(vertical_key): i+1})
                             total = qs.aggregate(Avg(attr)).get('{}__avg'.format(attr)) or 0
                         aggregation_field = get_field(self.model, attr)
@@ -186,8 +216,7 @@ class QuerySet(query.QuerySet):
                     else:
                         qs = self.filter(**{'{}__month'.format(vertical_key): i+1})
                         total = qs.count()
-                    serie.append((qs, total))
-                statistics.add(serie)
+                    statistics.add(label, qs, total, avg=avg)
                 return statistics
         else:
             if vertical_field.choices:
@@ -208,11 +237,12 @@ class QuerySet(query.QuerySet):
                     horizontal_choices = [(o.pk, str(o)) for o in horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))]
 
                 title = '{} por {} e {}'.format(verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
-                statistics = QueryStatistics([], [choice[1] for choice in vertical_choices], [choice[1] for choice in horizontal_choices], title=title)
+                statistics = QueryStatistics(title)
                 for vertical_choice in vertical_choices:
-                    serie = []
+                    group = vertical_choice[1]
                     avg = False
                     for horizontal_choice in horizontal_choices:
+                        label = horizontal_choice[1]
                         value = 0
                         lookup = {vertical_key: vertical_choice[0], horizontal_key: horizontal_choice[0]}
                         qs = self.filter(**lookup)
@@ -228,15 +258,14 @@ class QuerySet(query.QuerySet):
                                 value = Decimal(value)
                         else:
                             value = qs.values('id').count()
-                        serie.append((qs, value))
-                    statistics.add(serie, avg)
+                        statistics.add(label, qs, value, group, avg=avg)
                 return statistics
             else:
                 title = '{} por {}'.format(verbose_name, vertical_field.verbose_name)
-                statistics = QueryStatistics([], [choice[1] for choice in vertical_choices], title=title)
-                serie = []
+                statistics = QueryStatistics(title)
                 avg = False
                 for vertical_choice in vertical_choices:
+                    label = vertical_choice[1]
                     lookup = {vertical_key: vertical_choice[0]}
                     value = 0
                     qs = self.filter(**lookup)
@@ -252,8 +281,7 @@ class QuerySet(query.QuerySet):
                             value = Decimal(value)
                     else:
                         value = qs.count()
-                    serie.append((qs, value))
-                statistics.add(serie, avg)
+                    statistics.add(label, qs, value, avg=avg)
                 return statistics
 
     def count(self, vertical_key=None, horizontal_key=None):
@@ -521,7 +549,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
     def can_edit(self):
         if self._user:
-            if self._user.organization_id or self._user.unit_id or not self._user.is_superuser:
+            if not self._user.is_superuser:
                 model = type(self)
                 app_label = get_metadata(model, 'app_label')
                 perm_name = '{}.edit_{}'.format(app_label, model.__name__.lower())
@@ -540,7 +568,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
     def can_delete(self):
         if self._user:
-            if self._user.organization_id or self._user.unit_id or not self._user.is_superuser:
+            if not self._user.is_superuser:
                 model = type(self)
                 app_label = get_metadata(model, 'app_label')
                 perm_name = '{}.delete_{}'.format(app_label, model.__name__.lower())

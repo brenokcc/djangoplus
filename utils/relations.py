@@ -20,6 +20,8 @@ class Relation(object):
         app_label = get_metadata(self.model, 'app_label')
         model_name = self.model.__name__.lower()
 
+        self.add_label = None
+        self.can_add = None
         self.add_url = None
         self.edit_url = None
         self.view_url = None
@@ -85,6 +87,7 @@ class Relation(object):
                 self.relation_type = 'OneToMany'
                 self.relation_model = attr.field.remote_field.model
                 self.relation_verbose_name = attr.field.verbose_name
+                self.add_label = attr.field.add_label
 
                 self.relation_value = getattr(instance, relation_name).all()
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
@@ -115,6 +118,8 @@ class Relation(object):
                 self.relation_type = 'ManyToMany'
                 self.relation_model = attr.field.remote_field.model
                 self.relation_verbose_name = attr.field.verbose_name
+                self.add_label = attr.field.add_label
+                self.can_add = attr.field.can_add
 
                 self.relation_value = getattr(instance, relation_name).all()
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
@@ -140,7 +145,7 @@ class Relation(object):
             raise Exception()
         # self.debug()
 
-    def get_component(self, request):
+    def get_component(self, request, as_pdf=False):
         verbose_name = getattr(self.relation_model, '_meta').verbose_name
         if self.is_one_to_one or self.is_many_to_one:
             panel_fieldsets = getattr(self.relation_model, 'fieldsets', None)
@@ -149,9 +154,9 @@ class Relation(object):
             else:
                 panel_fieldsets = get_fieldsets(self.relation_model, self.relation_verbose_name)
             component = ModelPanel(request, self.relation_value or self.relation_model(), fieldsets=panel_fieldsets, complete=False)
-            if self.view_url:
+            if self.view_url and permissions.has_view_permission(request, self.relation_model):
                 label = 'Detalhar {}'.format(verbose_name)
-                component.drop_down.add_action(label, self.view_url, 'popup', 'fa-eye', category=label)
+                component.drop_down.add_action(label, self.view_url, 'ajax', 'fa-eye', category=label)
             if self.add_url and permissions.has_edit_permission(request, self.model):
                 label = 'Atualizar {}'.format(verbose_name)
                 component.drop_down.add_action(label, self.add_url, 'popup', 'fa-edit', category=label)
@@ -172,12 +177,15 @@ class Relation(object):
                     if len(fieldset_relations) + len(fieldset_inlines) + len(fieldset_fields) == 1:
                         title = fieldset[0].split('::')[-1]
 
-            component = Paginator(request, self.relation_value, title, relation=self, list_subsets=[])
-
             if self.is_one_to_many or self.is_many_to_many:
-                has_add_permission = permissions.has_add_permission(request, self.model)
+                if self.can_add:
+                    has_add_permission = permissions.check_group_or_permission(request, self.can_add)
+                else:
+                    has_add_permission = permissions.has_add_permission(request, self.model)
             else:
                 has_add_permission = permissions.has_add_permission(request, self.relation_model)
+
+            component = Paginator(request, self.relation_value.all(request.user), title, relation=self, list_subsets=[], readonly=not has_add_permission)
 
             if self.add_url and has_add_permission:
                 if self.relation_name in inlines:
@@ -208,9 +216,12 @@ class Relation(object):
                             except ValidationError as e:
                                 form.add_error(None, str(e.message))
                 else:
-                    add_label = get_metadata(self.relation_model, 'add_label')
+                    add_label = self.add_label or get_metadata(self.relation_model, 'add_label')
                     label = add_label or 'Adicionar {}'.format(verbose_name)
                     component.add_action(label, self.add_url, 'popup', 'fa-plus')
+
+        component.as_pdf = as_pdf
+
         return component
 
     def debug(self):

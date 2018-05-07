@@ -1,0 +1,129 @@
+/* timeline */
+.timeline {
+    margin: 20px 0;
+    padding: 0;
+    border-top: 2px solid #6e829b;
+    list-style: none
+}
+
+.timeline__step {
+    float: left;
+    padding-top: 30px;
+    position: relative
+}
+
+.timeline__step:first-of-type:before, .timeline__step:last-of-type:before {
+    content: "";
+    width: 50%;
+    height: 100%;
+    background: #fff;
+    position: absolute;
+    top: -2px;
+    left: 0
+}
+
+.timeline__step:last-of-type:before {
+    left: 50%
+}
+
+.timeline__step:hover .timeline__step-label {
+    opacity: 1;
+    -webkit-transform: rotate(0deg);
+    height: auto;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-width: 1px;
+    bottom: 100%
+}
+
+.timeline__step:hover .timeline__step-label:before, .timeline__step:hover .timeline__step-label:after {
+    display: block
+}
+
+.timeline__step-label {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    font-size: 0;
+    border-width: 0;
+    -webkit-transform: rotate(30deg);
+    width: 110px;
+    margin: 0 0 45px -55px;
+    border-style: solid;
+    border-color: #6e829b;
+    background: #fff;
+    font-weight: 400;
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transition: bottom .1s ease-in-out, opacity .1s ease-in-out, -webkit-transform .1s ease-in-out
+}
+
+.timeline__step-label:before, .timeline__step-label:after {
+    display: none;
+    content: "";
+    width: 0;
+    height: 0;
+    border: solid transparent;
+    pointer-events: none;
+    position: absolute;
+    top: 100%;
+    left: 50%
+}
+
+.timeline__step-label:before {
+    border-top-color: #6e829b;
+    border-width: 8px;
+    margin-left: -8px
+}
+
+.timeline__step-label:after {
+    border-top-color: #fff;
+    border-width: 6px;
+    margin-left: -6px
+}
+
+.timeline__step-content {
+    display: block;
+    overflow: hidden;
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis
+}
+
+.timeline__step-title {
+    display: block;
+    width: 100%;
+    padding: 30px 0 0;
+    font-size: 12px;
+    text-align: center;
+    position: absolute;
+    top: 0
+}
+
+.timeline__step-marker {
+    width: 50px;
+    height: 50px;
+    margin-left: -25px;
+    background: #fff;
+    border: 4px solid #6e829b;
+    border-radius: 50%;
+    box-shadow: 0 0 0 10px #fff;
+    text-align: center;
+    line-height: -10;
+    color: #6e829b;
+    font-size: 2em;
+    font-style: normal;
+    position: absolute;
+    top: -26px;
+    left: 50%
+}
+
+.timeline__step.done .timeline__step-marker {
+    background: #6e829b;
+    color: #FFF
+}
+
+.timeline__step-radio {
+    display: none
+}

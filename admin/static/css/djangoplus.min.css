@@ -18,6 +18,9 @@ h2 {
     margin-top: 0;
 }
 
+a.hide-label span{
+    font-size: 0px;
+}
 
 /* header */
 header.navbar {
@@ -34,6 +37,10 @@ header .navbar-header a:hover{
     min-height: 100%;
     min-height: 100vh;
     padding-bottom: 20px;
+}
+
+#content{
+   min-height: 70vh;
 }
 
 /* bootstrap */
@@ -95,9 +102,8 @@ header .navbar-header a:hover{
 }
 
 .navbar-top-links .dropdown-menu li a {
-    padding: 3px 20px;
     min-height: 0;
-    white-space: nowrap;
+    padding: 3px 20px;
 }
 
 .navbar-top-links .dropdown-menu li a div {
@@ -127,6 +133,11 @@ header .navbar-header a:hover{
     right: 0;
     left: auto;
     padding: 0;
+}
+
+#user-drop-down{
+    width: 220px !important;
+    margin-left: -95px !important;
 }
 
 .sidebar .sidebar-nav.navbar-collapse {
@@ -498,6 +509,19 @@ li {
     clear: both;
 }
 
+.panel-fullscreen {
+    display: block;
+    z-index: 9999;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    overflow: auto;
+}
+
 .model-panel h3 {
     margin-top: 0;
 }
@@ -596,7 +620,6 @@ li {
 input::placeholder, .select2-selection__placeholder {
   color: #BBB !important;
 }
-
 
 /* card panel*/
 .card-panel {
@@ -708,136 +731,6 @@ input::placeholder, .select2-selection__placeholder {
 
 .treegrid-expander-collapsed {
     background-image: url(../images/expand.png)
-}
-
-/* timeline */
-.timeline {
-    margin: 20px 0;
-    padding: 0;
-    border-top: 2px solid #428bca;
-    list-style: none
-}
-
-.timeline__step {
-    float: left;
-    padding-top: 30px;
-    position: relative
-}
-
-.timeline__step:first-of-type:before, .timeline__step:last-of-type:before {
-    content: "";
-    width: 50%;
-    height: 100%;
-    background: #fff;
-    position: absolute;
-    top: -2px;
-    left: 0
-}
-
-.timeline__step:last-of-type:before {
-    left: 50%
-}
-
-.timeline__step:hover .timeline__step-label {
-    opacity: 1;
-    -webkit-transform: rotate(0deg);
-    height: auto;
-    padding: 5px 10px;
-    font-size: 12px;
-    border-width: 1px;
-    bottom: 100%
-}
-
-.timeline__step:hover .timeline__step-label:before, .timeline__step:hover .timeline__step-label:after {
-    display: block
-}
-
-.timeline__step-label {
-    opacity: 0;
-    height: 0;
-    padding: 0;
-    font-size: 0;
-    border-width: 0;
-    -webkit-transform: rotate(30deg);
-    width: 110px;
-    margin: 0 0 45px -55px;
-    border-style: solid;
-    border-color: #428bca;
-    background: #fff;
-    font-weight: 400;
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    transition: bottom .1s ease-in-out, opacity .1s ease-in-out, -webkit-transform .1s ease-in-out
-}
-
-.timeline__step-label:before, .timeline__step-label:after {
-    display: none;
-    content: "";
-    width: 0;
-    height: 0;
-    border: solid transparent;
-    pointer-events: none;
-    position: absolute;
-    top: 100%;
-    left: 50%
-}
-
-.timeline__step-label:before {
-    border-top-color: #428bca;
-    border-width: 8px;
-    margin-left: -8px
-}
-
-.timeline__step-label:after {
-    border-top-color: #fff;
-    border-width: 6px;
-    margin-left: -6px
-}
-
-.timeline__step-content {
-    display: block;
-    overflow: hidden;
-    text-align: center;
-    white-space: nowrap;
-    text-overflow: ellipsis
-}
-
-.timeline__step-title {
-    display: block;
-    width: 100%;
-    padding: 30px 0 0;
-    font-size: 12px;
-    text-align: center;
-    position: absolute;
-    top: 0
-}
-
-.timeline__step-marker {
-    width: 50px;
-    height: 50px;
-    margin-left: -25px;
-    background: #fff;
-    border: 4px solid #428bca;
-    border-radius: 50%;
-    box-shadow: 0 0 0 10px #fff;
-    text-align: center;
-    line-height: -10;
-    color: #428bca;
-    font-size: 2em;
-    font-style: normal;
-    position: absolute;
-    top: -26px;
-    left: 50%
-}
-
-.timeline__step.done .timeline__step-marker {
-    background: #428bca;
-    color: #FFF
-}
-
-.timeline__step-radio {
-    display: none
 }
 
 .progress {
@@ -1098,6 +991,9 @@ input::placeholder, .select2-selection__placeholder {
 
 /* medium screen */
 @media (max-width: 767px) {
+    h2{
+        font-size: 20px;
+    }
     .hide-mobile{
         display: None;
     }
@@ -1107,7 +1003,9 @@ input::placeholder, .select2-selection__placeholder {
     #menu-toggle {
         display: none
     }
-
+    .breadcrumb{
+        margin-top: 40px;
+    }
     #page-wrapper {
         margin-left: 0;
         margin-top: 0;
@@ -1145,7 +1043,9 @@ input::placeholder, .select2-selection__placeholder {
     h3 {
         font-size: 22px;
     }
-
+    .breadcrumb{
+        margin-top: 40px;
+    }
     #menu-toggle, .navbar-header {
         display: none
     }

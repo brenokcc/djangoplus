@@ -1,0 +1,69 @@
+{% load i18n %}
+{% if self.mobile %}
+    <ul class="list-group collapse in" id="feedList">
+    {% for obj in self.get_queryset %}
+        {% set_request obj self.request %}
+        <li class="list-group-item clearfix">
+            <div class="pull-left m-left-sm">
+                <strong>{{ obj }}</strong>
+                {% for column_name, lookup, sortable, to in self.column_names %}
+                    {% with value=obj|getattr:lookup %}
+                        {% if value|displayable %}
+                            <br>
+                            <small class="text-muted"><i class="fa fa-angle-double-right"></i> <strong>{{ column_name }}</strong>: {{ value|format|safe }}</small>
+                        {% endif %}
+                    {% endwith %}
+                {% endfor %}
+                <br><br>
+                {% paginator_icons self obj %}
+            </div>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    {% with queryset=self.get_queryset %}
+    <table class="table {% if self.qs.model.get_parent_field %}tree{% endif %}" id="dataTable">
+        <thead>
+            <tr>
+                {% paginator_checkboxes self None True %}
+                {% if self.can_show_actions and not self.request.GET.popup %}
+                <th style="vertical-align: top" width="50px">{% trans "Options" %}</th>
+                {% endif %}
+                {% for column_name, lookup, sortable, to in self.column_names %}
+                <th style="vertical-align: top">
+                    {% if sortable %}<a href="javascript:" onclick="$('#order_by{{ self.id }}').val('0{{ lookup }}');$('#{{ self.id }}').submit();" class="default-color"><i class="fa fa-sort fa-lg"></i>{% endif %}
+                    {{ column_name|normalyze }}
+                    {% if sortable %}</a>{% endif %}
+
+                {% if self.order_by == lookup and sortable %} <i class="mdi-hardware-keyboard-arrow-down"></i> {% endif %} </th>
+                {% endfor %}
+                {% if self.drop_down.has_inline_action and not self.readonly and not self.request.GET.popup %}
+                <th style="text-align: center" class="paginator-actions">{% trans "Actions" %}</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for obj in queryset %}
+                {% set_request obj self.request %}
+                <tr class="{% tree_info obj queryset %}">
+                    {% paginator_checkboxes self obj True %}
+                    {% if self.can_show_actions and not self.request.GET.popup %}
+                    <td style="vertical-align: middle" nowrap class="action-links">
+                        {% paginator_icons self obj %}
+                    </td>
+                    {% endif %}
+                    {% for column_name, lookup, sortable, to in self.column_names %}
+                        {% with value=obj|getattr:lookup %}
+                        <td style="text-align: {{ value|align }};vertical-align: middle">{{ value|format|safe }}</td>
+                        {% endwith %}
+                    {% endfor %}
+                    {% if self.drop_down.has_inline_action and not self.readonly and not self.request.GET.popup %}
+                    <td class="paginator-actions" align="center" style="vertical-align: middle"> {% add_actions self obj %}
+                    {{ self.drop_down }} </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endwith %}
+{% endif %}

@@ -39,11 +39,9 @@ INSTALLED_APPS = (
     'djangoplus.admin',
     'djangoplus.ui',
     'djangoplus.ui.components.forms',
-    'djangoplus.ui.components.breadcrumbs',
     'djangoplus.ui.components.calendar',
     'djangoplus.ui.components.select',
-    'djangoplus.ui.components.dropdown',
-    'djangoplus.ui.components.menu',
+    'djangoplus.ui.components.navigation',
     'djangoplus.ui.components.paginator',
     'djangoplus.ui.components.panel',
     'djangoplus.ui.components.utils',
@@ -80,7 +78,10 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'djangoplus.admin.context_processors.context_processor'
             ],
-            'builtins': ['djangoplus.templatetags'],
+            'builtins': [
+                'djangoplus.templatetags',
+                'djangoplus.ui.components.paginator.templatetags'
+            ],
         },
     },
 ]
@@ -114,7 +115,7 @@ USERNAME_MASK = None
 DROPBOX_TOKEN = ''
 BACKUP_FILES = ['media', 'sqlite.db']
 
-_LOGGING = {
+LOGGING_ = {
     'version': 1,
     'filters': {
         'require_debug_true': {
@@ -125,7 +126,7 @@ _LOGGING = {
         'console': {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
-            'class': 'logging.StreamHandler',
+            'class': 'djangoplus.utils.logging.CustomStreamHandler',
         }
     },
     'loggers': {
@@ -140,3 +141,5 @@ GRADIENT = ('#aeb6bf', '#85929e', '#5d6d7e', '#d6dbdf', '#34495e', '#2e4053')
 
 CAPTCHA_KEY = '6Lcpc1IUAAAAADXT-pykYw7_duD4NkrQ54VXjlfJ'
 CAPTCHA_SECRET = '6Lcpc1IUAAAAABiWOqddzw63lR6ZEaQTtpuM-X5m'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

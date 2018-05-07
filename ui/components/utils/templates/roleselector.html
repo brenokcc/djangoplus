@@ -1,0 +1,50 @@
+{% for group in self.groups %}
+    <div>
+        {% if group.scopes > 1 %}
+        <input  id="{{ group }}Checkbox" class="roles" type="checkbox" value="" onclick="configureCheckBoxes(this)"/>
+        <span class="custom-checkbox"></span>
+        <label style="display: initial">{{ group }}</label><br>
+        {% endif %}
+        <div id="{{ group }}Checkboxes">
+            {% for role in group.roles %}
+                <div style="{% if group.scopes > 1 %}padding-left: 20px{% endif %}">
+                    {% if self.groups|length > 1 %}
+                    <input class="roles" type="checkbox" value="{{ role.pk }}" onchange="configureCheckBox('{{ group }}')" {% if role.active %}checked{% endif %}/>
+                    <span class="custom-checkbox"></span>
+                    {% endif %}
+                    <label style="display: initial">
+                        {% if group.scopes < 2 %}
+                            {{ group }} {% if role.scope %} - {{ role.scope }}{% endif %}
+                        {% else %}
+                            {{ role.scope }}
+                        {% endif %}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endfor %}
+{% if self.groups|length > 1 %}
+<div style="margin: 10px; text-align: center"><button id="reloadScopeButton" class="btn btn-default" onclick="reloadScope()">Aplicar</button></div>
+<script>
+    function reloadScope(){
+        var data = $('.roles:checked').map(function(){return this.value}).get();
+        $.get(document.location.href, {data: data}, function(){loadUrl('/admin/')});
+    }
+    function configureCheckBox(group){
+        $('#'+group+'Checkbox').prop('checked', $('#'+group+'Checkboxes').find('.roles:checked').length>0);
+        configureReloadScopeButton()
+    }
+    function configureCheckBoxes(checkbox){
+        $(checkbox).parent().find('.roles').prop('checked', checkbox.checked);
+        configureReloadScopeButton()
+    }
+    function configureReloadScopeButton(){
+        if($('.roles:checked').length > 0) $('#reloadScopeButton').removeClass('disabled');
+        else $('#reloadScopeButton').addClass('disabled')
+    }
+    {% for group in self.groups %}
+        configureCheckBox('{{ group }}');
+    {% endfor %}
+</script>
+{% endif %}

@@ -1,38 +1,51 @@
-<div class="paginator-image-cards">
-    {% for obj in paginator.get_queryset %}
-        <div class="col-lg-3 col-md-4 col-sm-6" align="center" style="padding-left:0">
-            <div style="border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px;overflow: hidden; height:280px">
+<div class="image-cards">
+    {% for obj in self.get_queryset %}
+        <div class="col-lg-3 col-md-4 col-sm-6 image-cards-row" align="center">
+            <div class="image-cards-container">
                 <div>
-                    <p style="font-size: 110%; font-weight: bold">
-                        {{ obj|getattr:paginator.list_display.1|format|format }}
-                    </p>
-                    <div>
-                        {{ obj|getattr:paginator.list_display.0|format }}
-                    </div>
-                    <div>
-                        {% paginator_icons paginator obj %}
-                        {% if paginator.list_display|length > 2 %}
-                            <p>{{ obj|getattr:paginator.list_display.2|format }}</p>
+                    {% for list_display in self.list_display %}
+                        {% if forloop.first %}
+                            <div>
+                                {{ obj|getattr:list_display|format }}
+                            </div>
+                        {% else %}
+                            {% if forloop.counter == 2 %}
+                                <div>
+                                    <p class="image-cards-title">
+                                        {% paginator_checkboxes self obj False %}
+                                        {{ obj|getattr:list_display|format }}
+                                    </p>
+                                    {% paginator_icons self obj %}
+                                </div>
+                            {% else %}
+                                <div><p>{{ obj|getattr:list_display|format }}</p></div>
+                            {% endif %}
+
+                            {% if forloop.last %}
+                                <div class="paginator-actions">
+                                    {% add_grouped_actions self obj %}
+                                    {{ self.drop_down }}
+                                </div>
+                            {% endif %}
                         {% endif %}
-                        {% if paginator.list_display|length > 3 %}
-                            <p>{{ obj|getattr:paginator.list_display.3|format }}</p>
-                        {% endif %}
-                        {% if paginator.list_display|length > 4 %}
-                            <p>{{ obj|getattr:paginator.list_display.4|format }}</p>
-                        {% endif %}
-                    </div>
-                    <div>
-                        {{ paginator|add_actions:obj }}
-                        {{ paginator.drop_down }}
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     {% endfor %}
 </div>
 <style>
-    .paginator-image-cards img {
-        width: 100px;
+    .image-cards-row{
+        padding-left:0
+    }
+    .image-cards-container{
+        border: 1px solid #ddd; border-radius: 0; margin-bottom: 10px;overflow: hidden; height:350px;
+    }
+    .image-cards-title{
+        font-size: 110%; font-weight: bold;
+    }
+    .image-cards img {
+        width: 100%; max-height: 150px; margin-bottom: 10px;
     }
 </style>
 

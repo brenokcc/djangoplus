@@ -1,0 +1,51 @@
+<div class="image-cards">
+    {% for obj in self.get_queryset %}
+        <div class="col-lg-3 col-md-4 col-sm-6 image-cards-row" align="center">
+            <div class="image-cards-container">
+                <div>
+                    {% for list_display in self.list_display %}
+                        {% if forloop.first %}
+                            <div>
+                                {{ obj|getattr:list_display|format }}
+                            </div>
+                        {% else %}
+                            {% if forloop.counter == 2 %}
+                                <div>
+                                    <p class="image-cards-title">
+                                        {% paginator_checkboxes self obj False %}
+                                        {{ obj|getattr:list_display|format }}
+                                    </p>
+                                    {% paginator_icons self obj %}
+                                </div>
+                            {% else %}
+                                <div><p>{{ obj|getattr:list_display|format }}</p></div>
+                            {% endif %}
+
+                            {% if forloop.last %}
+                                <div class="paginator-actions">
+                                    {% add_grouped_actions self obj %}
+                                    {{ self.drop_down }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<style>
+    .image-cards-row{
+        padding-left:0
+    }
+    .image-cards-container{
+        border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px;overflow: hidden; height:280px;
+    }
+    .image-cards-title{
+        font-size: 110%; font-weight: bold;
+    }
+    .image-cards img {
+        width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px;
+    }
+</style>
+

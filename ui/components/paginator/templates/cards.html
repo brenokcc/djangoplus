@@ -1,0 +1,39 @@
+<div class="paginator-cards">
+    {% for obj in self.get_queryset %}
+        <div class="col-lg-3 col-md-4 col-sm-6 cards-row" align="center">
+            <div style="border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px;overflow: hidden; height:280px">
+                <div>
+                    {% for list_display in self.list_display %}
+                        {% if forloop.first %}
+                        <div>
+                            {% paginator_checkboxes self obj False %}
+                            <p class="cards-title">{{ obj|getattr:list_display|format }}</p>
+                        </div>
+                        {% else %}
+                            <div>{{ obj|getattr:list_display|format }}</div>
+                            {% if forloop.last %}
+                                <div class="cards-action paginator-actions">
+                                    {% paginator_icons self obj %}
+                                    {% add_grouped_actions self obj %}
+                                    {{ self.drop_down }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<style>
+    .cards-row{
+        padding-left:0
+    }
+    .cards-title{
+        font-size: 110%; font-weight: bold
+    }
+    .cards-action a{
+        margin-top: 10px;
+    }
+</style>
+

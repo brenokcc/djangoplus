@@ -181,7 +181,7 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
             fields = ()
             title = 'Adicionar {}'.format(get_metadata(related_field_model, 'verbose_name'))
             icon = get_metadata(related_field_model, 'icon', None)
-            is_inner = True
+            # is_inner = True
 
         def save(self, *args, **kwargs):
             for related_object in self.cleaned_data['related_objects']:
@@ -212,7 +212,7 @@ def get_many_to_many_reverse_form(request, obj, related_field_name):
             fields = ()
             title = 'Adicionar {}'.format(get_metadata(related_field_model, 'verbose_name'))
             icon = get_metadata(related_field_model, 'icon', None)
-            is_inner = True
+            # is_inner = True
 
         def save(self, *args, **kwargs):
             for related_object in self.cleaned_data['related_objects']:

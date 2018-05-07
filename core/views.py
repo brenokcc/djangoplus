@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from djangoplus.ui import ComponentHasResponseException
 from djangoplus.utils import permissions
 from djangoplus.ui.components.panel import ModelPanel
-from djangoplus.ui.components.breadcrumbs import httprr
+from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from django.template import Template, Context
 from djangoplus.ui.components.paginator import Paginator
 from django.views.defaults import page_not_found, server_error
@@ -57,7 +57,7 @@ def listt(request, app, cls, subset=None):
     list_subsets = subset and [subset] or None
 
     paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True, list_display=list_display, list_filter=list_filter, search_fields=search_fields)
-    paginator.check_http_response()
+    paginator.process_request()
 
     if _model in loader.class_actions:
         for group in loader.class_actions[_model]:
@@ -149,7 +149,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
 
-    obj = pk and _model.objects.all(request.user).get(pk=pk) or _model()
+    obj = pk and _model.objects.all(request.user).filter(pk=pk).first() or _model()
     obj.request = request
     obj._user = request.user
 
@@ -242,7 +242,7 @@ def view(request, app, cls, pk, tab=None):
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
 
-    obj = _model.objects.all(request.user).get(pk=pk)
+    obj = _model.objects.all(request.user).filter(pk=pk).first()
     obj.request = request
     obj._user = request.user
 
@@ -257,7 +257,7 @@ def view(request, app, cls, pk, tab=None):
     parent = request.GET.get('parent', None)
     printable = get_metadata(_model, 'pdf', False)
     panel = ModelPanel(request, obj, tab, parent, printable=printable)
-    panel.check_http_response()
+    panel.process_request()
 
     if panel.message:
         return httprr(request, request.get_full_path(), panel.message)

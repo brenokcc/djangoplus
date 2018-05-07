@@ -107,8 +107,8 @@ class Form(django_forms.Form):
                             continue
 
                 if self.request.user.is_authenticated and (not hasattr(field, 'ignore_lookup') or not field.ignore_lookup):
-                    if hasattr(self, 'instance') and not self.is_inner:
-                        field.queryset = field.queryset.all(self.request.user, obj=self.instance)
+                    if not self.is_inner:
+                        field.queryset = field.queryset.all(self.request.user, obj=hasattr(self, 'instance') and self.instance or None)
 
                 if True:#hasattr(field.queryset.model._meta, 'organization_lookup') or hasattr(field.queryset.model,'organization_ptr'):
                     from djangoplus.admin.models import Organization

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.conf import settings
 from djangoplus.cache import loader
-from djangoplus.ui.components.menu import Menu
+from djangoplus.ui.components.navigation.menu import Menu
 from djangoplus.admin.models import Settings
 from djangoplus.ui.components.utils import RoleSelector
 from djangoplus.utils import permissions
@@ -15,7 +15,6 @@ def context_processor(request):
 
     if request.user.is_authenticated:
         menu = Menu(request, app_settings)
-        menu.load()
 
         for model in loader.subsets:
             icon = get_metadata(model, 'icon', 'fa-warning')
@@ -37,6 +36,7 @@ def context_processor(request):
                         alerts.append(item)
 
     return dict(
+        debug=settings.DEBUG,
         role_selector=RoleSelector(request),
         username_mask=settings.USERNAME_MASK,
         js_files=settings.EXTRA_JS,
