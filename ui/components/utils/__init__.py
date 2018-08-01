@@ -125,10 +125,14 @@ class QueryStatisticsChart(Chart):
     def process_request(self):
         super(Chart, self).process_request()
         if self.request and 'uuid' in self.request.GET and self.request.GET['uuid'] == self.title:
+            note = None
             i, j = self.request.GET['position'].split('x')
             qs = self.queryset_statistics.querysets[int(i)][int(j)]
             title = get_metadata(qs.model, 'verbose_name_plural')
-            component = ModelTable(self.request, title, qs)
+            if qs.count() > 25:
+                qs = qs[0:25]
+                note = u'Apenas uma amostra com 25 registros está sendo exibida.'
+            component = ModelTable(self.request, title, qs, note=note)
             raise ComponentHasResponseException(ComponentResponse(component))
 
 
@@ -206,17 +210,18 @@ class ProgressBar(RequestComponent):
 
 
 class Table(RequestComponent):
-    def __init__(self, request, title, header=list(), rows=list(), footer=list(), enumerable=True):
+    def __init__(self, request, title, header=list(), rows=list(), footer=list(), enumerable=True, note=None):
         super(Table, self).__init__(title, request)
         self.title = title
         self.header = header
         self.rows = rows
         self.footer = footer
         self.enumerable = enumerable
+        self.note = note
 
 
 class ModelTable(Table):
-    def __init__(self, request, title, qs, list_display=()):
+    def __init__(self, request, title, qs, list_display=(), note=None):
 
         header = []
         rows = []
@@ -234,7 +239,7 @@ class ModelTable(Table):
                 row.append(getattr2(obj, lookup))
             rows.append(row)
 
-        super(ModelTable, self).__init__(request, title, header, rows)
+        super(ModelTable, self).__init__(request, title, header, rows, note=note)
 
 
 class QueryStatisticsTable(Table):
@@ -316,9 +321,3 @@ class ModelReport(RequestComponent):
             self.components.append(statistics.as_table(self.request))
         if add_chart:
             self.components.append(statistics.as_chart(self.request))
-
-
-
-
-
-

@@ -233,13 +233,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.save()
 
     @action('Enviar Convite de Acesso', inline=True, condition='email', category=None)
-    def send_access_invitation(self):
+    def send_access_invitation(self, group=None):
         project_name = Settings.default().initials
         subject = 'Acesso ao Sistema - "{}"'.format(project_name)
-        message = '''Você está cadastro no sistema <b>{}</b>.
-            Para (re)definir sua senha de acesso, clique no botão abaixo.
-        '''.format(project_name)
-        actions = [('Acessar agora!', '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
+        if group:
+            message = '''Você foi cadastrado no sistema <b>{}</b> como <b>{}</b>.
+                Caso já seja um usuário, clique no botão "Acessar agora!" para acessar o sistema.
+                Caso nunca tenha acessado o sistema, clique no botão "Definir senha!" para informar sua senha de acesso.
+            '''.format(project_name, group)
+            actions = [
+                ('Acessar agora!', '/admin/'),
+                ('Definir senha!', '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))
+            ]
+        else:
+            message = '''Você foi cadastrado no sistema <b>{}</b>.
+                Para (re)definir sua senha de acesso, clique no botão abaixo.
+            '''.format(project_name)
+            actions = [('Acessar agora!', '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
         send_mail(subject, message, self.email, actions=actions)
 
     def units(self, group_name=None):
@@ -291,7 +301,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if get_metadata(model, 'role_username') and 'id' not in role_lookups:
             role_lookups[get_metadata(model, 'verbose_name')] = get_metadata(model, 'role_username')
 
-        for field in get_metadata(model, 'fields'):
+        for field in get_metadata(model, 'fields') + get_metadata(model, 'many_to_many'):
             if field.remote_field and field.remote_field.model:
                 if field.remote_field.model in loader.role_models:
                     role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(field.name, loader.role_models[field.remote_field.model]['username_field'])

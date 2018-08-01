@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 {% load breadcrumbs %}
 {% load i18n %}
@@ -29,7 +28,6 @@
     {% endblock %}
 {% endblock %}
 {% endif %}
-
 
 {% block body %}
 {% if not request.GET.popup %}
@@ -106,7 +104,7 @@
                 </a>
                 <div id="user-drop-down" class="dropdown-menu" onmouseleave="$(this).toggle()">
 
-                    <div class="padding-md" style="margin-bottom: 20px">
+                    <div class="padding-md">
                             {% if not request.session.side_menu_size %}
                             <div style="text-align: center">
                                 <img src="{{ request.user|photo }}" alt='{% trans "Photo" %} {% trans "of" %} {{ self.request.user.name }}' class="img-circle" width="100" height="100">
@@ -131,7 +129,6 @@
                     </div>
                     {% if role_selector.groups %}
                     <div class="padding-md" style="min-height:150px; border-top: 1px solid #e5e5e5">
-                        <h4 align="center">Vínculos</h4>
                         {{ role_selector }}
                     </div>
                     {% endif %}
@@ -178,8 +175,6 @@
                     {% endif %}
                     Versão {{ settings.version }}
                 </div>
-
-
         </div>
     </main>
 

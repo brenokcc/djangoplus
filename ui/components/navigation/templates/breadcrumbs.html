@@ -1,5 +1,7 @@
 {% if self.as_pdf %}{% else %}
+
 <div id="breadcrumb">
+    {% if self.request.session.stack|length > 1 %}
     <ul class="breadcrumb">
         <li><a href="/admin/" class="ajax"> Principal</a></li>
         {% if self.request.session.stack %}
@@ -14,6 +16,7 @@
             {% endfor %}
         {% endif %}
     </ul>
+    {% endif %}
 </div><!-- /breadcrumb-->
 {% if self.referrer %}
 <script>

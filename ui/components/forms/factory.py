@@ -3,7 +3,7 @@
 from django.conf import settings
 from djangoplus.ui.components import forms
 from django.apps import apps
-from djangoplus.utils.metadata import get_metadata, find_field_by_name, list_related_objects
+from djangoplus.utils.metadata import get_metadata, find_field_by_name, list_related_objects, get_fiendly_name, getattr2
 
 
 def get_register_form(request, obj):
@@ -270,6 +270,7 @@ def get_action_form(request, obj, action):
     initial = action['initial']
     action_input = action['input']
     action_choices = action['choices']
+    action_display = action['display']
     app_label = get_metadata(type(obj), 'app_label')
     func = getattr(obj, action_function.__name__, action_function)
 
@@ -322,6 +323,12 @@ def get_action_form(request, obj, action):
         form = form_cls(request, instance=obj, initial=initial)
     else:
         form = form_cls(request, initial=initial)
+
+    if action_display:
+        for lookup in action_display:
+            label = get_fiendly_name(func.__self__.__class__, lookup)
+            value = getattr2(obj, lookup)
+            form.fields[lookup] = forms.CharField(label=label, initial=value, required=False, widget=forms.widgets.DisplayInput(value))
 
     if action_choices:
         for field_name in action_choices:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import json
+from djangoplus.admin.models import Settings
 import urllib.request, urllib.error, urllib.parse
 from djangoplus.cache import loader
 from django.contrib import auth
@@ -15,10 +16,13 @@ from djangoplus.admin.forms import ProfileForm, ChangePasswordForm, SettingsForm
 
 @view('Public', login_required=False)
 def public(request):
+    app_settings = Settings.default()
+    if not app_settings.background:
+        return httprr(request, '/admin/')
     return locals()
 
 
-@view('Index', login_required=True)
+@view('Principal', login_required=True)
 def index(request):
     widget_panel = DashboardPanel(request)
     return locals()

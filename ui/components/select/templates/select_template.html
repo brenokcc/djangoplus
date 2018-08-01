@@ -1,7 +1,7 @@
 {% with first_attr=obj|getattr:select_display.0 %}
     {% if first_attr|is_image %}
         <div style="display: inline-block;vertical-align:top">
-            <img src="/media/{{ first_attr }}" width="50px"/>
+            <img src="{{ first_attr|image_url }}" width="50px"/>
         </div>
     {% endif %}
     <ul style="padding-left:0;display: inline-block">

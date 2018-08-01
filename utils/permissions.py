@@ -71,6 +71,11 @@ def can_view(request, obj):
     return can(request, obj, 'view')
 
 
+def can_edit_field(request, obj, related_field_name):
+    field = getattr(type(obj), related_field_name).field
+    return can_add(request, obj) or check_group_or_permission(request, field.can_add)
+
+
 def check_group_or_permission(request, perm_or_group, ignore_superuser=False):
     if perm_or_group:
         satisfied = False

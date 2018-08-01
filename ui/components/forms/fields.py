@@ -152,12 +152,16 @@ class ModelChoiceField(forms.models.ModelChoiceField):
     def __init__(self, *args, **kwargs):
         minimum_input_length = kwargs.pop('minimum_input_length', 3)
         self.lazy = kwargs.pop('lazy', False)
+        self.pick = kwargs.pop('pick', False)
         self.ignore_lookup = kwargs.pop('ignore_lookup', False)
         self.form_filters = kwargs.pop('form_filters', [])
         super(ModelChoiceField, self).__init__(*args, **kwargs)
-        self.widget.lazy = self.lazy
-        self.widget.form_filters = self.form_filters
-        self.widget.minimum_input_length = minimum_input_length
+        if self.pick:
+            self.widget = widgets.PickWidget()
+        else:
+            self.widget.lazy = self.lazy
+            self.widget.form_filters = self.form_filters
+            self.widget.minimum_input_length = minimum_input_length
 
 
 class OneToOneField(ModelChoiceField):
@@ -172,12 +176,16 @@ class MultipleModelChoiceField(forms.models.ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
         minimum_input_length = kwargs.pop('minimum_input_length', 3)
         self.lazy = kwargs.pop('lazy', False)
+        self.pick = kwargs.pop('pick', False)
         self.ignore_lookup = kwargs.pop('ignore_lookup', False)
         self.form_filters = kwargs.pop('form_filters', [])
         super(MultipleModelChoiceField, self).__init__(*args, **kwargs)
-        self.widget.lazy = self.lazy
-        self.widget.form_filters = self.form_filters
-        self.widget.minimum_input_length = minimum_input_length
+        if self.pick:
+            self.widget = widgets.PickWidget(multiple=True)
+        else:
+            self.widget.lazy = self.lazy
+            self.widget.form_filters = self.form_filters
+            self.widget.minimum_input_length = minimum_input_length
 
 
 class OneToManyField(MultipleModelChoiceField):

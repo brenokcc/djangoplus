@@ -22,7 +22,6 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'icon', 'verbose_female', 'order_by', 'pdf', 'menu',
     'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut', 'list_csv', 'list_xls', 'list_menu', 'list_lookups', 'list_pdf',
     'add_label', 'add_form', 'add_inline', 'add_message', 'add_shortcut', 'select_template', 'select_display', 'select_related',
-    'role_name', 'role_username', 'role_email', 'role_scope', 'role_signup', 'role_active',
     'log', 'logging',
     'can_add', 'can_edit', 'can_delete', 'can_list', 'can_view', 'can_admin',
     'can_list_by_role', 'can_view_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
@@ -137,6 +136,12 @@ class QuerySet(query.QuerySet):
         clone._user = self._user
         return clone
 
+    def __add__(self, other):
+        return self | other
+
+    def __sub__(self, other):
+        return self.difference(other)
+
     def all(self, user=None, obj=None):
         app_label = get_metadata(self.model, 'app_label')
         if user:
@@ -220,7 +225,11 @@ class QuerySet(query.QuerySet):
                 return statistics
         else:
             if vertical_field.choices:
-                vertical_choices = vertical_field.choices
+                used_choices = self.values_list(vertical_key, flat=True).order_by(vertical_key).distinct()
+                vertical_choices = []
+                for choice in vertical_field.choices:
+                    if choice[0] in used_choices:
+                        vertical_choices.append(choice)
             elif vertical_field.__class__.__name__ == 'BooleanField':
                 vertical_choices = [(True, 'Sim'), (False, 'Não')]
             else:
@@ -229,7 +238,11 @@ class QuerySet(query.QuerySet):
             if horizontal_key:
                 horizontal_field = get_field(self.model, horizontal_key)
                 if horizontal_field.choices:
-                    horizontal_choices = horizontal_field.choices
+                    used_choices = self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct()
+                    horizontal_choices = []
+                    for choice in horizontal_field.choices:
+                        if choice[0] in used_choices:
+                            horizontal_choices.append(choice)
                 elif horizontal_field.__class__.__name__ == 'BooleanField':
                     vertical_choices = [(True, 'Sim'), (False, 'Não')]
                 else:
@@ -244,7 +257,7 @@ class QuerySet(query.QuerySet):
                     for horizontal_choice in horizontal_choices:
                         label = horizontal_choice[1]
                         value = 0
-                        lookup = {vertical_key: vertical_choice[0], horizontal_key: horizontal_choice[0]}
+                        lookup = {vertical_key: vertical_choice[0] or None, horizontal_key: horizontal_choice[0] or None}
                         qs = self.filter(**lookup)
                         if aggregate:
                             mode, attr = aggregate
@@ -266,7 +279,7 @@ class QuerySet(query.QuerySet):
                 avg = False
                 for vertical_choice in vertical_choices:
                     label = vertical_choice[1]
-                    lookup = {vertical_key: vertical_choice[0]}
+                    lookup = {vertical_key: vertical_choice[0] or None}
                     value = 0
                     qs = self.filter(**lookup)
                     if aggregate:

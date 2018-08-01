@@ -123,9 +123,9 @@ class Paginator(RequestComponent):
                     elif hasattr(field, 'choices') and field.choices:
                         form.fields[form_field_name] = forms.ChoiceField(choices=[['', '']] + field.choices, label=normalyze(field.verbose_name), initial=initial, required=False)
                     else:
-                        if hasattr(field.remote_field.model, 'unit_ptr_id') and self.request.user.role_set.values_list('scope__unit', flat=True).count() == 1:
+                        if hasattr(field.remote_field.model, 'unit_ptr_id') and self.request.user.role_set.filter(scope__unit__isnull=False).values_list('scope__unit', flat=True).count() == 1:
                             continue
-                        if hasattr(field.remote_field.model, 'organization_ptr_id') and self.request.user.role_set.values_list('scope__organization', flat=True).count() == 1:
+                        if hasattr(field.remote_field.model, 'organization_ptr_id') and self.request.user.role_set.filter(scope__organization__isnull=False).values_list('scope__organization', flat=True).count() == 1:
                             continue
                         if field.remote_field and not should_filter_or_display(self.request, self.qs.model, field.remote_field.model):
                             continue
@@ -199,7 +199,7 @@ class Paginator(RequestComponent):
 
         subclasses = self.qs.model.__subclasses__()
 
-        if not subclasses and permissions.has_add_permission(self.request, self.qs.model):
+        if not subclasses and not self.list_subsets and permissions.has_add_permission(self.request, self.qs.model):
             instance = self.qs.model()
             instance.user = self.request.user
             if not hasattr(instance, 'can_add') or instance.can_add():
@@ -289,7 +289,7 @@ class Paginator(RequestComponent):
                 if hasattr(field, 'display') and not field.display:
                     hidden_fields.append(field_name)
 
-            if self.relation and field_name == self.relation.hidden_field_name:
+            if self.relation and (field_name == self.relation.hidden_field_name or field_name.startswith('{}__'.format(self.relation.hidden_field_name))):
                 hidden_fields.append(field_name)
 
         if self.exclude:
@@ -305,9 +305,9 @@ class Paginator(RequestComponent):
             hide_field = False
             attr = getattr(self.qs.model, lookup.split('__')[0])
             if hasattr(attr, 'field') and attr.field.remote_field and attr.field.remote_field.model:
-                if hasattr(attr.field.remote_field.model, 'unit_ptr_id') and self.request.user.role_set.values_list('scope__unit', flat=True).count() == 1:
+                if hasattr(attr.field.remote_field.model, 'unit_ptr_id') and self.request.user.role_set.filter(scope__unit__isnull=False).values_list('scope__unit', flat=True).count() == 1:
                     continue
-                if hasattr(attr.field.remote_field.model, 'organization_ptr_id') and self.request.user.role_set.values_list('scope__organization', flat=True).count() == 1:
+                if hasattr(attr.field.remote_field.model, 'organization_ptr_id') and self.request.user.role_set.filter(scope__organization__isnull=False).values_list('scope__organization', flat=True).count() == 1:
                     continue
                 if not should_filter_or_display(self.request, self.qs.model, attr.field.remote_field.model):
                     hide_field = True
@@ -432,7 +432,7 @@ class Paginator(RequestComponent):
             queryset = queryset.distinct()
         return queryset
 
-    def check_http_response(self):
+    def process_request(self):
         export = self.request.GET.get('export', None)
         if export == 'pdf':
             raise ComponentHasResponseException(self._get_pdf_response())

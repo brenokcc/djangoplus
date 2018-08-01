@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.forms import widgets
+from django.db.models.fields.files import FieldFile, ImageFieldFile
 from djangoplus.ui.components.calendar.widgets import *
 from djangoplus.ui.components.editor.widgets import *
 from djangoplus.ui.components.select.widgets import *
@@ -79,13 +80,22 @@ class ReadOnlyInput(TextInput):
 
 
 class DisplayInput(widgets.TextInput):
-    def __init__(self, obj):
+    def __init__(self, obj=None):
         super(DisplayInput, self).__init__()
         self.obj = obj
 
     def render(self, name, value, attrs=None):
-        return '<input class="form-control" type="text" value="{}" disabled /><input type="hidden" id="id_{}" name="{}" value="{}"/>'.format(self.obj, name, name, self.obj.pk)
-
+        if value:
+            if isinstance(value, FieldFile):
+                value = value and str(value) or value.field.default
+                url = '/static/' in value and value or '/media/{}'.format(value)
+                height = value.split('.')[-1] in ('pdf', 'txt', 'xls', 'docx') and 500 or ''
+                return mark_safe('<embed src="{}" width="100%" height="{}">'.format(url, height))
+            return '<br>{}'.format(format_value(value))
+        elif self.obj and hasattr(self.obj, 'pk'):
+                return '<input class="form-control" type="text" value="{}" disabled /><input type="hidden" id="id_{}" name="{}" value="{}"/>'.format(self.obj, name, name, self.obj.pk)
+        else:
+            return ''
 
 class Textarea(widgets.Textarea):
     def render(self, name, value, attrs={}):
@@ -139,33 +149,50 @@ class CheckboxInput(widgets.CheckboxInput):
         return mark_safe(html)
 
 
-class RenderableSelectMultiple(widgets.SelectMultiple):
-    def __init__(self, template_name='renderable_widget.html', *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
+class RadioSelect(widgets.CheckboxInput):
+    input_type = 'radio'
+
+    def render(self, *args, **kwargs):
+        html = super(RadioSelect, self).render(*args, **kwargs)
+        html = '{}<span class="custom-radio"></span>'.format(html)
+        return mark_safe(html)
+
+
+class PickWidget(widgets.Select):
+    def __init__(self, template_name='pick_widget.html', multiple=False, *args, **kwargs):
+        super(PickWidget, self).__init__(*args, **kwargs)
         self.template_name = template_name
+        self.allow_multiple_selected = multiple
+
+    def value_from_datadict(self, data, files, name):
+        if self.allow_multiple_selected:
+            getter = data.getlist
+        else:
+            getter = data.get
+        return getter(name)
 
     def render(self, name, value, attrs=None, choices=()):
-        if value is None: value = []
         has_id = attrs and 'id' in attrs
-        final_attrs = self.build_attrs(attrs, name=name)
-        str_values = set([str(v) for v in value])
+        final_attrs = self.build_attrs(attrs)
+        values = value and (type(value) == int and [value] or [int(v) for v in value]) or []
+        widget_cls = self.allow_multiple_selected and CheckboxInput or RadioSelect
         i = 0
         objects = []
+        onclick = "var is=this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input');for(var i=0; i<is.length; i++) is[i].checked = {}".format(self.allow_multiple_selected and 'this.checked' or 'false')
+        widget = widget_cls({'onclick': onclick}, check_test=lambda v: False).render(None, '')
 
-        qs = hasattr(self.choices.queryset, 'all') and self.choices.queryset.all() or self.choices.queryset
-        for obj in qs:
-            option_value = obj.pk
-            if has_id:
-                final_attrs = dict(final_attrs, id='{}_{}'.format(attrs['id'], i))
-            final_attrs['class'] = 'custom-checkbox'
-            cb = CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
-            option_value = str(option_value)
-            rendered_cb = cb.render(name, option_value)
-            obj.widget = rendered_cb
-            i += 1
-            objects.append(obj)
+        if self.choices:
+            qs = hasattr(self.choices.queryset, 'all') and self.choices.queryset.all() or self.choices.queryset
+            for obj in qs:
+                option_value = obj.pk
+                if has_id:
+                    final_attrs = dict(final_attrs, id='{}_{}'.format(attrs['id'], i))
+                final_attrs['class'] = self.allow_multiple_selected and 'custom-checkbox' or 'custom-radio'
+                obj.widget = widget_cls(final_attrs, check_test=lambda v: int(v) in values).render(name, str(option_value))
+                i += 1
+                objects.append(obj)
 
-        return mark_safe(render_to_string(self.template_name, dict(objects=objects)))
+        return mark_safe(render_to_string(self.template_name, dict(objects=objects, widget=widget)))
 
 
 # File Widgets #
@@ -188,7 +215,7 @@ class FileInput(widgets.ClearableFileInput):
                  {}
                  <label for="{}" style="padding:5px"></label>
             </div>
-            <div style="margin-top:20px">{}</div>
+            <div style="margin-top:10px">{}</div>
             <script>$('#{}').change(function(){{$(this).parent().find('label').html($(this).val().split('\\\\').pop());}});</script>
         '''.format(input, kwargs['attrs']['id'], extra, kwargs['attrs']['id'])
         return mark_safe(html)
@@ -261,7 +288,7 @@ class CpfCnpjWidget(TextInput):
 
                     $('#id_{}').mask(CpfCnpjMaskBehavior, spOptions);
                 </script>
-                '''.format(html, name)
+                '''.format(html, value, name)
         return mark_safe(html)
 
 

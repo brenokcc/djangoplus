@@ -215,7 +215,7 @@ class DateFilterWidget(DateRangeWidget):
             </script>
         '''.format(start_js, end_js, function_name, self.label, id_, id_, name, name, name, name, name, function_name, function_name)
         output.append('''
-            <div class="form-control" style="background: #fff; cursor: pointer; padding: 5px; height:34px; border: 1px solid #ccc; width: auto; margin-right:5px;">
+            <div class="form-control" style="cursor:pointer; width:auto;">
                 <span id="reportrange{}">
                 <i class="fa fa-calendar"></i>&nbsp;&nbsp;
                     <span style="white-space: nowrap"></span>&nbsp;

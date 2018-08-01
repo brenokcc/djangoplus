@@ -1,20 +1,14 @@
 {% if self.as_pdf %}{% else %}
-<div class="panel panel-default">
+<div class="panel panel-default notification-panel">
         <div class="panel-heading clearfix">
             <span><i class="fa {{ self.icon }}"></i></span>
             <span>{{ self.title }}</span>
         </div>
-    <div class="panel-body" align="center">
-        <div style="display: inline-block; width: 170px;margin-top:-50px">
-            <div style="font-size: 1200%">
-                {{ self.count }}
-            </div>
-            <a class="ajax" href="{{ self.url }}">
-            <div style="margin-top: -30px">
-                <p style="font-size: 150%;">{{ self.description }}</p>
-            </div>
-            </a>
-        </div>
+    <div class="panel-body">
+        <a class="ajax" href="{{ self.url }}">
+            <span>{{ self.count }}</span>
+            <span>{{ self.description }}</span>
+        </a>
     </div>
 </div>
 {% endif %}

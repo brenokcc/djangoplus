@@ -76,7 +76,7 @@ def listt(request, app, cls, subset=None):
                     if subsetp not in loader.subset_actions[_model] or view_name not in loader.subset_actions[_model][subsetp]:
                         continue
                 else:
-                    if subset not in loader.subset_actions[_model] or view_name not in loader.subset_actions[_model][subset]:
+                    if subset in loader.subset_actions[_model] and view_name not in loader.subset_actions[_model][subset]:
                         continue
 
                 if permissions.check_group_or_permission(request, action_can_execute):
@@ -173,7 +173,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
         form = factory.get_one_to_many_form(request, obj, related_field_name)
 
     elif is_many_to_many(_model, related_field_name):
-        if not permissions.can_add(request, obj) and not permissions.can_edit(request, obj):
+        if not permissions.can_edit_field(request, obj, related_field_name):
             return HttpResponseForbidden()
         form = factory.get_many_to_many_form(request, obj, related_field_name, related_pk)
 
@@ -289,6 +289,7 @@ def action(request, app, cls, action_name, pk=None):
     action_message = 'message' in form_action and form_action['message'] or None
     action_permission = '{}.{}'.format(_model._meta.app_label, action_function.__name__)
     action_input = form_action['input']
+    action_display = form_action['display']
     redirect_to = form_action['redirect_to']
 
     obj = pk and _model.objects.all(request.user).get(pk=pk) or _model()
@@ -313,7 +314,7 @@ def action(request, app, cls, action_name, pk=None):
                 try:
                     f_return = func(*params)
                     if not redirect_to:
-                        if func.__code__.co_argcount > 1:
+                        if func.__code__.co_argcount > 1 or action_display:
                             return httprr(request, '..', action_message)
                         else:
                             return httprr(request, '.', action_message)
@@ -324,19 +325,19 @@ def action(request, app, cls, action_name, pk=None):
         else:
             try:
                 if form.fields and form.is_valid() or not form.fields:
-                    if form.fields:
+                    if 'instance' in form.fields:
                         obj = form.cleaned_data['instance']
                     func = getattr(obj, action_function.__name__, action_function)
                     f_return = func()
                     if not redirect_to:
-                        if func.__code__.co_argcount > 1:
+                        if func.__code__.co_argcount > 1 or action_display:
                             return httprr(request, '..', action_message)
                         else:
                             return httprr(request, '.', action_message)
                     else:
                         return httprr(request, Template(redirect_to).render(Context({'self': obj})), action_message)
             except ValidationError as e:
-                return httprr(request, '.', str(e.message))
+                form.add_error(None, str(e.message))
 
         if form.title == DEFAULT_FORM_TITLE:
             form.title = action_title
@@ -415,6 +416,7 @@ def dispatcher(request, app, view_name, params):
     except Exception as e:
         print(e)
         traceback.print_exc()
-        return server_error(request, 'error500.html')
+        #return server_error(request, 'error500.html')
+        raise e
 
 

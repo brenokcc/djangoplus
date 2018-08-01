@@ -79,8 +79,8 @@ class Relation(object):
                 self.relation_value = getattr(instance, relation_name)
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
-
-                self.view_url = '/view/{}/{}/{}/'.format(relation_app_label, relation_model_name, self.relation_value.pk)
+                if self.relation_value:
+                    self.view_url = '/view/{}/{}/{}/'.format(relation_app_label, relation_model_name, self.relation_value.pk)
 
             elif descriptor_name == 'ManyToManyDescriptor' and field_name == 'OneToManyField':
                 self.is_one_to_many = True

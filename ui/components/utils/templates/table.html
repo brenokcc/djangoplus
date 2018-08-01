@@ -35,40 +35,53 @@
         {% endif %}
     </table>
 {% else %}
-    <div class="panel panel-default table-responsive">
+    <div class="panel panel-default">
         <div class="panel-heading">
             <i class="fa fa-table fa-fw"></i>
             {{ self.title }}
         </div>
+
+        {% if self.note %}
+            <div style="padding: 15px">
+                <div class="alert alert-info">
+                    {{ self.note }}
+                </div>
+            </div>
+        {% endif %}
+
         <div class="panel-body">
             {% if self.rows %}
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                    {% for value in self.header %}
-                        <th style="text-align:center;vertical-align: middle">{{ value }}</th>
-                    {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in self.rows %}
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    {% if self.header %}
+                    <thead>
                         <tr>
-                            {% for value in row %}
-                                <td style="text-align:{{ value|align }}">{{ value|format }}</td>
+                        {% for value in self.header %}
+                            <th style="text-align:center;vertical-align: middle">{{ value }}</th>
+                        {% endfor %}
+                        </tr>
+                    </thead>
+                    {% endif %}
+                    <tbody>
+                        {% for row in self.rows %}
+                            <tr>
+                                {% for value in row %}
+                                    <td style="text-align:{{ value|align }}">{{ value|format }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if self.footer %}
+                    <tfoot>
+                        <tr>
+                            {% for value in self.footer %}
+                                <th style="text-align:{{ value|align }}">{{ value }}</th>
                             {% endfor %}
                         </tr>
-                    {% endfor %}
-                </tbody>
-                {% if self.footer %}
-                <tfoot>
-                    <tr>
-                        {% for value in self.footer %}
-                            <th style="text-align:{{ value|align }}">{{ value }}</th>
-                        {% endfor %}
-                    </tr>
-                </tfoot>
-                {% endif %}
-            </table>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
             {% else %}
                 <div class="alert alert-warning">{% trans "No records found" %}.</div>
             {% endif %}

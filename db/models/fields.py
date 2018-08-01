@@ -210,6 +210,7 @@ class OneToOneField(models.OneToOneField, FieldPlus):
 class ForeignKey(models.ForeignKey, FieldPlus):
     def __init__(self, *args, **kwargs):
         self.lazy = kwargs.pop('lazy', False)
+        self.pick = kwargs.pop('pick', False)
         self.ignore_lookup = kwargs.pop('ignore_lookup', False)
         self.form_filter = kwargs.pop('form_filter', None)
         self.composition = kwargs.pop('composition', False)
@@ -226,8 +227,8 @@ class ForeignKey(models.ForeignKey, FieldPlus):
             self.form_filter = None
 
     def formfield(self, **kwargs):
-
         kwargs.setdefault('lazy', self.lazy)
+        kwargs.setdefault('pick', self.pick)
         kwargs.setdefault('ignore_lookup', self.ignore_lookup)
         kwargs.setdefault('form_filters', self.form_filter and [self.form_filter] or [])
         kwargs.setdefault('form_class', form_fields.ModelChoiceField)
@@ -246,6 +247,7 @@ ModelChoiceField = ForeignKey
 class ManyToManyField(models.ManyToManyField, FieldPlus):
     def __init__(self, *args, **kwargs):
         self.lazy = kwargs.pop('lazy', False)
+        self.pick = kwargs.pop('pick', False)
         self.ignore_lookup = kwargs.pop('ignore_lookup', False)
         self.form_filter = kwargs.pop('form_filter', None)
         self.add_label = kwargs.pop('add_label', None)
@@ -259,6 +261,7 @@ class ManyToManyField(models.ManyToManyField, FieldPlus):
 
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.MultipleModelChoiceField)
+        kwargs.setdefault('pick', self.pick)
         kwargs.setdefault('ignore_lookup', self.ignore_lookup)
         kwargs.setdefault('form_filters', self.form_filter and [self.form_filter] or [])
         kwargs.setdefault('lazy', self.lazy)

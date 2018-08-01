@@ -59,7 +59,7 @@ def format_value(value, html=True):
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
         value = value and str(value) or value.field.default
         url = '/static/' in value and value or '/media/{}'.format(value)
-        return html and mark_safe('<img width="50px" class="materialboxed" src="{}"/>'.format(url)) or value
+        return html and mark_safe('<img width="75" class="materialboxed" src="{}"/>'.format(url)) or value
     elif isinstance(value, FieldFile):
         value = str(value)
         url = '/static/' in value and value or '/media/{}'.format(value)
@@ -150,4 +150,4 @@ def to_ascii(txt, codif='utf-8'):
         txt = str(txt)
     if isinstance(txt, str):
         txt = txt.encode('utf-8')
-    return unicodedata.normalize('NFKD', txt.decode(codif)).encode('ASCII', 'ignore')
+    return unicodedata.normalize('NFKD', txt.decode(codif)).encode('ASCII', 'ignore').decode('utf-8')

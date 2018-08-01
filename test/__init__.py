@@ -1,19 +1,29 @@
 # -*- coding: utf-8 -*-
 import os
 import datetime
+import warnings
 from selenium import webdriver
 import traceback, time, json
 from django.conf import settings
 from djangoplus.test import cache
-from django.core import serializers
 from django.core.management import call_command
 from selenium.webdriver.firefox.options import Options
 from django.utils.translation import ugettext_lazy as _
 from selenium.common.exceptions import WebDriverException
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.contrib.staticfiles.testing import LiveServerTestCase
+from django.contrib.staticfiles.handlers import StaticFilesHandler
 
 
-class TestCase(StaticLiveServerTestCase):
+class TestStaticFilesHandler(StaticFilesHandler):
+    def _middleware_chain(self, request):
+        from django.http import HttpResponse
+        return HttpResponse()
+
+
+# StaticLiveServerTestCase
+class TestCase(LiveServerTestCase):
+
+    static_handler = TestStaticFilesHandler
 
     def __init__(self, *args, **kwargs):
         super(TestCase, self).__init__(*args, **kwargs)
@@ -22,6 +32,7 @@ class TestCase(StaticLiveServerTestCase):
         self.current_password = None
         self.restored = False
         self.watched = False
+        warnings.filterwarnings('ignore')
 
     def setUp(self):
         super(TestCase, self).setUp()
@@ -90,6 +101,15 @@ class TestCase(StaticLiveServerTestCase):
                 self.choose(name, value, count-1)
             else:
                 self.watch(e)
+
+    def dont_see_error_message(self):
+        elements = self.driver.find_elements_by_class_name('alert-danger')
+        if elements:
+            messages = [element.text for element in elements]
+            if 'HEADLESS' not in os.environ:
+                input('Type enter to continue...')
+            else:
+                raise self.failureException('The following messages were found on the page: {}'.format(';'.join(messages)))
 
     def look_for(self, text, count=2):
         print('Looking for "{}"'.format(text))
@@ -161,6 +181,7 @@ class TestCase(StaticLiveServerTestCase):
         except WebDriverException as e:
             self.watch(e)
         self.wait()
+        self.dont_see_error_message()
 
     def click_tab(self, text):
         print('Clicking tab "{}"'.format(text))
@@ -226,7 +247,7 @@ class TestCase(StaticLiveServerTestCase):
             app_label = app.split('.')[-1]
             if app_label not in 'auth':
                 app_labels.append(app_label)
-        call_command('dumpdata', *app_labels, format='json', indent=3, stdout=output)
+        call_command('dumpdata', *app_labels, format='json', indent=3, stdout=output, skip_checks=True, verbosity=0)
         output.close()
 
     def restore(self):

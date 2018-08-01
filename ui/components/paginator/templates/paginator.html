@@ -34,151 +34,152 @@
 {% else %}
 <div id="table{{ self.id }}" class="paginator paginator-{% if self.is_list_view %}admin{% endif %}">
     {% with content=self|paginate %}
-            {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
-            <div class="action-bar">
-                {% if self.is_list_view %}
-                <div class="pull-left">
-                    <h2>{% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}{{ self.title }} ({{ self.count }})</h2>
-                </div>
-                {% endif %}
-                <div class="pull-right">
-                    {% if not self.request.GET.popup %}
-                        {{ self.subset_dropdown }}
-                        {{ self.paginator_dropdown }}
-                    {% endif %}
-                </div>
+        {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
+        <div class="action-bar">
+            {% if self.is_list_view %}
+            <div class="pull-left">
+                <h2>{% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}{{ self.title }} ({{ self.count }})</h2>
             </div>
             {% endif %}
-
-            <div {% if not self.is_list_view %}class="panel panel-default"{% endif %}>
-                {% if not self.is_list_view %}
-                <div class="panel-heading">
-                    {% if self.url %}
-                        {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
-                        <a class="ajax" href="{{ self.url }}">{{ self.title }}</a>
-                    {% else %}
-                        {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
-                        {{ self.title }}
-                    {% endif %}
-                    <a href="javascript:" role="button" class="pull-right fullscreen-action"><i class="fa fa-expand"></i></a>
-                </div>
-
-                {% endif %}
-                <div class="panel-body">
-
-                    {% if self.tabs|length > 1 and not self.readonly %}
-                        <ul class="paginator-tabs">
-                            {% for tab in self.tabs %}
-                                <li>
-                                <a href="javascript:" onclick="$('#tab{{ self.id }}').val('{{ tab.0 }}');$('#{{ self.id }}').submit();">{{ tab.1 }}</a>
-                                <span class="badge {% if tab.3 %}badge-primary{% endif %}">{{ tab.2.count }}</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-
-                    {% if self.form %}
-                        {{ self.form }}
-                    {% endif %}
-
-                    {% if self.list_total %}
-                        {% with total=self.get_total %}
-                        {% if total %}
-                        <div class="paginator-total">
-                            {{ total|format }}
-                        </div>
-                        {% else %}
-                            <br/>
-                        {% endif %}
-                        {% endwith %}
-                    {% endif %}
-
-                    <form method="get" class="table-form form-horizontal no-margin form-border" id="{{ self.id }}" action="{{ self.request.get_full_path }}">
-                    <input name="tid" type="hidden" value="{{ self.id }}"/>
-                    <input name="q{{ self.id }}" id="q{{ self.id }}" type="hidden" value="{{ self.get_q }}"/>
-                    <input name="order_by{{ self.id }}" id="order_by{{ self.id }}" type="hidden" value="{{ self.get_order_by }}"/>
-                    <input name="page{{ self.id }}" id="page{{ self.id }}" type="hidden" value="{{ self.get_page }}"/>
-                    <input name="tab{{ self.id }}" id="tab{{ self.id }}" type="hidden" value="{{ self.get_tab }}"/>
-                    <input name="{{ self.id }}" type="hidden" value="1"/>
-                    {% with list_filter=self.get_list_filter search_fields=self.get_search_fields %}
-                    {% if list_filter or search_fields %}
-                    <div>
-                    {% with filter_form=self.get_filter_form %}
-                        {{ filter_form.media }}
-                        {% if search_fields or list_filter %}
-                            <div class="filter-container">
-                            {% if search_fields %}
-                            <label>
-                                <div class="input-group">
-                                    <input id="search{{ self.id }}" style="height: 34px;" type="text" class="form-control input-sm" placeholder='{% trans "Keywords" %}...' aria-controls="dataTable" value="{{ self.get_q }}" onkeyup="$('#q{{ self.id }}').val(this.value)">
-                                    <span class="input-group-btn">
-                                        <button style="height: 34px;margin-left: -2px;" class="btn btn-default btn-sm" type="button" onclick="$('#page{{ self.id }}').val(1);$('#{{ self.id }}').submit();">
-                                            <i class="fa fa-search"></i>
-                                        </button>
-                                    </span>
-                                    <script>
-                                    $('#search{{ self.id }}').keypress(function (e) {
-                                      if (e.which == 13) {
-                                        $('#{{ self.id }}').submit();
-                                        return false;
-                                      }
-                                    });
-                                    </script>
-                                </div>
-                            </label>
-                            {% endif %}
-
-                            {% for field in filter_form  %}
-                                {{ field }}
-                            {% endfor %}
-
-                            <script>$('#table{{ self.id }}').find('select, input[data-type=\'hidden_daterange\']').on('change', function(e) {$('#{{ self.id }}').submit();});</script>
-
-                            </div>
-                        {% endif %}
-
-                        {% if list_filter1 %}
-                            <div class="pull-right">
-                                <a data-modal-id="#filter_modal{{ self.id }}" href="#" role="button" data-toggle="modal" class="btn btn-default" style="height: 30px;"><i class="fa fa-filter"></i><span class="link-text"> {% trans "Filter" %}...</span></a>
-                            </div>
-                        {% endif %}
-                    {% endwith %}
-                    </div>
-                    {% endif %}
-                    {% endwith %}
-                    </form>
-                    <div style="clear:both"></div>
-                    {% if self.count %}
-
-                        {% if self.help_text %}
-                            <div class="alert alert-info">
-                                {{ self.help_text }}
-                            </div>
-                        {% endif %}
-
-                        {{ content }}
-
-                    {% else %}
-                        <div class="alert alert-warning">{% trans "No records found" %}.</div>
-                    {% endif %}
-
-                    {% if self.subset_dropdown.actions and not self.request.GET.popup %}
-                        <div class="col s12 disabled" id="subset-actions-btn{{ self.id }}">
-
-                            <div class="pull-left">
-                                {{ self.subset_dropdown }}
-                            </div>
-
-                        </div>
-                    {% endif %}
-                    <div class="col s12" id="paginator{{ self.id }}">
-                        {{ self.pagination|safe }}
-                    </div>
-                </div>
-                {% if not self.is_list_view %}
-
+            <div class="pull-right">
+                {% if not self.request.GET.popup %}
+                    {{ self.subset_dropdown }}
+                    {{ self.paginator_dropdown }}
                 {% endif %}
             </div>
+        </div>
+        {% endif %}
+
+        <div {% if not self.is_list_view %}class="panel panel-default"{% endif %} id="painel-{{ self.id }}">
+            {% if not self.is_list_view %}
+            <div class="panel-heading">
+                {% if self.url %}
+                    {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
+                    <a class="ajax" href="{{ self.url }}">{{ self.title }}</a>
+                {% else %}
+                    {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
+                    {{ self.title }}
+                {% endif %}
+                <a href="javascript:" role="button" class="pull-right fullscreen-action"><i class="fa fa-expand"></i></a>
+            </div>
+
+            {% endif %}
+            <div class="panel-body">
+
+                {% if self.tabs|length > 1 and not self.readonly %}
+                    <ul class="paginator-tabs">
+                        {% for tab in self.tabs %}
+                            <li class="{% if tab.3 %}active{% endif %}">
+                            <a href="javascript:" onclick="$('#tab{{ self.id }}').val('{{ tab.0 }}');$('#{{ self.id }}').submit();">
+                                {{ tab.1 }} <span class="badge {% if tab.3 %}badge-primary{% endif %}">{{ tab.2.count }}</span>
+                            </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if self.form %}
+                    {{ self.form }}
+                {% endif %}
+
+                {% if self.list_total %}
+                    {% with total=self.get_total %}
+                    {% if total %}
+                    <div class="paginator-total">
+                        {{ total|format }}
+                    </div>
+                    {% else %}
+                        <br/>
+                    {% endif %}
+                    {% endwith %}
+                {% endif %}
+
+                <form method="get" class="table-form form-horizontal no-margin form-border" id="{{ self.id }}" action="{{ self.request.get_full_path }}">
+                <input name="tid" type="hidden" value="{{ self.id }}"/>
+                <input name="q{{ self.id }}" id="q{{ self.id }}" type="hidden" value="{{ self.get_q }}"/>
+                <input name="order_by{{ self.id }}" id="order_by{{ self.id }}" type="hidden" value="{{ self.get_order_by }}"/>
+                <input name="page{{ self.id }}" id="page{{ self.id }}" type="hidden" value="{{ self.get_page }}"/>
+                <input name="tab{{ self.id }}" id="tab{{ self.id }}" type="hidden" value="{{ self.get_tab }}"/>
+                <input name="{{ self.id }}" type="hidden" value="1"/>
+                {% with list_filter=self.get_list_filter search_fields=self.get_search_fields %}
+                {% if list_filter or search_fields %}
+                <div>
+                {% with filter_form=self.get_filter_form %}
+                    {{ filter_form.media }}
+                    {% if search_fields or list_filter %}
+                        <div class="filter-container">
+                        {% if search_fields %}
+                        <label>
+                            <div class="input-group">
+                                <input id="search{{ self.id }}" style="height: 34px;" type="text" class="form-control input-sm" placeholder='{% trans "Keywords" %}...' aria-controls="dataTable" value="{{ self.get_q }}" onkeyup="$('#q{{ self.id }}').val(this.value)">
+                                <span class="input-group-btn">
+                                    <button style="height: 34px;margin-left: -2px;" class="btn btn-default btn-sm" type="button" onclick="$('#page{{ self.id }}').val(1);$('#{{ self.id }}').submit();">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </span>
+                                <script>
+                                $('#search{{ self.id }}').keypress(function (e) {
+                                  if (e.which == 13) {
+                                    $('#{{ self.id }}').submit();
+                                    return false;
+                                  }
+                                });
+                                </script>
+                            </div>
+                        </label>
+                        {% endif %}
+
+                        {% for field in filter_form  %}
+                            {{ field }}
+                        {% endfor %}
+
+                        <script>$('#table{{ self.id }}').find('select, input[data-type=\'hidden_daterange\']').on('change', function(e) {$('#{{ self.id }}').submit();});</script>
+
+                        </div>
+                    {% endif %}
+
+                    {% if list_filter1 %}
+                        <div class="pull-right">
+                            <a data-modal-id="#filter_modal{{ self.id }}" href="#" role="button" data-toggle="modal" class="btn btn-default" style="height: 30px;"><i class="fa fa-filter"></i><span class="link-text"> {% trans "Filter" %}...</span></a>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                </form>
+                <div style="clear:both"></div>
+                {% if self.count %}
+
+                    {% if self.help_text %}
+                        <div class="alert alert-info">
+                            {{ self.help_text }}
+                        </div>
+                    {% endif %}
+
+                    {{ content }}
+
+                {% else %}
+                    <div class="alert alert-warning">{% trans "No records found" %}.</div>
+                {% endif %}
+
+                {% if self.subset_dropdown.actions and not self.request.GET.popup %}
+                    <div class="col s12 disabled" id="subset-actions-btn{{ self.id }}">
+
+                        <div class="pull-left">
+                            {{ self.subset_dropdown }}
+                        </div>
+
+                    </div>
+                {% endif %}
+                <div class="col s12" id="paginator{{ self.id }}">
+                    {{ self.pagination|safe }}
+                </div>
+            </div>
+            {% if not self.is_list_view %}
+
+            {% endif %}
+        </div>
 
     <script>
         if($('#table{{ self.id }} .paginator-actions .btn').length == 0) $('#table{{ self.id }} .paginator-actions').hide();

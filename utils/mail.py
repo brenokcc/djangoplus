@@ -23,6 +23,8 @@ def send_mail(subject, message, to, reply_to=None, actions=()):
     html = loader.render_to_string('mail.html', context)
     email = EmailMultiAlternatives(subject, 'Mensagem em anexo.', from_email, [to], reply_to=reply_to)
     email.attach_alternative(html, "text/html")
+    if settings.DEBUG:
+        print(html)
     return email.send()
 
 

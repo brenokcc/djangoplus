@@ -1,3 +1,4 @@
+<h4 align="center">Vínculo{% if self.groups|length > 1 %}s{% endif %}</h4>
 {% for group in self.groups %}
     <div>
         {% if group.scopes > 1 %}
@@ -5,7 +6,7 @@
         <span class="custom-checkbox"></span>
         <label style="display: initial">{{ group }}</label><br>
         {% endif %}
-        <div id="{{ group }}Checkboxes">
+        <div id="{{ group }}Checkboxes" style="{% if self.groups|length > 1 %}padding-left: 10px{% else %}text-align: center{% endif %}">
             {% for role in group.roles %}
                 <div style="{% if group.scopes > 1 %}padding-left: 20px{% endif %}">
                     {% if self.groups|length > 1 %}

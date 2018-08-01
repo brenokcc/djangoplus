@@ -7,6 +7,7 @@ import tempfile
 import json
 import os
 import datetime
+from djangoplus.utils.formatter import to_ascii
 
 
 def mobile(request):
@@ -28,7 +29,7 @@ class XlsResponse(HttpResponse):
         file_name = mktemp()
         wb.save(file_name)
         HttpResponse.__init__(self, content=open(file_name, 'rb').read(), content_type='application/vnd.ms-excel')
-        self['Content-Disposition'] = 'attachment; filename={}.xls'.format(name)
+        self['Content-Disposition'] = 'attachment; filename={}.xls'.format(to_ascii(name))
 
 
 class CsvResponse(HttpResponse):
@@ -40,14 +41,14 @@ class CsvResponse(HttpResponse):
             for row in rows:
                 writer.writerow([col for col in row]) # .encode('iso8859-1')
         HttpResponse.__init__(self, content=open(file_name, 'r').read(), content_type='application/csv')
-        self['Content-Disposition'] = 'attachment; filename={}.xls'.format(name)
+        self['Content-Disposition'] = 'attachment; filename={}.xls'.format(to_ascii(name))
 
 
 class ZipResponse(HttpResponse):
     def __init__(self, file_path):
         content = open(file_path)
         HttpResponse.__init__(self, content=content, content_type='application/zip')
-        self['Content-Disposition'] = 'attachment; filename={}'.format(file_path.split(os.sep)[-1])
+        self['Content-Disposition'] = 'attachment; filename={}'.format(to_ascii(file_path.split(os.sep)[-1]))
 
 
 class JsonResponse(HttpResponse):

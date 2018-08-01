@@ -5,7 +5,7 @@
                 {% for verbose_name, lookup, sortable, to in self.column_names %}
                     {% if forloop.first %}
                         <div class="image-rows-image-container">
-                            {{ obj|getattr:lookup|format }}
+                            {{ obj|getattr:lookup|zoom_image:"width='150px'" }}
                         </div>
                     {% else %}
                     <div>
@@ -44,8 +44,5 @@
     .image-rows-image-container{
         float:left;
         margin-right: 20px;
-    }
-    .paginator-image-rows img {
-        width: 150px;
     }
 </style>

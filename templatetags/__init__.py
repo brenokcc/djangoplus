@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import json
+import locale
 import qrcode
 from django import template
 from django.conf import settings
@@ -37,6 +38,13 @@ def get_item(dictionary, key):
 @register.simple_tag(name='uuid')
 def do_uuid4():
     return uuid4()
+
+
+@register.filter
+def full_date_format(value):
+    locale.setlocale(locale.LC_ALL, "pt_BR")
+    return value.strftime('%d de %B de %Y')
+
 
 @register.filter(name='format')
 def format2(value, request=None):
@@ -182,6 +190,22 @@ def is_image(value):
             if str(value).lower().endswith(ext):
                 return True
     return False
+
+
+@register.filter
+def image(value, attrs="width='100px'", zoom=False):
+    return mark_safe('<img class="{}" {} src="{}">'.format(zoom and 'materialboxed' or '', attrs, image_url(value)))
+
+
+@register.filter
+def zoom_image(value, attrs="width='100px'"):
+    return image(value, attrs=attrs, zoom=True)
+
+
+@register.filter
+def image_url(value):
+    value = str(value)
+    return '/static/' in value and value or '/media/{}'.format(value)
 
 
 @register.filter

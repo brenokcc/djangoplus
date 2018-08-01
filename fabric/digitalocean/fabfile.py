@@ -260,8 +260,8 @@ def _setup_remote_project():
             virtual_env_dir = '/var/opt/.virtualenvs'
             with shell_env(WORKON_HOME=virtual_env_dir):
                 _debug('Installing/Updating project requirements...')
-                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip install --upgrade pip'.format(project_name))
-                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip install -U -r requirements.txt'.format(project_name))
+                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip3 install --upgrade pip'.format(project_name))
+                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip3 install -U -r requirements.txt'.format(project_name))
         _debug('Checking if necessary dirs (logs, media and static) were created...')
         run('mkdir -p logs')
         run('mkdir -p static')
@@ -534,8 +534,8 @@ def _execute_aptget():
             # print LIMITS_FILE_CONTENT
             append('/etc/security/limits.conf', LIMITS_FILE_CONTENT)
 
-        run('pip install --upgrade pip')
-        run('pip install virtualenv virtualenvwrapper')
+        run('pip3 install --upgrade pip')
+        run('pip3 install virtualenv virtualenvwrapper')
 
         if not contains('/root/.bashrc', 'WORKON_HOME'):
             # print BASHRC_FILE_CONTENT

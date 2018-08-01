@@ -26,7 +26,16 @@ def add_months(sourcedate, months):
 
 
 def add_days(sourcedate, days):
+    sourcedate = sourcedate or datetime.date.today()
     return sourcedate + datetime.timedelta(days=days)
+
+
+def future(days):
+    return datetime.date.today() + datetime.timedelta(days=days)
+
+
+def past(days):
+    return datetime.date.today() - datetime.timedelta(days=days)
 
 
 def pretty_date(d):

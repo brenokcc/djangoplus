@@ -71,7 +71,7 @@
                     {% if fieldset.image or fieldset.extra  %}
                         {% if fieldset.image %}
                         <div style="float: left; margin-right: 10px">
-                            {{ self.obj|getattr:fieldset.image|format }}
+                            {{ self.obj|getattr:fieldset.image|zoom_image }}
                         </div>
                         {% else %}
                             <div style="float: right; margin-left: 10px">

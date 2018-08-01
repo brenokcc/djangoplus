@@ -4,7 +4,7 @@ from collections import OrderedDict
 from datetime import datetime
 from djangoplus.ui import RequestComponent
 from djangoplus.utils import permissions
-from djangoplus.utils.metadata import get_metadata
+from djangoplus.utils.metadata import get_metadata, get_can_execute
 from djangoplus.utils.metadata import check_condition
 from djangoplus.utils import http
 
@@ -94,19 +94,20 @@ class ModelDropDown(GroupDropDown):
                 action = loader.actions[self.model][action_category][view_name]
                 action_function = action.get('function')
                 action_title = action['title']
-                action_can_execute = action['can_execute']
+                action_can_execute = get_can_execute(action)
                 action_condition = action['condition']
                 action_css = action['css']
                 action_input = action['input']
                 action_inline = action['inline']
                 action_icon = action['icon']
+                action_display = action['display']
 
                 action_name = action_function.__name__
                 is_action_view = not hasattr(self.model, action_name)
 
                 if action_name and action_css == 'popup' and not is_action_view:
                     func = getattr(self.model, action_name)
-                    action_css = (func.__code__.co_argcount > 1 or action_input) and action_css or 'ajax'
+                    action_css = (func.__code__.co_argcount > 1 or action_input or action_display) and action_css or 'ajax'
 
                 # it is a dropdown in a model panel
                 if fieldset_title is not None:

@@ -74,7 +74,8 @@ def get_field_recursively(field, tokens):
 def get_fieldsets(model, title='Dados Gerais'):
     fields = []
     for field in get_metadata(model, 'fields')[1:]:
-        fields.append(field.name)
+        if not field.name.endswith('_ptr') and not field.name == 'ascii' and not field.name == 'tree_index':
+            fields.append(field.name)
 
     for field in get_metadata(model, 'local_many_to_many'):
         fields.append(field.name)
@@ -245,6 +246,7 @@ def check_role(self, saving=True):
     verbose_name = get_metadata(self.__class__, 'verbose_name')
     role_email = get_metadata(self.__class__, 'role_email', '')
     role_scope = get_metadata(self.__class__, 'role_scope', False)
+    role_notify = get_metadata(self.__class__, 'role_notify', False)
 
     if role_username:
         from django.conf import settings
@@ -285,12 +287,16 @@ def check_role(self, saving=True):
                     if user.email and not (settings.DEBUG or 'test' in sys.argv):
                         user.send_access_invitation()
 
-                user.groups.add(group)
+                already_in_group = user.groups.filter(pk=group.pk).exists()
+                if not already_in_group:
+                    user.groups.add(group)
                 if scopes:
                     for scope in scopes:
                         Role.objects.get_or_create(user=user, group=group, scope=scope)
                 else:
                     Role.objects.get_or_create(user=user, group=group)
+                if role_notify and not already_in_group:
+                    user.send_access_invitation(group)
             else:
                 user = User.objects.filter(username=username).first()
                 if user:
@@ -409,7 +415,7 @@ def should_filter_or_display(request, model, to):
         can_view = list(
             get_metadata(model, 'can_admin', (), iterable=True) +
             get_metadata(model, 'can_admin_by_organization', (), iterable=True) +
-            get_metadata(model,'can_admin_by_unit',(), iterable=True) +
+            get_metadata(model, 'can_admin_by_unit',(), iterable=True) +
             get_metadata(model, 'can_list', (), iterable=True) +
             get_metadata(model, 'can_list_by_organization', (), iterable=True) +
             get_metadata(model, 'can_list_by_unit', (), iterable=True) +

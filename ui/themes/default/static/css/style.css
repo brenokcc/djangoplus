@@ -1,5 +1,5 @@
 body {
-    font-family: 'Open Sans', sans-serif;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol" !important;
     color: #33455a;
 }
 
@@ -12,7 +12,7 @@ a:hover{
 
 h1, h2, h3, h4, h5, h6, .panel .panel-heading i {
     font-weight: inherit;
-    color: #6e829b;
+    color: #3d5170;
 }
 
 .navbar{
@@ -56,18 +56,16 @@ h1, h2, h3, h4, h5, h6, .panel .panel-heading i {
 .table > thead > tr > th, .table > thead > tr > td {
     border-bottom-width: 1px !important;
 }
-.table td{
-    padding: 15px !important;
-}
 
 .btn-default{
-    text-transform: uppercase;
+    border: 1px solid #e1e5eb !important;
+    color: #3d5170 !important;
 }
 
 .btn-default:hover, .pagination>.active>a{
-    padding: 4px 10px;
-    background-color: inherit;
-    border: 3px solid #6e829b !important;
+    background-color: white;
+    box-shadow: 0 0.125rem 0.625rem rgba(129,142,163,.2), 0 0.0625rem 0.125rem rgba(129,142,163,.3);
+
 }
 
 .fc-content {
@@ -94,8 +92,8 @@ h1, h2, h3, h4, h5, h6, .panel .panel-heading i {
 .badge{
     background-color: #BBB;
 }
-.badge-primary{
-    background-color: #6e829b;
+.badge-primary, .progress-bar{
+    background-color: #3d5170;
 }
 
 .timeline{
@@ -255,4 +253,119 @@ input[type=checkbox]:active + .custom-checkbox, input[type=radio]:active + .cust
     -moz-box-shadow: inset 0 2px 3px rgba(0, 0, 0, .1);
     -webkit-box-shadow: inset 0 2px 3px rgba(0, 0, 0, .1)
 }
+
+
+header{
+ box-shadow: 0 0.125rem 0.625rem rgba(90,97,105,.12);
+ height: 67.5px !important;
+}
+
+
+.navbar-top-links li a{
+ padding: 25px !important;
+}
+
+.notification-label{
+ top: 20px !important;
+ right: 30px !important;
+}
+
+.navbar-brand{
+ padding: 7px 25px !important;
+}
+
+#menu-toggle{
+ margin: 15px !important;
+}
+
+#page-wrapper{
+ margin-top: 68px !important;
+}
+
+
+aside .nav>li>a i{
+color: #cacedb !important;
+    margin-left: 5px;
+    margin-right: 10px;
+}
+
+aside .nav>li>a{
+    color: #3d5170 !important;
+    font-size: 110%;
+    border-bottom: 1px solid #e1e5eb;
+    margin: 5px;
+}
+aside .nav>li>a.active{
+    color: #3d5170 !important;
+    font-weight: 500;
+}
+aside .nav>li>a.active i{
+    color: #3d5170 !important;
+}
+
+.breadcrumb, #page-wrapper{
+    background-color: #f5f6f8 !important;
+}
+
+.table-responsive, .card-panel-item{
+    background-color: #fff;
+}
+
+.shortcut-wrapper{
+    border: None;
+}
+
+.paginator .table-responsive th{
+    height: 44px;
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+}
+.paginator .table-responsive .table td{
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+}
+.panel-heading{
+    height: 64px !important;
+    padding: 20px !important;
+}
+
+.btn-default[type="submit"]{
+    background-color: transparent;
+    background-image: none;
+    border-color: #3d5170 !important;
+    color: #3d5170 !important;
+}
+.btn-default[type="submit"]:hover {
+    color: #fff !important;
+    background-color: #3d5170;
+    border-color: #3d5170;
+    box-shadow: 0 5px 15px rgba(0,0,0,.05), 0 4px 10px rgba(0,123,255,.25);
+}
+
+.navbar-brand {
+    font-weight: 500;
+    color: #3d5170 !important;
+    font-size: 24px;
+}
+
+.paginator-admin .panel-body{
+    background-color: #fff;
+    padding-top: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;
+    margin-top: 5px;
+}
+
+.pagination>.active>a:hover{
+    background-color: #fff;
+}
+
+.padding-md{
+    padding: 15px;
+}
+
+
+
+
 

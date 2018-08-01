@@ -59,6 +59,7 @@ class ModelPanel(RequestComponent):
 
             drop_down = ModelDropDown(self.request, model)
             fieldset_actions = info.get('actions', [])
+            fieldset_image = info.get('image')
 
             if fieldset_actions:
                 drop_down.add_actions(self.obj, fieldset_title=title)
@@ -105,7 +106,7 @@ class ModelPanel(RequestComponent):
                         attr_names = []
 
                         for attr_name in name_or_tuple:
-                            if attr_name != parent:
+                            if attr_name != parent and attr_name != fieldset_image:
                                 attr = getattr(model, attr_name)
                                 field = None
                                 if hasattr(attr, 'field_name'):
@@ -240,14 +241,14 @@ class CardPanel(RequestComponent):
                             count = qs.count()
                             if count:
                                 url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                                self.add(icon, title, count, url, 'bg-info', None, item['title'])
+                                self.add(icon, title, count, url, '', None, item['title'])
 
         for item in loader.views:
             if False:  # TODO False
                 if permissions.check_group_or_permission(request, item['can_view']):
-                    self.add(item['icon'], item['menu'], None, item['url'], 'bg-info', item['can_view'], item['style'])
+                    self.add(item['icon'], item['menu'], None, item['url'], '', item['can_view'], item['style'])
 
-    def add(self, icon, title, count=None, url=None, css='bg-info', perm_or_group=None, description=''):
+    def add(self, icon, title, count=None, url=None, css='', perm_or_group=None, description=''):
         if permissions.check_group_or_permission(self.request, perm_or_group):
             item = dict(icon=icon, title=title, count=count, url=url, css=css, description=description)
             self.items.append(item)
@@ -263,7 +264,7 @@ class CardPanel(RequestComponent):
             model_name = model.__name__.lower()
             url = '/list/{}/{}/'.format(app_label, model_name)
             permission = '{}.list_{}'.format(app_label, model_name)
-            self.add(icon, title, None, url, 'bg-info', permission)
+            self.add(icon, title, None, url, '', permission)
 
 
 class DashboardPanel(RequestComponent):
