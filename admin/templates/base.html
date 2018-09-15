@@ -54,6 +54,12 @@
         <!-- Custom Theme -->
         <link href="/static/css/style.css" rel="stylesheet"/>
 
+        {% if executing_tests %}
+            <script>window['executing_tests']=true;</script>
+        {% endif %}
+        {% if display_fake_mouse %}
+            <script>window['display_fake_mouse']=true;</script>
+        {% endif %}
     </head>
 {% endif %}
     {% block body %}
@@ -107,7 +113,9 @@
 
     {% if messages %}
         {% for message in messages %}
+            {% if 'error' not in message.tags %}
             {{ message|toast }}
+            {% endif %}
         {% endfor %}
     {% endif %}
 
@@ -130,6 +138,9 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div>
+    {% if display_emails %}
+        <script>popup('/admin/emails/')</script>
+    {% endif %}
 {% endif %}
 
 </html>

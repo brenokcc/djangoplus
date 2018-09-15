@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 import json
 import sys
 import shutil
@@ -324,9 +325,10 @@ class ImageFieldFile(ImageFieldFile):
                     setattr(self, 'large', get_size(self, size))
 
     def generate_thumb(self, img, thumb_size, file_format):
-        # return img
-        import io
-        from PIL import Image
+        try:
+            from PIL import Image
+        except ImportError:
+            return img
         img.seek(0)  # see http://code.djangoproject.com/ticket/8222 for details
         image = Image.open(img)
 
@@ -356,7 +358,7 @@ class ImageFieldFile(ImageFieldFile):
             image2 = image
             image2.thumbnail(thumb_size, Image.ANTIALIAS)
 
-        io = io.StringIO()
+        io = io.BytesIO()
         # PNG and GIF are the same, JPG is JPEG
         if file_format.upper() == 'JPG':
             file_format = 'JPEG'

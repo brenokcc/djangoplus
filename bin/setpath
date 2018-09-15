@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+if ! [ -x "$(command -v startproject)" ]; then
+    if [ -f ~/.bashrc ]; then
+        echo "
+export PATH=~/.local/bin:\$PATH
+        " >> ~/.bashrc
+    fi
+    if [ -f ~/.zshrc ]; then
+        echo "
+export PATH=~/.local/bin:\$PATH
+        " >> ~/.zshrc
+    fi
+    if [ -f ~/.profile ]; then
+        echo "
+export PATH=~/.local/bin:\$PATH
+        " >> ~/.profile
+    fi
+    if [ -f ~/.bash_profile ]; then
+        echo "
+export PATH=~/.local/bin:\$PATH
+        " >> ~/.bash_profile
+    fi
+    export PATH=~/.local/bin:$PATH
+fi
+
+

@@ -1,36 +1,30 @@
 # -*- coding: utf-8 -*-
-
+import os
 import json
-
-from djangoplus.docs.doc import Documentation
 from os import path, listdir
 from django.conf import settings
 from djangoplus.cache import loader
-from djangoplus.docs import utils
 from djangoplus.admin.models import Group
-from djangoplus.decorators.views import view
+from djangoplus.docs import Documentation
+from djangoplus.decorators.views import view, action
 from djangoplus.admin.models import User, Organization
 
 
-@view('Modelo', login_required=False, template='source.html')
-def model(request):
+@view('Source', login_required=False)
+def source(request, module=None):
     src = []
-    content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'models.py')).read()
-    src.append(dict(file='models.py', language='python', content=content))
-    content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'formatters.py')).read()
-    src.append(dict(file='formatters.py', language='python', content=content))
-    for template_file_name in listdir(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'templates')):
-        if template_file_name != 'public.html':
-            content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'templates', template_file_name)).read()
-            src.append(dict(file=template_file_name, language='html', content=content))
-    return locals()
-
-
-@view('Testes', login_required=False, template='source.html')
-def tests(request):
-    src = []
-    content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'tests.py')).read()
-    src.append(dict(file='tests.py', language='python', content=content))
+    if module == 'model':
+        content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'models.py')).read()
+        src.append(dict(file='models.py', language='python', content=content))
+        content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'formatters.py')).read()
+        src.append(dict(file='formatters.py', language='python', content=content))
+        for template_file_name in listdir(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'templates')):
+            if template_file_name != 'public.html':
+                content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'templates', template_file_name)).read()
+                src.append(dict(file=template_file_name, language='html', content=content))
+    elif module == 'tests':
+        content = open(path.join(settings.BASE_DIR, settings.PROJECT_NAME, 'tests.py')).read()
+        src.append(dict(file='tests.py', language='python', content=content))
     return locals()
 
 
@@ -76,8 +70,20 @@ def homologate(request):
     return locals()
 
 
-@view('Doc', login_required=False)
+@view('Documentation', login_required=False)
 def doc(request):
     documentation = Documentation()
     workflow_data = json.dumps(loader.workflows)
     return locals()
+
+
+@view('Tutorials', login_required=False)
+def tutorial(request):
+    file_path = '{}/tutorials/youtube.json'.format(settings.BASE_DIR)
+    videos = os.path.exists(file_path) and json.load(open(file_path)) or []
+    return locals()
+
+
+@action(User, 'Login as User', can_execute='Superuser')
+def login_as(request, pk):
+    pass

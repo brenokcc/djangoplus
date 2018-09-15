@@ -5,7 +5,8 @@ import json
 from os import path
 from django.conf import settings
 from djangoplus.test import cache
-from djangoplus.docs.doc import Workflow, UseCase
+from djangoplus.docs.diagrams import Workflow
+from djangoplus.docs.usecase import UseCase
 from django.core.management.commands import test
 
 
@@ -18,11 +19,24 @@ class Command(test.Command):
         parser.add_argument('--add', action='store_true', dest='add', default=(),
                             help='Adds test cases in test.py file')
         parser.add_argument('--watch', action='store_true', dest='watch', default=False,
-                            help='Run test in browser intead of headless mode')
+                            help='Run tests in browser intead of headless mode')
+        parser.add_argument('--record', action='store_true', dest='record', default=False,
+                            help='Record the videos for the functions decorated with @tutorial')
+        parser.add_argument('--upload', action='store_true', dest='upload', default=False,
+                            help='Upload the videos for the functions decorated with @tutorial')
 
     def handle(self, *args, **options):
-        if not options.pop('watch', False):
-            os.environ['HEADLESS'] = '1'
+        watch = options.pop('watch', False)
+        record = options.pop('record', False)
+        upload = options.pop('upload', False)
+
+        if not watch and not record and not upload:
+            cache.HEADLESS = True
+        if record or upload:
+            cache.RECORD = True
+        if upload:
+            cache.UPLOAD = True
+
         if options.pop('add', False):
             workflow = Workflow()
             function_definitions = []

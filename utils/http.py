@@ -63,7 +63,10 @@ class PdfResponse(HttpResponse):
         from xhtml2pdf import pisa
 
         def link_callback(uri, rel):
-            s = '{}/{}'.format(settings.MEDIA_ROOT, uri.replace('/media', ''))
+            if not uri.startswith('/static'):
+                s = '{}/{}'.format(settings.MEDIA_ROOT, uri.replace('/media', ''))
+            else:
+                s = '{}/{}/{}'.format(settings.BASE_DIR, settings.PROJECT_NAME, uri)
             return s
 
         tmp = tempfile.NamedTemporaryFile(mode='w+b', delete=False)

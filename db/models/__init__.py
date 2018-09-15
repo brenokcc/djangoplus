@@ -258,7 +258,7 @@ class QuerySet(query.QuerySet):
                         label = horizontal_choice[1]
                         value = 0
                         lookup = {vertical_key: vertical_choice[0] or None, horizontal_key: horizontal_choice[0] or None}
-                        qs = self.filter(**lookup)
+                        qs = self.filter(**lookup).distinct()
                         if aggregate:
                             mode, attr = aggregate
                             if mode == 'sum':
@@ -281,7 +281,7 @@ class QuerySet(query.QuerySet):
                     label = vertical_choice[1]
                     lookup = {vertical_key: vertical_choice[0] or None}
                     value = 0
-                    qs = self.filter(**lookup)
+                    qs = self.filter(**lookup).distinct()
                     if aggregate:
                         mode, attr = aggregate
                         if mode == 'sum':
@@ -325,6 +325,8 @@ class Manager(models.Manager):
         return self.queryset_class(self.model, using=self._db)
 
     def all(self, user=None, obj=None):
+        if self.queryset_class != self.model.objects.queryset_class:
+            return self.model.objects.filter(pk=0).union(self.get_queryset().all(user, obj=obj))
         return self.get_queryset().all(user, obj=obj)
 
     def count(self, vertical_key=None, horizontal_key=None):
@@ -570,10 +572,9 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     permission_mapping = self._user.get_permission_mapping(model)
                     if 'edit_lookups' in permission_mapping and permission_mapping['edit_lookups']:
                         for lookup, values in permission_mapping['edit_lookups']:
-                            value = getattr2(self, lookup)
-                            value = hasattr(value, 'pk') and value.pk or value
-                            if value in values:
-                                return True
+                            for value in model.objects.filter(pk=self.pk).values_list(lookup, flat=True).distinct():
+                                if value in values:
+                                    return True
                         return False
                 else:
                     return False
@@ -589,10 +590,9 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     permission_mapping = self._user.get_permission_mapping(model)
                     if 'delete_lookups' in permission_mapping and permission_mapping['delete_lookups']:
                         for lookup, values in permission_mapping['delete_lookups']:
-                            value = getattr2(self, lookup)
-                            value = hasattr(value, 'pk') and value.pk or value
-                            if value in values:
-                                return True
+                            for value in model.objects.filter(pk=self.pk).values_list(lookup, flat=True).distinct():
+                                if value in values:
+                                    return True
                         return False
                 else:
                     return False

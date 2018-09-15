@@ -23,6 +23,7 @@
           }); // end of document ready
         })(jQuery); // end of jQuery name space
     </script>
+
     {% block extra_admin_head %}
 
     {% endblock %}
@@ -122,16 +123,24 @@
                                         <li><a class="ajax" href="/list/admin/log/" title="Logs"><i class="fa fa-history fa-fw"></i> Logs</a></li>
                                         <li class="divider"></li>
                                     {% endif %}
-                                    <li><a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {% trans "Logout" %}</a>
                                     </li>
                                 </ul>
                             </div>
                     </div>
                     {% if role_selector.groups %}
-                    <div class="padding-md" style="min-height:150px; border-top: 1px solid #e5e5e5">
+                    <div class="padding-md" style="min-height:100px; border-top: 1px solid #e5e5e5">
                         {{ role_selector }}
                     </div>
                     {% endif %}
+                    <div class="padding-md">
+                        <div>
+                            <ul class="dropdown-user">
+                                <li>
+                                    <a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {% trans "Logout" %}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </li>
         </ul>
@@ -149,9 +158,19 @@
             {% else %}
                 <br>
             {% endif %}
+            {% for message in messages %}
+            {% if 'error' in message.tags %}
+                <div class="padding-md">
+                <div class="alert alert-danger">
+                    {{ message }}
+                </div>
+                </div>
+            {% endif %}
+            {% endfor %}
         <div>
 {% endif %}
             <div {% if not request.GET.popup %}id="content"{% endif %}>
+
             {% block content %}
 
             {% endblock %}

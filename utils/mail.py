@@ -1,8 +1,21 @@
 # -*- coding: utf-8 -*-
-
+import json
 from django.conf import settings
 from django.template import loader
 from django.core.mail import EmailMultiAlternatives
+from django.core.mail.backends.base import BaseEmailBackend
+
+DEBUG_EMAIL_FILE_PATH = '/tmp/{}.json'.format(settings.PROJECT_NAME)
+
+
+class EmailBackend(BaseEmailBackend):
+
+    def send_messages(self, email_messages):
+        messagens = []
+        for message in email_messages:
+            messagens.append(dict(from_email=message.from_email, to=', '.join(message.to), message=message.body))
+        open(DEBUG_EMAIL_FILE_PATH, 'w').write(json.dumps(messagens))
+        return len(messagens)
 
 
 def send_mail(subject, message, to, reply_to=None, actions=()):
@@ -23,8 +36,6 @@ def send_mail(subject, message, to, reply_to=None, actions=()):
     html = loader.render_to_string('mail.html', context)
     email = EmailMultiAlternatives(subject, 'Mensagem em anexo.', from_email, [to], reply_to=reply_to)
     email.attach_alternative(html, "text/html")
-    if settings.DEBUG:
-        print(html)
     return email.send()
 
 

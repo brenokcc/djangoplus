@@ -799,7 +799,6 @@ input::placeholder, .select2-selection__placeholder {
 .panel.notification-panel .panel-body > a {
     display: inline-block;
     margin-top: -40px;
-    width: 170px;
 }
 
 .panel.notification-panel .panel-body span {
@@ -807,7 +806,7 @@ input::placeholder, .select2-selection__placeholder {
 }
 
 .panel.notification-panel .panel-body span:first-child {
-    font-size: 1200%;
+    font-size: 1000%;
 }
 
 .panel.notification-panel .panel-body span:last-child {

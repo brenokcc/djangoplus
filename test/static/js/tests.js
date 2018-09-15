@@ -1,5 +1,46 @@
 var cursor = document;
 
+function fakeMouse(){
+    var img = $('<img id="fake-cursor">');
+    img.attr('id', "fake-cursor");
+    img.attr('src', "/static/images/hand.png");
+    img.css('position', 'absolute');
+    img.css('top', '300px');
+    img.css('left', '300px');
+    img.css('z-index', '99999999');
+    img.appendTo(document.body);
+}
+
+function fakeType(el, string, index){
+      var val = string.substr(0, index + 1);
+      el.val(val);
+      if (index < string.length) {
+        setTimeout(function(){ fakeType(el, string, index + 1); }, Math.random() * 200);
+      }
+      if(index==string.length-1){
+          var daterangepicker = el.data('daterangepicker');
+          if(daterangepicker) daterangepicker.hide();
+      }
+}
+
+
+function moveMouseTo(lookup, f) {
+    $("#fake-cursor").attr("src","/static/images/hand.png");
+    var el = $(lookup).first();
+    var top = el.first().offset()['top']+el.height()/2;
+	var left = el.first().offset()['left']+el.width()/2;
+	var lastClickedElement = null;
+	window['mouse-top'] = top;
+	window['mouse-left'] = left;
+	$('#fake-cursor').animate({top:  top, left: left }, 1200, 'swing', function(){
+	    if(lastClickedElement!=el) {
+	        $("#fake-cursor").attr("src","/static/images/click.png");
+            setTimeout(f, 500);
+        }
+	    lastClickedElement = el;
+	});
+}
+
 function recursively(element){
     if(element.length==0 && cursor!=document) {
         if (cursor.parentNode != null) cursor = cursor.parentNode; else cursor = document;
@@ -8,16 +49,29 @@ function recursively(element){
     return false
 }
 
-function scroolToElement(element){
-    var obj = element[0];
-    var curtop = 0;
-    if (obj.offsetParent) {
-        do {
-            curtop += obj.offsetTop;
-        }
-        while (obj = obj.offsetParent);
-        window.scroll(0, curtop - 300);
+function isIntoView(elem)
+{
+    var docViewTop = $(window).scrollTop();
+    var docViewBottom = docViewTop + $(window).height();
+
+    var elemTop = elem.offset().top;
+    var elemBottom = elemTop + elem.height();
+
+    return ((elemBottom <= docViewBottom-200) && (elemTop-52 >= docViewTop));
+}
+
+function scroolToElement(element, callback){
+    var lastScrooledElement = null;
+    if(element.offset() && !isIntoView(element)) {
+        var scrollData = { scrollTop: element.offset().top - $(window).height()/2 };
+        $([document.documentElement, document.body]).animate(scrollData, 0, 'swing', function (){
+            if(lastScrooledElement!=element) callback();
+            lastScrooledElement = element;
+        });
+    } else {
+        callback();
     }
+    return element
 }
 
 function typeReturn(element){
@@ -40,18 +94,26 @@ function click(name, type, index){
     var tab = type == 'tab';
 
     if (tab){
-        element = $(cursor).find('.nav-tabs').find( "a:visible:contains('"+name+"')" );
+        element = $(cursor).find('.nav-tabs').find( "a:visible:contains('"+name+"')" ).first();
     } else {
-        if (element.length == 0 && (link || button)) element = $(cursor).find("button:visible:contains('" + name + "'), button[name='" + name + "']");
-        if (element.length == 0 && (link || button)) element = $(cursor).find("a:visible:contains('" + name + "'), a[name='" + name + "']").not($('.main-menu').find('a'));
-        if (element.length == 0 && menu) element = $(cursor).find('.main-menu').find("a:visible:contains('" + name + "')");
+        if (element.length == 0 && (link || button)) element = $(cursor).find("button:visible:contains('" + name + "'), button[name='" + name + "']").first();
+        if (element.length == 0 && (link || button)) element = $(cursor).find("a:visible:contains('" + name + "'), a[name='" + name + "']").not($('.main-menu').find('a')).first();
+        if (element.length == 0 && menu) element = $(cursor).find('.main-menu').find("a:visible:contains('" + name + "')").first();
     }
 
     if(recursively(element)){
         return click(name, type);
     } else {
-        scroolToElement(element);
-        element[index].click();
+        function afterScrool() {
+            if (window['display_fake_mouse']) {
+                moveMouseTo(element[index], function () {
+                    element[index].click();
+                });
+            } else {
+                element[index].click();
+            }
+        }
+        scroolToElement(element, afterScrool);
     }
 }
 
@@ -81,7 +143,11 @@ function clickIcon(name, index){
     if(recursively(element)){
         return clickIcon(name, index);
     } else {
-        $(cursor).find(element[index]).click()
+        if(window['display_fake_mouse']){
+            moveMouseTo(element[index], function(){$(cursor).find(element[index]).click()});
+        } else {
+            $(cursor).find(element[index]).click()
+        }
     }
 }
 
@@ -91,21 +157,20 @@ function lookAtPopupWindow(){
 
 function lookAt(text, only_panel){
     if(only_panel==true){
-        var element = $(cursor).find(".panel-heading:visible:contains('"+text+"')");
-        if (element.length == 0) element = $(cursor).find("h1:visible:contains('" + text + "')");
-        if (element.length == 0) element = $(cursor).find("h2:visible:contains('" + text + "')");
-        if (element.length == 0) element = $(cursor).find("h3:visible:contains('" + text + "')");
-        if (element.length == 0) element = $(cursor).find("h4:visible:contains('" + text + "')");
+        var element = $(cursor).find(".panel-heading:visible:contains('"+text+"')").first();
+        if (element.length == 0) element = $(cursor).find("h1:visible:contains('" + text + "')").first();
+        if (element.length == 0) element = $(cursor).find("h2:visible:contains('" + text + "')").first();
+        if (element.length == 0) element = $(cursor).find("h3:visible:contains('" + text + "')").first();
+        if (element.length == 0) element = $(cursor).find("h4:visible:contains('" + text + "')").first();
     } else {
         var element = $(cursor).find("tr:visible:contains('" + text + "')");
-        if (element.length == 0) element = $(cursor).find("p:visible:contains('" + text + "')");
-        if (element.length == 0) element = $(cursor).find("div:visible:contains('" + text + "')");
+        if (element.length == 0) element = $(cursor).find("p:visible:contains('" + text + "')").first();
+        if (element.length == 0) element = $(cursor).find("div:visible:contains('" + text + "')").first();
     }
     if(recursively(element)){
         lookAt(text, only_panel);
     }
     else{
-        console.log(element);
         cursor = element[0];
     }
 }
@@ -115,27 +180,62 @@ function lookAtPanel(text){
 }
 
 function enter(name, value, submit){
-
     if(String(value)!='null' && String(value)){
-        var element = $(cursor).find( "input[name='"+name+"'], textarea[name='"+name+"']" )
-        if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('input, textarea')
+        var element = $(cursor).find( "input[name='"+name+"'], textarea[name='"+name+"']" ).first();
+        if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('input, textarea').first();
+
+        $('input[name=hidden-upload-value]').remove();
+        if(element.prop("type")=='file'){
+            $('<input type="hidden" name="hidden-upload-value" value="'+element[0].id+':'+value+'">').appendTo(document.body);
+            return element;
+        }
 
         if(recursively(element)){
             return enter(name, value, submit);
         } else {
-            element.focus();
-            element.val(value);
-            element.focus();
-            scroolToElement(element);
-            if (submit) typeReturn(element);
-            return element
+            function afterScrool() {
+                element.focus();
+                if (window['display_fake_mouse']) {
+                    fakeType(element, value, 0);
+                } else {
+                    element.val(value);
+                    var daterangepicker = element.data('daterangepicker');
+                    if(daterangepicker){
+                        setTimeout(function(){daterangepicker.hide()}, 500);
+                    }
+                }
+                element.focus();
+                if (submit) typeReturn(element);
+            }
+            scroolToElement(element, afterScrool);
+            return element;
         }
     }
 }
 
+function pick(value){
+    var checkbox = $(cursor).find("tr:contains('"+value+"')" ).parent().find('input[type=checkbox]');
+    if(checkbox.length>0){
+        function callback(){
+            checkbox.trigger('click');
+        }
+        return scroolToElement(checkbox, callback);
+    }
+}
+
 function choose(name, value, headless){
-    var element = $(cursor).find( "select[name='"+name+"']" )
-    if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('select')
+    if(!value) return;
+
+    var checkbox = $(cursor).find(".pick-value td:contains('"+value+"')" ).parent().find('input[type=checkbox]');
+    if(checkbox.length>0){
+        function callback(){
+            checkbox.prop('checked', true);
+        }
+        return scroolToElement(checkbox, callback);
+    }
+
+    var element = $(cursor).find( "select[name='"+name+"']" );
+    if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('select');
 
     if(recursively(element)){
         return choose(name, value, headless);

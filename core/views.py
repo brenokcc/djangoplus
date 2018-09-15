@@ -59,81 +59,7 @@ def listt(request, app, cls, subset=None):
     paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True, list_display=list_display, list_filter=list_filter, search_fields=search_fields)
     paginator.process_request()
 
-    if _model in loader.class_actions:
-        for group in loader.class_actions[_model]:
-            for view_name in loader.class_actions[_model][group]:
-                _action = loader.class_actions[_model][group][view_name]
-                action_title = _action['title']
-                action_message = _action['message']
-                action_can_execute = _action['can_execute']
-                action_input = _action['input']
-                action_css = _action['css']
-                action_condition = _action['condition']
-                initial = _action['initial']
-                choices = _action['choices']
 
-                if subsetp:
-                    if subsetp not in loader.subset_actions[_model] or view_name not in loader.subset_actions[_model][subsetp]:
-                        continue
-                else:
-                    if subset in loader.subset_actions[_model] and view_name not in loader.subset_actions[_model][subset]:
-                        continue
-
-                if permissions.check_group_or_permission(request, action_can_execute):
-                    func = hasattr(qs, view_name) and getattr(qs, view_name) or None
-                    if func:
-
-                        char = '?' in request.get_full_path() and '&' or '?'
-                        url = '{}{}{}'.format(request.get_full_path(), char, '{}='.format(view_name))
-
-                        has_input = func.__code__.co_argcount > 1
-
-                        if not has_input:
-                            action_css = action_css.replace('popup', '')
-                        paginator.add_subset_action(action_title, url, action_css, None, action_condition)
-
-                        if view_name in request.GET:
-                            ids = paginator.get_selected_ids()
-                            if ids:
-                                qs = paginator.get_queryset(paginate=False).filter(id__in=ids)
-                            else:
-                                qs = paginator.get_queryset(paginate=False)
-
-                            func = getattr(qs, view_name)
-                            redirect_url = None
-
-                            if has_input:
-                                form = factory.get_class_action_form(request, _model, _action, func)
-                                paginator = ''
-                                if form.is_valid():
-                                    params = []
-                                    for param in func.__code__.co_varnames[1:func.__code__.co_argcount]:
-                                        if param in form.cleaned_data:
-                                            params.append(form.cleaned_data[param])
-                                    try:
-                                        f_return = func(*params)
-                                        redirect_url = '..'
-                                    except ValidationError as e:
-                                        form.add_error(None, str(e.message))
-                                if not redirect_url:
-                                    return render(request, 'default.html', locals())
-                            else:
-                                f_return = func()
-                                redirect_url = '.'
-
-                            if redirect_url:
-                                request.GET._mutable = True
-                                del request.GET['ids']
-                                del request.GET[view_name]
-                                request.GET._mutable = False
-                            return httprr(request, redirect_url, action_message)
-                    else:
-                        url = '/{}/{}/'.format(app, view_name)
-                        if view_name in request.GET:
-                            return httprr(request, url)
-                        else:
-                            action_css = action_css.replace('popup', '')
-                            paginator.add_action(action_title, url, action_css, None)
 
     paginator.add_actions()
     return render(request, 'default.html', locals())
@@ -290,15 +216,17 @@ def action(request, app, cls, action_name, pk=None):
     action_permission = '{}.{}'.format(_model._meta.app_label, action_function.__name__)
     action_input = form_action['input']
     action_display = form_action['display']
-    redirect_to = form_action['redirect_to']
+    action_style = form_action['css']
+    action_redirect = form_action['redirect_to']
 
-    obj = pk and _model.objects.all(request.user).get(pk=pk) or _model()
+    obj = pk and _model.objects.all(request.user).distinct().get(pk=pk) or _model()
     obj.request = request
     obj._user = request.user
     title = action_title
+    redirect_to = None
 
     if check_condition(action_condition, obj) and (not action_can_execute or permissions.check_group_or_permission(request, action_permission)):
-
+        f_return = None
         func = getattr(_model, action_function.__name__, action_function)
         form = factory.get_action_form(request, obj, form_action)
 
@@ -313,13 +241,13 @@ def action(request, app, cls, action_name, pk=None):
                         params.append(form.cleaned_data[param])
                 try:
                     f_return = func(*params)
-                    if not redirect_to:
+                    if not action_redirect:
                         if func.__code__.co_argcount > 1 or action_display:
-                            return httprr(request, '..', action_message)
+                            redirect_to = '..'
                         else:
-                            return httprr(request, '.', action_message)
+                            redirect_to = '.'
                     else:
-                        return httprr(request, Template(redirect_to).render(Context({'self': obj})), action_message)
+                        redirect_to = Template(action_redirect).render(Context({'self': obj}))
                 except ValidationError as e:
                     form.add_error(None, str(e.message))
         else:
@@ -329,15 +257,37 @@ def action(request, app, cls, action_name, pk=None):
                         obj = form.cleaned_data['instance']
                     func = getattr(obj, action_function.__name__, action_function)
                     f_return = func()
-                    if not redirect_to:
+                    if not action_redirect:
                         if func.__code__.co_argcount > 1 or action_display:
-                            return httprr(request, '..', action_message)
+                            redirect_to = '..'
                         else:
-                            return httprr(request, '.', action_message)
+                            redirect_to = '.'
                     else:
-                        return httprr(request, Template(redirect_to).render(Context({'self': obj})), action_message)
+                        redirect_to = Template(action_redirect).render(Context({'self': obj}))
             except ValidationError as e:
-                form.add_error(None, str(e.message))
+                if form.fields:
+                    form.add_error(None, str(e.message))
+                return httprr(request, '.', e.message, error=True)
+
+        if f_return:
+            if 'pdf' in action_style:
+                request.GET._mutable = True
+                request.GET['pdf'] = 1
+                request.GET._mutable = False
+                from datetime import datetime
+                from djangoplus.admin.models import Settings
+                from djangoplus.utils.http import PdfResponse
+                from django.template.loader import render_to_string
+                app_settings = Settings.default()
+                f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
+                f_return['project_name'] = app_settings.initials
+                f_return['project_description'] = app_settings.name
+                f_return['today'] = datetime.now()
+                template_list = ['{}.html'.format(action_function.__name__), 'report.html']
+                landscape = 'landscape' in action_style
+                return PdfResponse(render_to_string(template_list, f_return, request=request), landscape=landscape)
+        elif redirect_to:
+            return httprr(request, redirect_to, action_message)
 
         if form.title == DEFAULT_FORM_TITLE:
             form.title = action_title

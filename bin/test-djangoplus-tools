@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+DIRECTORY=$(pwd)
+cd /tmp
+startproject xyz
+cd xyz
+python3 manage.py test_tools
+rm -r /tmp/xyz
+cd $DIRECTORY
+echo "[OK]"

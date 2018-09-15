@@ -1,7 +1,10 @@
+#!/usr/bin/env bash
+
 BOLD='\033[1m'
 CYAN='\033[1;36m'
 GREEN='\033[1;32m'
 BLACK='\033[0m'
+SECRET_KEY=$(mktemp XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)
 
 if [[ "$1" != "" ]]; then
     PROJECT_NAME=$1
@@ -158,6 +161,8 @@ from os import sep
 from djangoplus.conf.base_settings import *
 from os.path import abspath, dirname, join, exists
 
+SECRET_KEY = '$SECRET_KEY'
+
 BASE_DIR = abspath(dirname(dirname(__file__)))
 PROJECT_NAME = __file__.split(sep)[-2]
 
@@ -212,7 +217,7 @@ printf "from djangoplus.fabric.digitalocean.fabfile import *
 from djangoplus.fabric.tests.fabfile import *
 " > fabfile.py
 
-python manage.py sync
+python3 manage.py sync
 printf "
 ${GREEN}Congratulations\041\041\041${BLACK} The project was successfully started and configured. =)
 A superuser with username ${BOLD}admin${BLACK} and password ${BOLD}senha${BLACK} was created

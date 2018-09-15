@@ -2,6 +2,7 @@
 
 import os
 from django.forms import widgets
+from djangoplus.test import cache
 from django.utils.safestring import mark_safe
 from djangoplus.utils.metadata import get_metadata
 from django.template.loader import render_to_string
@@ -83,7 +84,7 @@ AJAX_INIT_SCRIPT = '''{html}
 RELOAD_SCRIPT = '''
 <script>
     function reload_{function_name}(){{
-        var pk = $('#id_{field_name}').val()
+        var pk = $('#id_{popup}{field_name}').val()
         if(!pk) pk = 0;
         $.ajax({{url:"/reload_options/{app_label}/{model_name}/{value}/{lookup}/"+pk+"/{lazy}/", dataType:'json', success:function( data ) {{
             if({lazy}){{
@@ -95,7 +96,7 @@ RELOAD_SCRIPT = '''
             $('#id_{name}').trigger("change");
         }}}});
     }}
-    $('#id_{field_name}').on('change', function(e) {{
+    $('#id_{popup}{field_name}').on('change', function(e) {{
         reload_{function_name}();
     }});
     reload_{function_name}();
@@ -117,9 +118,9 @@ class SelectWidget(widgets.Select):
         self.form_filters = []
         self.minimum_input_length = 3
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
 
-        if 'HEADLESS' in os.environ:
+        if cache.HEADLESS:
             self.lazy = False
 
         attrs['class'] = 'form-control'
@@ -180,9 +181,10 @@ class SelectWidget(widgets.Select):
                 app_label = get_metadata(model, 'app_label')
                 model_name = model.__name__.lower()
                 function_name = name.replace('-', '__')
+                popup = 'popup' in function_name and 'popup-' or ''
                 reload_script = RELOAD_SCRIPT.format(
                     function_name=function_name, field_name=field_name, app_label=app_label, model_name=model_name,
-                    value=value, lookup=lookup, lazy=lazy, name=name
+                    value=value, lookup=lookup, lazy=lazy, name=name, popup=popup
                 )
                 html = '{} {}'.format(html, reload_script)
         return mark_safe(html)
@@ -200,9 +202,9 @@ class SelectMultipleWidget(widgets.SelectMultiple):
         self.form_filters = []
         self.minimum_input_length = 3
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
 
-        if 'HEADLESS' in os.environ:
+        if cache.HEADLESS:
             self.lazy = False
 
         attrs['class'] = 'form-control'
@@ -261,7 +263,8 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                 model_name = queryset.model.__name__.lower()
                 value = '_'.join(l)
                 function_name = name.replace('-', '__')
-                reload_script = RELOAD_SCRIPT.format(function_name=function_name, field_name=field_name,
+                popup = 'popup' in function_name and 'popup-' or ''
+                reload_script = RELOAD_SCRIPT.format(function_name=function_name, field_name=field_name, popup=popup,
                     app_label=app_label, model_name=model_name, value=value, lookup=lookup, lazy=lazy, name=name)
                 html = '{} {}'.format(html, reload_script)
 
@@ -274,7 +277,7 @@ class NullBooleanSelect(widgets.NullBooleanSelect):
         css = {'all': ('/static/css/select2.min.css',)}
         js = ('/static/js/select2.min.js', '/static/js/i18n/pt-BR.js')
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
         if 'data-placeholder' not in self.attrs:
             attrs['data-placeholder'] = ' '

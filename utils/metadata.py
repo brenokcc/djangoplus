@@ -296,7 +296,7 @@ def check_role(self, saving=True):
                 else:
                     Role.objects.get_or_create(user=user, group=group)
                 if role_notify and not already_in_group:
-                    user.send_access_invitation(group)
+                    user.send_access_invitation_for_group(group)
             else:
                 user = User.objects.filter(username=username).first()
                 if user:
@@ -415,13 +415,16 @@ def should_filter_or_display(request, model, to):
         can_view = list(
             get_metadata(model, 'can_admin', (), iterable=True) +
             get_metadata(model, 'can_admin_by_organization', (), iterable=True) +
-            get_metadata(model, 'can_admin_by_unit',(), iterable=True) +
+            get_metadata(model, 'can_admin_by_unit', (), iterable=True) +
+            get_metadata(model, 'can_admin_by_role', (), iterable=True) +
             get_metadata(model, 'can_list', (), iterable=True) +
             get_metadata(model, 'can_list_by_organization', (), iterable=True) +
             get_metadata(model, 'can_list_by_unit', (), iterable=True) +
+            get_metadata(model, 'can_list_by_role', (), iterable=True) +
             get_metadata(model, 'can_view', (), iterable=True) +
             get_metadata(model, 'can_view_by_organization', (), iterable=True) +
-            get_metadata(model, 'can_view_by_unit', (), iterable=True))
+            get_metadata(model, 'can_view_by_unit', (), iterable=True) +
+            get_metadata(model, 'can_view_by_role', (), iterable=True))
         if not request.user.is_superuser and can_view and not request.user.in_group(*can_view):
             return False
     return True
@@ -442,7 +445,7 @@ def find_model_by_verbose_name(verbose_name):
     for model in apps.get_models():
         app_label = get_metadata(model, 'app_label')
         if not app_label.startswith('admin'):
-            if get_metadata(model, 'verbose_name') == verbose_name:
+            if get_metadata(model, 'verbose_name') == verbose_name.replace(' __ ', ' em '):
                 return model
     return None
 
@@ -482,10 +485,16 @@ def find_model(model, key):
 def find_model_recursively(cls, tokens):
     if tokens:
         token = tokens.pop()
-        attr = getattr(cls, token)
-        if not hasattr(attr, 'field'):
-            return cls
-        return find_model_recursively(attr.field.remote_field.model, tokens)
+        try:
+            attr = getattr(cls, token)
+            if not hasattr(attr, 'field'):
+                return cls
+            return find_model_recursively(attr.field.remote_field.model, tokens)
+        except AttributeError as e:
+            for related_object in get_metadata(cls, 'related_objects'):
+                if related_object.name == token:
+                    return find_model_recursively(related_object.related_model, tokens)
+            raise e
     else:
         return cls
 

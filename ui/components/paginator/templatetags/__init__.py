@@ -29,13 +29,13 @@ def tree_info(obj, queryset):
 @register.simple_tag()
 def paginator_checkboxes(paginator, obj, as_row=False):
     l = []
-    if paginator.is_list_view and paginator.subset_dropdown.has_items():
+    if paginator.display_checkboxes:
         if as_row:
             l.append('<td style="vertical-align: middle" width="5px">')
         if obj:
             l.append('<label class="label-checkbox"><input type="checkbox" name="pk" value="{}" onclick="check{}();"><span class="custom-checkbox"></span></label>'.format(obj.pk, paginator.id))
         else:
-            l.append("""<label class="label-checkbox"><input name="pk" type="checkbox" value="0" onclick="$('input[name=\'pk\']').prop('checked', this.checked);check{}();"><span class="custom-checkbox"></span></label>""".format(paginator.id))
+            l.append("""<label class="label-checkbox"><input name="pk" type="checkbox" value="0" onclick="$('input[name=\\\'pk\\\']').prop('checked', this.checked);check{}();"><span class="custom-checkbox"></span></label>""".format(paginator.id))
         if as_row:
             l.append('</td>')
     return mark_safe(''.join(l))

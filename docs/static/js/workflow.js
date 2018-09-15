@@ -29,6 +29,7 @@ function addRole(name){
 }
 
 function addActivity(name, role){
+    var name = name.substring(0, 45);
 	var startDirection = 'bottom';
 	var endDirections = 'top';
     var rect = new joint.shapes.basic.Rect({
@@ -73,7 +74,7 @@ function addActivity(name, role){
     index = roles.indexOf(role);
     indexY = activities[role].indexOf(name);
 }
-
+var i = 1;
 function connect(source, target, startDirection, endDirections){
     var rect = new joint.dia.Link({
         source: { id: source.id },
@@ -83,13 +84,25 @@ function connect(source, target, startDirection, endDirections){
         attrs: {
             '.connection': {
                 stroke: '#333333',
-                'stroke-width': 3
+                'stroke-width': 2
             },
             '.marker-target': {
                 fill: '#333333',
                 d: 'M 10 0 L 0 5 L 10 10 z'
             }
-        }
+        },
+        labels: [
+            {
+                attrs: {
+                    text: {
+                        text: i++,
+                        fontFamily: 'sans-serif',
+                        fontSize: 10
+                    }
+                },
+                position: 0.7
+            }
+        ]
     });
     graph.addCell(rect);
 }

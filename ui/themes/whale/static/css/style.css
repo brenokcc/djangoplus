@@ -1,0 +1,224 @@
+/* Whale Theme */
+
+body {
+    background-color: #fafaff;
+    color: #30343F;
+}
+a,
+a:active,
+.btn-default,
+.fc .fc-button-group > button:active,
+.fc .fc-button-group > button:focus,
+.fc .fc-button-group > button:hover,
+aside .nav > li > a,
+aside .nav > li > a .fa,
+aside .nav > li > a:hover .fa,
+aside .nav > li > a.active .fa,
+.navbar-top-links li a:active,
+.navbar-top-links li a:focus,
+.navbar-top-links .dropdown-menu li a:hover .fa,
+.pagination > li > a,
+.pagination > li > span {
+    color: #0a507b;
+}
+a:hover {
+    color: #666;
+}
+h2 .fa {
+    color: #556f7a;
+    font-size: 80%;
+    margin-right: 5px;
+    vertical-align: 0;
+}
+header.navbar,
+#user-drop-down,
+.breadcrumb,
+.copyright,
+.navbar-top-links .dropdown-alerts,
+.paginator.paginator-admin,
+.panel,
+.sidebar,
+.table-responsive {
+    background-color: #fff;
+    border: 1px solid #ebe9e9;
+    border-radius: 10px;
+}
+header.navbar {
+    margin: 30px;
+    position: static;
+}
+#page-wrapper {
+    background-color: #fafaff;
+    border: 0 none;
+    margin-top: 30px;
+}
+.action-links > a {
+    margin: 0 2px;
+}
+.badge {
+    background-color: #5a6169;
+}
+.breadcrumb {
+    font-size: 90%;
+    margin: 0 30px 30px;
+    padding: 10px 20px;
+}
+.btn-default,
+.fc .fc-today-button {
+    background-color: rgba(10, 80, 123, 0.1);
+    border: 0 none;
+    border-radius: 10px;
+}
+.btn-default:hover,
+.fc .fc-today-button:hover {
+    background-color: rgba(10, 80, 123, 0.3);
+    color: #0a507b;
+}
+.copyright {
+    color: #556F7A;
+    font-size: 80%;
+    margin: 0 30px 10px;
+    padding: 10px 20px;
+}
+.dashboard-main {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+.dashboard-aside-2 {
+    padding-right: 30px;
+}
+.dashboard-aside.dashboard-aside-2 .panel {
+    background-color: rgba(10, 80, 123, 0.75);
+    color: #fff;
+}
+.dashboard-aside.dashboard-aside-2 .panel a {
+    color: #fff;
+}
+.dashboard-aside.dashboard-aside-2 .panel.panel-default .panel-heading {
+    border-color: rgba(10, 80, 123, 0.5);
+    color: #fff;
+}
+.dashboard-aside.dashboard-aside-2 .panel.panel-default .panel-heading .fa {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+.fc .fc-center h2 {
+    font-size: 130%;
+}
+.fc .fc-today-button {
+    background-image: none;
+}
+.filter-container button {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 0 3px 3px 0;
+}
+aside .nav > li > a {
+    border-top: 1px solid #ebe9e9;
+    padding: 15px;
+}
+aside .nav > li > a:active,
+aside .nav > li > a:focus,
+aside .nav > li > a:hover,
+aside .nav > li > a.active {
+    background-color: rgba(10, 80, 123, 0.1);
+}
+aside .nav > li > a .fa {
+    font-size: 120%;
+    margin-right: 5px;
+}
+.navbar .icon-bar {
+    background-color: #5a6169;
+}
+.navbar-brand {
+    padding-bottom: 10px;
+    padding-left: 0;
+    padding-top: 10px;
+}
+.navbar-header img {
+    height: 30px;
+    margin-top: 0;
+}
+.navbar-top-links li a:hover {
+    background-color: #f5f6f8;
+    text-decoration: none;
+}
+.navbar-top-links .dropdown-menu li a {
+    display: block;
+    padding: 3px 15px;
+}
+.navbar-top-links .dropdown-menu li a .fa {
+    color: #cacedb;
+    margin-right: 5px;
+}
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    background-color: #eee;
+    border-color: #ddd;
+    color: #5a6169;
+}
+.paginator.paginator-admin {
+    margin-bottom: 30px;
+    padding: 20px;
+}
+.panel {
+    margin-bottom: 30px;
+}
+.panel .panel-heading {
+    border-radius: 10px 10px 0 0;
+}
+.panel.panel-default .panel-heading {
+    background-color: transparent;
+    border-color: #e1e5eb;
+    font-size: 120%;
+    font-weight: 500;
+    padding: 15px 20px;
+}
+.panel.panel-default .panel-heading .fa {
+    background-color: rgba(10, 80, 123, 0.25);
+    border-radius: 50%;
+    color: #0a507b;
+    font-size: 90%;
+    height: 33px;
+    line-height: 33px;
+    margin-right: 5px;
+    text-align: center;
+    vertical-align: 0;
+    width: 33px;
+}
+.panel .table > thead > tr > th {
+    border-radius: 0 !important;
+}
+main .padding-md {
+    padding: 0 30px;
+}
+.sidebar {
+    margin-left: 30px;
+    width: 220px;
+}
+.sidebar .nav-second-level li a {
+    padding-bottom: 7px;
+    padding-left: 45px;
+    padding-top: 7px;
+}
+.table>thead>tr>th,
+.table>tbody>tr>th,
+.table>tfoot>tr>th,
+.table>thead>tr>td,
+.table>tbody>tr>td,
+.table>tfoot>tr>td {
+    padding: 10px 20px;
+}
+.table > thead > tr > th {
+    background-color: rgba(10, 80, 123, 0.05);
+    border-bottom: 1px solid #ebe9e9;
+}
+.table > thead > tr > th:first-child {
+    border-radius: 10px 0 0 0;
+}
+.table > thead > tr > th:last-child {
+    border-radius: 0 10px 0 0;
+}

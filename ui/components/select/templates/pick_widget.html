@@ -1,0 +1,54 @@
+{% if grouped_objects %}
+<div class="filter-container">
+<label>
+    <div class="input-group">
+        <input style="height: 34px;" type="text" class="form-control input-sm" placeholder="Palavras-chaves..." aria-controls="dataTable" value="" onkeyup="search_{{ name }}(this.value)">
+        <span class="input-group-btn">
+            <button style="height: 34px;margin-left: -2px;" class="btn btn-default btn-sm" type="button" onclick="">
+                <i class="fa fa-search"></i>
+            </button>
+        </span>
+        <script>
+            function search_{{ name }}(value){
+                var table = $('#pick-{{ name }}');
+                if(value) {
+                    table.find(".pick-value").hide();
+                    table.find(".pick-grouper").hide();
+                    var trs = table.find(".pick-value:icontains('" + value + "')").closest('tr');
+                    trs.show();
+                    trs.each(function( index ) {
+                      $( this ).prev('.pick-grouper').show();
+                    });
+                } else {
+                    table.find(".pick-grouper").show();
+                    table.find(".pick-value").show();
+                }
+            }
+        </script>
+    </div>
+</label>
+</div>
+<table id="pick-{{ name }}" class="table table-striped table-bordered table-hover">
+    <thead>
+        <tr>
+            <th style="text-align: center; width: 15px">{{ widget }}</th>
+			<th>Opções</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for grouper, objects in grouped_objects %}
+        {% if grouper %}
+            <tr class="pick-grouper">
+                <td colspan="2"><strong>{{ grouper }}</strong></td>
+            </tr>
+        {% endif %}
+        {% for obj in objects %}
+            <tr class="pick-value">
+                <td align="center">{{ obj.widget }}</td>
+                <td align="left">{{ obj|format }} <span style="font-size: 0">{{ grouper }}</span></td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+	</tbody>
+</table>
+{% endif %}

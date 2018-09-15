@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import json
-from django.apps import apps
 from django.conf import settings
 from djangoplus.docs import utils
 from djangoplus.cache import loader
 from django.http import HttpRequest
 from django.utils import translation
-from djangoplus.utils import terminal
 from djangoplus.admin.models import User
 from django.utils.translation import ugettext as _
 from django.template.defaultfilters import slugify
-from djangoplus.ui.components.forms import factory, fields as form_fields
 from djangoplus.db.models import fields as model_fields
-from djangoplus.utils.metadata import get_metadata, find_action, find_model_by_verbose_name, find_model_by_add_label, get_field, find_model_by_verbose_name_plural, find_subset_by_title
+from djangoplus.ui.components.forms import factory, fields as form_fields
+from djangoplus.utils.metadata import get_metadata, find_action, find_model_by_verbose_name,\
+    find_model_by_add_label, get_field, find_model_by_verbose_name_plural, find_subset_by_title
 
 
 class Actor(object):
@@ -123,7 +121,12 @@ class UseCase(object):
 
         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
         list_shortcut = get_metadata(model, 'list_shortcut', [], iterable=True)
+        list_menu = get_metadata(model, 'list_menu', [], iterable=True)
         menu = get_metadata(model, 'menu')
+
+        list_required_role = [role_name for role_name in (list_shortcut + list_menu) if role_name is not True]
+        if list_required_role and loader.last_authenticated_role and loader.last_authenticated_role not in list_required_role:
+            self._login('{} {} {}'.format(_('Access'), _('as'), list_required_role[0]))
 
         if not loader.last_authenticated_role or True in list_shortcut or loader.last_authenticated_role in list_shortcut:
 
@@ -213,7 +216,7 @@ class UseCase(object):
             subset = find_subset_by_title(subset_name, model)
 
             # set the attributes of the usecase
-            self.description = subset['function'].__doc__.strip()
+            self.description = (subset['function'].__doc__ or '').strip()
             for can_view in subset['can_view']:
                 self.actors.append(can_view)
             if not self.actors:
@@ -317,7 +320,6 @@ class UseCase(object):
         self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
 
     def _add(self, action):
-
         model = None
 
         if action.startswith(_('Add')):
@@ -497,7 +499,9 @@ class UseCase(object):
 
                 self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
                 self._test_function_code.append("\t\tself.look_at_popup_window()")
-                form = factory.get_action_form(self._mocked_request(), model(), func._action)
+                obj = model()
+                obj.pk = 0
+                form = factory.get_action_form(self._mocked_request(), obj, func._action)
                 self._fill_out(form)
 
             interaction = _('The user clicks the button')
@@ -537,170 +541,7 @@ class UseCase(object):
                     business_rules=self.business_rules, pre_conditions=self.pre_conditions,
                     post_condition=self.post_condition, scenario=self.get_interactions_as_string())
 
-    def __str__(self):
-        l = list()
-        l.append('')
-        l.append('{}:\t\t\t{}'.format(terminal.info(_('Name')), self.name))
-        l.append('{}:\t\t{}'.format(terminal.info(_('Description')), self.description or ''))
-        l.append('{}:\t\t\t{}'.format(terminal.info(_('Actors')), ', '.join(self.actors)))
-        l.append('{}:\t\t{}'.format(terminal.info(_('Buniness Rules')), ', '.join(self.business_rules)))
-        l.append('{}:\t\t{}'.format(terminal.info(_('Pre-conditions')), ', '.join(self.pre_conditions)))
-        l.append('{}:\t\t{}'.format(terminal.info(_('Post-condition')), (self.post_condition or '')))
-        l.append('{}:'.format(terminal.info(_('Main-scenario'))))
-        l.append(self.get_interactions_as_string())
-        l.append('')
-        return '\n'.join(l)
 
 
-class Workflow(object):
 
-    def __init__(self):
-
-        translation.activate(settings.LANGUAGE_CODE)
-
-        self.actors = []
-        self.tasks = []
-        tmp = None
-        for task in loader.workflows:
-            role = task['role']
-            activity = task['activity']
-            model = task['model']
-
-            if role != tmp:
-                tmp = role or _('Superuser')
-                action = _('Acessar como')
-                self.tasks.append('{} {}'.format(action, tmp))
-
-            if model:
-                action = '{}{}{}'.format(activity, _(' in '), model)
-            else:
-                action = activity
-            self.tasks.append(action)
-
-
-class ClassDiagram(object):
-
-    POSITION_MAP = {
-        1: (2.2,), 2: (1.2, 3.2,), 3: (3.2, 1.1, 1.3,), 4: (2.2, 3.2, 1.1, 1.3,), 5: (2.2, 1.1, 1.3, 3.1, 3.3,),
-        6: (1.2, 3.2, 1.1, 3.1, 1.3, 3.3,), 7: (2.2, 1.2, 3.2, 1.1, 1.3, 3.1, 3.3,),
-        8: (1.2, 3.2, 1.1, 1.3, 2.1, 2.3, 3.1, 3.3,), 9: (1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3,)
-    }
-
-    def __init__(self, class_diagram_name, models):
-
-        self.name = class_diagram_name
-        self.classes = []
-        self.compositions = []
-        self.agregations = []
-
-        classes = dict()
-        n = len(loader.class_diagrams[class_diagram_name])
-        associations_count = {}
-        for model in loader.class_diagrams[class_diagram_name]:
-            associations_count[model] = 0
-
-        for model in loader.class_diagrams[class_diagram_name]:
-            verbose_name = get_metadata(model, 'verbose_name')
-            related_objects = get_metadata(model, 'related_objects')
-            classes[model] = dict(name=verbose_name, position='1.1')
-            for related_object in related_objects:
-                related_verbose_name = get_metadata(related_object.related_model, 'verbose_name')
-                if related_object.related_model in models:
-                    if hasattr(related_object.field, 'composition') and related_object.field.composition:
-                        self.compositions.append(
-                            [related_verbose_name, verbose_name, related_object.remote_field.name])
-                        associations_count[model] += 1
-                        associations_count[related_object.related_model] += 1
-                    else:
-                        if (model not in loader.role_models or class_diagram_name == related_verbose_name) or (
-                                        class_diagram_name == verbose_name and related_object.related_model not in loader.role_models):
-                            self.agregations.append(
-                                [verbose_name, related_verbose_name, related_object.field.name])
-                            associations_count[related_object.related_model] += 1
-                            associations_count[model] += 1
-        sorted_associations_count = sorted(associations_count, key=associations_count.get, reverse=True)
-        for i, model in enumerate(sorted_associations_count):
-            cls = classes[model]
-            cls['position'] = ClassDiagram.POSITION_MAP[n][i]
-            self.classes.append(cls)
-
-    def as_dict(self):
-        return dict(name=self.name, classes=self.classes, compositions=self.compositions, agregations=self.agregations)
-
-    def as_json(self):
-        return json.dumps(self.as_dict())
-
-
-class Documentation(object):
-
-    def __init__(self):
-
-        translation.activate(settings.LANGUAGE_CODE)
-
-        self.description = None
-        self.workflow = None
-        self.actors = []
-        self.usecases = []
-        self.class_diagrams = []
-
-        # load description
-        for app_config in apps.get_app_configs():
-            if app_config.label == settings.PROJECT_NAME:
-                self.description = app_config.module.__doc__ and app_config.module.__doc__.strip() or None
-
-        # load actors
-        self.organization_model = loader.organization_model
-        self.unit_model = loader.unit_model
-
-        for model in loader.role_models:
-            name = loader.role_models[model]['name']
-            scope = loader.role_models[model]['scope']
-            description = utils.extract_documentation(model)
-            self.actors.append(Actor(name=name, scope=scope, description=description))
-
-        # load usecases
-        self.workflow = Workflow()
-        for task in self.workflow.tasks:
-            if not task.startswith(_('Access')):
-                usecase = UseCase(task)
-                self.usecases.append(usecase)
-
-        # load class diagrams
-        for class_diagram_name, models in list(loader.class_diagrams.items()):
-            class_diagram = ClassDiagram(class_diagram_name, models)
-            self.class_diagrams.append(class_diagram)
-
-    def as_dict(self):
-        return dict(description=self.description, actors=[actor.as_dict() for actor in self.actors],
-                    usecases=[usecase.as_dict() for usecase in self.usecases],
-                    class_diagrams=[class_diagram.as_json() for class_diagram in self.class_diagrams],
-                    organization_model=self.organization_model, unit_model=self.unit_model)
-
-    def as_json(self):
-        return json.dumps(self.as_dict())
-
-    def __str__(self):
-        l = list()
-        l.append(terminal.bold(_('Description:').upper()))
-        l.append(terminal.info(self.description))
-        l.append('')
-        l.append(terminal.bold(_('Actors:').upper()))
-        for i, actor in enumerate(self.actors):
-            l.append('{}. {}'.format(i + 1, actor.name))
-        l.append('')
-        l.append(terminal.bold(_('Workflow:').upper()))
-        for i, task in enumerate(self.workflow.tasks):
-            l.append('{} {}'.format(' ' * i, task))
-        l.append('')
-        l.append(terminal.bold(_('Usecases:').upper()))
-        for i, usecase in enumerate(self.usecases):
-            l.append(terminal.bold('* Usecase #{}'.format((i + 1))))
-            l.append('{}'.format(usecase))
-        l.append('')
-        l.append(terminal.bold(_('Class Diagrams:').upper()))
-        for class_diagram in self.class_diagrams:
-            l.append(terminal.bold('\t{} {}'.format(class_diagram.name, _('Diagram'))))
-            for i, cls in enumerate(class_diagram.classes):
-                l.append('\t\t\t{}. {}'.format(i + 1, cls['name']))
-        return '\n'.join(l)
 

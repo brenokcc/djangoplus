@@ -3,7 +3,6 @@
 import os
 from djangoplus.conf import base_settings
 from django.conf import settings
-from django.core import serializers
 from django.utils import termcolors
 from django.core.management import call_command
 from django.contrib.auth import get_user_model
@@ -24,7 +23,6 @@ class Command(BaseCommand):
         for app_label in settings.INSTALLED_APPS:
             if app_label not in base_settings.INSTALLED_APPS and '.' not in app_label:
                 app_labels.append(app_label)
-
 
         print_and_call('makemigrations', *app_labels)
         print_and_call('migrate')

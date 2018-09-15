@@ -16,8 +16,8 @@ def meta(verbose_name, help_text=None, formatter=None, dashboard=None, can_view=
     return decorate
 
 
-def subset(title, help_text=None, list_display=(), list_filter=(), search_fields=(), template=None, menu=None,
-           dashboard=None, usecase=None, can_view=(), can_alert=(), can_notify=()):
+def subset(title, help_text=None, list_display=(), list_filter=None, search_fields=None, template=None, menu=None,
+           dashboard=None, inline=False, usecase=None, can_view=(), can_alert=(), can_notify=()):
     def decorate(function):
         set_metadata(function, 'type', 'subset')
         set_metadata(function, 'tab', True)
@@ -28,6 +28,7 @@ def subset(title, help_text=None, list_display=(), list_filter=(), search_fields
         set_metadata(function, 'help_text', help_text)
         set_metadata(function, 'usecase', usecase)
         set_metadata(function, 'can_view', iterable(can_view))
+        set_metadata(function, 'inline', inline)
         set_metadata(function, 'name', function.__name__)
         set_metadata(function, 'order', cache.next_number())
         set_metadata(function, 'dashboard', dashboard)

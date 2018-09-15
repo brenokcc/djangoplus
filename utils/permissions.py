@@ -37,10 +37,6 @@ def has_delete_permission(request, model):
     return has_permission(request, model, 'delete')
 
 
-def has_view_permission(request, model):
-    return has_permission(request, model, 'view')
-
-
 def can(request, obj, action):
     if request.user.is_superuser:
         return True

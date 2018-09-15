@@ -90,6 +90,7 @@ class ModelDropDown(GroupDropDown):
                             )
 
         for action_category in loader.actions[self.model]:
+
             for view_name in loader.actions[self.model][action_category]:
                 action = loader.actions[self.model][action_category][view_name]
                 action_function = action.get('function')

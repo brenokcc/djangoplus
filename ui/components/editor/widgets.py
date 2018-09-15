@@ -8,7 +8,7 @@ class FormattedTextarea(widgets.Textarea):
     class Media:
         js = ('/static/js/tinymce.min.js',)
 
-    def render(self, name, value, attrs={}):
+    def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
         html = super(FormattedTextarea, self).render(name, value, attrs)
         js = '''

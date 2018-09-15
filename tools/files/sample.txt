@@ -1,0 +1,23 @@
+linha 01  #: 0
+linha 02  #: 9
+linha 03  #: 9
+linha 04  #: 9
+linha 05  #: 1
+linha 06  #: 4
+linha 07  #: 4
+
+linha 08  #: 5
+linha 09  #: 6
+linha 10  #: 3
+
+linha 11  #: 6
+linha 12  #: 6
+linha 13  #: 6
+linha 14  #: 7
+linha 15  #: 7
+linha 16  #: 7
+linha 17  #: 7
+linha 18  #: 8
+linha 19  #: 8
+linha 20  #: 8
+linhão 21 #: 2

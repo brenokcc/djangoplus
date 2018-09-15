@@ -126,6 +126,7 @@ if not initialized:
                     subset_alert = attr._metadata['{}:alert'.format(attr_name)]
                     subset_notify = attr._metadata['{}:notify'.format(attr_name)]
                     subset_can_view = attr._metadata['{}:can_view'.format(attr_name)]
+                    subset_inline = attr._metadata['{}:inline'.format(attr_name)]
                     subset_order = attr._metadata['{}:order'.format(attr_name)]
                     subset_menu = attr._metadata['{}:menu'.format(attr_name)]
                     subset_dashboard = attr._metadata['{}:dashboard'.format(attr_name)]
@@ -139,7 +140,7 @@ if not initialized:
                         title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
                         menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify, actions=subset_actions,
                         order=subset_order, help_text=subset_help_text, list_display=subset_list_display,
-                        list_filter=subset_list_filter, search_fields=subset_search_fields
+                        list_filter=subset_list_filter, search_fields=subset_search_fields, inline=subset_inline
                     )
                     subsets[model].append(item)
 
@@ -189,7 +190,7 @@ if not initialized:
                         actions[model][action_group] = dict()
                     actions[model][action_group][view_name] = action
                     if action_inline:
-                        action_subset = action_inline is not True and action_inline or None
+                        action_subset = action_inline is True and 'all' or action_inline
                         if action_subset not in subset_actions[model]:
                             subset_actions[model][action_subset] = []
                         subset_actions[model][action_subset].append(attr)
@@ -233,15 +234,16 @@ if not initialized:
                     action_can_execute = get_can_execute(action)
                     action_group = action['group']
                     view_name = action['view_name']
-                    action_subset = action['inline']
+                    action_inline = action['inline']
                     action_workflow = action['usecase']
                     if action_group not in class_actions[model]:
                         class_actions[model][action_group] = dict()
                     class_actions[model][action_group][view_name] = action
-
-                    if action_subset not in subset_actions[model]:
-                        subset_actions[model][action_subset] = []
-                    subset_actions[model][action_subset].append(view_name)
+                    action_subset = action_inline is True and 'all' or action_inline
+                    if action_subset:
+                        if action_subset not in subset_actions[model]:
+                            subset_actions[model][action_subset] = []
+                        subset_actions[model][action_subset].append(view_name)
 
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
@@ -255,7 +257,7 @@ if not initialized:
                     module_attr = getattr(module, attr_name)
                     if callable(module_attr):
                         formatters[attr_name] = module_attr
-            except ImportError:
+            except ImportError as e:
                 pass
 
             try:
@@ -274,12 +276,12 @@ if not initialized:
                         action_can_execute = get_can_execute(action)
                         action_inline = action['inline']
                         action_menu = action['menu']
-
                         if action_inline:
-                            action_subset = action_inline is not True and action_inline or None
-                            if action_subset not in subset_actions[action_model]:
-                                subset_actions[action_model][action_subset] = []
-                            subset_actions[action_model][action_subset].append(action_name)
+                            action_subset = action_inline is True and 'all' or action_inline
+                            if action_subset:
+                                if action_subset not in subset_actions[action_model]:
+                                    subset_actions[action_model][action_subset] = []
+                                subset_actions[action_model][action_subset].append(action_name)
 
                         if action_workflow:
                             role = action_can_execute and action_can_execute[0] or 'Superusuário'
@@ -307,7 +309,7 @@ if not initialized:
                     # indexing the widgets
                     elif hasattr(function, '_widget'):
                         widgets.append(function._widget)
-            except ImportError:
+            except ImportError as e:
                 pass
 
     for model in apps.get_models():
@@ -413,8 +415,10 @@ if not initialized:
                 related_verbose_name = get_metadata(related_model, 'verbose_name')
                 related_add_label = get_metadata(model, 'add_label')
                 if related_add_label:
+                    related_add_label = related_add_label.replace(' em ', ' __ ')
                     activity = '{} em {}'.format(related_add_label, related_verbose_name)
                 else:
+                    verbose_name = verbose_name.replace(' em ', ' __ ')
                     activity = 'Adicionar {} em {}'.format(verbose_name, related_verbose_name)
                 workflows[workflow] = dict(activity=activity, role=role, model=None)
             else:

@@ -206,7 +206,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta():
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
-        list_display = 'photo', 'username', 'name', 'groups'
+        list_display = 'photo', 'username', 'name', 'email', 'groups'
         add_form = 'UserForm'
         can_admin = 'Gerenciador de Usuários'
         icon = 'fa-users'
@@ -223,6 +223,9 @@ class User(AbstractBaseUser, PermissionsMixin):
                 password = uuid.uuid4().get_hex()
             self.set_password(password)
         super(User, self).save(*args, **kwargs)
+        if self.is_superuser:
+            group = Group.objects.get_or_create(name='Superuser')[0]
+            self.groups.add(group)
 
     def __str__(self):
         return self.name or self.username
@@ -233,7 +236,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.save()
 
     @action('Enviar Convite de Acesso', inline=True, condition='email', category=None)
-    def send_access_invitation(self, group=None):
+    def send_access_invitation(self):
+        self.send_access_invitation_for_group(None)
+
+    def send_access_invitation_for_group(self, group):
         project_name = Settings.default().initials
         subject = 'Acesso ao Sistema - "{}"'.format(project_name)
         if group:

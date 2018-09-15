@@ -186,7 +186,7 @@ class Relation(object):
                 has_add_permission = permissions.has_add_permission(request, self.relation_model)
 
             component = Paginator(request, self.relation_value.all(request.user), title, relation=self, list_subsets=[], readonly=not has_add_permission)
-
+            component.add_actions()
             if self.add_url and has_add_permission:
                 if self.relation_name in inlines:
                     instance = self.relation_model()

@@ -181,7 +181,11 @@ class MultipleModelChoiceField(forms.models.ModelMultipleChoiceField):
         self.form_filters = kwargs.pop('form_filters', [])
         super(MultipleModelChoiceField, self).__init__(*args, **kwargs)
         if self.pick:
-            self.widget = widgets.PickWidget(multiple=True)
+            if type(self.pick) is not bool:
+                grouper = self.pick
+            else:
+                grouper = None
+            self.widget = widgets.PickWidget(multiple=True, grouper=grouper)
         else:
             self.widget.lazy = self.lazy
             self.widget.form_filters = self.form_filters

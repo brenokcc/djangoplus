@@ -1,11 +1,6 @@
 {% load i18n %}
 {% if self.as_pdf %}{% else %}
-{% if self.note %}
-    <div class="alert alert-info">
-        <strong>{% trans "Note" %}: </strong> {{ self.note }}
-    </div>
-{% endif %}
-    
+
 {% if not self.partial %}
     <form id="{{ self.id }}"
           class="{% if self.horizontal %}form-horizontal{% endif %} no-margin form-border ajax-form {% if self.request.GET.popup %}popup-form{% endif %}{% if self.inline %}inline-form{% endif %}"
@@ -33,6 +28,12 @@
             </div>
         {% endif %}
     {% endif %}
+{% endif %}
+
+{% if self.note %}
+    <div class="alert alert-info">
+        {{ self.note }}
+    </div>
 {% endif %}
 
 {% for fieldset in self.configured_fieldsets %}

@@ -4,6 +4,11 @@ import datetime
 import calendar
 
 
+def calculate_age(birthday):
+    today = datetime.date.today()
+    return today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+
+
 def numer_of_days(start, end):
     delta = end - start
     return delta.days

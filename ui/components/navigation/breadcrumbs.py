@@ -68,7 +68,6 @@ def httprr(request, url, message='', error=False):
                 title, url = stack[-1]
         else:
             url = request.get_full_path()
-
     if request.is_ajax():
         return HttpResponse(url)
     else:

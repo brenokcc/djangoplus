@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
-import requests
+import urllib
 import json
 from django.conf import settings
 from django.db import transaction
@@ -267,7 +267,7 @@ class Form(django_forms.Form):
             captcha_secret = settings.CAPTCHA_SECRET
             if captcha_response:
                 data = dict(secret=captcha_secret, response=captcha_response)
-                response = json.loads(requests.post(captcha_url, data).content.decode('utf-8'))
+                response = json.loads(urllib.request.urlopen(captcha_url, urllib.parse.urlencode(data).encode('utf-8')).read().decode('utf-8'))
                 if not response.get('success'):
                     raise ValidationError('Confirme que você não é um robô.')
             else:

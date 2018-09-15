@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 import copy
+from django.shortcuts import render
 from djangoplus.utils import permissions
 from djangoplus.ui.components import forms
 from django.db.models.aggregates import Sum
 from djangoplus.utils.tabulardata import tolist
 from djangoplus.utils.formatter import normalyze
+from djangoplus.ui.components.forms import factory
+from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
+from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.ui import RequestComponent, ComponentHasResponseException
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, mobile
@@ -17,8 +22,11 @@ class Paginator(RequestComponent):
                  help_text=None, url=None, template='datagrid.html'):
 
         super(Paginator, self).__init__(is_list_view and '_' or abs(hash(title)), request)
-
-        self.qs = qs.all()
+        if relation:
+            qs = qs.model.objects.filter(pk__in=qs.values_list('pk', flat=True))
+        else:
+            qs = qs.all()
+        self.qs = qs
         self.title = title
         self.list_display = list_display
         self.list_filter = list_filter
@@ -35,6 +43,7 @@ class Paginator(RequestComponent):
         self.template = get_metadata(self.qs.model, 'list_template', template)
         self.help_text = help_text
         self.url = url
+        self.display_checkboxes = False
 
         self.subset_actions = []
         self.filters = []
@@ -180,38 +189,153 @@ class Paginator(RequestComponent):
         app_label = get_metadata(self.qs.model, 'app_label')
         list_pdf = get_metadata(self.qs.model, 'list_pdf')
 
-        if list_csv:
+        if list_csv and not self.relation:
             export_url = '?' in export_url and '{}&export=csv'.format(export_url) or '{}?export=csv'.format(export_url)
             self.add_action('Exportar CSV', export_url, 'ajax', 'fa-table')
 
-        if list_xls:
+        if list_xls and not self.relation:
             export_url = '?' in export_url and '{}&export=excel'.format(export_url) or '{}?export=excel'.format(export_url)
             self.add_action('Exportar Excel', export_url, 'ajax', 'fa-file-excel-o')
 
-        if log:
+        if log and not self.relation:
             log_url = '/log/{}/{}/'.format(app_label, self.qs.model.__name__.lower())
             if self.request.user.has_perm('admin.list_log'):
                 self.add_action('Visualizar Log', log_url, 'ajax', 'fa-history')
 
-        if list_pdf:
+        if list_pdf and not self.relation:
             pdf_url = '?' in export_url and '{}&export=pdf'.format(export_url) or '{}?export=pdf'.format(export_url)
             self.add_action('Imprimir', pdf_url, 'ajax', 'fa-print')
 
         subclasses = self.qs.model.__subclasses__()
 
-        if not subclasses and not self.list_subsets and permissions.has_add_permission(self.request, self.qs.model):
-            instance = self.qs.model()
-            instance.user = self.request.user
-            if not hasattr(instance, 'can_add') or instance.can_add():
-                add_label = get_metadata(self.qs.model, 'add_label', 'Cadastrar')
-                self.add_action(add_label, '/add/{}/{}/'.format(app_label, self.qs.model.__name__.lower()), 'ajax', 'fa-plus')
+        if not self.relation:
+            if not subclasses and not self.list_subsets and permissions.has_add_permission(self.request, self.qs.model):
+                instance = self.qs.model()
+                instance.user = self.request.user
+                if not hasattr(instance, 'can_add') or instance.can_add():
+                    if self.relation:
+                        verbose_name = get_metadata(self.qs.model, 'verbose_name')
+                        add_label = get_metadata(self.qs.model, 'add_label', 'Cadastrar {}'.format(verbose_name))
+                    else:
+                        add_label = get_metadata(self.qs.model, 'add_label', 'Cadastrar')
+                    self.add_action(add_label, '/add/{}/{}/'.format(app_label, self.qs.model.__name__.lower()), 'ajax', 'fa-plus')
 
-        for subclass in subclasses:
-            app = get_metadata(subclass, 'app_label')
-            verbose_name = get_metadata(subclass, 'verbose_name')
-            cls = subclass.__name__.lower()
-            if permissions.has_add_permission(self.request, subclass):
-                self.add_action(verbose_name, '/add/{}/{}/'.format(app, cls), False, 'fa-plus')
+            for subclass in subclasses:
+                app = get_metadata(subclass, 'app_label')
+                verbose_name = get_metadata(subclass, 'verbose_name')
+                cls = subclass.__name__.lower()
+                if permissions.has_add_permission(self.request, subclass):
+                    self.add_action(verbose_name, '/add/{}/{}/'.format(app, cls), False, 'fa-plus')
+
+        subset = self.list_subsets and self.list_subsets[0] or None
+        if subset:
+            subsetp = None
+        else:
+            tid = self.request.GET.get('tid')
+            subsetp = self.request.GET.get('tab{}'.format(tid))
+
+        from djangoplus.cache import loader
+        if self.qs.model in loader.class_actions:
+            for group in loader.class_actions[self.qs.model]:
+                for view_name in loader.class_actions[self.qs.model][group]:
+                    _action = loader.class_actions[self.qs.model][group][view_name]
+                    action_title = _action['title']
+                    action_message = _action['message']
+                    action_can_execute = _action['can_execute']
+                    action_input = _action['input']
+                    action_css = _action['css']
+                    action_condition = _action['condition']
+                    initial = _action['initial']
+                    choices = _action['choices']
+
+                    subset_name = subsetp or subset or 'all'
+                    if subset_name not in loader.subset_actions[self.qs.model] or view_name not in loader.subset_actions[self.qs.model][subset_name]:
+                            continue
+                    self.display_checkboxes = True
+
+                    if permissions.check_group_or_permission(self.request, action_can_execute):
+                        func = hasattr(self.qs, view_name) and getattr(self.qs, view_name) or None
+                        if func:
+                            char = '?' in self.request.get_full_path() and '&' or '?'
+                            url = '{}{}{}'.format(self.request.get_full_path(), char, '{}='.format(view_name))
+                            code = getattr(func, '__code__')
+                            has_input = code.co_argcount > 1
+
+                            if not has_input:
+                                action_css = action_css.replace('popup', '')
+                            self.add_subset_action(action_title, url, action_css, None, action_condition)
+
+                            if view_name in self.request.GET:
+                                ids = self.get_selected_ids()
+                                if ids:
+                                    qs = self.get_queryset(paginate=False).filter(id__in=ids)
+                                else:
+                                    break
+                                    # qs = self.get_queryset(paginate=False)
+
+                                func = getattr(qs, view_name)
+                                form = None
+                                f_return = None
+                                redirect_url = None
+
+                                if has_input:
+                                    form = factory.get_class_action_form(self.request, self.qs.model, _action, func)
+                                    paginator = ''
+                                    if form.is_valid():
+                                        params = []
+                                        for param in func.__code__.co_varnames[1:func.__code__.co_argcount]:
+                                            if param in form.cleaned_data:
+                                                params.append(form.cleaned_data[param])
+                                        try:
+                                            f_return = func(*params)
+                                            if not f_return:
+                                                redirect_url = '..'
+                                        except ValidationError as e:
+                                            form.add_error(None, str(e.message))
+                                else:
+                                    f_return = func()
+                                    if not f_return:
+                                        redirect_url = '.'
+
+                                if redirect_url:
+                                    self.request.GET._mutable = True
+                                    del self.request.GET['ids']
+                                    del self.request.GET[view_name]
+                                    self.request.GET._mutable = False
+                                    raise ComponentHasResponseException(
+                                        httprr(self.request, redirect_url, action_message)
+                                    )
+                                else:
+                                    template_names = ['{}.html'.format(view_name), 'default.html']
+                                    context = f_return or dict(form=form)
+
+                                    if 'pdf' in action_css:
+                                        self.request.GET._mutable = True
+                                        self.request.GET['pdf'] = 1
+                                        self.request.GET._mutable = False
+                                        from datetime import datetime
+                                        from djangoplus.admin.models import Settings
+                                        from djangoplus.utils.http import PdfResponse
+                                        app_settings = Settings.default()
+                                        f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
+                                        f_return['project_name'] = app_settings.initials
+                                        f_return['project_description'] = app_settings.name
+                                        f_return['today'] = datetime.now()
+                                        landscape = 'landscape' in action_css
+                                        raise ComponentHasResponseException(
+                                            PdfResponse(render_to_string(
+                                                template_names, f_return, request=self.request
+                                            ), landscape=landscape)
+                                        )
+                                    else:
+                                        raise ComponentHasResponseException(render(self.request, template_names, context))
+                        else:
+                            url = '/{}/{}/'.format(get_metadata(self.qs.model, 'app_label'), view_name)
+                            if view_name in self.request.GET:
+                                raise ComponentHasResponseException(httprr(self.request, url))
+                            else:
+                                action_css = action_css.replace('popup', '')
+                                self.add_action(action_title, url, action_css, None)
 
     def get_total(self):
         if self.list_total:
@@ -229,7 +353,8 @@ class Paginator(RequestComponent):
             if not type (self.ordering) == tuple:
                 self.ordering = self.ordering,
             queryset = queryset.order_by(*self.ordering)
-
+        if self.get_list_filter():
+            queryset = queryset.distinct()
         if paginate:
             l = []
 
@@ -316,14 +441,23 @@ class Paginator(RequestComponent):
 
     def _load_tabs(self):
         from djangoplus.cache import loader
+        list_subsets = []
         if self.list_subsets is None:
             list_subsets = loader.subsets[self.qs.model]
-        else:
+        elif self.list_subsets:
             list_subsets = []
             for subset_name in self.list_subsets:
                 for subset in loader.subsets[self.qs.model]:
                     if subset['name'] == subset_name:
                         list_subsets.append(subset)
+        elif self.relation:
+            list_subsets = []
+            for subset in loader.subsets[self.qs.model]:
+                inline = subset['inline']
+                if inline:
+                    list_subsets.append(subset)
+
+        active_queryset = None
         create_default_tab = True
         for subset in list_subsets:
             tab_title = subset['title']
@@ -337,7 +471,7 @@ class Paginator(RequestComponent):
             tab_search_fields = subset['search_fields']
             tab_active = False
             if permissions.check_group_or_permission(self.request, tab_can_view):
-                tab_qs = getattr(tab_function.__self__.all(self.request.user), tab_function.__func__.__name__)()
+                tab_qs = getattr(self.qs, tab_function.__func__.__name__)()
                 tab_active = self.current_tab == tab_name
                 self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order, tab_help_text])
                 if (tab_active or len(list_subsets) == 1) and tab_help_text:
@@ -345,20 +479,24 @@ class Paginator(RequestComponent):
             if tab_name == 'all':
                 create_default_tab = False
             if tab_active:
-                self.qs = tab_qs
+                active_queryset = tab_qs
                 self.drop_down = ModelDropDown(self.request, self.qs.model)
                 self.list_display = tab_list_display
                 self.list_filter = tab_list_filter
                 self.search_fields = tab_search_fields
 
         self.tabs = sorted(self.tabs, key=lambda k: k[4])
-        if self.list_subsets is None and create_default_tab:
+        if (self.list_subsets is None or self.relation) and create_default_tab:
             tab_title = get_metadata(self.qs.model, 'verbose_female') and 'Todas' or 'Todos'
-            tab_qs = self.original_qs
+            tab_qs = self.original_qs.all()
             tab_active = self.current_tab == 'all'
+            if tab_active:
+                active_queryset = tab_qs
             tab_order = 0
             self.tabs.insert(0, ['', tab_title, tab_qs, tab_active, tab_order, None])
-        if not self.current_tab and self.tabs:
+        if active_queryset is not None:
+            self.qs = active_queryset
+        elif self.tabs:
             self.tabs[0][3] = True
             self.qs = self.tabs[0][2]
 
@@ -430,7 +568,7 @@ class Paginator(RequestComponent):
                     pass
         if distinct:
             queryset = queryset.distinct()
-        return queryset
+        return queryset.all(self.request.user)
 
     def process_request(self):
         export = self.request.GET.get('export', None)

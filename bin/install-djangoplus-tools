@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+set -e
+
+sudo echo "Installing tools for djangoplus framework..."
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if [ "$EUID" -ne 0 ]; then
+        if [ ! -d /Applications/Firefox.app ]; then
+            curl https://ftp.mozilla.org/pub/firefox/releases/60.0b3/mac/en-US/Firefox%2060.0b3.dmg --output Firefox.dmg
+            hdiutil attach Firefox.dmg
+            sudo cp -R /Volumes/Firefox/Firefox.app /Applications
+            hdiutil detach /Volumes/Firefox/
+        fi
+
+        if ! [ -x "$(command -v geckodriver)" ]; then
+            curl http://djangoplus.net/geckodriver-v0.21.0-macos.tar.gz --output geckodriver.tar.gz
+            gunzip geckodriver.tar.gz
+            tar -xvf geckodriver.tar
+            sudo mv geckodriver /usr/local/bin
+        fi
+
+        if ! [ -x "$(command -v ffmpeg)" ]; then
+            brew install ffmpeg
+        fi
+        brew install libjpeg
+        brew install tcl-tk
+    else
+        echo "Please, execute this script as a non-privileged user."
+    fi
+
+elif [[ "$OSTYPE" == "linux-gnu" ]]; then
+
+    if ! [ -x "$(command -v curl)" ]; then
+        sudo apt-get -y install curl
+    fi
+
+    if ! [ -x "$(command -v firefox)" ]; then
+        curl https://ftp.mozilla.org/pub/firefox/releases/60.0b3/linux-x86_64/en-US/firefox-60.0b3.tar.bz2 --output firefox.tar.bz2
+        tar xvjf firefox.tar.bz2 --directory /usr/lib/
+        sudo ln -s /usr/lib/firefox /usr/local/bin/firefox
+        rm firefox.tar.bz2
+    fi
+
+    if ! [ -x "$(command -v geckodriver)" ]; then
+        curl http://djangoplus.net/geckodriver-v0.21.0-linux64.tar.gz --output geckodriver.tar.gz
+        gunzip geckodriver.tar.gz
+        tar -xvf geckodriver.tar
+        sudo mv geckodriver /usr/local/bin/
+        rm geckodriver.tar
+    fi
+
+    if ! [ -x "$(command -v ffmpeg)" ]; then
+        sudo apt-get -y install ffmpeg
+    fi
+
+    sudo apt-get -y install tcl python3-tk
+
+    if [ -f ~/.bashrc ]; then
+        echo "
+        export PATH=~/.local/bin:\$PATH
+        " >> ~/.bashrc
+    fi
+    if [ -f ~/.zshrc ]; then
+        echo "
+        export PATH=~/.local/bin:\$PATH
+        " >> ~/.zshrc
+    fi
+    export PATH=~/.local/bin:$PATH
+fi

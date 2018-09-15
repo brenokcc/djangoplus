@@ -1,0 +1,240 @@
+/* Shark Theme */
+
+body {
+    background-color: #fff;
+}
+body,
+a,
+.btn-default,
+.fc .fc-button-group > button:active,
+.fc .fc-button-group > button:focus,
+.fc .fc-button-group > button:hover,
+aside .nav > li > a:hover,
+aside .nav > li > a:hover .fa,
+aside .nav > li > a.active .fa,
+.navbar-top-links li a:active,
+.navbar-top-links li a:focus,
+.navbar-top-links .dropdown-menu li a:hover,
+.navbar-top-links .dropdown-menu li a:hover .fa,
+.pagination > li > a,
+.pagination > li > span {
+    color: #5a6169;
+}
+body#login-body {
+    background-color: #f5f6f8;
+}
+a:active,
+a:focus,
+a:hover {
+    color: #cacedb;
+}
+h2 .fa {
+    color: #cacedb;
+    font-size: 80%;
+    margin-right: 5px;
+    vertical-align: 0;
+}
+header.navbar {
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.625rem rgba(90,97,105,.12);
+}
+#page-wrapper {
+    background-color: #f5f6f8;
+    border: 0 none;
+}
+#user-drop-down,
+.card-panel-item,
+.image-rows-container,
+.navbar-top-links .dropdown-alerts,
+.panel,
+.table-responsive {
+    background-color: #fff;
+    border: 0 none;
+    border-radius: 10px;
+    box-shadow: 0 2px 0 rgba(90,97,105,.11), 0 4px 8px rgba(90,97,105,.12), 0 10px 10px rgba(90,97,105,.06), 0 7px 70px rgba(90,97,105,.1);
+}
+.action-links > a {
+    margin: 0 2px;
+}
+.badge {
+    background-color: #5a6169;
+}
+.breadcrumb {
+    background-color: transparent;
+    font-size: 90%;
+    padding: 20px 30px;
+}
+.btn-default,
+.fc .fc-today-button {
+    background-color: transparent;
+    border-color: #5a6169;
+    border-radius: 10px;
+}
+.btn-default:hover {
+    background-color: #fff;
+}
+.cards-container {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+.card-panel {
+    flex-basis: 250px !important;
+    min-width: 250px;
+    padding: 0 15px 30px;
+}
+.copyright {
+    margin: 20px 30px 10px;
+}
+.dashboard-main {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+.dashboard-aside {
+    flex-basis: 28%;
+}
+.dashboard-aside-2 {
+    padding-right: 30px;
+}
+.dashboard-header {
+    margin-bottom: 20px;
+    padding: 0 5px;
+}
+.fc .fc-center h2 {
+    font-size: 130%;
+}
+.filter-container button {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 0 3px 3px 0;
+}
+.image-rows-container {
+    padding: 20px;
+}
+aside .nav > li > a {
+    border-top: 1px solid #e1e5eb;
+    border-left: 5px solid #fff;
+    padding: 15px;
+}
+aside .nav > li > a:hover,
+aside .nav > li > a.active {
+    background-color: #f5f6f8;
+    border-left: 5px solid #5a6169;
+}
+aside .nav > li > a .fa {
+    color: #cacedb;
+    font-size: 120%;
+    margin-right: 5px;
+}
+.navbar .icon-bar {
+    background-color: #5a6169;
+}
+.navbar-brand {
+    padding-left: 0;
+}
+.navbar-header img {
+    height: 30px;
+    margin-top: 0;
+}
+.navbar-toggle .icon-bar {
+    height: 1px;
+    width: 14px;
+}
+.navbar-top-links li a:hover {
+    background-color: #f5f6f8;
+    text-decoration: none;
+}
+.navbar-top-links .dropdown-menu li a {
+    display: block;
+    padding: 3px 15px;
+}
+.navbar-top-links .dropdown-menu li a span.small {
+    margin-top: 3px;
+}
+.navbar-top-links .dropdown-menu li a .fa {
+    color: #cacedb;
+    margin-right: 5px;
+}
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    background-color: #f5f6f8;
+    border-color: #cacedb;
+    color: #5a6169;
+}
+.paginator .paginator-tabs a:hover {
+    text-decoration: none;
+}
+.paginator .paginator-tabs .badge {
+    background-color: #cacedb;
+}
+.paginator .paginator-tabs .active .badge {
+    background-color: #5a6169;
+}
+.panel .panel-heading {
+    border-radius: 10px 10px 0 0;
+}
+.panel.panel-default .panel-heading {
+    background-color: #fff;
+    border-color: #f5f6f8;
+    font-size: 120%;
+    font-weight: 500;
+    padding: 15px 20px;
+}
+.panel.panel-default .panel-heading .fa {
+    color: #cacedb;
+    font-size: 80%;
+    margin-right: 5px;
+    vertical-align: 0;
+}
+.panel.notification-panel .panel-body > a:hover {
+    text-decoration: none;
+}
+.panel.notification-panel .panel-body span:first-child {
+    font-size: 700%;
+}
+.panel.notification-panel .panel-body span:last-child {
+    margin-top: -20px;
+}
+.panel .table > thead > tr > th {
+    border-radius: 0 !important;
+}
+.panel .table-responsive {
+    box-shadow: 0 0 0;
+}
+main .padding-md {
+    padding: 0 30px;
+}
+.shortcut-wrapper .shortcut-link {
+    padding: 15px 20px;
+}
+.sidebar {
+    box-shadow: 0 0.125rem 9.375rem rgba(90,97,105,.1), 0 0.25rem 0.5rem rgba(90,97,105,.12), 0 0.9375rem 1.375rem rgba(90,97,105,.1), 0 0.4375rem 2.1875rem rgba(165,182,201,.1);
+    height: calc(100% + 50px);
+    position: fixed;
+}
+.sidebar .nav-second-level li a {
+    padding-bottom: 7px;
+    padding-left: 45px;
+    padding-top: 7px;
+}
+.table>thead>tr>th,
+.table>tbody>tr>th,
+.table>tfoot>tr>th,
+.table>thead>tr>td,
+.table>tbody>tr>td,
+.table>tfoot>tr>td {
+    padding: 10px 20px;
+}
+.table > thead > tr > th {
+    background-color: #fbfbfb;
+    border-bottom: 1px solid #dee2e6;
+}
+.table > thead > tr > th:first-child {
+    border-radius: 10px 0 0 0;
+}
+.table > thead > tr > th:last-child {
+    border-radius: 0 10px 0 0;
+}

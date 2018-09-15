@@ -36,6 +36,7 @@ INSTALLED_APPS = (
     'djangoplus',
     'djangoplus.docs',
     'djangoplus.test',
+    'djangoplus.tools',
     'djangoplus.admin',
     'djangoplus.ui',
     'djangoplus.ui.components.forms',
@@ -142,4 +143,4 @@ GRADIENT = ('#aeb6bf', '#85929e', '#5d6d7e', '#d6dbdf', '#34495e', '#2e4053')
 CAPTCHA_KEY = '6Lcpc1IUAAAAADXT-pykYw7_duD4NkrQ54VXjlfJ'
 CAPTCHA_SECRET = '6Lcpc1IUAAAAABiWOqddzw63lR6ZEaQTtpuM-X5m'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'

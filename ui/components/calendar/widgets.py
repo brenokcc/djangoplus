@@ -11,7 +11,7 @@ class DateWidget(widgets.DateInput):
         css = {'all': ('/static/css/daterangepicker-2.1.24.css',)}
         js = ('/static/js/moment.min.js', '/static/js/daterangepicker-2.1.24.js', '/static/js/jquery.mask.min-1.7.7.js')
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
         html = super(DateWidget, self).render(name, value, attrs)
         script = '''
@@ -42,7 +42,7 @@ class DateWidget(widgets.DateInput):
 
 class HiddenDateWidget(widgets.DateInput):
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'hidden'
         return super(HiddenDateWidget, self).render(name, value, attrs)
 
@@ -53,7 +53,7 @@ class DateTimeWidget(widgets.DateTimeInput):
         css = {'all': ('/static/css/daterangepicker-2.1.24.css', )}
         js = ('/static/js/moment.min.js', '/static/js/daterangepicker-2.1.24.js', '/static/js/jquery.mask.min-1.7.7.js')
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
         html = super(DateTimeWidget, self).render(name, value, attrs)
         if type(value) not in [str, str]:
@@ -100,7 +100,7 @@ class DateRangeWidget(widgets.MultiWidget):
             return ['', '']
         return value
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         if not isinstance(value, list):
             value = self.decompress(value)
         output = []
@@ -136,7 +136,7 @@ class DateFilterWidget(DateRangeWidget):
             return ['', '']
         return value
 
-    def render(self, name, value, attrs=None):
+    def render(self, name, value, attrs=None, renderer=None):
         if not isinstance(value, list):
             value = self.decompress(value)
         output = []

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-
 import os
-from dropbox import Dropbox
 from django.conf import settings
-from dropbox.files import WriteMode
 from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        from dropbox import Dropbox
+        from dropbox.files import WriteMode
         dropbox_destination = settings.PROJECT_NAME
         client = Dropbox(settings.DROPBOX_TOKEN)
         local_paths = []

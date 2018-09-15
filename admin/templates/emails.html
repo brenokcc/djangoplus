@@ -1,0 +1,15 @@
+{% extends "admin.html" %}
+
+{% block content %}
+    {% for message in messages %}
+        <h1>{{ message.to }}</h1>
+        {% if message.body %}
+            <p>{{ message.body }}</p>
+        {% endif %}
+        {% for alternative in message.alternatives %}
+            {{ alternative.0|safe }}
+        {% endfor %}
+    {% endfor %}
+
+{% endblock %}
+

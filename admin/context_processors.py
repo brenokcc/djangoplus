@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import sys
 from django.conf import settings
 from djangoplus.cache import loader
+from djangoplus.test import cache
 from djangoplus.ui.components.navigation.menu import Menu
 from djangoplus.admin.models import Settings
 from djangoplus.ui.components.utils import RoleSelector
 from djangoplus.utils import permissions
+from djangoplus.mail.utils import should_display
 from djangoplus.utils.metadata import get_metadata
 
 
@@ -43,5 +46,8 @@ def context_processor(request):
         css_files=settings.EXTRA_CSS,
         settings=app_settings,
         menu=menu,
-        alerts=alerts
+        alerts=alerts,
+        display_emails=should_display(),
+        display_fake_mouse=cache.RECORD,
+        executing_tests='test' in sys.argv
     )

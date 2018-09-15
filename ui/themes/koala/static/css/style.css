@@ -1,0 +1,393 @@
+/* Koala Theme */
+
+body {
+    background-color: #8e9eab;  /* fallback for old browsers */
+    background-image: -webkit-linear-gradient(to top, #6c7a89, #8e9eab);  /* Chrome 10-25, Safari 5.1-6 */
+    background-image: linear-gradient(to top, #6c7a89, #8e9eab); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+body,
+table tbody a,
+.breadcrumb > .active,
+.btn-default,
+aside .nav a,
+.paginator .paginator-tabs a {
+    color: #47505a;
+}
+a,
+aside .nav > li > a {
+    color: #fff;
+}
+a:active,
+a:focus,
+a:hover {
+    color: #6c7a89;
+}
+header.navbar {
+    background-color: #8e9eab;
+    border: 0 none;
+    box-shadow: 0 0 35px 25px rgba(71, 80, 90, 0.2);
+    min-height: 60px;
+}
+header.navbar .icon-bar {
+    background-color: #eef2f3;
+}
+h2 {
+    margin-bottom: 30px;
+}
+h2 .fa {
+    display: none;
+}
+table tbody a {
+    text-decoration: underline;
+}
+table.table > thead > tr > th,
+table.table > tbody > tr > td,
+.shortcut-wrapper {
+    border: 0 none;
+}
+table tr:nth-child(even) td {
+    background-color: rgba(255, 255, 255, 0.5);
+}
+table tr:nth-child(odd) td {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+#page-wrapper,
+.breadcrumb {
+    background-color: transparent;
+}
+#page-wrapper {
+    border: 0 none;
+    padding: 10px 0;
+}
+.action-links a {
+    font-size: 90%;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+.badge {
+    background-color: #6C7A89;
+}
+.breadcrumb {
+    padding: 20px;
+}
+.btn-default {
+    background: rgba(255, 255, 255, 0.3);
+    border: 0 none;
+    border-radius: 20px;
+    padding: 8px 20px;
+}
+.btn-default:hover {
+    border-color: #fff;
+}
+.btn-default .fa {
+    margin-right: 5px;
+}
+.cards-container {
+    margin-left: -15px;
+    margin-right: -15px;
+    padding-top: 15px;
+}
+.card-panel,
+.image-rows-container,
+.panel .panel-body,
+.shortcut-wrapper,
+.table-responsive {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 0 none;
+    border-radius: 20px;
+}
+.card-panel {
+    flex-basis: 150px !important;
+    margin: 20px 15px;
+    min-width: 150px;
+    padding: 0;
+}
+.card-panel-item {
+    background-color: transparent;
+    overflow: inherit;
+}
+.card-panel-item .pull-right {
+    float: left !important;
+}
+.card-panel-item .stat-icon {
+    float: right;
+    margin-top: -35px;
+    position: relative;
+}
+.card-panel-item .title,
+.panel.panel-default .panel-heading,
+.shortcut-wrapper .shortcut-description {
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.card-panel-item .title {
+    color: #fff;
+    font-size: 120%;
+    margin-left: 5px;
+    margin-top: 10px;
+}
+.copyright {
+    margin: 30px;
+}
+.dashboard-aside,
+.dashboard-header,
+.dashboard-main,
+.dashboard-footer {
+    margin-left: 30px;
+    margin-right: 30px;
+}
+.dashboard-aside .paginator .panel .panel-heading > .fa {
+    display: none;
+}
+.dropdown-toggle b.caret {
+    display: none;
+}
+.fc .fc-center h2 {
+    font-size: 130%;
+}
+.filter-container button {
+    background-color: #fff;
+    border-color: #8e9eab;
+    border-radius: 2px;
+}
+.filter-container button .fa {
+    margin-right: 0;
+}
+.form-control {
+    border-color: #fff;
+    height: 40px;
+}
+.form-control:focus {
+    border-color: #fff;
+    box-shadow: 0 0 0;
+}
+aside .form-control {
+    height: 32px;
+}
+.image-rows-container {
+    padding: 20px;
+}
+.modal-content {
+    background-color: #eef2f3;
+}
+aside .nav .sidebar-profile {
+    padding-top: 15px;
+}
+aside .nav > li > a {
+    border-radius: 0 20px 20px 0;
+    font-size: 115%;
+    font-weight: 500;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+}
+aside .nav > li > a .fa {
+    margin-right: 5px;
+}
+aside .nav a:focus,
+aside .nav a:hover,
+aside .nav a.active {
+    background-color: rgba(71, 80, 90, 0.25);
+}
+.navbar-brand {
+    padding: 0 30px 0 0;
+}
+.navbar-header {
+    margin-top: 5px;
+}
+.navbar-header img {
+    height: 30px;
+    margin-top: 0;
+}
+.navbar-toggle {
+    margin-top: 13px;
+}
+.navbar-toggle .icon-bar {
+    height: 1px;
+    width: 14px;
+}
+.navbar-top-links li a {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-top: 12px;
+    min-height: 36px;
+    padding: 8px;
+}
+.navbar-top-links .dropdown a {
+    border-radius: 20px;
+    padding: 8px 10px;
+}
+.navbar-top-links .dropdown-alerts {
+    border: 0 none;
+}
+.navbar-top-links .dropdown-menu li a {
+    border-radius: 0;
+    color: #47505a;
+    display: block;
+    margin: 0;
+}
+.navbar-top-links .dropdown-menu li a span.small {
+    margin-top: 3px;
+}
+.nav-tabs {
+    border-bottom: 1px solid #6C7A89;
+}
+.nav-tabs > li > a:hover {
+    background-color: transparent;
+    border: 0 none;
+}
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    background-color: transparent;
+    border: 1px solid #6C7A89;
+    color: #6C7A89;
+}
+.notification-label {
+    right: 2px;
+    top: 4px;
+}
+.pagination > li > a,
+.pagination > li > span,
+.pagination>.disabled>span,
+.pagination>.disabled>span:hover,
+.pagination>.disabled>span:focus,
+.pagination>.disabled>a,
+.pagination>.disabled>a:hover,
+.pagination>.disabled>a:focus {
+    background-color: transparent;
+    border: 0 none;
+    color: #fff;
+}
+.pagination>li>a:hover,
+.pagination>li>span:hover,
+.pagination>li>a:focus,
+.pagination>li>span:focus {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    color: #fff;
+}
+.pagination>.active>a,
+.pagination>.active>span,
+.pagination>.active>a:hover,
+.pagination>.active>span:hover,
+.pagination>.active>a:focus,
+.pagination>.active>span:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+}
+.paginator .paginator-tabs {
+    margin-top: 0;
+}
+.paginator .paginator-tabs a {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 25px;
+    font-size: 90%;
+    font-weight: 300;
+    letter-spacing: 1px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+}
+.paginator .paginator-tabs a:hover,
+.paginator .paginator-tabs .active a {
+    background-color: rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+}
+.paginator .paginator-tabs .active a {
+    color: #fff;
+}
+.paginator-actions.pull-right > .btn {
+    font-size: 90%;
+    margin-left: 5px;
+    margin-top: 5px;
+    padding: 5px 12px;
+}
+.paginator-actions.pull-right > .btn .fa {
+    font-size: 105%;
+}
+.panel {
+    background-color: transparent;
+    border: 0 none;
+    box-shadow: 0 0 0;
+}
+.panel.info-panel label {
+    margin-right: 15px;
+    text-align: right;
+}
+.panel.info-panel label:after {
+    content: ":";
+}
+.panel.panel-default .panel-heading {
+    background-color: transparent;
+    border: 0 none;
+    color: #fff;
+    font-size: 110%;
+    padding: 20px 20px 10px;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+}
+.card-panel-item .stat-icon,
+.panel.panel-default .panel-heading .fa,
+.shortcut-wrapper .shortcut-link .shortcut-icon {
+    background-color: #6c7a89;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 120%;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    width: 50px;
+}
+.panel.panel-default .panel-heading .fa {
+    float: right;
+    margin-bottom: -30px;
+}
+.panel.notification-panel .panel-body > a {
+    text-decoration: none;
+}
+.panel.notification-panel .panel-body > a:hover {
+    color: #6c7a89;
+}
+.panel-body {
+    padding: 30px;
+}
+span.select2-container--default .select2-selection--single {
+    border: 1px solid #fff;
+}
+.shortcut-wrapper .shortcut-link {
+    flex-basis: 120px;
+}
+.shortcut-wrapper .shortcut-link .shortcut-icon {
+    margin: 0 auto;
+}
+.shortcut-wrapper .shortcut-link:hover .shortcut-icon {
+    background-color: #8e9eab;
+}
+.shortcut-wrapper .shortcut-description {
+    font-size: 90%;
+}
+.sidebar .nav-second-level li a {
+    font-size: 100%;
+    font-weight: 400;
+    padding-bottom: 8px;
+    padding-left: 45px;
+    padding-top: 8px;
+}
+.social-login > a {
+    color: #6c7a89;
+}
+.social-login > a:hover {
+    color: #8e9eab;
+}
+.table {
+    margin-bottom: 0;
+}
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > tbody > tr > td,
+.table > tfoot > tr > td {
+    padding: 8px 15px;
+}

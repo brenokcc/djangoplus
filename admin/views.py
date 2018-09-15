@@ -2,12 +2,14 @@
 import os
 import json
 from djangoplus.admin.models import Settings
-import urllib.request, urllib.error, urllib.parse
+import urllib
+from djangoplus.test import cache
+from djangoplus.mail import utils
 from djangoplus.cache import loader
 from django.contrib import auth
 from djangoplus.utils.aescipher import decrypt
 from django.http.response import HttpResponse
-from djangoplus.decorators.views import view
+from djangoplus.decorators.views import view, action
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.admin.models import User, Unit, Organization
 from djangoplus.ui.components.panel import DashboardPanel
@@ -31,7 +33,7 @@ def index(request):
 @view('Acesso ao Sistema', login_required=False, template='login/login.html')
 def login(request, scope=None, organization=None, unit=None):
     auth.logout(request)
-    can_register = loader.signup_model is not None and not 'HEADLESS' in os.environ
+    can_register = loader.signup_model is not None and not cache.HEADLESS
     organization = organization and Organization.objects.get(pk=organization) or None
     unit = unit and Unit.objects.get(pk=unit) or None
     form = LoginForm(request, scope, organization, unit)
@@ -169,6 +171,20 @@ def toggle_menu(request):
         request.session['hidden_menu'] = True
     request.session.save()
     return HttpResponse()
+
+
+@action(User, 'Login as User', can_execute='Superuser')
+def login_as(request, pk):
+    auth.logout(request)
+    user = User.objects.get(pk=pk)
+    auth.login(request, user)
+    return httprr(request, '/admin/', 'Login realizado com sucesso')
+
+
+@view('View E-mails')
+def emails(request):
+    messages = utils.load_emails()
+    return locals()
 
 
 

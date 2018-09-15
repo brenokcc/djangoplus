@@ -286,9 +286,8 @@ class DashboardPanel(RequestComponent):
             model_name = model.__name__.lower()
             for item in loader.subsets[model]:
                 description = item['title']
-                can_view = item['can_view']
                 notify = item['notify']
-                if notify and permissions.check_group_or_permission(request, can_view):
+                if notify is True or notify and permissions.check_group_or_permission(request, notify):
                     attr_name = item['function'].__func__.__name__
                     qs = model.objects.all(request.user)
                     qs = getattr(qs, attr_name)()

@@ -66,7 +66,7 @@
             {% endif %}
             <div class="panel-body">
 
-                {% if self.tabs|length > 1 and not self.readonly %}
+                {% if self.tabs|length > 1 %}
                     <ul class="paginator-tabs">
                         {% for tab in self.tabs %}
                             <li class="{% if tab.3 %}active{% endif %}">
@@ -200,7 +200,10 @@
         $('#table{{ self.id }}').find('a.subset-action').click(function (e) {
             var url = this.href.split('&ids=')[0];
             url+='&ids='+$('input:checked[name=\'pk\']').map(function(){return $(this).attr('value');}).get().join(',');
-            this.href = url;
+            if(window['executing_tests']) document.location.href = url;
+            else loadUrl(url);
+            e.preventDefault();
+            return false;
         });
     </script>
     {% endwith %}
