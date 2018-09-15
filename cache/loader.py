@@ -24,7 +24,6 @@ abstract_role_model_names = dict()
 actions = dict()
 class_actions = dict()
 fieldset_actions = dict()
-subset_actions = dict()
 add_inline_actions = dict()
 
 # documentation
@@ -70,8 +69,6 @@ if not initialized:
 
         if model not in subsets:
             subsets[model] = []
-        if model not in subset_actions:
-            subset_actions[model] = dict()
         if model not in actions:
             actions[model] = dict()
         if model not in class_actions:
@@ -138,7 +135,7 @@ if not initialized:
 
                     item = dict(
                         title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
-                        menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify, actions=subset_actions,
+                        menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify,
                         order=subset_order, help_text=subset_help_text, list_display=subset_list_display,
                         list_filter=subset_list_filter, search_fields=subset_search_fields, inline=subset_inline
                     )
@@ -189,11 +186,6 @@ if not initialized:
                     if action_group not in actions[model]:
                         actions[model][action_group] = dict()
                     actions[model][action_group][view_name] = action
-                    if action_inline:
-                        action_subset = action_inline is True and 'all' or action_inline
-                        if action_subset not in subset_actions[model]:
-                            subset_actions[model][action_subset] = []
-                        subset_actions[model][action_subset].append(attr)
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
                         workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
@@ -236,14 +228,11 @@ if not initialized:
                     view_name = action['view_name']
                     action_inline = action['inline']
                     action_workflow = action['usecase']
+                    if not action_inline:
+                        action['inline'] = True
                     if action_group not in class_actions[model]:
                         class_actions[model][action_group] = dict()
                     class_actions[model][action_group][view_name] = action
-                    action_subset = action_inline is True and 'all' or action_inline
-                    if action_subset:
-                        if action_subset not in subset_actions[model]:
-                            subset_actions[model][action_subset] = []
-                        subset_actions[model][action_subset].append(view_name)
 
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
@@ -264,7 +253,7 @@ if not initialized:
                 module = __import__('{}.views'.format(app_label), fromlist=list(map(str, app_label.split('.'))))
                 for attr_name in dir(module):
                     function = getattr(module, attr_name)
-                    # indexing the actions
+                    # indexing the actions defined in the views
                     if hasattr(function, '_action'):
                         action = function._action
                         action_group = action['group']
@@ -276,21 +265,17 @@ if not initialized:
                         action_can_execute = get_can_execute(action)
                         action_inline = action['inline']
                         action_menu = action['menu']
-                        if action_inline:
-                            action_subset = action_inline is True and 'all' or action_inline
-                            if action_subset:
-                                if action_subset not in subset_actions[action_model]:
-                                    subset_actions[action_model][action_subset] = []
-                                subset_actions[action_model][action_subset].append(action_name)
 
                         if action_workflow:
                             role = action_can_execute and action_can_execute[0] or 'Superusuário'
                             action_model_verbose_name = get_metadata(action_model, 'verbose_name')
                             workflows[action_workflow] = dict(activity=action_title, role=role, model=action_model_verbose_name)
+                        # object action
                         if action_function.__code__.co_argcount > 1:
                             if action_group not in actions[action_model]:
                                 actions[action_model][action_group] = dict()
                             actions[action_model][action_group][action_name] = action
+                        # class action
                         else:
                             if action_model not in class_actions:
                                 class_actions[action_model] = dict()

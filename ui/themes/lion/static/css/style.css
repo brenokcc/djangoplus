@@ -46,6 +46,9 @@ body#login-body .panel {
 #wrapper {
     background-color: transparent;
 }
+#content {
+    padding-top: 0;
+}
 .action-links > a {
     margin: 0 2px;
 }
@@ -64,6 +67,9 @@ body#login-body .panel {
 .btn-default:hover {
     background-color: #c5Ab85;
     color: #050505;
+}
+.btn-default.btn-sm {
+    background-color: #6E7271;
 }
 .btn-default .fa {
     color: #f8f4e3;
@@ -84,6 +90,7 @@ body#login-body .panel {
 }
 .card-panel-item {
     background-color: transparent;
+    border: 0 none;
     padding: 40px;
 }
 .card-panel-item .stat-icon {
@@ -112,7 +119,7 @@ body#login-body .panel {
 }
 .copyright {
     border-top: 1px solid #c5Ab85;
-    margin: 0;
+    margin: 40px 0 0;
     padding: 40px 40px 20px;
 }
 .dashboard-aside,
@@ -157,11 +164,14 @@ body#login-body .panel {
 .fc .fc-center h2 {
     font-size: 130%;
 }
+.fc-button-group button {
+    background-color: transparent;
+}
 .filter-container button,
 .paginator .filter-container input {
     height: 38px !important;
 }
-.filter-container button {
+.filter-container button.btn {
     background-color: #fff;
     border: 1px solid #050505;
     height: 38px !important;
@@ -179,6 +189,9 @@ body#login-body .panel {
     border: 0 none;
     margin-bottom: 0;
     padding: 20px;
+}
+.input-group-addon {
+    border-color: #6e7271;
 }
 aside .nav > li > a {
     border-top: 1px solid #c5ab85;
@@ -304,6 +317,10 @@ aside .nav > li > a.active .fa {
     background-color: transparent;
     border-color: transparent;
 }
+.paginator-actions .btn {
+    font-size: 90%;
+    padding: 5px 10px;
+}
 .paginator-actions.pull-right > .btn {
     font-size: 90%;
     margin-left: 5px;
@@ -321,11 +338,21 @@ aside .nav > li > a.active .fa {
     box-shadow: 0 0 0;
     margin-bottom: 0;
 }
+.panel:last-of-type:not(:only-of-type) {
+    border-bottom: 0 none;
+}
+.panel + .seperator {
+    padding-top: 40px;
+}
 .row .panel {
     background-color: rgba(197, 171, 133, 0.2);
     border: 1px solid #c5ab85;
     margin-bottom: 15px;
     margin-top: 15px;
+}
+.panel.info-panel label {
+    padding-right: 10px;
+    text-align: right;
 }
 .panel.panel-default .panel-heading {
     background-color: transparent;
@@ -337,6 +364,7 @@ aside .nav > li > a.active .fa {
     padding: 40px 40px 0;
     position: relative;
     text-align: left;
+    text-transform: uppercase;
 }
 .panel.panel-default .panel-heading .fa {
     color: #c5Ab85;
@@ -354,9 +382,10 @@ aside .nav > li > a.active .fa {
     margin-left: 0;
     margin-right: 0;
     opacity: 0.5;
-    position: absolute;
-    right: 10px;
-    top: 10px;
+}
+.panel.panel-fullscreen {
+    background-color: #F8F4E3;
+    padding: 40px;
 }
 .panel.notification-panel .panel-body {
     padding-top: 0;
@@ -382,11 +411,22 @@ aside .nav > li > a.active .fa {
     background-color: transparent;
     padding: 40px;
 }
+form .panel.panel-default .panel-heading,
+form .panel-body,
+.model-panel .panel.panel-default .panel-heading,
+.model-panel .panel-body {
+    padding-left: 0;
+    padding-right: 0;
+}
+.panel-heading + .panel-body {
+    padding-top: 20px;
+}
 main .padding-md {
     padding: 0 40px;
 }
 .select2-container .select2-selection--single {
     height: 38px !important;
+    padding-top: 4px;
 }
 .select2-container--default .select2-selection--single {
     border-radius: 0 !important;
@@ -457,16 +497,14 @@ main .padding-md {
     background-color: transparent;
     border: 0 none;
     color: #6e7271;
-    font-weight: 600;
+    font-size: 95%;
+    font-weight: 400;
+    text-transform: uppercase;
 }
 .table > thead > tr > th a {
     color: #6e7271;
 }
 .table > tbody > tr > td {
     background-color: #f8f4e3;
-    border: 0 none;
-}
-.table-responsive {
-    background-color: rgba(197, 171, 133, 0.1);
-    padding: 20px;
+    border: 1px solid rgba(197, 171, 133, 0.25);
 }

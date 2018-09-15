@@ -81,7 +81,9 @@ header.navbar {
 }
 .card-panel-item {
     background-color: #fff;
+    border: 0 none;
     border-radius: 5px 25px 5px 5px;
+    padding: 20px;
 }
 .card-panel-item .stat-icon {
     color: #fd6f71;
@@ -92,6 +94,9 @@ header.navbar {
     font-weight: 500;
     margin-top: 7px;
     text-transform: uppercase;
+}
+.card-panel-item .value {
+    margin-top: -15px;
 }
 .copyright {
     margin: 40px;
@@ -183,6 +188,9 @@ aside .nav > li > a.active .fa {
 }
 .navbar-top-links.navbar-left {
     margin-left: 15px;
+}
+.navbar-top-links.navbar-right {
+    margin-right: 34px;
 }
 .navbar-top-links li {
     margin-right: 10px;
@@ -333,12 +341,20 @@ aside .nav > li > a.active .fa {
     margin-left: 10px;
     margin-right: 0;
 }
+.panel.panel-fullscreen {
+    background-color: #fff;
+    padding: 40px;
+}
 .panel-body {
     background-color: #fff;
     border-radius: 5px 25px 5px 5px;
+    padding: 25px 20px 20px;
 }
 main .padding-md {
     padding: 0 40px;
+}
+.shortcut-wrapper {
+    border-width: 0 0 1px;
 }
 .shortcut-wrapper .shortcut-description {
     font-size: 90%;
@@ -358,6 +374,8 @@ main .padding-md {
 .sidebar-profile {
     color: #fff;
 }
+
+/* Tables */
 .table > thead > tr > th,
 .table > tbody > tr > th,
 .table > tfoot > tr > th,
@@ -367,15 +385,30 @@ main .padding-md {
     padding: 10px;
 }
 .table > thead > tr > th {
-    background-color: #fff;
     border: 0 none;
-    color: #9e2b25;
+    font-size: 90%;
     font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.table > thead > tr > th:first-child {
+    border-radius: 5px 0 0 0;
+}
+.table > thead > tr > th:last-child {
+    border-radius: 0 5px 0 0;
 }
 .table > thead > tr > th a {
-    color: #9e2b25;
     font-weight: 600;
 }
-.table > tbody > tr > td {
-    background-color: #fff;
+.table > tbody > tr:nth-child(odd) > td {
+    background-color: rgba(237, 241, 245, 0.5);
+}
+.table > tbody > tr:nth-child(even) > td {
+    background-color: rgba(237, 241, 245, 0.25);
+}
+.table > tbody > tr:last-child > td {
+    border-bottom: 1px solid #ddd;
+}
+.table-responsive {
+    width: 99%;
 }

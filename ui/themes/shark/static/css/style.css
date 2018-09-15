@@ -41,6 +41,8 @@ header.navbar {
 #page-wrapper {
     background-color: #f5f6f8;
     border: 0 none;
+    flex-grow: 1;
+    margin-left: 0;
 }
 #user-drop-down,
 .card-panel-item,
@@ -52,6 +54,12 @@ header.navbar {
     border: 0 none;
     border-radius: 10px;
     box-shadow: 0 2px 0 rgba(90,97,105,.11), 0 4px 8px rgba(90,97,105,.12), 0 10px 10px rgba(90,97,105,.06), 0 7px 70px rgba(90,97,105,.1);
+}
+#wrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: stretch;
 }
 .action-links > a {
     margin: 0 2px;
@@ -82,22 +90,18 @@ header.navbar {
     min-width: 250px;
     padding: 0 15px 30px;
 }
+.card-panel-item .title {
+    margin-top: 0;
+}
 .copyright {
     margin: 20px 30px 10px;
 }
-.dashboard-main {
+.dashboard-aside,
+.dashboard-header,
+.dashboard-main,
+.dashboard-footer {
     margin-left: 30px;
     margin-right: 30px;
-}
-.dashboard-aside {
-    flex-basis: 28%;
-}
-.dashboard-aside-2 {
-    padding-right: 30px;
-}
-.dashboard-header {
-    margin-bottom: 20px;
-    padding: 0 5px;
 }
 .fc .fc-center h2 {
     font-size: 130%;
@@ -109,6 +113,14 @@ header.navbar {
 }
 .image-rows-container {
     padding: 20px;
+}
+.panel .image-rows-container {
+    background-color: transparent;
+    box-shadow: 0 0 0;
+    padding: 20px 0;
+}
+.panel .image-rows-row {
+    border-bottom: 1px solid #e1e5eb;
 }
 aside .nav > li > a {
     border-top: 1px solid #e1e5eb;
@@ -173,6 +185,12 @@ aside .nav > li > a .fa {
 .paginator .paginator-tabs .active .badge {
     background-color: #5a6169;
 }
+.paginator-actions.pull-right > .btn {
+    font-size: 90%;
+    margin-left: 5px;
+    margin-top: 5px;
+    padding: 5px 12px;
+}
 .panel .panel-heading {
     border-radius: 10px 10px 0 0;
 }
@@ -188,6 +206,10 @@ aside .nav > li > a .fa {
     font-size: 80%;
     margin-right: 5px;
     vertical-align: 0;
+}
+.panel.panel-fullscreen {
+    background-color: #fff;
+    padding: 40px;
 }
 .panel.notification-panel .panel-body > a:hover {
     text-decoration: none;
@@ -207,13 +229,19 @@ aside .nav > li > a .fa {
 main .padding-md {
     padding: 0 30px;
 }
+.shortcut-wrapper {
+    border-width: 0 0 1px;
+    margin-bottom: 30px;
+}
 .shortcut-wrapper .shortcut-link {
     padding: 15px 20px;
 }
 .sidebar {
     box-shadow: 0 0.125rem 9.375rem rgba(90,97,105,.1), 0 0.25rem 0.5rem rgba(90,97,105,.12), 0 0.9375rem 1.375rem rgba(90,97,105,.1), 0 0.4375rem 2.1875rem rgba(165,182,201,.1);
-    height: calc(100% + 50px);
-    position: fixed;
+    flex-basis: 250px;
+    flex-shrink: 0;
+    padding-top: 60px;
+    position: static;
 }
 .sidebar .nav-second-level li a {
     padding-bottom: 7px;

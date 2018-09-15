@@ -51,6 +51,9 @@ table tr:nth-child(even) td {
 table tr:nth-child(odd) td {
     background-color: rgba(255, 255, 255, 0.7);
 }
+#content {
+    padding-top: 30px;
+}
 #page-wrapper,
 .breadcrumb {
     background-color: transparent;
@@ -75,6 +78,7 @@ table tr:nth-child(odd) td {
     border: 0 none;
     border-radius: 20px;
     padding: 8px 20px;
+    text-decoration: none;
 }
 .btn-default:hover {
     border-color: #fff;
@@ -104,7 +108,9 @@ table tr:nth-child(odd) td {
 }
 .card-panel-item {
     background-color: transparent;
+    border: 0 none;
     overflow: inherit;
+    padding: 20px;
 }
 .card-panel-item .pull-right {
     float: left !important;
@@ -343,6 +349,10 @@ aside .nav a.active {
     float: right;
     margin-bottom: -30px;
 }
+.panel.panel-fullscreen {
+    background-color: #fff;
+    padding: 40px;
+}
 .panel.notification-panel .panel-body > a {
     text-decoration: none;
 }
@@ -354,6 +364,9 @@ aside .nav a.active {
 }
 span.select2-container--default .select2-selection--single {
     border: 1px solid #fff;
+}
+.shortcut-wrapper {
+    border-width: 0 0 1px;
 }
 .shortcut-wrapper .shortcut-link {
     flex-basis: 120px;

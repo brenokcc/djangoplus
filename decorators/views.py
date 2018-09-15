@@ -86,9 +86,9 @@ def action(model, verbose_name, help_text=None, condition=None, inline=(), icon=
 
         d = dict(title=verbose_name, can_execute=iterable(can_execute), condition=condition, help_text=help_text,
                  view_name=function.__name__, function=function, group=category, css=style, message=message, model=model, input=None,
-                 initial=None, choices=None, inline=inline, icon=icon, doc=function.__doc__, usecase=usecase,
+                 initial=None, choices=None, inline=iterable(inline), icon=icon, doc=function.__doc__, usecase=usecase,
                  can_execute_by_organization=iterable(can_execute_by_organization), can_execute_by_unit=iterable(can_execute_by_unit),
-                 can_execute_by_role=iterable(can_execute_by_role), redirect_to=None, menu=menu, display=None)
+                 can_execute_by_role=iterable(can_execute_by_role), redirect_to=None, menu=menu, display=None, source='view')
 
         receive_function_args._action = d
 

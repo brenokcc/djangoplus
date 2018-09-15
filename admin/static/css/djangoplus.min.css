@@ -628,7 +628,7 @@ li {
 }
 
 .paginator .paginator-total {
-    font-size: 50px;
+    font-size: 450%;
     float: right;
     text-align: center
 }

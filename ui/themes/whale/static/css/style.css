@@ -2,6 +2,10 @@
 
 body {
     background-color: #fafaff;
+    background: #70e1f5;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to bottom, #ffd194, #70e1f5);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to bottom, #fafaff, #0a507b); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
     color: #30343F;
 }
 a,
@@ -37,20 +41,22 @@ header.navbar,
 .navbar-top-links .dropdown-alerts,
 .paginator.paginator-admin,
 .panel,
-.sidebar,
-.table-responsive {
+.sidebar {
     background-color: #fff;
-    border: 1px solid #ebe9e9;
-    border-radius: 10px;
+    border: 0 none;
+    border-radius: 4px;
 }
 header.navbar {
-    margin: 30px;
+    margin: 20px;
     position: static;
 }
+#content {
+    padding-top: 0;
+}
 #page-wrapper {
-    background-color: #fafaff;
+    background-color: transparent;
     border: 0 none;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 .action-links > a {
     margin: 0 2px;
@@ -67,25 +73,43 @@ header.navbar {
 .fc .fc-today-button {
     background-color: rgba(10, 80, 123, 0.1);
     border: 0 none;
-    border-radius: 10px;
+    border-radius: 4px;
 }
 .btn-default:hover,
 .fc .fc-today-button:hover {
     background-color: rgba(10, 80, 123, 0.3);
     color: #0a507b;
 }
+.cards-container {
+    margin-left: -10px;
+    margin-right: -10px;
+}
+.card-panel {
+    background-color: #fff;
+    border: 0 none;
+    border-radius: 4px;
+    margin: 0 10px 20px;
+    padding: 0;
+}
+.card-panel-item {
+    border: 0 none;
+    padding: 20px;
+}
+.card-panel-item .title {
+    margin-top: 0;
+}
 .copyright {
     color: #556F7A;
     font-size: 80%;
-    margin: 0 30px 10px;
+    margin: 0 20px 10px;
     padding: 10px 20px;
 }
-.dashboard-main {
-    margin-left: 30px;
-    margin-right: 30px;
-}
-.dashboard-aside-2 {
-    padding-right: 30px;
+.dashboard-aside,
+.dashboard-header,
+.dashboard-main,
+.dashboard-footer {
+    margin-left: 20px;
+    margin-right: 20px;
 }
 .dashboard-aside.dashboard-aside-2 .panel {
     background-color: rgba(10, 80, 123, 0.75);
@@ -112,6 +136,11 @@ header.navbar {
     border: 1px solid #ccc;
     border-radius: 0 3px 3px 0;
 }
+.image-rows-container {
+    background-color: rgba(10, 80, 123, 0.15);
+    border: 0 none;
+    border-radius: 4px;
+}
 aside .nav > li > a {
     border-top: 1px solid #ebe9e9;
     padding: 15px;
@@ -120,7 +149,7 @@ aside .nav > li > a:active,
 aside .nav > li > a:focus,
 aside .nav > li > a:hover,
 aside .nav > li > a.active {
-    background-color: rgba(10, 80, 123, 0.1);
+    background-color: rgba(10, 80, 123, 0.2);
 }
 aside .nav > li > a .fa {
     font-size: 120%;
@@ -130,13 +159,15 @@ aside .nav > li > a .fa {
     background-color: #5a6169;
 }
 .navbar-brand {
-    padding-bottom: 10px;
     padding-left: 0;
-    padding-top: 10px;
 }
 .navbar-header img {
     height: 30px;
     margin-top: 0;
+}
+.navbar-toggle .icon-bar {
+    height: 1px;
+    width: 14px;
 }
 .navbar-top-links li a:hover {
     background-color: #f5f6f8;
@@ -164,11 +195,17 @@ aside .nav > li > a .fa {
     margin-bottom: 30px;
     padding: 20px;
 }
+.paginator-actions.pull-right > .btn {
+    font-size: 90%;
+    margin-left: 5px;
+    margin-top: 5px;
+    padding: 5px 12px;
+}
 .panel {
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 .panel .panel-heading {
-    border-radius: 10px 10px 0 0;
+    border-radius: 4px 4px 0 0;
 }
 .panel.panel-default .panel-heading {
     background-color: transparent;
@@ -189,15 +226,60 @@ aside .nav > li > a .fa {
     vertical-align: 0;
     width: 33px;
 }
+.panel.panel-fullscreen {
+    background-color: #fff;
+    padding: 40px;
+}
+.panel.notification-panel .panel-body > a:hover {
+    color: #30343f;
+    text-decoration: none;
+}
+.panel.notification-panel .panel-body span:first-child {
+    font-size: 900%;
+}
 .panel .table > thead > tr > th {
     border-radius: 0 !important;
 }
 main .padding-md {
     padding: 0 30px;
 }
+.shortcut-wrapper {
+    border: 0 none;
+    align-items: stretch;
+    margin-bottom: 0;
+    margin-left: -10px;
+    margin-right: -10px;
+}
+.shortcut-wrapper .shortcut-link {
+    background-color: rgba(10, 80, 123, 0.75);
+    border-radius: 4px;
+    color: #fff;
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 0 10px 20px;
+    padding: 20px;
+}
+.shortcut-wrapper .shortcut-link:hover {
+    background-color: rgba(10, 80, 123, 0.85);
+}
+.shortcut-wrapper .shortcut-link .shortcut-icon {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    color: #0a507b;
+    font-size: 90%;
+    height: 33px;
+    line-height: 33px;
+    float: left;
+    font-size: 120%;
+    margin-right: 10px;
+    width: 33px;
+}
+.shortcut-wrapper .shortcut-description {
+    text-align: left;
+}
 .sidebar {
-    margin-left: 30px;
-    width: 220px;
+    margin-left: 20px;
+    width: 230px;
 }
 .sidebar .nav-second-level li a {
     padding-bottom: 7px;
@@ -217,8 +299,30 @@ main .padding-md {
     border-bottom: 1px solid #ebe9e9;
 }
 .table > thead > tr > th:first-child {
-    border-radius: 10px 0 0 0;
+    border-radius: 4px 0 0 0;
 }
 .table > thead > tr > th:last-child {
-    border-radius: 0 10px 0 0;
+    border-radius: 0 4px 0 0;
+}
+
+/* Pagination */
+.pagination > li > a,
+.pagination > li > span {
+    border: 0 none;
+}
+.pagination>li>a:hover,
+.pagination>li>span:hover,
+.pagination>li>a:focus,
+.pagination>li>span:focus {
+    background-color: rgba(10, 80, 123, 0.1);
+    border-radius: 50%;
+}
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    background-color: rgba(10, 80, 123, 0.3);
+    border-radius: 50%;
 }

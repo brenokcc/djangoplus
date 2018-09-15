@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 from django.shortcuts import render
-from djangoplus.utils import permissions
+from djangoplus.utils import permissions, should_add_action
 from djangoplus.ui.components import forms
 from django.db.models.aggregates import Sum
 from djangoplus.utils.tabulardata import tolist
@@ -45,7 +45,6 @@ class Paginator(RequestComponent):
         self.url = url
         self.display_checkboxes = False
 
-        self.subset_actions = []
         self.filters = []
         self.pagination = ''
 
@@ -189,6 +188,14 @@ class Paginator(RequestComponent):
         app_label = get_metadata(self.qs.model, 'app_label')
         list_pdf = get_metadata(self.qs.model, 'list_pdf')
 
+        subset = self.list_subsets and self.list_subsets[0] or None
+        if subset:
+            subsetp = None
+        else:
+            tid = self.request.GET.get('tid')
+            subsetp = self.request.GET.get('tab{}'.format(tid))
+        subset_name = subsetp or subset or None
+
         if list_csv and not self.relation:
             export_url = '?' in export_url and '{}&export=csv'.format(export_url) or '{}?export=csv'.format(export_url)
             self.add_action('Exportar CSV', export_url, 'ajax', 'fa-table')
@@ -208,7 +215,7 @@ class Paginator(RequestComponent):
 
         subclasses = self.qs.model.__subclasses__()
 
-        if not self.relation:
+        if not self.relation and not subset_name:
             if not subclasses and not self.list_subsets and permissions.has_add_permission(self.request, self.qs.model):
                 instance = self.qs.model()
                 instance.user = self.request.user
@@ -227,13 +234,6 @@ class Paginator(RequestComponent):
                 if permissions.has_add_permission(self.request, subclass):
                     self.add_action(verbose_name, '/add/{}/{}/'.format(app, cls), False, 'fa-plus')
 
-        subset = self.list_subsets and self.list_subsets[0] or None
-        if subset:
-            subsetp = None
-        else:
-            tid = self.request.GET.get('tid')
-            subsetp = self.request.GET.get('tab{}'.format(tid))
-
         from djangoplus.cache import loader
         if self.qs.model in loader.class_actions:
             for group in loader.class_actions[self.qs.model]:
@@ -242,18 +242,15 @@ class Paginator(RequestComponent):
                     action_title = _action['title']
                     action_message = _action['message']
                     action_can_execute = _action['can_execute']
-                    action_input = _action['input']
+                    action_inline = _action['inline']
                     action_css = _action['css']
                     action_condition = _action['condition']
-                    initial = _action['initial']
-                    choices = _action['choices']
+                    action_source = _action['source']
 
-                    subset_name = subsetp or subset or 'all'
-                    if subset_name not in loader.subset_actions[self.qs.model] or view_name not in loader.subset_actions[self.qs.model][subset_name]:
-                            continue
-                    self.display_checkboxes = True
+                    add_action = should_add_action(action_inline, subset_name)
 
-                    if permissions.check_group_or_permission(self.request, action_can_execute):
+                    if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
+                        self.display_checkboxes = self.display_checkboxes or not action_source == 'view'
                         func = hasattr(self.qs, view_name) and getattr(self.qs, view_name) or None
                         if func:
                             char = '?' in self.request.get_full_path() and '&' or '?'

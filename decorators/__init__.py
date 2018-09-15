@@ -50,10 +50,10 @@ def action(verbose_name, help_text=None, condition=None, inline=(), icon=None, c
             title=verbose_name, can_execute=iterable(can_execute), help_text=help_text,
             input=input, group=category or verbose_name, css=style, condition=condition, view_name=function.__name__,
             message=message, initial=initial or '{}_initial'.format(function.__name__), function=function,
-            choices=choices or '{}_choices'.format(function.__name__), inline=inline, icon=icon, doc=function.__doc__,
-            usecase=usecase, can_execute_by_organization=iterable(can_execute_by_organization),
+            choices=choices or '{}_choices'.format(function.__name__), inline=iterable(inline), icon=icon,
+            doc=function.__doc__, usecase=usecase, can_execute_by_organization=iterable(can_execute_by_organization),
             can_execute_by_unit=iterable(can_execute_by_unit), can_execute_by_role=iterable(can_execute_by_role),
-            redirect_to=redirect_to, menu=menu, display=display
+            redirect_to=redirect_to, menu=menu, display=display, source='model'
         )
         return function
 

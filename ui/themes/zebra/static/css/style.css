@@ -113,6 +113,10 @@ aside .nav > li > a .fa {
     margin-right: 5px;
     vertical-align: 0;
 }
+.panel.panel-fullscreen {
+    background-color: #fff;
+    padding: 40px;
+}
 .padding-md {
     padding: 0 40px;
 }

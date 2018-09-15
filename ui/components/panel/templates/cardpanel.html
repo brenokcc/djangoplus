@@ -1,51 +1,50 @@
 {% if self.as_pdf %}{% else %}
-<div class="flex-container p-l-1 cards-container">
-{% for item in self.items %}
-<div class="card-panel">
-    {% if item.url %}<a class="ajax" href="{{ item.url }}">{% endif %}
-    {% if item.icon %}
-        <div class="card-panel-item {{ item.css }}">
-
-            <span class="stat-icon">
-                <i class="fa {{ item.icon }}"></i>
-            </span>
-            <div class="text-right pull-right">
-                {% if not item.count == None %}<div class="value">{{ item.count|format }}</div>{% endif %}
-                <div class="title">
-                    {% if not item.count == None %}
-                        <p style="margin-top:10px">{{ item.title }}</p>
-                    {% else %}
-                        <p>{{ item.title }}</p>
-                    {% endif %}
-                    {% if item.description %}
-                        <p>{{ item.description }}</p>
-                    {% endif %}
+{% if self.items %}
+    <div class="flex-container p-l-1 cards-container">
+        {% for item in self.items %}
+        <div class="card-panel">
+            {% if item.url %}<a class="ajax" href="{{ item.url }}">{% endif %}
+            {% if item.icon %}
+                <div class="card-panel-item {{ item.css }}">
+                    <span class="stat-icon">
+                        <i class="fa {{ item.icon }}"></i>
+                    </span>
+                    <div class="text-right pull-right">
+                        {% if not item.count == None %}<div class="value">{{ item.count|format }}</div>{% endif %}
+                        <div class="title">
+                            {% if not item.count == None %}
+                                <p style="margin-top:10px">{{ item.title }}</p>
+                            {% else %}
+                                <p>{{ item.title }}</p>
+                            {% endif %}
+                            {% if item.description %}
+                                <p>{{ item.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            </div>
-
+            {% else %}
+                <div class="card-panel-item {{ item.css }}">
+                    <div class="text-right pull-right">
+                        <div class="value">{% if not item.count == None %}{{ item.count|format }}{% endif %}</div>
+                        <div class="title">
+                            {% if not item.count == None %}
+                                    {{ item.title }}
+                            {% else %}
+                                <div style="font-size: 20px">{{ item.title }}</div>
+                            {% endif %}
+                            {% if item.description %}
+                                <div>{{ item.description }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% if item.url %}</a>{% endif %}
         </div>
-    {% else %}
-        <div class="card-panel-item {{ item.css }}">
-
-            <div class="text-right pull-right">
-                <div class="value">{% if not item.count == None %}{{ item.count|format }}{% endif %}</div>
-                <div class="title">
-                    {% if not item.count == None %}
-                            {{ item.title }}
-                    {% else %}
-                        <div style="font-size: 20px">{{ item.title }}</div>
-                    {% endif %}
-                    {% if item.description %}
-                        <div>{{ item.description }}</div>
-                    {% endif %}
-                </div>
-            </div>
+        {% endfor %}
     </div>
-    {% endif %}
-    </a>
-</div>
-{% endfor %}
-</div>
+{% endif %}
 {% endif %}
 
 

@@ -34,22 +34,6 @@
 {% else %}
 <div id="table{{ self.id }}" class="paginator paginator-{% if self.is_list_view %}admin{% endif %}">
     {% with content=self|paginate %}
-        {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
-        <div class="action-bar">
-            {% if self.is_list_view %}
-            <div class="pull-left">
-                <h2>{% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}{{ self.title }} ({{ self.count }})</h2>
-            </div>
-            {% endif %}
-            <div class="pull-right">
-                {% if not self.request.GET.popup %}
-                    {{ self.subset_dropdown }}
-                    {{ self.paginator_dropdown }}
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-
         <div {% if not self.is_list_view %}class="panel panel-default"{% endif %} id="painel-{{ self.id }}">
             {% if not self.is_list_view %}
             <div class="panel-heading">
@@ -62,9 +46,25 @@
                 {% endif %}
                 <a href="javascript:" role="button" class="pull-right fullscreen-action"><i class="fa fa-expand"></i></a>
             </div>
-
             {% endif %}
+
             <div class="panel-body">
+
+                {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
+                <div class="action-bar">
+                    {% if self.is_list_view %}
+                    <div class="pull-left">
+                        <h2>{% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}{{ self.title }} ({{ self.count }})</h2>
+                    </div>
+                    {% endif %}
+                    <div class="pull-right">
+                        {% if not self.request.GET.popup %}
+                            {{ self.subset_dropdown }}
+                            {{ self.paginator_dropdown }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
 
                 {% if self.tabs|length > 1 %}
                     <ul class="paginator-tabs">

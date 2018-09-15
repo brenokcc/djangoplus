@@ -410,6 +410,16 @@ def get_can_execute(action):
     return can_execute
 
 
+def should_add_action(action_inline, subset_name):
+    add_action = False
+    if action_inline:
+        for action_subset in action_inline:
+            if (action_subset == subset_name) or (action_subset is True and subset_name is None):
+                add_action = True
+                break
+    return add_action
+
+
 def should_filter_or_display(request, model, to):
     if get_metadata(to, 'role_username'):
         can_view = list(

@@ -12,6 +12,7 @@ from djangoplus.utils.metadata import get_metadata
 
 
 def context_processor(request):
+    executing_tests = 'test' in sys.argv
     app_settings = Settings.default()
     alerts = []
     menu = None
@@ -47,7 +48,7 @@ def context_processor(request):
         settings=app_settings,
         menu=menu,
         alerts=alerts,
-        display_emails=should_display(),
+        display_emails=not executing_tests and should_display(),
         display_fake_mouse=cache.RECORD,
-        executing_tests='test' in sys.argv
+        executing_tests=executing_tests
     )

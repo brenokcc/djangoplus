@@ -3,7 +3,7 @@ import copy
 from collections import OrderedDict
 from datetime import datetime
 from djangoplus.ui import RequestComponent
-from djangoplus.utils import permissions
+from djangoplus.utils import permissions, should_add_action
 from djangoplus.utils.metadata import get_metadata, get_can_execute
 from djangoplus.utils.metadata import check_condition
 from djangoplus.utils import http
@@ -126,7 +126,7 @@ class ModelDropDown(GroupDropDown):
                             continue
                 else:
                     # it is a dropdown in a paginator
-                    if action_inline is not True and (subset_name not in loader.subset_actions[self.model] or action_name not in loader.subset_actions[self.model][subset_name]):
+                    if not should_add_action(action_inline, subset_name):
                         continue
 
                 if not permissions.check_group_or_permission(self.request, action_can_execute):

@@ -187,11 +187,12 @@ class Relation(object):
 
             component = Paginator(request, self.relation_value.all(request.user), title, relation=self, list_subsets=[], readonly=not has_add_permission)
             component.add_actions()
-            if self.add_url and has_add_permission:
+            instance = self.relation_model()
+            if self.hidden_field_name:
+                setattr(instance, self.hidden_field_name, self.instance)
+            can_add = not hasattr(instance, 'can_add') or instance.can_add()
+            if self.add_url and has_add_permission and can_add:
                 if self.relation_name in inlines:
-                    instance = self.relation_model()
-                    setattr(instance, self.hidden_field_name, self.instance)
-                    if not hasattr(instance, 'can_add') or instance.can_add():
                         form_name = get_metadata(self.relation_model, 'add_form')
                         if form_name:
                             fromlist = get_metadata(self.relation_model, 'app_label')
