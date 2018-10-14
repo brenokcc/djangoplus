@@ -79,14 +79,12 @@ printf "" > $PROJECT_NAME/static/css/$PROJECT_NAME.css
 printf "" > $PROJECT_NAME/__init__.py
 
 printf "# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from djangoplus.ui.components import forms
 from djangoplus.decorators import action
 
 " > $PROJECT_NAME/forms.py
 
 printf "# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import datetime
 from djangoplus.db import models
 from djangoplus.utils.mail import send_mail
@@ -115,27 +113,27 @@ from djangoplus.decorators.views import view, action, dashboard
 " > $PROJECT_NAME/views.py
 
 printf "# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from djangoplus.admin.models import User
-from djangoplus.test import TestCase
 from django.conf import settings
+from djangoplus.test import TestCase
+from djangoplus.admin.models import User
+from djangoplus.test.decorators import testcase
 
 
 class AppTestCase(TestCase):
 
-    def test_app(self):
-
+    def test(self):
         User.objects.create_superuser(settings.DEFAULT_SUPERUSER, None, settings.DEFAULT_PASSWORD)
-        self.login(settings.DEFAULT_SUPERUSER, settings.DEFAULT_PASSWORD)
-        self.logout()
+        self.execute_flow()
 
+    @testcase('Testcase')
+    def first_testcase(self):
+        pass
 " > $PROJECT_NAME/tests.py
 
 printf "djangoplus
 " > requirements.txt
 
 printf "# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from django.conf.urls import url, include
 from djangoplus.admin.views import public, index
 
@@ -149,7 +147,6 @@ urlpatterns = [
 " > $PROJECT_NAME/urls.py
 
 printf "# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 def h1(value):
     return u'<h1></h1>' %% value
@@ -212,10 +209,6 @@ DIGITAL_OCEAN_SERVER = ''
 DIGITAL_OCEAN_DOMAIN = ''
 
 " > $PROJECT_NAME/settings.py
-
-printf "from djangoplus.fabric.digitalocean.fabfile import *
-from djangoplus.fabric.tests.fabfile import *
-" > fabfile.py
 
 python3 manage.py sync
 printf "

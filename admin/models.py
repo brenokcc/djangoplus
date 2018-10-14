@@ -541,7 +541,6 @@ class Role(models.Model):
         return '{}'.format(self.group)
 
 
-
 class PermissionManager(models.Manager):
 
     def get_queryset(self):
@@ -569,6 +568,7 @@ class Permission(Permission):
     )
 
     objects = PermissionManager()
+
 setattr(Permission._meta, 'search_fields', ['codename', 'name'])
 setattr(Permission._meta, 'list_filter', ['content_type'])
 

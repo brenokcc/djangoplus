@@ -34,7 +34,7 @@
 {% if not request.GET.popup %}
 <body id="admin-body">
 
-<div id="wrapper" class="{% if request.session.hidden_menu or not request.session.side_menu_size %}hidden-menu{% endif %}">
+    <div id="wrapper" class="{% if request.session.hidden_menu or not request.session.side_menu_size %}hidden-menu{% endif %}">
 
     <!-- Navigation -->
     <header class="navbar navbar-fixed-top">
@@ -133,7 +133,7 @@
                     </div>
                     {% endif %}
                     <div class="padding-md">
-                        <div>
+                        <div align="center">
                             <ul class="dropdown-user">
                                 <li>
                                     <a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {% trans "Logout" %}</a>
@@ -197,7 +197,7 @@
         </div>
     </main>
 
-</div>
+    </div>
 
 </body>
 {% endif %}

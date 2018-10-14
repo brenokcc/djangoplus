@@ -19,5 +19,5 @@ dist/
 djangoplus.egg-info/
 */dist/
 */*egg-info/
-ghostdriver.log
-tutorials/*
+geckodriver.log
+videos/*

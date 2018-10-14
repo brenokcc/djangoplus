@@ -91,6 +91,7 @@ def action(model, verbose_name, help_text=None, condition=None, inline=(), icon=
                  can_execute_by_role=iterable(can_execute_by_role), redirect_to=None, menu=menu, display=None, source='view')
 
         receive_function_args._action = d
+        function._view_action = d
 
         return receive_function_args
 

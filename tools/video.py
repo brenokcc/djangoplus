@@ -7,6 +7,8 @@ from time import sleep
 from subprocess import Popen, PIPE, DEVNULL
 from django.conf import settings
 
+from djangoplus.utils import to_ascii
+
 
 class Subtitle(object):
 
@@ -67,29 +69,53 @@ class VideoRecorder(object):
             self.proccess = Popen(cmd.format(size).split(), stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
         sleep(5)
 
-    def stop(self, file_name=None, audio_file_path=None):
+    def stop(self, title=None, output_dir=None, audio_file_path=None):
+
         if self.proccess:
             os.kill(self.proccess.pid, signal.SIGTERM)
-            if file_name:
-                sleep(2)
+            if title:
                 tmp_file_path = '/tmp/video.mkv'
-                if file_name.startswith('/'):
-                    output_file_path = file_name
-                else:
-                    directory = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
-                    if not os.path.exists(directory):
-                        directory = os.path.join(os.path.expanduser('~'))
-                    output_file_path = '{}/{}.mkv'.format(directory, file_name)
+                if not output_dir:
+                    output_dir = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop')
+                    if not os.path.exists(output_dir):
+                        output_dir = os.path.join(os.path.expanduser('~'))
+                if not os.path.exists(output_dir):
+                    os.mkdir(output_dir)
+
+                output_file_path = '{}/{}.mkv'.format(output_dir, to_ascii(title).replace(' ', '_'))
                 if os.path.exists(output_file_path):
                     os.unlink(output_file_path)
-                os.rename(tmp_file_path, output_file_path)
-                print('Video Ouput: {}'.format(output_file_path))
-                if audio_file_path and 'darwin' in platform.system().lower():
-                    output_audio_path = '/tmp/video-audio.mkv'
-                    combine_audio_cmd = 'ffmpeg -y -i {} -i {} -c copy -map 0:0 -map 1:0 -shortest {}  > /dev/null 2>&1'
-                    os.system(combine_audio_cmd.format(output_file_path, audio_file_path, output_audio_path))
-                    sleep(5)
-                    os.rename(output_audio_path, output_file_path)
+
+                if self.proccess:
+                    os.kill(self.proccess.pid, signal.SIGTERM)
+                    sleep(2)
+                    os.rename(tmp_file_path, output_file_path)
+
+                    print('Video Ouput: {}'.format(output_file_path))
+                    if audio_file_path and os.path.exists(audio_file_path) and 'darwin' in platform.system().lower():
+                        output_audio_path = '/tmp/video-audio.mkv'
+                        combine_audio_cmd = 'ffmpeg -y -i {} -i {} -c copy -map 0:0 -map 1:0 -shortest {}  > /dev/null 2>&1'
+                        os.system(combine_audio_cmd.format(output_file_path, audio_file_path, output_audio_path))
+                        sleep(5)
+                        os.rename(output_audio_path, output_file_path)
+
+                    cmd = 'ffmpeg -y -i {} -metadata title="{}" {}'.format(output_file_path, title, tmp_file_path)
+                    Popen(cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL, shell=True).wait()
+                    os.rename(tmp_file_path, output_file_path)
+
+                return output_file_path
+        return None
+
+    @staticmethod
+    def metadata(file_path):
+        cmd = 'ffmpeg -y -i {} -f ffmetadata /tmp/metadata.txt'.format(file_path)
+        Popen(cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL, shell=True).wait()
+        metadata = {}
+        for line in open('/tmp/metadata.txt').readlines():
+            if '=' in line:
+                tokens = line.strip().split('=')
+                metadata[tokens[0]] = tokens[1]
+        return metadata
 
 
 class VideoUploader(object):
@@ -111,16 +137,10 @@ class VideoUploader(object):
     CLIENT_ID = '289626547199-v2476ui09vqqjgbl607n2lcsq7arq0u0.apps.googleusercontent.com'
     CLIENT_SECRET = 'QjWNSUt_ILAytbnROoSAdv7m'
 
-    @staticmethod
-    def upload_video(file_path, title):
-        return VideoUploader.upload_videos([(file_path, title)])
-
-    @staticmethod
-    def upload_videos(tuples):
+    def __init__(self):
 
         from google.oauth2.credentials import Credentials
         from googleapiclient.discovery import build
-        from googleapiclient.http import MediaFileUpload
         from google_auth_oauthlib.flow import InstalledAppFlow
 
         client_config = {"installed": {
@@ -138,36 +158,52 @@ class VideoUploader(object):
             credentials = flow.run_console()
             import pdb; pdb.set_trace()
 
-        service = build(VideoUploader.API_SERVICE_NAME, VideoUploader.API_VERSION, credentials=credentials)
-        upload_videos = []
-        tags = [settings.PROJECT_NAME]
+        self.service = build(VideoUploader.API_SERVICE_NAME, VideoUploader.API_VERSION, credentials=credentials)
 
-        for file_path, title in tuples:
-            response = None
-            body = dict(
-                snippet=dict(title=title, description='.', tags=tags, categoryId='22'),
-                status=dict(privacyStatus='public')
-            )
-
-            request = service.videos().insert(
-                part=','.join(body.keys()), body=body, media_body=MediaFileUpload(file_path, chunksize=-1, resumable=True)
-            )
-
-            while response is None:
-                print('Uploading file...')
-                status, response = request.next_chunk()
-                if response is not None:
-                    if 'id' in response:
-                        url = 'http://www.youtube.com/embed/{}?rel=0&autoplay=1'.format(response['id'])
-                        print('The video was successfully uploaded. To watch it access: {}'.format(url))
-                        upload_videos.append(response['id'])
-                    else:
-                        exit('The upload failed with an unexpected response: %s' % response)
-
-        videos_ids = [item['id']['videoId'] for item in service.search().list(forMine=True, type="video", part="id,snippet", fields='items(id)').execute()['items']]
-        videos = [item['id'] for item in service.videos().list(part="id,snippet", id=','.join(videos_ids), fields='items(id,snippet/tags)').execute()['items'] if settings.PROJECT_NAME in item.get('snippet', {}).get('tags', [])]
-        for uploaded_video in upload_videos:
-            if uploaded_video not in videos:
-                videos.append(uploaded_video)
-        print('Uploaded videos for the project are {}'.format(videos))
+    def list_videos(self):
+        videos_ids = [item['id']['videoId'] for item in self.service.search().list(forMine=True, type="video", part="id,snippet", fields='items(id)').execute()['items']]
+        videos = [video for video in self.service.videos().list(part="id,snippet", id=','.join(videos_ids), fields='items(id,snippet/tags,snippet/title,snippet/description)').execute()['items'] if settings.PROJECT_NAME in video.get('snippet', {}).get('tags', [])]
         return videos
+
+    def delete_video(self, video_id):
+        self.service.videos().delete(id=video_id).execute()
+        print('Video "{}" deleted from Youtube.'.format(video_id))
+
+    def upload_video(self, file_path, title, force=False):
+        self.upload_videos([(file_path, title)], force=force)
+
+    def upload_videos(self, tuples, force=False):
+        from googleapiclient.http import MediaFileUpload
+        uploaded_titles = {}
+        for video in self.list_videos():
+            uploaded_titles[video['snippet']['title']] = video['id']
+        tags = [settings.PROJECT_NAME]
+        for file_path, title in tuples:
+            if title not in uploaded_titles or force:
+                response = None
+
+                if force and title in uploaded_titles:
+                    video_id = uploaded_titles[title]
+                    self.delete_video(video_id)
+
+                body = dict(
+                    snippet=dict(title=title, description='', tags=tags, categoryId='22'),
+                    status=dict(privacyStatus='public')
+                )
+
+                media_body = MediaFileUpload(file_path, chunksize=-1, resumable=True)
+                request = self.service.videos().insert(
+                    part=','.join(body.keys()), body=body, media_body=media_body
+                )
+
+                while response is None:
+                    print('Uploading file "{}"...'.format(file_path))
+                    status, response = request.next_chunk()
+                    if response is not None:
+                        if 'id' in response:
+                            url = 'http://www.youtube.com/embed/{}?rel=0&autoplay=1'.format(response['id'])
+                            print('The video was successfully uploaded. {}'.format(url))
+                        else:
+                            exit('The upload failed with an unexpected response: %s' % response)
+            else:
+                print('The video "{}" has already been uploaded. Force upload if it should be replaced.'.format(title))

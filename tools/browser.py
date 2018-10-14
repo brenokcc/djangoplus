@@ -21,7 +21,6 @@ class Browser(webdriver.Firefox):
         if cache.HEADLESS:
             options.add_argument("--headless")
 
-
         super(Browser, self).__init__(options=options)
 
         self.verbose = verbose
@@ -70,7 +69,8 @@ class Browser(webdriver.Firefox):
     def back(self, seconds=None):
         if seconds:
             self.wait(seconds)
-        self.open('/admin/')
+        if not self.current_url or not self.current_url.endswith('/admin/'):
+            self.open('/admin/')
 
     def enter(self, name, value, submit=False, count=2):
 

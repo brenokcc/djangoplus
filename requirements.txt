@@ -1,4 +1,4 @@
-Django==2.1.1
+Django==2.0.8
 xhtml2pdf==0.2.2
 python-dateutil==2.7.3
 selenium==3.14.0
@@ -11,3 +11,6 @@ cryptography==2.3.1
 Fabric3==1.14.post1
 dropbox==9.0.0
 gunicorn==19.9.0
+google-auth-oauthlib
+google-api-python-client
+oauth2client

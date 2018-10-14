@@ -56,8 +56,7 @@ class UseCase(object):
         translation.activate(settings.LANGUAGE_CODE)
 
         self._interactions = []
-
-        self._test_flow_code = []
+        self._func_signature = None
         self._test_function_code = []
 
         self.name = name
@@ -90,8 +89,6 @@ class UseCase(object):
         print('\n'.join(self._interactions))
         print()
         print('\n'.join(self._test_function_code))
-        print()
-        print('\n'.join(self._test_flow_code))
 
     def _login(self, action):
         verbose_name = action.split(_('as'))[-1].strip()
@@ -111,9 +108,6 @@ class UseCase(object):
         interaction = _('The user access the system as')
         self._interactions.append('{} {}'.format(interaction, verbose_name))
         self._interactions.append(_('The system displays the main page'))
-
-        self._test_flow_code.append('\t\t# {}'.format(action))
-        self._test_flow_code.append("\t\tif self.login('{}', '{}'):".format(username, password))
 
     def _find(self, model):
         click_str = []
@@ -137,7 +131,7 @@ class UseCase(object):
 
             self._interactions.append(_('The system displays the listing page'))
 
-            self._test_function_code.append('\t\tself.click_link(u\'{}\')'.format(verbose_name_plural))
+            self._test_function_code.append('        self.click_link(u\'{}\')'.format(verbose_name_plural))
             return True
         elif menu:
 
@@ -150,7 +144,7 @@ class UseCase(object):
             interaction = _('The user access the menu')
             self._interactions.append('{} {}'.format(interaction, ', '.join(click_str)))
 
-            self._test_function_code.append('\t\tself.click_menu({})'.format(', '.join(click_str_unicode)))
+            self._test_function_code.append('        self.click_menu({})'.format(', '.join(click_str_unicode)))
             return True
         return False
 
@@ -166,7 +160,7 @@ class UseCase(object):
             accessible = True
             self._interactions.append(_('The user locates the record and clicks the visualization icon'))
             self._interactions.append(_('The system displays the visualization page'))
-            self._test_function_code.append("\t\tself.click_icon('{}')".format('Visualizar'))  # _('Visualize')
+            self._test_function_code.append("        self.click_icon('{}')".format('Visualizar'))  # _('Visualize')
         else:
             # the model can be accessed only by a parent model
             for parent_model in loader.composition_relations:
@@ -184,18 +178,18 @@ class UseCase(object):
                         accessible = True
                         if '::' in panel_title:
                             tab_name, panel_title = panel_title.split('::')
-                            self._test_function_code.append("\t\tself.click_tab('{}')".format(tab_name))
+                            self._test_function_code.append("        self.click_tab('{}')".format(tab_name))
                             interaction = _('The user clicks the tab')
                             self._interactions.append('{} "{}"'.format(interaction, tab_name))
                         if panel_title:
                             interaction = _('The user looks at the painel')
                             self._interactions.append('{} "{}"'.format(interaction, panel_title))
-                            self._test_function_code.append("\t\tself.look_at_panel('{}')".format(panel_title))
+                            self._test_function_code.append("        self.look_at_panel('{}')".format(panel_title))
 
                     if recursive:
                         self._interactions.append(_('The user locates the record and clicks the visualization icon'))
                         self._interactions.append(_('The system displays the visualization page'))
-                        self._test_function_code.append("\t\tself.click_icon('{}')".format('Visualizar'))  # _('Visualize')
+                        self._test_function_code.append("        self.click_icon('{}')".format('Visualizar'))  # _('Visualize')
 
         if not accessible:
             raise ValueError('There is no way to access the model "{}", please do one of the following things:\n '
@@ -228,7 +222,7 @@ class UseCase(object):
             interaction = _('The user clicks the pill')
             self._interactions.append('{} "{}"'.format(interaction, subset_name))
 
-            self._test_function_code.append("\t\tself.click_link('{}')".format(subset_name))
+            self._test_function_code.append("        self.click_link('{}')".format(subset_name))
 
         else:
             model = find_model_by_verbose_name_plural(verbose_name_plural)
@@ -298,14 +292,14 @@ class UseCase(object):
         if not self.actors:
             self.actors.append(_('Superuser'))
 
-        # register the interactions and testing code
-        func_signature = '{}(self)'.format(func_name)
-        self._test_flow_code.append('\t\t\t# {}'.format(action))
-        self._test_flow_code.append('\t\t\tself.{}()'.format(func_name))
+        # register the interactions and testing code'
+        func_decorator = '@testcase(\'{}\')'.format(self.name)
+        self._func_signature = '{}(self)'.format(func_name)
 
-        self._test_function_code.append('\tdef {}:'.format(func_signature))
+        self._test_function_code.append('    {}'.format(func_decorator))
+        self._test_function_code.append('    def {}:'.format(self._func_signature))
         self._find(model)
-        self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
+        self._test_function_code.append("        self.click_button('{}')".format(button_label))
 
         a = _('The user clicks the button')
         b = _('on the right-side of the action bar')
@@ -316,8 +310,7 @@ class UseCase(object):
 
         interaction = _('The user clicks the button')
         self._interactions.append('{} "{}"'.format(interaction, button_label))
-        self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
-        self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
+        self._test_function_code.append("        self.click_button('{}')".format(button_label))
 
     def _add(self, action):
         model = None
@@ -363,11 +356,11 @@ class UseCase(object):
             button_label = add_label or 'Adicionar'
             button_label = get_metadata(related_model, 'add_label', button_label)
 
-            function_signature = '{}_{}_{}_{}'.format(_('add'), related_model.__name__.lower(), _('in'), model.__name__.lower())
-            self._test_flow_code.append('\t\t\t# {}'.format(action))
-            self._test_flow_code.append('\t\t\tself.{}()'.format(function_signature))
+            func_decorator = '@testcase(\'{}\')'.format(self.name)
+            self._func_signature = '{}_{}_{}_{}'.format(_('add'), related_model.__name__.lower(), _('in'), model.__name__.lower())
 
-            self._test_function_code.append('\tdef {}(self):'.format(function_signature))
+            self._test_function_code.append('    {}'.format(func_decorator))
+            self._test_function_code.append('    def {}(self):'.format(self._func_signature))
 
             self._view(related_model)
 
@@ -380,8 +373,8 @@ class UseCase(object):
                 self._interactions.append('{} "{}"'.format(interaction, add_button_label))
                 self._interactions.append(_('The system displays a popup window'))
 
-                self._test_function_code.append("\t\tself.click_button('{}')".format(add_button_label))
-                self._test_function_code.append("\t\tself.look_at_popup_window()")
+                self._test_function_code.append("        self.click_button('{}')".format(add_button_label))
+                self._test_function_code.append("        self.look_at_popup_window()")
 
             form = factory.get_many_to_one_form(self._mocked_request(), model(), relation_name, related_model())
             self._fill_out(form)
@@ -389,8 +382,8 @@ class UseCase(object):
             interaction = _('The user clicks the button')
             self._interactions.append('{} "{}"'.format(interaction, button_label))
 
-            self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
-            self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
+            self._test_function_code.append("        self.click_button('{}')".format(button_label))
+            self._test_function_code.append("        self.click_icon('{}')".format('Principal'))
         else:
             raise ValueError('Please add the {}\'s relation in the fieldsets of model {}'.format(related_model.__name__, model.__name__))
 
@@ -446,12 +439,12 @@ class UseCase(object):
 
                         # define the kind of user interaction
                         if hasattr(form_field, 'choices') and form_field.choices:
-                            self._test_function_code.append("\t\tself.choose('{}', '{}')".format(form_field.label, value))
+                            self._test_function_code.append("        self.choose('{}', '{}')".format(form_field.label, value))
                             interaction = _('The user chooses')
                             self._interactions.append('{} "{}"'.format(interaction, form_field.label))
                         else:
                             if not isinstance(form_field, form_fields.BooleanField) and not isinstance(form_field, form_fields.NullBooleanField):
-                                self._test_function_code.append("\t\tself.enter('{}', '{}')".format(form_field.label, value))
+                                self._test_function_code.append("        self.enter('{}', '{}')".format(form_field.label, value))
                                 interaction = _('The user enters')
                                 self._interactions.append('{} "{}"'.format(interaction, form_field.label))
 
@@ -482,12 +475,11 @@ class UseCase(object):
         model = find_model_by_verbose_name(verbose_name)
         action_dict = find_action(model, action_name)
         func = action_dict['function']
+        func_decorator = '@testcase(\'{}\')'.format(self.name)
+        self._func_signature = '{}_em_{}(self)'.format(func.__name__.lower(), model.__name__.lower())
 
-        func_signature = '{}_em_{}(self)'.format(func.__name__.lower(), model.__name__.lower())
-        self._test_flow_code.append('\t\t\t# {}'.format(action))
-        self._test_flow_code.append('\t\t\tself.{}_em_{}()'.format(func.__name__.lower(), model.__name__.lower()))
-
-        self._test_function_code.append('\tdef {}:'.format(func_signature))
+        self._test_function_code.append('    {}'.format(func_decorator))
+        self._test_function_code.append('    def {}:'.format(self._func_signature))
         self._view(model, True)
         if hasattr(func, '_action'):
             button_label = func._action['title']
@@ -497,8 +489,8 @@ class UseCase(object):
                 self._interactions.append('{} "{}"'.format(interaction, button_label))
                 self._interactions.append(_('The system displays a popup window'))
 
-                self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
-                self._test_function_code.append("\t\tself.look_at_popup_window()")
+                self._test_function_code.append("        self.click_button('{}')".format(button_label))
+                self._test_function_code.append("        self.look_at_popup_window()")
                 obj = model()
                 obj.pk = 0
                 form = factory.get_action_form(self._mocked_request(), obj, func._action)
@@ -506,8 +498,8 @@ class UseCase(object):
 
             interaction = _('The user clicks the button')
             self._interactions.append('{} "{}"'.format(interaction, button_label))
-            self._test_function_code.append("\t\tself.click_button('{}')".format(button_label))
-            self._test_function_code.append("\t\tself.click_icon('{}')".format('Principal'))
+            self._test_function_code.append("        self.click_button('{}')".format(button_label))
+            self._test_function_code.append("        self.click_icon('{}')".format('Principal'))
 
             description = func.__doc__ and func.__doc__.strip() or ''
             business_rules = utils.extract_exception_messages(func)
@@ -520,28 +512,30 @@ class UseCase(object):
                 self.actors.append(can_execute)
             if not self.actors:
                 self.actors.append(_('Superuser'))
+        elif hasattr(func, '_view_action'):
+            button_label = func._view_action['title']
+            interaction = _('The user clicks the button')
+            self._interactions.append('{} "{}"'.format(interaction, button_label))
+            self._test_function_code.append("        self.click_button('{}')".format(button_label))
 
     def _execute_view(self, action):
-        pass
+        interaction = _('The user clicks the button')
+        self._interactions.append('{} "{}"'.format(interaction, action))
+        self._test_function_code.append("        self.click_button('{}')".format(action))
 
     def get_interactions_as_string(self):
         l = []
         for i, interaction in enumerate(self._interactions):
-            l.append('\t\t\t{}. {}'.format(i+1, interaction))
+            l.append('            {}. {}'.format(i+1, interaction))
         return '\n'.join(l)
 
-    def get_test_flow_code(self):
-        return self._test_flow_code
+    def get_test_function_signature(self):
+        return self._func_signature
 
     def get_test_function_code(self):
-        return self._test_function_code
+        return '\n'.join(self._test_function_code)
 
     def as_dict(self):
         return dict(name=self.name, description=self.description, actors=self.actors,
                     business_rules=self.business_rules, pre_conditions=self.pre_conditions,
                     post_condition=self.post_condition, scenario=self.get_interactions_as_string())
-
-
-
-
-

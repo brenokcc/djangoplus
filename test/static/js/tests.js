@@ -1,14 +1,16 @@
 var cursor = document;
 
 function fakeMouse(){
-    var img = $('<img id="fake-cursor">');
-    img.attr('id', "fake-cursor");
-    img.attr('src', "/static/images/hand.png");
-    img.css('position', 'absolute');
-    img.css('top', '300px');
-    img.css('left', '300px');
-    img.css('z-index', '99999999');
-    img.appendTo(document.body);
+    if($("#fake-cursor").length==0) {
+        var img = $('<img id="fake-cursor">');
+        img.attr('id', "fake-cursor");
+        img.attr('src', "/static/images/hand.png");
+        img.css('position', 'absolute');
+        img.css('top', '300px');
+        img.css('left', '300px');
+        img.css('z-index', '99999999');
+        img.appendTo(document.body);
+    }
 }
 
 function fakeType(el, string, index){
@@ -25,7 +27,7 @@ function fakeType(el, string, index){
 
 
 function moveMouseTo(lookup, f) {
-    $("#fake-cursor").attr("src","/static/images/hand.png");
+    $("#fake-cursor").attr("src","/static/images/hand.png").show();
     var el = $(lookup).first();
     var top = el.first().offset()['top']+el.height()/2;
 	var left = el.first().offset()['left']+el.width()/2;
@@ -64,7 +66,9 @@ function scroolToElement(element, callback){
     var lastScrooledElement = null;
     if(element.offset() && !isIntoView(element)) {
         var scrollData = { scrollTop: element.offset().top - $(window).height()/2 };
-        $([document.documentElement, document.body]).animate(scrollData, 0, 'swing', function (){
+        if(window['display_fake_mouse']) var scroolSpeed = 1200;
+        else var scroolSpeed = 0;
+        $([document.documentElement, document.body]).animate(scrollData, scroolSpeed, 'swing', function (){
             if(lastScrooledElement!=element) callback();
             lastScrooledElement = element;
         });
@@ -92,8 +96,12 @@ function click(name, type, index){
     var link = type==null || type=='link';
     var button = type==null || type=='button';
     var tab = type == 'tab';
-
-    if (tab){
+    var icon = type == 'icon';
+    if(icon){
+        var element = $(cursor).find('.'+name+':visible').parent();
+        if (element.length == 0) element = $(cursor).find('a[title='+name+']');
+    }
+    else if(tab){
         element = $(cursor).find('.nav-tabs').find( "a:visible:contains('"+name+"')" ).first();
     } else {
         if (element.length == 0 && (link || button)) element = $(cursor).find("button:visible:contains('" + name + "'), button[name='" + name + "']").first();
@@ -104,51 +112,42 @@ function click(name, type, index){
     if(recursively(element)){
         return click(name, type);
     } else {
-        function afterScrool() {
-            if (window['display_fake_mouse']) {
-                moveMouseTo(element[index], function () {
+        if (window['display_fake_mouse']) {
+            function afterScrool() {
+                function afterMoveMouse(){
                     element[index].click();
-                });
-            } else {
+                }
+                moveMouseTo(element[index], afterMoveMouse);
+            }
+            scroolToElement(element, afterScrool);
+        } else {
+            function afterScrool() {
+                $("#fake-cursor").hide();
                 element[index].click();
             }
+            scroolToElement(element, afterScrool);
         }
-        scroolToElement(element, afterScrool);
     }
 }
 
 function clickMenu(name){
-    return click(name, 'menu')
+    return click(name, 'menu');
 }
 
 function clickLink(name){
-    return click(name, 'link')
+    return click(name, 'link');
 }
 
 function clickTab(name){
-    return click(name, 'link')
+    return click(name, 'link');
 }
 
 function clickButton(name){
-    return click(name, 'button')
+    return click(name, 'button');
 }
 
 function clickIcon(name, index){
-
-    if(index==null) index = 0;
-
-    var element = $(cursor).find('.'+name+':visible').parent();
-    if (element.length == 0) element = $(cursor).find('a[title='+name+']');
-
-    if(recursively(element)){
-        return clickIcon(name, index);
-    } else {
-        if(window['display_fake_mouse']){
-            moveMouseTo(element[index], function(){$(cursor).find(element[index]).click()});
-        } else {
-            $(cursor).find(element[index]).click()
-        }
-    }
+    return click(name, 'icon');
 }
 
 function lookAtPopupWindow(){
@@ -215,6 +214,7 @@ function enter(name, value, submit){
 
 function pick(value){
     var checkbox = $(cursor).find("tr:contains('"+value+"')" ).parent().find('input[type=checkbox]');
+    if(checkbox.length==0) checkbox = $('.panel-heading:contains('+value+')').find('input[type=checkbox]');
     if(checkbox.length>0){
         function callback(){
             checkbox.trigger('click');

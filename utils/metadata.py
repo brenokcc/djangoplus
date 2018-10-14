@@ -411,13 +411,16 @@ def get_can_execute(action):
 
 
 def should_add_action(action_inline, subset_name):
-    add_action = False
-    if action_inline:
-        for action_subset in action_inline:
-            if (action_subset == subset_name) or (action_subset is True and subset_name is None):
-                add_action = True
-                break
-    return add_action
+    if action_inline is True:
+        return True
+    else:
+        add_action = False
+        if action_inline:
+            for action_subset in action_inline:
+                if (action_subset == subset_name) or (action_subset is True and subset_name is None):
+                    add_action = True
+                    break
+        return add_action
 
 
 def should_filter_or_display(request, model, to):
@@ -447,6 +450,7 @@ def find_action(model, action_name):
             for func_name, action in list(actions[model][action_group].items()):
                 if action['title'] == action_name:
                     return action
+
     return None
 
 
@@ -512,12 +516,24 @@ def find_model_recursively(cls, tokens):
 def check_condition(condition, obj):
     satisfied = True
     if obj.pk and condition:
+        model = type(obj)
         attr_name = condition.replace('not ', '')
-        attr = getattr(obj, attr_name)
-        if callable(attr):
-            satisfied = attr()
+        # the method is defined in the model
+        if hasattr(obj, attr_name):
+            attr = getattr(obj, attr_name)
+            if callable(attr):
+                satisfied = attr()
+            else:
+                satisfied = bool(attr)
         else:
-            satisfied = bool(attr)
+            # the method is defined in the manager as a subset
+            qs = model.objects.all()
+            if hasattr(qs, attr_name):
+                attr = getattr(qs, attr_name)
+                satisfied = attr().filter(pk=obj.pk).exists()
+            else:
+                raise Exception('The condition "{}" is invalid for {} because it is not an attribute or a method of {},'
+                                ' neither a method of its manager'.format(condition, obj, model))
         if 'not ' in condition:
             satisfied = not satisfied
     return satisfied

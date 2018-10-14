@@ -534,6 +534,12 @@ b.caret {
     margin-left: -50px;
 }
 
+.help-text {
+    color: #666;
+    font-size: 95%;
+    padding-top: 5px;
+}
+
 /* login */
 #login-wrapper {
     position: absolute;
@@ -688,6 +694,10 @@ li {
 
 .paginator .filter-container span {
     color: #999;
+}
+
+.paginator .filter-container select, .form-group select{
+    visibility: hidden;
 }
 
 /* placeholders */

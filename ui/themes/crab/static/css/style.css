@@ -42,6 +42,9 @@ header.navbar {
 #user-drop-down {
     background-color: #2a2b2a;
 }
+.action-bar {
+    min-height: 55px;
+}
 .action-links > a {
     margin: 0 2px;
 }
@@ -77,7 +80,7 @@ header.navbar {
     margin-top: 35px;
 }
 .card-panel {
-    padding: 0 10px 20px;
+    padding: 0 10px 10px;
 }
 .card-panel-item {
     background-color: #fff;
@@ -141,7 +144,7 @@ aside .nav > li > a {
     font-size: 95%;
     font-weight: 400;
     letter-spacing: 1px;
-    padding: 10px 20px;
+    padding: 10px 15px;
     text-transform: uppercase;
 }
 aside .nav > li > a:active,
@@ -159,6 +162,7 @@ aside .nav > li > a .fa {
 }
 aside .nav > li > a .fa.arrow {
     line-height: 1em;
+    margin-right: 0;
 }
 aside .nav > li > a:hover .fa,
 aside .nav > li > a.active .fa {
@@ -308,6 +312,10 @@ aside .nav > li > a.active .fa {
     border-radius: 0;
     margin-top: 55px;
 }
+.panel.info-panel label {
+    padding-right: 10px;
+    width: auto;
+}
 .panel.notification-panel .panel-body > a:hover {
     text-decoration: none;
 }
@@ -338,11 +346,11 @@ aside .nav > li > a.active .fa {
     vertical-align: 0;
 }
 .panel.panel-default .panel-heading .fa.fa-expand {
-    margin-left: 10px;
+    margin-left: 20px;
     margin-right: 0;
 }
 .panel.panel-fullscreen {
-    background-color: #fff;
+    background-color: #edf1f5;
     padding: 40px;
 }
 .panel-body {
@@ -356,6 +364,16 @@ main .padding-md {
 .shortcut-wrapper {
     border-width: 0 0 1px;
 }
+.shortcut-wrapper .shortcut-link {
+    flex-grow: 1;
+    text-align: left;
+}
+.shortcut-wrapper .shortcut-link .shortcut-icon {
+    float: left;
+    font-size: 100%;
+    padding-right: 10px;
+    padding-top: 2px;
+}
 .shortcut-wrapper .shortcut-description {
     font-size: 90%;
     font-weight: 500;
@@ -365,11 +383,14 @@ main .padding-md {
 .sidebar {
     background-color: #2a2b2a;
 }
+.sidebar .nav-second-level {
+    padding-bottom: 10px;
+}
 .sidebar .nav-second-level li a {
     font-size: 90%;
-    padding-bottom: 7px;
-    padding-left: 60px;
-    padding-top: 7px;
+    padding-bottom: 5px;
+    padding-left: 55px;
+    padding-top: 5px;
 }
 .sidebar-profile {
     color: #fff;

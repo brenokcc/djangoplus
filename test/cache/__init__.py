@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
-LOGIN_COUNT = 0
-USERNAME = None
-PASSWORD = None
+SEQUENCE = 0
+STEP = None
+CONTINUE = None
+RESUME = None
 RECORD = None
 HEADLESS = None
-UPLOAD = None
+PAUSE = False

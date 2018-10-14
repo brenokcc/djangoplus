@@ -16,6 +16,7 @@ class Relation(object):
         self.relation_value = None
         self.relation_type = None
         self.hidden_field_name = None
+        self.subset_names = []
 
         app_label = get_metadata(self.model, 'app_label')
         model_name = self.model.__name__.lower()
@@ -32,8 +33,12 @@ class Relation(object):
         self.is_one_to_many = False
         self.is_one_to_many_reverse = False
         self.is_many_to_many = False
-        
-        attr = getattr(self.model, relation_name)
+
+        if ':' in self.relation_name:
+            tokens = self.relation_name.split(':')
+            self.relation_name, self.subset_names = tokens[0], tokens[1].split(',')
+
+        attr = getattr(self.model, self.relation_name)
         descriptor_name = attr.__class__.__name__
 
         if hasattr(attr, 'related'):
@@ -43,7 +48,7 @@ class Relation(object):
                 self.relation_model = attr.related.remote_field.model
                 self.relation_verbose_name = getattr(attr.related.target_field.model, '_meta').verbose_name
 
-                self.relation_value = getattr(instance, relation_name)
+                self.relation_value = getattr(instance, self.relation_name)
                 relation_app_label = get_metadata(self.model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
 
@@ -60,13 +65,13 @@ class Relation(object):
                 self.relation_model = attr.field.remote_field.model
                 self.relation_verbose_name = attr.field.verbose_name
 
-                self.relation_value = getattr(instance, relation_name)
+                self.relation_value = getattr(instance, self.relation_name)
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
 
-                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, relation_name)
+                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
                 if self.relation_value:
-                    self.add_url = '/add/{}/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, relation_name, self.relation_value.pk)
+                    self.add_url = '/add/{}/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, self.relation_name, self.relation_value.pk)
                     self.view_url = '/view/{}/{}/{}/'.format(relation_app_label, relation_model_name, self.relation_value.pk)
                     self.delete_url = '/delete/{}/{}/{}/'.format(relation_app_label, relation_model_name, self.relation_value.pk)
 
@@ -76,7 +81,7 @@ class Relation(object):
                 self.relation_model = attr.field.remote_field.model
                 self.relation_verbose_name = attr.field.verbose_name
 
-                self.relation_value = getattr(instance, relation_name)
+                self.relation_value = getattr(instance, self.relation_name)
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
                 if self.relation_value:
@@ -89,13 +94,13 @@ class Relation(object):
                 self.relation_verbose_name = attr.field.verbose_name
                 self.add_label = attr.field.add_label
 
-                self.relation_value = getattr(instance, relation_name).all()
+                self.relation_value = getattr(instance, self.relation_name).all()
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
 
                 self.view_url = '/view/{}/{}/{{}}/'.format(relation_app_label, relation_model_name)
-                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, relation_name)
-                self.delete_url = '/delete/{}/{}/{}/{}/{{}}/'.format(app_label, model_name, self.instance.pk, relation_name)
+                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
+                self.delete_url = '/delete/{}/{}/{}/{}/{{}}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
 
             elif descriptor_name == 'ReverseManyToOneDescriptor':
                 self.is_one_to_many_reverse = True
@@ -104,12 +109,12 @@ class Relation(object):
                 self.relation_verbose_name = getattr(attr.field.model, '_meta').verbose_name_plural
 
                 self.hidden_field_name = attr.rel.field.name
-                self.relation_value = getattr(instance, relation_name).all()
+                self.relation_value = getattr(instance, self.relation_name).all()
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
 
-                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, relation_name)
-                self.edit_url = '/add/{}/{}/{}/{}/{{}}/'.format(app_label, model_name, self.instance.pk, relation_name)
+                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
+                self.edit_url = '/add/{}/{}/{}/{}/{{}}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
                 self.view_url = '/view/{}/{}/{{}}/'.format(relation_app_label, relation_model_name)
                 self.delete_url = '/delete/{}/{}/{{}}/'.format(relation_app_label, relation_model_name)
 
@@ -121,13 +126,13 @@ class Relation(object):
                 self.add_label = attr.field.add_label
                 self.can_add = attr.field.can_add
 
-                self.relation_value = getattr(instance, relation_name).all()
+                self.relation_value = getattr(instance, self.relation_name).all()
                 relation_app_label = get_metadata(self.relation_model, 'app_label')
                 relation_model_name = self.relation_model.__name__.lower()
 
                 self.view_url = '/view/{}/{}/{{}}/'.format(relation_app_label, relation_model_name)
-                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, relation_name)
-                self.delete_url = '/delete/{}/{}/{}/{}/{{}}/'.format(app_label, model_name, self.instance.pk, relation_name)
+                self.add_url = '/add/{}/{}/{}/{}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
+                self.delete_url = '/delete/{}/{}/{}/{}/{{}}/'.format(app_label, model_name, self.instance.pk, self.relation_name)
             else:
                 raise Exception()
         elif hasattr(attr, '_metadata'):
@@ -185,7 +190,10 @@ class Relation(object):
             else:
                 has_add_permission = permissions.has_add_permission(request, self.relation_model)
 
-            component = Paginator(request, self.relation_value.all(request.user), title, relation=self, list_subsets=[], readonly=not has_add_permission)
+            component = Paginator(
+                request, self.relation_value.all(request.user), title, relation=self,
+                list_subsets=self.subset_names, readonly=not has_add_permission
+            )
             component.add_actions()
             instance = self.relation_model()
             if self.hidden_field_name:

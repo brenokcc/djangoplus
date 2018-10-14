@@ -10,6 +10,15 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
             hdiutil attach Firefox.dmg
             sudo cp -R /Volumes/Firefox/Firefox.app /Applications
             hdiutil detach /Volumes/Firefox/
+            rm Firefox.dmg
+        fi
+
+        if [ ! -d /Applications/VLC.app ]; then
+            curl https://get.videolan.org/vlc/3.0.4/macosx/vlc-3.0.4.dmg --output VLC.dmg
+            hdiutil VLC.dmg
+            sudo cp -R "/Volumes/VLC media player/VLC.app" /Applications
+            hdiutil detach "/Volumes/VLC media player"
+            rm VLC.dmg
         fi
 
         if ! [ -x "$(command -v geckodriver)" ]; then
@@ -51,6 +60,10 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
     if ! [ -x "$(command -v ffmpeg)" ]; then
         sudo apt-get -y install ffmpeg
+    fi
+
+    if [ ! -f /usr/bin/vlc ]; then
+        sudo apt-get -y install vlc
     fi
 
     sudo apt-get -y install tcl python3-tk

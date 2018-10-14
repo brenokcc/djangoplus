@@ -49,7 +49,6 @@ def format_bool(value):
 
 def format_value(value, html=True):
     from djangoplus.db.models.fields import ImageFieldFile
-
     if type(value) == str:
         return value
     elif isinstance(value, Decimal):
@@ -78,7 +77,7 @@ def format_value(value, html=True):
         return value.strftime('%d/%m/%Y')
     elif value.__class__ == datetime.datetime:
         return value.strftime('%d/%m/%Y %H:%M')
-    elif type(value).__name__ in ('QuerySet',) or type(value) == list:
+    elif type(value).__name__=='QuerySet' or type(value).__name__.endswith('Manager') or type(value) == list:
         if html:
             l = ['<ul style="display: inline-block; padding-left:20px">']
             for obj in value:

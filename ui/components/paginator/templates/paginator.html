@@ -200,8 +200,13 @@
         $('#table{{ self.id }}').find('a.subset-action').click(function (e) {
             var url = this.href.split('&ids=')[0];
             url+='&ids='+$('input:checked[name=\'pk\']').map(function(){return $(this).attr('value');}).get().join(',');
-            if(window['executing_tests']) document.location.href = url;
-            else loadUrl(url);
+            if(window['executing_tests']){
+                document.location.href = url;
+            }
+            else{
+                if($(this).hasClass('popup')) popup(url);
+                else loadUrl(url);
+            }
             e.preventDefault();
             return false;
         });

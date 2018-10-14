@@ -8,6 +8,7 @@ from djangoplus.admin.models import Group
 from djangoplus.docs import Documentation
 from djangoplus.decorators.views import view, action
 from djangoplus.admin.models import User, Organization
+from djangoplus.tools.video import VideoUploader
 
 
 @view('Source', login_required=False)
@@ -77,10 +78,10 @@ def doc(request):
     return locals()
 
 
-@view('Tutorials', login_required=False)
+@view('Videos', login_required=False)
 def tutorial(request):
-    file_path = '{}/tutorials/youtube.json'.format(settings.BASE_DIR)
-    videos = os.path.exists(file_path) and json.load(open(file_path)) or []
+    youtube = VideoUploader()
+    videos = youtube.list_videos()
     return locals()
 
 

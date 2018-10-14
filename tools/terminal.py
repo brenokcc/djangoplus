@@ -58,13 +58,14 @@ class Terminal(object):
         os.system(command)
 
     def show(self, visible=True):
-        minimize_terminal_script = '''
-            tell application "Terminal"
-              set miniaturized of window 1 to {}
-            end tell
-        '''.format(visible and 'false' or 'true')
-        self.proccess = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        self.proccess.communicate(minimize_terminal_script.encode())
+        if os.path.exists('/usr/bin/osascript'):
+            minimize_terminal_script = '''
+                tell application "Terminal"
+                  set miniaturized of window 1 to {}
+                end tell
+            '''.format(visible and 'false' or 'true')
+            self.proccess = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            self.proccess.communicate(minimize_terminal_script.encode())
 
     def hide(self):
         self.show(False)

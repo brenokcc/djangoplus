@@ -269,7 +269,7 @@ class ProfileForm(forms.ModelForm):
 
 
 class SettingsForm(forms.ModelForm):
-    class Meta():
+    class Meta:
         model = Settings
         exclude = ()
 

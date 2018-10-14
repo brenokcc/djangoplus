@@ -358,13 +358,13 @@ class ImageFieldFile(ImageFieldFile):
             image2 = image
             image2.thumbnail(thumb_size, Image.ANTIALIAS)
 
-        io = io.BytesIO()
+        tmp = io.BytesIO()
         # PNG and GIF are the same, JPG is JPEG
         if file_format.upper() == 'JPG':
             file_format = 'JPEG'
 
-        image2.save(io, file_format)
-        return ContentFile(io.getvalue())
+        image2.save(tmp, file_format)
+        return ContentFile(tmp.getvalue())
 
     def save(self, name, content, save=True):
         super(ImageFieldFile, self).save(name, content, save)
