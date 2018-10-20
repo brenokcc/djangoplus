@@ -12,7 +12,7 @@
                     <span class="fa fa-facebook" aria-hidden="true"></span>
                     <span class="sr-only">Facebook</span>
                 </a>
-                <a href="#" onclick="handleAuthClick(event);return false;">
+                <a href="#" onclick="gg_login(event);return false;">
                     <span class="fa fa-google" aria-hidden="true"></span>
                     <span class="sr-only">Google</span>
                 </a>
@@ -50,7 +50,7 @@
 
         <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-sign-in"></i> {% trans "Sign-in" %}</button>
         {% if can_register %}
-        <a href="/admin/register/" class="bounceIn animation-delay5 pull-left popup" type="submit" style="margin-right: 10px"> {% trans "Register" %}</a>
+        <a href="/admin/register/" class="bounceIn animation-delay5 pull-left popup" type="submit" style="margin-right: 10px"> {% trans "Sign-up" %}</a>
         {% endif %}
     </form>
 

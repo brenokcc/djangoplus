@@ -27,7 +27,7 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'can_list_by_role', 'can_view_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
     'can_list_by_unit', 'can_view_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
     'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization', 'can_edit_by_organization', 'can_admin_by_organization',
-    'usecase', 'class_diagram',
+    'usecase', 'class_diagram', 'dashboard'
 ))
 
 
@@ -334,6 +334,17 @@ class Manager(models.Manager):
 
     def sum(self, attr, vertical_key=None, horizontal_key=None):
         return self.get_queryset().sum(attr, vertical_key, horizontal_key)
+
+    def authenticated(self, obj):
+        lookup = get_metadata(self.model, 'role_username')
+        qs = self.model.objects.filter(**{lookup: obj._user.username})
+        if qs.count():
+            if qs.count() == 1:
+                return qs[0]
+            else:
+                return qs
+        else:
+            return None
 
 
 class ModelBase(base.ModelBase):

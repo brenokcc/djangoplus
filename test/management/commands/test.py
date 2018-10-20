@@ -64,6 +64,7 @@ class Command(test.Command):
                     new_file_content = '{}\n{}\n'.format(file_content, '\n\n'.join(code_list))
                     # print(new_file_content)
                     open(test_file_path, 'w').write(new_file_content)
+                    print('Testcases succesfully generanted into file "{}/tests.py"'.format(settings.PROJECT_NAME))
             except ZeroDivisionError as e:
                 print(e)
 

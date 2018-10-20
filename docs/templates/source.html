@@ -6,8 +6,8 @@
         <h1>{{ title }}</h1>
         {% for src in src %}
             <h3>{{ src.file }}</h3>
-            <pre class="language-{{ src.language }}">
-            <code class="language-{{ src.language }}">{{ src.content }}</code>
+            <pre style="background-color: #FFF">
+            <code class="{{ src.language }} hljs" style="background-color: #FFF">{{ src.content }}</code>
             </pre>
         {% endfor %}
     </div>

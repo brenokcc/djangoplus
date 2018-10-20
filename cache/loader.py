@@ -13,6 +13,7 @@ widgets = []
 subset_widgets = []
 card_panel_models = []
 icon_panel_models = []
+list_dashboard = []
 subsets = dict()
 
 # roles
@@ -43,6 +44,7 @@ formatters = dict()
 
 # documentation
 last_authenticated_role = None
+last_authenticated_username = None
 
 if not initialized:
     initialized = True
@@ -55,6 +57,7 @@ if not initialized:
         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
         menu = get_metadata(model, 'menu')
         list_menu = get_metadata(model, 'list_menu')
+        dashboard = get_metadata(model, 'dashboard')
         role_signup = get_metadata(model, 'role_signup', False)
 
         field_names = []
@@ -92,6 +95,8 @@ if not initialized:
             icon_panel_models.append((model, add_shortcut))
         if list_shortcut:
             card_panel_models.append((model, list_shortcut))
+        if dashboard:
+            list_dashboard.append(model)
 
         # indexing the views generated from model classes
         url = '/list/{}/{}/'.format(app_label, model_name)
@@ -201,7 +206,7 @@ if not initialized:
             for fieldset in model.fieldsets:
                 if 'relations' in fieldset[1]:
                     for item in fieldset[1]['relations']:
-                        tmp = getattr(model, item)
+                        tmp = getattr(model, item.split(':')[0])
                         if hasattr(tmp, 'rel'):
                             add_inline = get_metadata(tmp.rel.related_model, 'add_inline')
                             if add_inline:
@@ -301,6 +306,7 @@ if not initialized:
         app_label = get_metadata(model, 'app_label')
         verbose_name = get_metadata(model, 'verbose_name')
         role_username = get_metadata(model, 'role_username')
+        role_signup = get_metadata(model, 'role_signup')
         add_label = get_metadata(model, 'add_label', None)
         workflow = get_metadata(model, 'usecase', 0)
         diagram_classes = get_metadata(model, 'class_diagram', None)
@@ -410,7 +416,11 @@ if not initialized:
                 if add_label:
                     activity = add_label
                 else:
-                    activity = '{} {}'.format('Cadastrar', verbose_name)
+                    if role_signup:
+                        activity = '{} {}'.format('Cadastrar-se como', verbose_name)
+                        role = verbose_name
+                    else:
+                        activity = '{} {}'.format('Cadastrar', verbose_name)
                 workflows[workflow] = dict(activity=activity, role=role, model=None)
 
         if diagram_classes is not None:

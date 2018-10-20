@@ -84,7 +84,7 @@ def get_one_to_many_form(request, obj, related_field_name, **kwargs):
 
 def get_many_to_one_form(request, obj, related_field_name, related_obj):
     _model = type(obj)
-    rel = getattr(_model, related_field_name).rel
+    rel = getattr(_model, related_field_name.split(':')[0]).rel
     add_label = get_metadata(rel.related_model, 'add_label')
     if add_label:
         form_title = add_label

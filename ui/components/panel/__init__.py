@@ -296,6 +296,11 @@ class DashboardPanel(RequestComponent):
                         url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
                         notification_panel = NotificationPanel(request, title, count, url, description, icon)
                         self.right.append(notification_panel)
+        for model in loader.list_dashboard:
+            title = get_metadata(model, 'verbose_name_plural')
+            position = get_metadata(model, 'dashboard')
+            paginator = Paginator(request, model.objects.all(request.user), title)
+            self.add(paginator, position)
 
         icon_panel = ShortcutPanel(request)
         card_panel = CardPanel(request)
@@ -355,16 +360,7 @@ class DashboardPanel(RequestComponent):
                             paginator.column_names = paginator.column_names[0:1]
                         html = str(paginator)
 
-                    if position == 'top':
-                        self.top.append(html)
-                    elif position == 'center':
-                        self.center.append(html)
-                    elif position == 'left':
-                        self.left.append(html)
-                    elif position == 'right':
-                        self.right.append(html)
-                    elif position == 'bottom':
-                        self.bottom.append(html)
+                    self.add(html, position)
 
         for item in loader.widgets:
             if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):
@@ -372,16 +368,19 @@ class DashboardPanel(RequestComponent):
                 position = item['position']
                 f_return = function(request)
                 html = render_to_string(['{}.html'.format(function.__name__), 'dashboard.html'], f_return, request)
-                if position == 'top':
-                    self.top.append(html)
-                elif position == 'center':
-                    self.center.append(html)
-                elif position == 'left':
-                    self.left.append(html)
-                elif position == 'right':
-                    self.right.append(html)
-                elif position == 'bottom':
-                    self.bottom.append(html)
+                self.add(html, position)
+
+    def add(self, component, position):
+        if position == 'top':
+            self.top.append(component)
+        elif position == 'center':
+            self.center.append(component)
+        elif position == 'left':
+            self.left.append(component)
+        elif position == 'right':
+            self.right.append(component)
+        elif position == 'bottom':
+            self.bottom.append(component)
 
 
 class NumberPanel(RequestComponent):

@@ -215,7 +215,7 @@ class ImageField(forms.fields.ImageField):
 
     def clean(self, data, initial=None):
         cleaned_data = super(ImageField, self).clean(data, initial=initial)
-        if cleaned_data and cleaned_data.name != initial:
+        if cleaned_data and hasattr(cleaned_data, 'name') and cleaned_data.name != initial:
             extension = cleaned_data.name.split('.')[-1]
             cleaned_data.name = '{}.{}'.format(str(uuid.uuid1()), extension)
         return cleaned_data

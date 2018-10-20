@@ -48,7 +48,7 @@ def context_processor(request):
         settings=app_settings,
         menu=menu,
         alerts=alerts,
-        display_emails=False and not executing_tests and should_display(),
+        display_emails=False,  # not executing_tests and should_display(),
         display_fake_mouse=cache.RECORD,
         executing_tests=executing_tests
     )

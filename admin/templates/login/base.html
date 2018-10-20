@@ -44,33 +44,53 @@
             </div><!-- /login-widget -->
         </div><!-- /login-wrapper -->
     </body>
-    {% if can_register %}
-    <script src="https://connect.facebook.net/en_US/sdk.js"></script>
-    <script>
-        /* Facebook */
-        function statusChangeCallback(response) {
-          if (response.status === 'connected') {
-            var url = '/admin/register/'+response.authResponse.accessToken+'/'+response.authResponse.userID+'/';
-            document.location.href = url;
-          }
-        }
-        function checkLoginState() { FB.getLoginStatus(function(response) { statusChangeCallback(response); });}
-        window.fbAsyncInit = function() {FB.init({ appId: '629398233811863', cookie: true, xfbml: true, version: 'v2.8' });}
-        function fb_login(){FB.login(function(response) {statusChangeCallback(response);}, {scope: 'public_profile,email'});}
-    </script>
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script>
-        /* Google */
-        var CLIENT_ID = '201881391313-cfshu52pcv0m8ij5t3e026q4h1iqjabc.apps.googleusercontent.com';
-        var SCOPES = ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'];
-        function handleAuthResult(authResult) {
-            var authorizeDiv = document.getElementById('authorize-div');
-            if (authResult && !authResult.error) {
-                var url = '/admin/register/'+authResult.access_token+'/';
-                document.location.href = url;
-            }
-        }
-        function handleAuthClick(event) { gapi.auth.authorize({client_id: CLIENT_ID, scope: SCOPES, immediate: false}, handleAuthResult); return false; }
-    </script>
+    {% if allow_social_login %}
+        <!-- FACEBOOK https://developers.facebook.com/docs/facebook-login/web/ -->
+        {% if facebook_auth_id %}
+            <script>
+                window.fbAsyncInit = function() {
+                    FB.init({appId: '341337683304718',  cookie: true,  xfbml: true, version: 'v2.8'});
+                    FB.AppEvents.logPageView();
+                };
+                (function(d, s, id){
+                 var js, fjs = d.getElementsByTagName(s)[0];
+                 if (d.getElementById(id)) {return;}
+                 js = d.createElement(s); js.id = id;
+                 js.src = "https://connect.facebook.net/en_US/sdk.js";
+                 fjs.parentNode.insertBefore(js, fjs);
+                }(document, 'script', 'facebook-jssdk'));
+
+                function statusChangeCallback(response) {
+                  if (response.status === 'connected') {
+                    document.location.href = '/admin/register/'+response.authResponse.accessToken+'/'+response.authResponse.userID+'/';
+                  }
+                }
+                function checkLoginState() { FB.getLoginStatus(function(response) { statusChangeCallback(response); });}
+                function fb_login(){FB.login(function(response) {statusChangeCallback(response);}, {scope: 'public_profile,email'});}
+            </script>
+        {% endif %}
+
+        <!-- GOOGLE http://usefulangle.com/post/55/google-login-javascript-api -->
+        {% if google_auth_key and google_auth_id %}
+            <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};HandleGoogleApiLibrary()" onreadystatechange="if (this.readyState === 'complete') this.onload()"></script>
+            <script>
+                function HandleGoogleApiLibrary() {
+                    gapi.load('client:auth2',  {
+                        callback: function() {
+                            gapi.client.init({
+                                apiKey: '{{ google_auth_key }}',
+                                clientId: '{{ google_auth_id }}',
+                                scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/plus.me'
+                            }).then(
+                                function(success) {},
+                                function(error) {alert(error);}
+                            );
+                        },
+                        onerror: function() {alert('Error');}
+                    });
+                }
+                function gg_login(event){gapi.auth2.getAuthInstance().signIn().then(function(success) { document.location.href = '/admin/register/'+success.Zi.access_token+'/';}, function(error) {alert(error);});}
+            </script>
+        {% endif %}
     {% endif %}
 {% endblock %}

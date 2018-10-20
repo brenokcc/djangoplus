@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+import sys
 import json
 from djangoplus.admin.models import Settings
 import urllib
@@ -7,6 +7,7 @@ from djangoplus.test import cache
 from djangoplus.mail import utils
 from djangoplus.cache import loader
 from django.contrib import auth
+from django.conf import settings
 from djangoplus.utils.aescipher import decrypt
 from django.http.response import HttpResponse
 from djangoplus.decorators.views import view, action
@@ -33,7 +34,13 @@ def index(request):
 @view('Acesso ao Sistema', login_required=False, template='login/login.html')
 def login(request, scope=None, organization=None, unit=None):
     auth.logout(request)
-    can_register = loader.signup_model is not None and not cache.HEADLESS
+    can_register = loader.signup_model is not None
+
+    allow_social_login = 'test' not in sys.argv
+    google_auth_key = settings.GOOGLE_AUTH_KEY
+    google_auth_id = settings.GOOGLE_AUTH_ID
+    facebook_auth_id = settings.FACEBOOK_AUTH_ID
+
     organization = organization and Organization.objects.get(pk=organization) or None
     unit = unit and Unit.objects.get(pk=unit) or None
     form = LoginForm(request, scope, organization, unit)
@@ -112,7 +119,7 @@ def register(request, token=None, userid=None):
             submit_label = 'Cadastrar'
             title = 'Cadastro de {}'.format(get_metadata(loader.signup_model, 'verbose_name'))
             icon = get_metadata(loader.signup_model, 'icon', None)
-
+            captcha = settings.CAPTCHA_KEY and settings.CAPTCHA_SECRET and 'test' not in sys.argv or False
 
     form = RegisterForm(request, initial=initial)
     form.fields[username_field].help_text='Utilizado para acessar o sistema.'

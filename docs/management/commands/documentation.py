@@ -11,7 +11,8 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
 
     def add_arguments(self, parser):
-        parser.add_argument('usecase', nargs='*', help='...')
+        parser.add_argument('--usecase', action='store', nargs=1, dest='usecase', default=False,
+                            help='Prints the documetation of a specific usecase')
         parser.add_argument('--json', action='store_true', dest='json', default=False, help='')
 
     def handle(self, *args, **options):
@@ -19,7 +20,7 @@ class Command(BaseCommand):
         doc = Documentation()
         translation.activate(settings.LANGUAGE_CODE)
 
-        usecase_name = (' '.join([x for x in options['usecase']])).strip()
+        usecase_name = options.get('usecase')
 
         if options.pop('json', False):
             print(str(doc.as_json()))
@@ -39,7 +40,7 @@ class Command(BaseCommand):
                 output.append('')
             output.append(terminal.bold(_('Usecases:').upper()))
             for i, usecase in enumerate(doc.usecases):
-                if not usecase_name or usecase.name == usecase_name:
+                if not usecase_name or usecase.name == usecase_name[0]:
                     output.append(terminal.bold('* Usecase #{}'.format((i + 1))))
                     output.append('')
                     output.append('{}:\t\t\t{}'.format(terminal.info(_('Name')), usecase.name))

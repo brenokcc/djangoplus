@@ -48,7 +48,7 @@
         {% if self.tabs and forloop.counter0 == self.fieldsets_without_tab_name|length %}
             <ul class="nav nav-tabs">
             {% for tab_name, url in self.tabs %}
-              <li class="{% if self.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax" href="{{ url }}">{{ tab_name }}</a></li>
+              <li class="{% if self.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax dontScrool" href="{{ url }}">{{ tab_name }}</a></li>
             {% endfor %}
             </ul>
         {% endif %}

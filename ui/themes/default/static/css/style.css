@@ -118,7 +118,7 @@ h1, h2, h3, h4, h5, h6, .panel .panel-heading i {
 }
 
 .progress{
-	background-color: #6e829b;
+	background-color: #EEE;
 }
 
 #wrapper {
@@ -327,6 +327,17 @@ aside .nav>li>a.active i{
 .panel-heading{
     height: 64px !important;
     padding: 20px !important;
+}
+
+.btn-danger, .btn-danger:hover{
+    color: #FFF !important;
+    background-color: #d9534f !important;
+}
+
+.btn-highlight{
+    color: #fff !important;
+    background-color: #3d5170 !important;
+    border-color: #3d5170 !important;
 }
 
 .btn-default[type="submit"]{

@@ -106,15 +106,6 @@ MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'admin.User'
 
-EXTRA_JS = []
-
-EXTRA_CSS = []
-
-DEFAULT_SUPERUSER = 'admin'
-DEFAULT_PASSWORD = 'senha'
-USERNAME_MASK = None
-DROPBOX_TOKEN = ''
-BACKUP_FILES = ['media', 'sqlite.db']
 
 LOGGING_ = {
     'version': 1,
@@ -138,9 +129,31 @@ LOGGING_ = {
     }
 }
 
+EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'
+
+EXTRA_JS = []
+EXTRA_CSS = []
+
+DEFAULT_SUPERUSER = 'admin'
+DEFAULT_PASSWORD = 'senha'
+
+USERNAME_MASK = None
+
+DROPBOX_TOKEN = ''
+BACKUP_FILES = ['media', 'sqlite.db']
+
 GRADIENT = ('#aeb6bf', '#85929e', '#5d6d7e', '#d6dbdf', '#34495e', '#2e4053')
 
 CAPTCHA_KEY = '6Lcpc1IUAAAAADXT-pykYw7_duD4NkrQ54VXjlfJ'
 CAPTCHA_SECRET = '6Lcpc1IUAAAAABiWOqddzw63lR6ZEaQTtpuM-X5m'
 
-EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'
+GOOGLE_AUTH_KEY = 'aboh-Z0qn76Eebe50-rqF9ub'
+GOOGLE_AUTH_ID = '319780096154-9pqkh6van1710g6ss17cvgj2b7vogarb.apps.googleusercontent.com'
+
+FACEBOOK_AUTH_ID = '341337683304718'
+
+DIGITAL_OCEAN_TOKEN = 'dae4434669a0c5a8dadb728ca6cea807bf0a6447784ecda17dadbbee7d6e3edc'
+DIGITAL_OCEAN_SERVER = '104.236.79.20'
+DIGITAL_OCEAN_DOMAIN = ''
+
+

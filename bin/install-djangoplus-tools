@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 set -e
+echo "This will install the following softwares:
+ a) Firefox navigator if not installed
+ b) VLC video player if not installed
+ c) Geckodriver for Firefox if not in the PATH
+ d) libjpeg and tcl-tk libraries if not installed
+Plase, provide your password if you agree with this."
 
-sudo echo "Installing tools for djangoplus framework..."
+echo "Starting installation..."
+
+sudo python3 -m pip install "djangoplus[automation,youtube,dropbox]"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     if [ "$EUID" -ne 0 ]; then
@@ -14,8 +22,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         fi
 
         if [ ! -d /Applications/VLC.app ]; then
-            curl https://get.videolan.org/vlc/3.0.4/macosx/vlc-3.0.4.dmg --output VLC.dmg
-            hdiutil VLC.dmg
+            curl http://videolan.c3sl.ufpr.br/vlc/3.0.4/macosx/vlc-3.0.4.dmg --output VLC.dmg
+            hdiutil attach VLC.dmg
             sudo cp -R "/Volumes/VLC media player/VLC.app" /Applications
             hdiutil detach "/Volumes/VLC media player"
             rm VLC.dmg
@@ -46,7 +54,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     if ! [ -x "$(command -v firefox)" ]; then
         curl https://ftp.mozilla.org/pub/firefox/releases/60.0b3/linux-x86_64/en-US/firefox-60.0b3.tar.bz2 --output firefox.tar.bz2
         tar xvjf firefox.tar.bz2 --directory /usr/lib/
-        sudo ln -s /usr/lib/firefox /usr/local/bin/firefox
+        sudo ln -s /usr/lib/firefox/firefox /usr/local/bin/firefox
         rm firefox.tar.bz2
     fi
 

@@ -198,7 +198,10 @@ class NullBooleanField(models.NullBooleanField, FieldPlus):
 class OneToOneField(models.OneToOneField, FieldPlus):
 
     def __init__(self, *args, **kwargs):
-        kwargs.update(on_delete=models.SET_NULL)
+        if kwargs.get('null'):
+            kwargs.update(on_delete=models.SET_NULL)
+        else:
+            kwargs.update(on_delete=models.CASCADE)
         super(OneToOneField, self).__init__(*args, **kwargs)
 
     def formfield(self, **kwargs):

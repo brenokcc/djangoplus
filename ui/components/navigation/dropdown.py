@@ -129,6 +129,16 @@ class ModelDropDown(GroupDropDown):
                     if not should_add_action(action_inline, subset_name):
                         continue
 
+                lookups = self.request.user.get_permission_mapping(self.model, obj).get(action_name)
+                if lookups:
+                    forbidden = True
+                    for key, value in lookups:
+                        if self.model.objects.filter(pk=obj.pk, **{'{}__in'.format(key): value}).exists():
+                            forbidden = False
+                            break
+                    if forbidden:
+                        continue
+
                 if not permissions.check_group_or_permission(self.request, action_can_execute):
                     continue
 

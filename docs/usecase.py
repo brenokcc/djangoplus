@@ -10,6 +10,7 @@ from django.utils.translation import ugettext as _
 from django.template.defaultfilters import slugify
 from djangoplus.db.models import fields as model_fields
 from djangoplus.ui.components.forms import factory, fields as form_fields
+from djangoplus.utils import get_fieldsets
 from djangoplus.utils.metadata import get_metadata, find_action, find_model_by_verbose_name,\
     find_model_by_add_label, get_field, find_model_by_verbose_name_plural, find_subset_by_title
 
@@ -72,6 +73,8 @@ class UseCase(object):
             self._login(name)
         elif name.startswith(_('List')):
             self._list(name)
+        elif name.startswith(_('Register')) and ' como ' in name:
+            self._signup(name)
         elif name.startswith(_('Register')) and _('in') not in name:
             self._register(name)
         elif name.startswith(_('Add')):
@@ -98,31 +101,32 @@ class UseCase(object):
             role_username = get_metadata(model, 'role_username')
             if role_username:
                 field = get_field(model, role_username)
-                username = field.example or ''
-            else:
-                username = settings.DEFAULT_SUPERUSER
-        else:
-            username = username = settings.DEFAULT_SUPERUSER
-        password = settings.DEFAULT_PASSWORD
-
+                loader.last_authenticated_username = field.example or None
         interaction = _('The user access the system as')
         self._interactions.append('{} {}'.format(interaction, verbose_name))
         self._interactions.append(_('The system displays the main page'))
 
-    def _find(self, model):
+    def _find(self, model, registering=False):
         click_str = []
         click_str_unicode = []
 
         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
         list_shortcut = get_metadata(model, 'list_shortcut', [], iterable=True)
         list_menu = get_metadata(model, 'list_menu', [], iterable=True)
+        dashboard = get_metadata(model, 'dashboard')
         menu = get_metadata(model, 'menu')
 
-        list_required_role = [role_name for role_name in (list_shortcut + list_menu) if role_name is not True]
-        if list_required_role and loader.last_authenticated_role and loader.last_authenticated_role not in list_required_role:
-            self._login('{} {} {}'.format(_('Access'), _('as'), list_required_role[0]))
+        # list_required_role = [role_name for role_name in (list_shortcut + list_menu) if role_name is not True]
+        # if list_required_role and loader.last_authenticated_role and loader.last_authenticated_role not in list_required_role:
+        #    self._login('{} {} {}'.format(_('Access'), _('as'), list_required_role[0]))
 
-        if not loader.last_authenticated_role or True in list_shortcut or loader.last_authenticated_role in list_shortcut:
+        if dashboard and not registering:
+            panel_title = verbose_name_plural
+            interaction = _('The user looks at the painel')
+            self._interactions.append('{} "{}"'.format(interaction, panel_title))
+            self._test_function_code.append("        self.look_at_panel('{}')".format(panel_title))
+            return True
+        elif not loader.last_authenticated_role or True in list_shortcut or loader.last_authenticated_role in list_shortcut:
 
             left = _('The user clicks on the shortcut card')
             right = _('in the dashboard at main page')
@@ -170,7 +174,7 @@ class UseCase(object):
                     if hasattr(parent_model, 'fieldsets'):
                         for fieldset in parent_model.fieldsets:
                             for item in fieldset[1].get('relations', ()) + fieldset[1].get('inlines', ()):
-                                relation = getattr(parent_model, item)
+                                relation = getattr(parent_model, item.split(':')[0])
                                 if hasattr(relation, 'field') and relation.field.remote_field.related_model == model:
                                     panel_title = fieldset[0]
                                     break
@@ -257,6 +261,35 @@ class UseCase(object):
         interaction = '{} {} {}'.format(left, utils.get_list_display(model), right)
         self._interactions.append(interaction)
 
+    def _signup(self, action):
+        model_name = action.split('como')[1].strip()
+        model = find_model_by_verbose_name(model_name)
+
+        func_name = slugify(action).replace('-', '_')
+        func_decorator = '@testcase(\'{}\', None)'.format(self.name)
+        self._func_signature = '{}(self)'.format(func_name)
+
+        self._test_function_code.append('    {}'.format(func_decorator))
+        self._test_function_code.append('    def {}:'.format(self._func_signature))
+
+        interaction = _('The user access login page')
+        self._interactions.append(interaction)
+        self._test_function_code.append("        self.open('/admin/login')")
+
+        interaction = _('The user clicks the link')
+        self._interactions.append('{} "{}"'.format(interaction, _('Sign-up')))
+        self._test_function_code.append("        self.click_button('{}')".format(_('Sign-up')))
+
+        self._interactions.append(_('The system displays a popup window'))
+        self._test_function_code.append("        self.look_at_popup_window()")
+
+        form = factory.get_register_form(self._mocked_request(), model())
+        self._fill_out(form)
+
+        interaction = _('The user clicks the button')
+        self._interactions.append('{} "{}"'.format(interaction, _('Register')))
+        self._test_function_code.append("        self.click_button('{}')".format(_('Register')))
+
     def _register(self, action):
         model = find_model_by_add_label(action)
         if model:
@@ -293,12 +326,15 @@ class UseCase(object):
             self.actors.append(_('Superuser'))
 
         # register the interactions and testing code'
-        func_decorator = '@testcase(\'{}\')'.format(self.name)
+        username_attr = ''
+        if loader.last_authenticated_username:
+            username_attr = ", '{}'".format(loader.last_authenticated_username)
+        func_decorator = '@testcase(\'{}\'{})'.format(self.name, username_attr)
         self._func_signature = '{}(self)'.format(func_name)
 
         self._test_function_code.append('    {}'.format(func_decorator))
         self._test_function_code.append('    def {}:'.format(self._func_signature))
-        self._find(model)
+        self._find(model, registering=True)
         self._test_function_code.append("        self.click_button('{}')".format(button_label))
 
         a = _('The user clicks the button')
@@ -333,13 +369,14 @@ class UseCase(object):
             related_model = find_model_by_add_label(add_label)
 
         # check if there is a fieldset was defined with the relation
+        fieldsets = hasattr(model, 'fieldsets') and model.fieldsets or get_fieldsets(model)
         relation_name = None
         inlines = []
         if hasattr(model, 'fieldsets'):
-            for fieldset in model.fieldsets:
+            for fieldset in fieldsets:
                 if 'relations' in fieldset[1]:
                     for item in fieldset[1]['relations']:
-                        tmp = getattr(model, item)
+                        tmp = getattr(model, item.split(':')[0])
                         if hasattr(tmp, 'field') and tmp.field.remote_field.model == model:
                             relation_name = item
                 if 'inlines' in fieldset[1]:
@@ -350,13 +387,15 @@ class UseCase(object):
                             relation_name = item
 
         # if the relation was defined in a fieldset
-        if relation_name:
+        if relation_name :
             add_inline = relation_name in inlines
             add_label = get_metadata(related_model, 'add_label')
             button_label = add_label or 'Adicionar'
             button_label = get_metadata(related_model, 'add_label', button_label)
-
-            func_decorator = '@testcase(\'{}\')'.format(self.name)
+            username_attr = ''
+            if loader.last_authenticated_username:
+                username_attr = ", '{}'".format(loader.last_authenticated_username)
+            func_decorator = '@testcase(\'{}\'{})'.format(self.name, username_attr)
             self._func_signature = '{}_{}_{}_{}'.format(_('add'), related_model.__name__.lower(), _('in'), model.__name__.lower())
 
             self._test_function_code.append('    {}'.format(func_decorator))
@@ -418,6 +457,7 @@ class UseCase(object):
                                 scopes = ['systemic']
                             if issubclass(form_field.queryset.model, Unit):
                                 scopes = ['systemic', 'organization']
+
                             if scopes:
                                 ignore_field = False
                                 for role_model in loader.role_models:
@@ -427,6 +467,9 @@ class UseCase(object):
                                             break
                                 if ignore_field:
                                     continue
+                            # the field is related to the class associated to the user's role
+                            if get_metadata(form_field.queryset.model, 'verbose_name') == loader.last_authenticated_role:
+                                continue
 
                         # get the test value in case of model form and if the sample value was defined in the model
                         value = ''
@@ -475,7 +518,10 @@ class UseCase(object):
         model = find_model_by_verbose_name(verbose_name)
         action_dict = find_action(model, action_name)
         func = action_dict['function']
-        func_decorator = '@testcase(\'{}\')'.format(self.name)
+        username_attr = ''
+        if loader.last_authenticated_username:
+            username_attr = ", '{}'".format(loader.last_authenticated_username)
+        func_decorator = '@testcase(\'{}\'{})'.format(self.name, username_attr)
         self._func_signature = '{}_em_{}(self)'.format(func.__name__.lower(), model.__name__.lower())
 
         self._test_function_code.append('    {}'.format(func_decorator))
