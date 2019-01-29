@@ -61,13 +61,13 @@ class LoginForm(forms.Form):
                 user.unit = None
                 if self.scope == LoginForm.ORGANIZATION:
                     user.organization = cleaned_data.get('login_scope', self.organization)
-                    is_organization_user = user.role_set.filter(organizations__in=(user.organization, 0)).exists()
+                    is_organization_user = user.role_set.filter(scope__in=(user.organization, 0)).exists()
                     if not is_organization_user:
                         raise forms.ValidationError('{} não é usuário de {}'.format(username, user.organization))
                 elif self.scope == LoginForm.UNIT:
                     user.unit = cleaned_data.get('login_scope', self.unit)
                     is_unit_user = user.role_set.filter(units__in=(user.unit, 0)).exists()
-                    is_organization_user = loader.organization_model and user.role_set.filter(organizations__in=(user.unit.get_organization(), 0)).exists()
+                    is_organization_user = loader.organization_model and user.role_set.filter(scope__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:
                         raise forms.ValidationError('{} não é usuário de {}'.format(username, user.unit))
                 else:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.apps import apps
+from threading import Thread
 from django.conf import settings
 from djangoplus.utils.metadata import get_metadata, get_scope, get_can_execute
 
@@ -447,3 +448,9 @@ if not initialized:
     for key in keys:
         l.append(workflows[key])
     workflows = l
+
+    if settings.DROPBOX_TOKEN and settings.DEBUG:
+        def sync_storage():
+            from djangoplus.utils.storage.dropbox import DropboxStorage
+            DropboxStorage().sync()
+        Thread(target=sync_storage).start()

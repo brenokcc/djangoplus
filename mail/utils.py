@@ -3,7 +3,7 @@ import os
 import json
 from django.conf import settings
 
-DEBUG_EMAIL_FILE_PATH = '/tmp/email-{}.json'.format(settings.PROJECT_NAME)
+DEBUG_EMAIL_FILE_PATH = os.path.join(settings.MEDIA_ROOT, 'mail.json')
 
 
 def dump_emails(emails):

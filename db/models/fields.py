@@ -10,6 +10,7 @@ from djangoplus.utils.formatter import to_ascii
 from djangoplus.ui.components.forms import fields as form_fields
 from django.db.models.fields.files import ImageFieldFile
 from djangoplus.utils.metadata import get_metadata, getattr2
+from djangoplus.utils.storage import dropbox
 
 
 # Superclass #
@@ -293,7 +294,16 @@ class OneToManyField(ManyToManyField):
 
 # File Fields #
 
+
 class FileField(models.FileField, FieldPlus):
+
+    def __init__(self, *args, **kwargs):
+        upload_to = kwargs.get('upload_to', None)
+        if upload_to and type(upload_to) == str and 'dropbox:' in upload_to:
+            kwargs['storage'] = dropbox.DropboxStorage()
+            kwargs['upload_to'] = upload_to[8:]
+        super(FileField, self).__init__(*args, **kwargs)
+
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.FileField)
         return super(FileField, self).formfield(**kwargs)
@@ -417,6 +427,10 @@ class ImageField(models.ImageField, FieldPlus):
         default = '/static/images/blank.png'
         if 'default' in kwargs:
             default = kwargs.pop('default')
+        upload_to = kwargs.get('upload_to', None)
+        if upload_to and type(upload_to) == str and 'dropbox:' in upload_to:
+            kwargs['storage'] = dropbox.DropboxStorage()
+            kwargs['upload_to'] = upload_to[8:]
         super(ImageField, self).__init__(default=default, verbose_name=self.verbose_name, **kwargs)
 
     def formfield(self, **kwargs):

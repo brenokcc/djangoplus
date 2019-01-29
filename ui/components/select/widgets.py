@@ -90,7 +90,7 @@ RELOAD_SCRIPT = '''
             if({lazy}){{
                 window['qs_{name}']['qs'] = data.qs;
             }} else {{
-                $('#id_{name}').select2('destroy').empty().select2({{allowClear: true, data: data.results}});
+                $('#id_{name}').select2('destroy').empty().select2({{allowClear: true, language: 'pt-BR', escapeMarkup: function (markup) {{ var links = markup=='Nenhum resultado encontrado'? '<div>{links}</dev>'.replace('relation_name', '{field_name}').replace('relation_pk', pk) : ''; return markup + links; }}, data: data.results}});
                 $('#id_{name}').val('{value}'.split('_'));
             }}
             $('#id_{name}').trigger("change");
@@ -103,7 +103,7 @@ RELOAD_SCRIPT = '''
 </script>
 '''
 
-ADD_LINK = '<a class="pull-right popup" style="padding:5px" href="javascript:" onclick="$(\\\'#id_{}\\\').select2(\\\'close\\\');popup(\\\'/add/{}/{}/?select=id_{}\\\');"><i class="fa fa-plus">\</i>Adicionar {}</a>'
+ADD_LINK = '<a class="pull-right popup" style="padding:5px" href="javascript:" onclick="$(\\\'#id_{}\\\').select2(\\\'close\\\');popup(\\\'/add/{}/{}/?select=id_{}&{}={}\\\');"><i class="fa fa-plus">\</i>Adicionar {}</a>'
 
 
 class SelectWidget(widgets.Select):
@@ -159,7 +159,7 @@ class SelectWidget(widgets.Select):
                     app_label = get_metadata(tmp, 'app_label')
                     perm = '{}.add_{}'.format(app_label, class_name)
                     if self.user.has_perm(perm):
-                        links.append(ADD_LINK.format(name, app_label, class_name, name, get_metadata(tmp, 'verbose_name')))
+                        links.append(ADD_LINK.format(name, app_label, class_name, name, 'relation_name', 'relation_pk', get_metadata(tmp, 'verbose_name')))
 
         html = super(SelectWidget, self).render(name, value, attrs)
         html = html.replace('---------', '')
@@ -184,7 +184,7 @@ class SelectWidget(widgets.Select):
                 popup = 'popup' in function_name and 'popup-' or ''
                 reload_script = RELOAD_SCRIPT.format(
                     function_name=function_name, field_name=field_name, app_label=app_label, model_name=model_name,
-                    value=value, lookup=lookup, lazy=lazy, name=name, popup=popup
+                    value=value, lookup=lookup, lazy=lazy, name=name, popup=popup, links=''.join(links)
                 )
                 html = '{} {}'.format(html, reload_script)
         return mark_safe(html)
@@ -239,7 +239,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                     app_label = get_metadata(tmp, 'app_label')
                     perm = '{}.add_{}'.format(app_label, class_name)
                     if self.user.has_perm(perm):
-                        links.append(ADD_LINK.format(name, app_label, class_name, name, get_metadata(tmp, 'verbose_name')))
+                        links.append(ADD_LINK.format(name, app_label, class_name, name, 'relation_name', 'relation_pk', get_metadata(tmp, 'verbose_name')))
 
         function_name = name.replace('-', '__')
         if queryset.model and self.lazy:
@@ -265,7 +265,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                 function_name = name.replace('-', '__')
                 popup = 'popup' in function_name and 'popup-' or ''
                 reload_script = RELOAD_SCRIPT.format(function_name=function_name, field_name=field_name, popup=popup,
-                    app_label=app_label, model_name=model_name, value=value, lookup=lookup, lazy=lazy, name=name)
+                    app_label=app_label, model_name=model_name, value=value, lookup=lookup, lazy=lazy, name=name, links=''.join(links))
                 html = '{} {}'.format(html, reload_script)
 
         return mark_safe(html)

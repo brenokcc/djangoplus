@@ -178,6 +178,8 @@ class RoleSelector(RequestComponent):
             for value in self.request.GET.getlist('data[]'):
                 if value.strip():
                     pks.append(value)
+            self.request.user.permission_mapping = '{}'
+            self.request.user.save()
             self.request.user.role_set.update(active=False)
             self.request.user.role_set.filter(pk__in=pks).update(active=True)
             self.request.user.check_role_groups()

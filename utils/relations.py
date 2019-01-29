@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.utils.text import slugify
 from djangoplus.utils import permissions
 from djangoplus.ui.components.panel import ModelPanel
 from djangoplus.ui.components.paginator import Paginator
@@ -194,6 +195,7 @@ class Relation(object):
                 request, self.relation_value.all(request.user), title, relation=self,
                 list_subsets=self.subset_names, readonly=not has_add_permission
             )
+            component.id = slugify(self.relation_name)
             component.add_actions()
             instance = self.relation_model()
             if self.hidden_field_name:
@@ -217,13 +219,14 @@ class Relation(object):
                         form = Form(request, instance=instance, inline=True)
                         if self.hidden_field_name in form.fields:
                             del (form.fields[self.hidden_field_name])
-                        component.form = form
-                        if form.is_valid():
-                            try:
-                                form.save()
-                                component.message = 'Ação realizada com sucesso'
-                            except ValidationError as e:
-                                form.add_error(None, str(e.message))
+                        if not hasattr(form.instance, 'can_add') or form.instance.can_add():
+                            component.form = form
+                            if form.is_valid():
+                                try:
+                                    form.save()
+                                    component.message = 'Ação realizada com sucesso'
+                                except ValidationError as e:
+                                    form.add_error(None, str(e.message))
                 else:
                     add_label = self.add_label or get_metadata(self.relation_model, 'add_label')
                     label = add_label or 'Adicionar {}'.format(verbose_name)

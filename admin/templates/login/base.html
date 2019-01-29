@@ -44,7 +44,7 @@
             </div><!-- /login-widget -->
         </div><!-- /login-wrapper -->
     </body>
-    {% if allow_social_login %}
+    {% if allow_social_login and can_register %}
         <!-- FACEBOOK https://developers.facebook.com/docs/facebook-login/web/ -->
         {% if facebook_auth_id %}
             <script>

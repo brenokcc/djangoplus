@@ -18,7 +18,7 @@ class EmailBackend(BaseEmailBackend):
         return len(messagens)
 
 
-def send_mail(subject, message, to, reply_to=None, actions=()):
+def _as_html(subject, message, actions=()):
     from djangoplus.admin.models import Settings
     url = 'http://{}'.format(settings.HOST_NAME or 'localhost:8000')
     app_settings = Settings.default()
@@ -31,11 +31,27 @@ def send_mail(subject, message, to, reply_to=None, actions=()):
         '{}/static/images/mail.png'.format(url)
     context['actions'] = actions
     context['message'] = message.replace('\n', '<br>').replace('\t', '&nbsp;'*4)
-    reply_to = reply_to and [reply_to] or None
-    from_email = 'Não-Responder <{}>'.format(settings.SERVER_EMAIL)
     html = loader.render_to_string('mail.html', context)
-    email = EmailMultiAlternatives(subject, 'Mensagem em anexo.', from_email, [to], reply_to=reply_to)
-    email.attach_alternative(html, "text/html")
-    return email.send()
+    return html
 
 
+def send_mail(subject, message, to, reply_to=None, actions=()):
+    html = _as_html(subject, message, actions)
+    if settings.SENDGRID_KEY:
+        import sendgrid
+        from sendgrid.helpers.mail import Email, Content, Mail
+        sg = sendgrid.SendGridAPIClient(apikey=settings.SENDGRID_KEY)
+        from_email = Email(settings.DEFAULT_FROM_EMAIL)
+        to_email = Email(to)
+        content = Content("text/html", html)
+        mail = Mail(from_email, subject, to_email, content)
+        if reply_to:
+            mail.reply_to = Email(reply_to)
+        response = sg.client.mail.send.post(request_body=mail.get())
+        return response.status_code
+    else:
+        reply_to = reply_to and [reply_to] or None
+        from_email = 'Não-Responder <{}>'.format(settings.DEFAULT_FROM_EMAIL)
+        email = EmailMultiAlternatives(subject, 'Mensagem em anexo.', from_email, [to], reply_to=reply_to)
+        email.attach_alternative(html, "text/html")
+        return email.send()

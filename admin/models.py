@@ -220,7 +220,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             if settings.DEBUG or 'test' in sys.argv:
                 password = settings.DEFAULT_PASSWORD
             else:
-                password = uuid.uuid4().get_hex()
+                password = uuid.uuid4().hex
             self.set_password(password)
         super(User, self).save(*args, **kwargs)
         if self.is_superuser:

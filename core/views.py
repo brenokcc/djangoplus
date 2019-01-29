@@ -3,8 +3,12 @@ import traceback
 from django.apps import apps
 from django.conf import settings
 from django.shortcuts import render
+from django.http import HttpResponseRedirect
+
 from djangoplus.cache import loader
 from django.http import HttpResponse
+from django.views.static import serve
+from djangoplus.utils.storage import dropbox
 from djangoplus.ui import ComponentHasResponseException
 from djangoplus.utils import permissions
 from djangoplus.ui.components.panel import ModelPanel
@@ -370,3 +374,9 @@ def dispatcher(request, app, view_name, params):
         raise e
 
 
+def cloud(request, path, document_root=None, show_indexes=False):
+    storage = dropbox.DropboxStorage()
+    if storage.exists_locally(path):
+        return serve(request, path, document_root=document_root, show_indexes=show_indexes)
+    else:
+        return HttpResponseRedirect(storage.remote_url('/{}'.format(path)))

@@ -140,7 +140,6 @@ USERNAME_MASK = ''
 
 
 DROPBOX_TOKEN = ''
-BACKUP_FILES = ['media', 'sqlite.db']
 
 GRADIENT = ('#aeb6bf', '#85929e', '#5d6d7e', '#d6dbdf', '#34495e', '#2e4053')
 
@@ -155,5 +154,8 @@ FACEBOOK_AUTH_ID = '341337683304718'
 DIGITAL_OCEAN_TOKEN = ''
 DIGITAL_OCEAN_SERVER = ''
 DIGITAL_OCEAN_DOMAIN = ''
+
+DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+SENDGRID_KEY = ''
 
 

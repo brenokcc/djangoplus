@@ -152,7 +152,7 @@ class Paginator(RequestComponent):
                             qs = field.remote_field.model.objects.get_queryset().filter(pk__in=pks)
                         empty_label = ''
 
-                        form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False, lazy=True, ignore_lookup=True, minimum_input_length=0)
+                        form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False, lazy=False, ignore_lookup=True, minimum_input_length=0)
                     form.fields[form_field_name].widget.attrs['data-placeholder'] = field.verbose_name
                     if initial:
                         label = form.fields[form_field_name].label
@@ -215,7 +215,7 @@ class Paginator(RequestComponent):
 
         subclasses = self.qs.model.__subclasses__()
 
-        if not self.relation and not subset_name:
+        if not self.relation:  # and not subset_name
             if not subclasses and not self.list_subsets and permissions.has_add_permission(self.request, self.qs.model):
                 instance = self.qs.model()
                 instance.user = self.request.user

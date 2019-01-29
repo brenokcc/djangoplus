@@ -10,9 +10,7 @@ PROJECT_NAME = __file__.split(sep)[-2]
 STATIC_ROOT = join(BASE_DIR, 'static')
 MEDIA_ROOT = join(BASE_DIR, 'media')
 
-DROPBOX_TOKEN = '' # disponível em https://www.dropbox.com/developers/apps
-DROPBOX_LOCALDIR = MEDIA_ROOT
-DROPBOX_REMOTEDIR = '/'
+DROPBOX_TOKEN = ''  # disponível em https://www.dropbox.com/developers/apps
 
 DATABASES = {
     'default': {
@@ -45,7 +43,6 @@ if exists(join(BASE_DIR, 'logs')):
     ADMINS = [('Admin', 'root@djangoplus.net')]
 
     DROPBOX_TOKEN = ''
-    BACKUP_FILES = ['media', 'sqlite.db']
 
 
 EXTRA_JS = ['/static/js/$PROJECT_NAME.js']
