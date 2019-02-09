@@ -2,10 +2,11 @@
 import sys
 import json
 import uuid
-from djangoplus.utils.aescipher import encrypt
-from djangoplus.utils.mail import send_mail
 from djangoplus.db import models
 from django.conf import settings
+from djangoplus.utils.mail import send_mail
+from djangoplus.utils.aescipher import encrypt
+from django.utils.translation import ugettext as _
 from djangoplus.decorators import action, meta, subset
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.models import ContentTypeManager
@@ -41,9 +42,9 @@ class Log(models.Model):
     content = models.TextField(verbose_name='Conteúdo', null=True)
 
     fieldsets = (
-        ('Dados Gerais', {'fields': (
-        ('content_type', 'operation'), ('user', 'date'), ('object_id', 'object_description'), 'get_tags')}),
-        ('Índices', {'relations': ('logindex_set',)}),
+        (_('General Data'), {'fields': (
+            ('content_type', 'operation'), ('user', 'date'), ('object_id', 'object_description'), 'get_tags')}),
+        (_('Indexes'), {'relations': ('logindex_set',)}),
     )
 
     objects = models.Manager()

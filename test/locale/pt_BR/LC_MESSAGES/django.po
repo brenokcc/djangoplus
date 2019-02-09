@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"POT-Creation-Date: 2019-02-09 18:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,50 +18,40 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: test/__init__.py:164
+#: test/__init__.py:114
 msgid "Username"
 msgstr "Login"
 
-#: test/__init__.py:165
+#: test/__init__.py:115
 msgid "Password"
 msgstr "Senha"
 
-#: test/utils.py:107
-msgid "The user chooses"
-msgstr "O usuário seleciona"
+#~ msgid "The user chooses"
+#~ msgstr "O usuário seleciona"
 
-#: test/utils.py:113
-msgid "The user enters"
-msgstr "O usuário informa"
+#~ msgid "The user enters"
+#~ msgstr "O usuário informa"
 
-#: test/utils.py:125
-msgid "The user access the menu"
-msgstr "O usuário acessa o menu"
+#~ msgid "The user access the menu"
+#~ msgstr "O usuário acessa o menu"
 
-#: test/utils.py:139
-msgid "The user access the system as"
-msgstr "O usuário acessa o sistema como"
+#~ msgid "The user access the system as"
+#~ msgstr "O usuário acessa o sistema como"
 
-#: test/utils.py:141
-msgid "The system displays the main page"
-msgstr "O sistema exibe a página principal"
+#~ msgid "The system displays the main page"
+#~ msgstr "O sistema exibe a página principal"
 
-#: test/utils.py:161
-msgid "The system displays previous registered records"
-msgstr "O sistema exibe os registros previamente cadastrados"
+#~ msgid "The system displays previous registered records"
+#~ msgstr "O sistema exibe os registros previamente cadastrados"
 
-#: test/utils.py:163 test/utils.py:170
-msgid "The user clicks the button"
-msgstr "O usuário clica no botão"
+#~ msgid "The user clicks the button"
+#~ msgstr "O usuário clica no botão"
 
-#: test/utils.py:164
-msgid "on the right-side of the action bar"
-msgstr "no canto superior direito da tela"
+#~ msgid "on the right-side of the action bar"
+#~ msgstr "no canto superior direito da tela"
 
-#: test/utils.py:166
-msgid "The system displays the input form"
-msgstr "O sistema exibe o formulário de cadastro"
+#~ msgid "The system displays the input form"
+#~ msgstr "O sistema exibe o formulário de cadastro"
 
-#: docs/doc.py:206
-msgid "Visualize"
-msgstr "Visualizar"
+#~ msgid "Visualize"
+#~ msgstr "Visualizar"

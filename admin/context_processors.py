@@ -5,7 +5,6 @@ from djangoplus.test import cache
 from djangoplus.cache import loader
 from djangoplus.utils import permissions
 from djangoplus.admin.models import Settings
-from djangoplus.mail.utils import should_display
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.ui.components.utils import RoleSelector
 from djangoplus.ui.components.navigation.menu import Menu

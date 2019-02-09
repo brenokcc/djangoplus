@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import datetime
-from djangoplus.ui.components import forms
 from django.contrib import auth
 from django.conf import settings
 from djangoplus.cache import loader
-from djangoplus.ui.components.navigation.breadcrumbs import httprr
+from djangoplus.ui.components import forms
 from djangoplus.utils.aescipher import encrypt
-from djangoplus.admin.models import Group, User, Unit, Settings, Organization
+from django.utils.translation import ugettext as _
 from django.contrib.auth.hashers import make_password
+from djangoplus.ui.components.navigation.breadcrumbs import httprr
+from djangoplus.admin.models import Group, User, Unit, Settings, Organization
 
 
 class LoginForm(forms.Form):
@@ -16,17 +17,16 @@ class LoginForm(forms.Form):
     ORGANIZATION = 'organization'
     UNIT = 'unit'
     
-    username = forms.CharField(label='Usuário')
-    password = forms.PasswordField(label='Senha',
-                                   help_text='Caso tenha esquecido sua senha, clique aqui para '
-                                   '<a class="popup" href="/admin/reset_password/">alterá-la</a>.')
+    username = forms.CharField(label=_('User'))
+    password = forms.PasswordField(label=_('Password'))
 
     def __init__(self, request, scope=None, organization=None, unit=None, *args, **kwargs):
         super(LoginForm, self).__init__(request, *args, **kwargs)
         self.scope = None
         self.fields['username'].widget.attrs['class'] = 'input-sm bounceIn animation-delay2'
         if scope:
-            if scope == LoginForm.ORGANIZATION or scope == (loader.organization_model and loader.organization_model.__name__.lower()):
+            if scope == LoginForm.ORGANIZATION or scope == (
+                    loader.organization_model and loader.organization_model.__name__.lower()):
                 if organization:
                     self.scope_display = organization
                 else:
@@ -52,7 +52,7 @@ class LoginForm(forms.Form):
         username = cleaned_data.get('username')
         password = cleaned_data.get('password')
         if not User.objects.filter(username=username).exists():
-            raise forms.ValidationError('Usuário não cadastrado.')
+            raise forms.ValidationError(_('User not registered.'))
         user = auth.authenticate(username=username, password=password)
         if user is not None:
             if user.active:
@@ -63,13 +63,14 @@ class LoginForm(forms.Form):
                     user.organization = cleaned_data.get('login_scope', self.organization)
                     is_organization_user = user.role_set.filter(scope__in=(user.organization, 0)).exists()
                     if not is_organization_user:
-                        raise forms.ValidationError('{} não é usuário de {}'.format(username, user.organization))
+                        raise forms.ValidationError('{} {} {}'.format(username, _('is not user of'), user.organization))
                 elif self.scope == LoginForm.UNIT:
                     user.unit = cleaned_data.get('login_scope', self.unit)
                     is_unit_user = user.role_set.filter(units__in=(user.unit, 0)).exists()
-                    is_organization_user = loader.organization_model and user.role_set.filter(scope__in=(user.unit.get_organization(), 0)).exists()
+                    is_organization_user = loader.organization_model and user.role_set.filter(
+                        scope__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:
-                        raise forms.ValidationError('{} não é usuário de {}'.format(username, user.unit))
+                        raise forms.ValidationError('{} {} {}'.format(username, _('is not user of'), user.unit))
                 else:
                     roles = user.role_set.all()
                     if roles.count() == 1:
@@ -81,13 +82,13 @@ class LoginForm(forms.Form):
                 auth.login(self.request, user)
                 return cleaned_data
             else:
-                raise forms.ValidationError('Usuário inativo.')
+                raise forms.ValidationError(_('User is inactive.'))
         else:
-            raise forms.ValidationError('Senha não confere.')
+            raise forms.ValidationError(_('Password is incorrect.'))
 
     def submit(self):
         url = self.request.GET.get('next', '/admin/')
-        return httprr(self.request, url, 'Usuário autenticado com sucesso.')
+        return httprr(self.request, url, _('You have successfully logged in.'))
 
 
 class GroupForm(forms.ModelForm):
@@ -102,14 +103,14 @@ class GroupForm(forms.ModelForm):
 
 
 class UserForm(forms.ModelForm):
-    is_superuser = forms.BooleanField(label='Superusuário', required=False)
-    new_password = forms.PasswordField(label='Senha', required=False)
+    is_superuser = forms.BooleanField(label=_('Superuser'), required=False)
+    new_password = forms.PasswordField(label=_('Password'), required=False)
 
     class Meta:
         model = User
         fields = ('username', 'name', 'active', 'email', 'is_superuser', 'photo')
-        title = 'Cadastro de Usuário'
-        submit_label = 'Cadastrar'
+        title = _('Sign-up')
+        submit_label = _('Sign-up')
         icon = 'fa-user'
 
     def __init__(self, *args, **kwargs):
@@ -117,13 +118,13 @@ class UserForm(forms.ModelForm):
         if not args[0].user.is_superuser:
             del (self.fields['is_superuser'])
             self.fieldsets = (
-                ('Identificação', {'fields': (('name', 'email',), 'photo')}),
-                ('Acesso', {'fields': (('username', 'new_password'), ('active',))}),
+                (_('Identification'), {'fields': (('name', 'email',), 'photo')}),
+                (_('Access'), {'fields': (('username', 'new_password'), ('active',))}),
             )
         else:
             self.fieldsets = (
-                ('Identificação', {'fields': (('name', 'email',), 'photo')}),
-                ('Acesso', {'fields': (('username', 'new_password'), ('active', 'is_superuser'))}),
+                (_('Identification'), {'fields': (('name', 'email',), 'photo')}),
+                (_('Access'), {'fields': (('username', 'new_password'), ('active', 'is_superuser'))}),
             )
 
     def save(self, *args, **kwargs):
@@ -134,11 +135,10 @@ class UserForm(forms.ModelForm):
 
 
 class RegisterForm(forms.Form):
-    name = forms.CharField(label='Nome', required=True)
-    email = forms.EmailField(label='E-mail', required=True)
-    new_password = forms.PasswordField(label='Senha', required=True)
-    confirm_password = forms.PasswordField(label='Senha', required=True,
-                                           help_text='Repita a senha digitada anteriormente')
+    name = forms.CharField(label=_('Name'), required=True)
+    email = forms.EmailField(label=_('E-mail'), required=True)
+    new_password = forms.PasswordField(label=_('Password'), required=True)
+    confirm_password = forms.PasswordField(label=_('Password'), required=True, help_text=_('Repeat Password'))
 
     class Meta:
         title = 'Novo Usuário'
@@ -147,16 +147,17 @@ class RegisterForm(forms.Form):
         captcha = True
 
     fieldsets = (
-        ('Dados Gerais', {'fields': ('name', 'email')}),
-        ('Senha de Acesso', {'fields': (('new_password', 'confirm_password'))}),
+        (_('User Data'), {'fields': ('name', 'email')}),
+        (_('Access Password'), {'fields': (('new_password', 'confirm_password'),)}),
     )
 
     def clean(self):
         if not self.data['new_password'] == self.data['confirm_password']:
-            raise forms.ValidationError('As senhas devem ser iguais.')
+            raise forms.ValidationError(_('The passwords must be the same.'))
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
+        create = True
         user = User()
         password = self.cleaned_data['new_password']
         user.name = self.cleaned_data['name']
@@ -168,34 +169,33 @@ class RegisterForm(forms.Form):
         user.date_joined = datetime.datetime.now()
         user.username = user.email
         user.set_password(password)
-        if True:
+        if create:
             user.save()
             return user
         else:
-            token = encrypt('{};{};{};{}'.format(user.first_name, user.last_name, user.email, password))
+            token = encrypt('{};{};{}'.format(user.name, user.email, password))
             url = '{}/admin/create_user/{}/'.format(settings.SERVER_ADDRESS, token)
-            user.email_user('Criação de Conta', 'Clique para confirmar a criação de sua conta: {}'.format(url),
-                            settings.SYSTEM_EMAIL_ADDRESS)
+            msg = '{}: {}'.format(_('Click on the link to activate your account'), url), settings.SYSTEM_EMAIL_ADDRESS
+            user.email_user(_('Account Activation'), msg)
             return None
 
 
 class ChangePasswordForm(forms.ModelForm):
-    new_password = forms.PasswordField(label='Senha', required=True)
-    confirm_password = forms.PasswordField(label='Confirmação', required=True,
-                                           help_text='Repita a senha digitada anteriormente')
+    new_password = forms.PasswordField(label=_('Password'), required=True)
+    confirm_password = forms.PasswordField(label=_('Password'), required=True, help_text=_('Repeat the password'))
 
-    fieldsets = (('Senhas', {'fields': ('new_password', 'confirm_password',)}),)
+    fieldsets = ((_('Password'), {'fields': ('new_password', 'confirm_password',)}),)
 
     class Meta:
         model = User
         fields = ('id',)
-        title = 'Alteração de Senha'
-        submit_label = 'Alterar'
+        title = _('Change Password')
+        submit_label = _('Change')
         icon = 'fa-key'
 
     def clean(self):
         if not self.data.get('new_password') == self.data.get('confirm_password'):
-            raise forms.ValidationError('As senhas devem ser iguais.')
+            raise forms.ValidationError(_('The passwords must be the same.'))
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -217,27 +217,26 @@ class RecoverPassowordForm(forms.Form):
             email=cleaned_data['email']
         )
         if qs.exists():
-            qs[0].send_access_invitation()
+            qs.first().send_access_invitation()
             return cleaned_data
         else:
-            raise forms.ValidationError('Usuário não encontrado')
+            raise forms.ValidationError(_('User not found.'))
 
 
 class ProfileForm(forms.ModelForm):
-    new_password = forms.PasswordField(label='Senha', required=False)
-    confirm_password = forms.PasswordField(label='Confirmação', required=False,
-                                           help_text='Repita a senha digitada anteriormente')
+    new_password = forms.PasswordField(label=_('Password'), required=False)
+    confirm_password = forms.PasswordField(label=_('Password'), required=False, help_text=_('Repeat the password'))
 
     class Meta:
         model = User
         fields = ('name', 'photo', 'username', 'email')
-        title = 'Atualização de Perfil'
-        submit_label = 'Atualizar Perfil'
+        title = _('Update Profile')
+        submit_label = _('Update')
         icon = 'fa-user'
 
     fieldsets = (
-        ('Dados do Usuário', {'fields': (('name', 'username'), 'email', 'photo')}),
-        ('Senha de Acesso', {'fields': (('new_password', 'confirm_password'),)}),
+        (_('User Data'), {'fields': (('name', 'username'), 'email', 'photo')}),
+        (_('Access Password'), {'fields': (('new_password', 'confirm_password'),)}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -246,7 +245,7 @@ class ProfileForm(forms.ModelForm):
 
     def clean_confirm_password(self):
         if not self.data.get('new_password') == self.data.get('confirm_password'):
-            raise forms.ValidationError('As senhas devem ser iguais.')
+            raise forms.ValidationError(_('The passwords must be the same.'))
         return self.cleaned_data
 
     def save(self, *args, **kwargs):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-17 09:03-0300\n"
+"POT-Creation-Date: 2019-02-09 18:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,19 +18,144 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: admin/templates/admin.html:105
-msgid "Edit Profile"
-msgstr "Editar Perfil"
+#: admin/forms.py:20
+#, fuzzy
+#| msgid "Username"
+msgid "User"
+msgstr "Login"
 
-#: admin/templates/admin.html:106
+#: admin/forms.py:21 admin/forms.py:107 admin/forms.py:140 admin/forms.py:141
+#: admin/forms.py:184 admin/forms.py:185 admin/forms.py:187 admin/forms.py:227
+#: admin/forms.py:228 admin/templates/login/login.html:35
+#: admin/templates/login/password.html:11
+msgid "Password"
+msgstr "Senha"
+
+#: admin/forms.py:55
+msgid "User not registered."
+msgstr "Usuário não cadastrado."
+
+#: admin/forms.py:66 admin/forms.py:73
+msgid "is not user of"
+msgstr "não é usuário de"
+
+#: admin/forms.py:85
+msgid "User is inactive."
+msgstr "Usuário inativo."
+
+#: admin/forms.py:87
+msgid "Password is incorrect."
+msgstr "Senha não confere."
+
+#: admin/forms.py:91 admin/views.py:112
+msgid "You have successfully logged in."
+msgstr "Usuário cadastrado com sucesso."
+
+#: admin/forms.py:106
+msgid "Superuser"
+msgstr "Superusuário"
+
+#: admin/forms.py:112 admin/forms.py:113 admin/templates/login/login.html:53
+#, fuzzy
+#| msgid "Sign-in"
+msgid "Sign-up"
+msgstr "Acessar"
+
+#: admin/forms.py:121 admin/forms.py:126
+msgid "Identification"
+msgstr "Identificação"
+
+#: admin/forms.py:122 admin/forms.py:127
+msgid "Access"
+msgstr "Acesso"
+
+#: admin/forms.py:138
+msgid "Name"
+msgstr "Nome"
+
+#: admin/forms.py:139
+msgid "E-mail"
+msgstr "E-mail"
+
+#: admin/forms.py:141
+#, fuzzy
+#| msgid "Password"
+msgid "Repeat Password"
+msgstr "Senha"
+
+#: admin/forms.py:150 admin/forms.py:238
+msgid "User Data"
+msgstr "Dados Gerais"
+
+#: admin/forms.py:151 admin/forms.py:239
+#, fuzzy
+#| msgid "Password"
+msgid "Access Password"
+msgstr "Senha"
+
+#: admin/forms.py:156 admin/forms.py:198 admin/forms.py:248
+msgid "The passwords must be the same."
+msgstr "As senhas devem ser iguais."
+
+#: admin/forms.py:178
+msgid "Click on the link to activate your account"
+msgstr "Clique para confirmar a criação de sua conta"
+
+#: admin/forms.py:179
+msgid "Account Activation"
+msgstr "Criação de Conta"
+
+#: admin/forms.py:185 admin/forms.py:228
+msgid "Repeat the password"
+msgstr "Repita a senha digitada anteriormente"
+
+#: admin/forms.py:192 admin/views.py:67 admin/views.py:69
 msgid "Change Password"
 msgstr "Alterar Senha"
 
-#: admin/templates/admin.html:108
+#: admin/forms.py:193
+msgid "Change"
+msgstr "Alterar"
+
+#: admin/forms.py:223
+msgid "User not found."
+msgstr "Usuário não encontrado."
+
+#: admin/forms.py:233
+#, fuzzy
+#| msgid "Edit Profile"
+msgid "Update Profile"
+msgstr "Atualizar Perfil"
+
+#: admin/forms.py:234
+msgid "Update"
+msgstr "Atualizar"
+
+#: admin/models.py:45
+msgid "General Data"
+msgstr "Dados Gerais"
+
+#: admin/models.py:47
+msgid "Indexes"
+msgstr "Índices"
+
+#: admin/templates/admin.html:111
+msgid "Photo"
+msgstr "Foto"
+
+#: admin/templates/admin.html:111
+msgid "of"
+msgstr "de"
+
+#: admin/templates/admin.html:116
+msgid "Edit Profile"
+msgstr "Editar Perfil"
+
+#: admin/templates/admin.html:118
 msgid "Settings"
 msgstr "Configurações"
 
-#: admin/templates/admin.html:117
+#: admin/templates/admin.html:139 admin/views.py:52
 msgid "Logout"
 msgstr "Sair"
 
@@ -51,92 +176,119 @@ msgstr "NÃO"
 msgid "result in the exclusion of any other information in the system."
 msgstr "resultará na exclusão de nenhuma informação relacionada."
 
-#: admin/templates/login.html:25
-msgid "Sign-in Form"
-msgstr "Acesso ao Sistema"
-
-#: admin/templates/login.html:56
+#: admin/templates/login/login.html:30
 msgid "Username"
 msgstr "Login"
 
-#: admin/templates/login.html:61
-msgid "Password"
-msgstr "Senha"
-
-#: admin/templates/login.html:70
+#: admin/templates/login/login.html:44
 msgid "Remember"
 msgstr "Lembre-me"
 
-#: admin/templates/login.html:83
+#: admin/templates/login/login.html:51 admin/templates/login/password.html:25
 msgid "Sign-in"
 msgstr "Acessar"
 
-#: admin/templates/login.html:85
+#: admin/templates/login/recover.html:21
+msgid "Reset Password"
+msgstr "Recuperar Senha"
+
+#: admin/views.py:20
+msgid "Public"
+msgstr "Público"
+
+#: admin/views.py:28
+msgid "Main"
+msgstr "Principal"
+
+#: admin/views.py:34
+#, fuzzy
+#| msgid "Systemic Users"
+msgid "System Access"
+msgstr "Usuários Sistêmicos"
+
+#: admin/views.py:59
+msgid "You have successfully logged out."
+msgstr "Sessão encerrada com sucesso."
+
+#: admin/views.py:74
+msgid "Your password has been successfully changed."
+msgstr "Sua senha foi alterada com sucesso."
+
+#: admin/views.py:78 admin/views.py:80
+#, fuzzy
+#| msgid "Password"
+msgid "Recover Password"
+msgstr "Recuperar Senha"
+
+#: admin/views.py:83
+msgid "Click on the link sent to your e-mail to reset your password."
+msgstr "Clique no link enviado para seu e-mail para redefinir sua senha."
+
+#: admin/views.py:88 admin/views.py:121 admin/views.py:122
 msgid "Register"
 msgstr "Cadastrar"
 
-#~ msgid "Documentation"
-#~ msgstr "Documentação"
+#: admin/views.py:99
+msgid "Sign-up not enabled."
+msgstr "O cadastrado externo não está habilitado."
 
-#~ msgid "This document describes the actors and funcionalities of the system"
-#~ msgstr "Este documento descreve os atores e funcionalidades do sistema"
+#: admin/views.py:127
+msgid "Used to access the system"
+msgstr "Utilizado para acessar o sistema"
 
-#~ msgid "Actors"
-#~ msgstr "Atores"
+#: admin/views.py:140
+msgid "You were successfully registered."
+msgstr "Usuário cadastrado com sucesso."
 
-#~ msgid "Group"
-#~ msgstr "Grupo"
+#: admin/views.py:144
+msgid "An e-mail will be sent to you as soon as your account is activated."
+msgstr "Um e-mail será enviado para você tão logo sua conta seja ativada."
 
-#~ msgid "Description"
-#~ msgstr "Descrição"
+#: admin/views.py:148
+msgid "User successfully registered."
+msgstr "Usuário cadastrado com sucesso."
 
-#~ msgid "Scope"
-#~ msgstr "Escopo"
+#: admin/views.py:150
+msgid "Click on the link sent to your e-mail to have you account activated."
+msgstr "Clique no link enviado para seu e-mail para confirmar a criação da sua conta."
 
-#~ msgid "Superuser"
-#~ msgstr "Superusuário"
+#: admin/views.py:154
+#, fuzzy
+#| msgid "Edit Profile"
+msgid "Profile"
+msgstr "Editar Perfil"
 
-#~ msgid "Functionalities"
-#~ msgstr "Funcionalidades"
+#: admin/views.py:159
+msgid "Profile successfully updated."
+msgstr "Perfil atualizado com sucesso."
 
-#~ msgid "Business Rules"
-#~ msgstr "Regras de Negócio"
+#: admin/views.py:163
+msgid "Configure"
+msgstr "Configuração"
 
-#~ msgid "Name"
-#~ msgstr "Nome"
+#: admin/views.py:166
+msgid "You do not have permission to access this page!"
+msgstr "Você não tem permissão para acessa essa página!"
 
-#~ msgid "Other Functionalities"
-#~ msgstr "Outras Funcionalidades"
+#: admin/views.py:171
+msgid "Configuration successfully updated."
+msgstr "Configuração salva com sucesso."
 
-#~ msgid "Note"
-#~ msgstr "Nota"
+#: admin/views.py:175
+msgid "Sidebar"
+msgstr "Painel Lateral"
 
-#~ msgid "Please correct the errors below"
-#~ msgstr "Por favor, corrija os erros abaixo"
+#: admin/views.py:185
+msgid "Login as User"
+msgstr "Acessar como Usuário"
 
-#~ msgid "Cancel"
-#~ msgstr "Cancelar"
+#: admin/views.py:190
+msgid "User successfully authenticated."
+msgstr "Usuário autenticado com sucesso"
 
-#~ msgid "Systemic Users"
-#~ msgstr "Usuários Sistêmicos"
+#: admin/views.py:193
+#, fuzzy
+#| msgid "E-mail"
+msgid "View E-mails"
+msgstr "E-mail"
 
-#~ msgid "Organization's Users"
-#~ msgstr "Usuários da Organização"
-
-#~ msgid "E-mail"
-#~ msgstr "E-mail"
-
-#~ msgid "Phones"
-#~ msgstr "Telefones"
-
-#~ msgid "Address"
-#~ msgstr "Endereço"
-
-#~ msgid "Page"
-#~ msgstr "Página"
-
-#~ msgid "of"
-#~ msgstr "de"
-
-#~ msgid "Systemic"
-#~ msgstr "Sistêmico"

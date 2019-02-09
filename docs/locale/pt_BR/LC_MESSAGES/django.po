@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-10-17 21:15-0300\n"
+"POT-Creation-Date: 2019-02-09 18:42-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,300 +18,299 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: __init__.py:45 usecase.py:72 usecase.py:126
+#: docs/__init__.py:45 docs/usecase.py:72
 msgid "Access"
 msgstr "Acessar"
 
-#: diagrams.py:26 templates/doc.html:136 usecase.py:315 usecase.py:537
+#: docs/diagrams.py:26 docs/templates/doc.html:136 docs/usecase.py:326
+#: docs/usecase.py:560
 msgid "Superuser"
 msgstr "Superusuário"
 
-#: diagrams.py:27
+#: docs/diagrams.py:27
 msgid "Acessar como"
 msgstr "Acessar como"
 
-#: diagrams.py:31 usecase.py:342 usecase.py:350 usecase.py:482 usecase.py:495
+#: docs/diagrams.py:31 docs/usecase.py:356 docs/usecase.py:364
+#: docs/usecase.py:502 docs/usecase.py:515
 msgid " in "
 msgstr " em "
 
-#: management/commands/documentation.py:29
+#: docs/management/commands/documentation.py:30
 msgid "Description:"
 msgstr "Descrição"
 
-#: management/commands/documentation.py:32
+#: docs/management/commands/documentation.py:33
 msgid "Actors:"
 msgstr "Atores"
 
-#: management/commands/documentation.py:36
+#: docs/management/commands/documentation.py:37
 msgid "Workflow:"
 msgstr "Fluxo:"
 
-#: management/commands/documentation.py:40
+#: docs/management/commands/documentation.py:41
 msgid "Usecases:"
 msgstr "Casos de Uso:"
 
-#: management/commands/documentation.py:45
+#: docs/management/commands/documentation.py:46
 msgid "Name"
 msgstr "Nome"
 
-#: management/commands/documentation.py:46 templates/doc.html:117
-#: templates/doc.html:195
+#: docs/management/commands/documentation.py:47 docs/templates/doc.html:117
+#: docs/templates/doc.html:195
 msgid "Description"
 msgstr "Descrição"
 
-#: management/commands/documentation.py:47 templates/doc.html:111
+#: docs/management/commands/documentation.py:48 docs/templates/doc.html:111
 msgid "Actors"
 msgstr "Atores"
 
-#: management/commands/documentation.py:48
+#: docs/management/commands/documentation.py:49
 msgid "Buniness Rules"
 msgstr "Regras de Negócio"
 
-#: management/commands/documentation.py:49
+#: docs/management/commands/documentation.py:50
 msgid "Pre-conditions"
 msgstr "Pré-condicões"
 
-#: management/commands/documentation.py:50
+#: docs/management/commands/documentation.py:51
 msgid "Post-condition"
 msgstr "Pós-condições"
 
-#: management/commands/documentation.py:51
+#: docs/management/commands/documentation.py:52
 msgid "Main-scenario"
 msgstr "Fluxo Principal"
 
-#: management/commands/documentation.py:56
+#: docs/management/commands/documentation.py:57
 msgid "Class Diagrams:"
 msgstr "Diagrama de Classes"
 
-#: management/commands/documentation.py:58
+#: docs/management/commands/documentation.py:59
 msgid "Diagram"
 msgstr "Diagrama"
 
-#: templates/doc.html:60
+#: docs/templates/doc.html:60
 msgid "Documentation"
 msgstr "Documentação"
 
-#: templates/doc.html:61
+#: docs/templates/doc.html:61
 msgid "This document describes the actors and funcionalities of the system"
 msgstr "Este documento descreve os atores e funcionalidades do sistema"
 
-#: templates/doc.html:116 templates/homologate.html:26
+#: docs/templates/doc.html:116 docs/templates/homologate.html:26
 msgid "Group"
 msgstr "Perfil"
 
-#: templates/doc.html:119
+#: docs/templates/doc.html:119
 msgid "Scope"
 msgstr "Escopo"
 
-#: templates/doc.html:168
+#: docs/templates/doc.html:168
 msgid "Use Cases"
 msgstr "Casos de Uso"
 
-#: templates/doc.html:191
+#: docs/templates/doc.html:191
 msgid "Title"
 msgstr "Título"
 
-#: templates/doc.html:199
+#: docs/templates/doc.html:199
 msgid "Primary Actor"
 msgstr "Ator Primário"
 
-#: templates/doc.html:205
+#: docs/templates/doc.html:205
 msgid "Secondary Actors"
 msgstr "Atores Secundários"
 
-#: templates/doc.html:212
+#: docs/templates/doc.html:212
 msgid "Preconditions"
 msgstr "Pré-condicões"
 
-#: templates/doc.html:219
+#: docs/templates/doc.html:219
 msgid "Business Rules"
 msgstr "Regras de Negócio"
 
-#: templates/doc.html:224
+#: docs/templates/doc.html:224
 msgid "Postconditions"
 msgstr "Pós-condições"
 
-#: templates/doc.html:228
+#: docs/templates/doc.html:228
 msgid "Main Scenario"
 msgstr "Fluxo Principal"
 
-#: templates/doc.html:234
+#: docs/templates/doc.html:234
 msgid "Extensions"
 msgstr "Fluxos Alternativos"
 
-#: templates/homologate.html:13
+#: docs/templates/homologate.html:13
 msgid "Systemic Users"
 msgstr "Usuários Sistêmicos"
 
-#: templates/homologate.html:27
+#: docs/templates/homologate.html:27
 msgid "Username"
 msgstr "Login"
 
-#: templates/homologate.html:58
+#: docs/templates/homologate.html:58
 msgid "Organization's Users"
 msgstr "Usuários da Organização"
 
-#: usecase.py:74 usecase.py:205
+#: docs/usecase.py:74 docs/usecase.py:206
 msgid "List"
 msgstr "Listar"
 
-#: usecase.py:76 usecase.py:78 usecase.py:289 usecase.py:291
+#: docs/usecase.py:76 docs/usecase.py:78 docs/usecase.py:290
+#: docs/usecase.py:291 docs/usecase.py:300 docs/usecase.py:302
 msgid "Register"
 msgstr "Cadastrar"
 
-#: usecase.py:78 usecase.py:383
+#: docs/usecase.py:78 docs/usecase.py:399
 msgid "in"
 msgstr "em"
 
-#: usecase.py:80 usecase.py:340 usecase.py:342
+#: docs/usecase.py:80 docs/usecase.py:354 docs/usecase.py:356
 msgid "Add"
 msgstr "Adicionar"
 
-#: usecase.py:97 usecase.py:126
+#: docs/usecase.py:97
 msgid "as"
 msgstr "como"
 
-#: usecase.py:111
+#: docs/usecase.py:105
 msgid "The user access the system as"
 msgstr "O usuário acessa o sistema como"
 
-#: usecase.py:113
+#: docs/usecase.py:107
 msgid "The system displays the main page"
 msgstr "O sistema exibe a página principal"
 
-#: usecase.py:130
-msgid "The user clicks on the shortcut card"
-msgstr "O usuário clica no cartão de atalho"
-
-#: usecase.py:131
-msgid "in the dashboard at main page"
-msgstr "no painel de controle na página principal"
-
-#: usecase.py:135
-msgid "The system displays the listing page"
-msgstr "O sistema exibe a página de listagem"
-
-#: usecase.py:147
-msgid "The user access the menu"
-msgstr "O usuário acessa o menu"
-
-#: usecase.py:164 usecase.py:193
-msgid "The user locates the record and clicks the visualization icon"
-msgstr "O usuário localiza o registro e clica na lupa"
-
-#: usecase.py:165 usecase.py:194
-msgid "The system displays the visualization page"
-msgstr "O sistema exibe a página de visualização"
-
-#: usecase.py:185
-msgid "The user clicks the tab"
-msgstr "O usuário clica na aba"
-
-#: usecase.py:188
+#: docs/usecase.py:125 docs/usecase.py:189
 msgid "The user looks at the painel"
 msgstr "O usuário olha para o painel"
 
-#: usecase.py:225
+#: docs/usecase.py:131
+msgid "The user clicks on the shortcut card"
+msgstr "O usuário clica no cartão de atalho"
+
+#: docs/usecase.py:132
+msgid "in the dashboard at main page"
+msgstr "no painel de controle na página principal"
+
+#: docs/usecase.py:136
+msgid "The system displays the listing page"
+msgstr "O sistema exibe a página de listagem"
+
+#: docs/usecase.py:148
+msgid "The user access the menu"
+msgstr "O usuário acessa o menu"
+
+#: docs/usecase.py:165 docs/usecase.py:194
+msgid "The user locates the record and clicks the visualization icon"
+msgstr "O usuário localiza o registro e clica na lupa"
+
+#: docs/usecase.py:166 docs/usecase.py:195
+msgid "The system displays the visualization page"
+msgstr "O sistema exibe a página de visualização"
+
+#: docs/usecase.py:186
+msgid "The user clicks the tab"
+msgstr "O usuário clica na aba"
+
+#: docs/usecase.py:226
 msgid "The user clicks the pill"
 msgstr "O usuário clica na aba"
 
-#: usecase.py:235
+#: docs/usecase.py:236
 msgid "The system displays the registered records"
 msgstr "O sistema exibe os registros cadastrados"
 
-#: usecase.py:250
+#: docs/usecase.py:251
 msgid "The user optionally performs a search by"
 msgstr "O usuário opcionalmente busca por"
 
-#: usecase.py:255
+#: docs/usecase.py:256
 msgid "The user optionally filter the records by"
 msgstr "O usuário opcionalmente filtra os registros por"
 
-#: usecase.py:258
+#: docs/usecase.py:259
 msgid "The system displays"
 msgstr "O sistema exibe"
 
-#: usecase.py:259
+#: docs/usecase.py:260
 msgid "of previous registered records"
 msgstr "os registros previamente cadastrados"
 
-#: usecase.py:267
+#: docs/usecase.py:275
 msgid "The user access login page"
 msgstr "O usuário acessa a página de login"
 
-#: usecase.py:271
+#: docs/usecase.py:279
 msgid "The user clicks the link"
 msgstr "O usuário clica no link"
 
-#: usecase.py:272 usecase.py:273 usecase.py:280
+#: docs/usecase.py:280 docs/usecase.py:281
 msgid "Sign-up"
 msgstr "Cadastrar-se"
 
-#: usecase.py:278 usecase.py:326 usecase.py:333 usecase.py:395 usecase.py:405
-#: usecase.py:511 usecase.py:522 usecase.py:540 usecase.py:545
+#: docs/usecase.py:283 docs/usecase.py:413 docs/usecase.py:536
+msgid "The system displays a popup window"
+msgstr "O sistema exibte uma janela pop-up"
+
+#: docs/usecase.py:289 docs/usecase.py:340 docs/usecase.py:347
+#: docs/usecase.py:411 docs/usecase.py:421 docs/usecase.py:534
+#: docs/usecase.py:545 docs/usecase.py:563 docs/usecase.py:568
 msgid "The user clicks the button"
 msgstr "O usuário clica no botão"
 
-#: usecase.py:296
+#: docs/usecase.py:307
 msgid "Add new records of"
 msgstr "Insere novos registros de"
 
-#: usecase.py:296
+#: docs/usecase.py:307
 msgid "in the system"
 msgstr "no sistema"
 
-#: usecase.py:298
+#: docs/usecase.py:309
 msgid "The record will be successfully registered in the system"
 msgstr "O registro estará devidamente cadastrado no sistema"
 
-#: usecase.py:306
+#: docs/usecase.py:317
 msgid ""
 "The following information must have been previouly registered in the system: "
 msgstr ""
 "As seguintes informações devem ter sido previamente cadastradas no sistema:"
 
-#: usecase.py:327
+#: docs/usecase.py:341
 msgid "on the right-side of the action bar"
 msgstr "no canto superior direito da barra de ações"
 
-#: usecase.py:383
+#: docs/usecase.py:399
 msgid "add"
 msgstr "adicionar"
 
-#: usecase.py:397 usecase.py:513
-msgid "The system displays a popup window"
-msgstr "O sistema exibte uma janela pop-up"
-
-#: usecase.py:416
+#: docs/usecase.py:432
 msgid "The system displays the input form"
 msgstr "O sistema exibe o formulário"
 
-#: usecase.py:424
+#: docs/usecase.py:440
 msgid "The user looks at fieldset"
 msgstr "O usuário olha para o fieldset"
 
-#: usecase.py:466
+#: docs/usecase.py:486
 msgid "The user chooses"
 msgstr "O usuário seleciona"
 
-#: usecase.py:471
+#: docs/usecase.py:491
 msgid "The user enters"
 msgstr "O usuário informa"
 
-#: usecase.py:529
+#: docs/usecase.py:552
 msgid "Action successfully performed"
 msgstr "Ação realizada com sucesso"
 
-#: utils.py:35 utils.py:48
+#: docs/utils.py:35 docs/utils.py:48
 msgid " or "
 msgstr " ou "
 
-#: utils.py:60
+#: docs/utils.py:60
 msgid " and "
 msgstr " e "
 
-#~ msgid "Systemic"
-#~ msgstr "Sistêmico"
-
-#~ msgid "Visualize"
-#~ msgstr "Visualizar"

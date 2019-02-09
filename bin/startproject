@@ -214,9 +214,9 @@ python3 manage.py sync
 printf "
 ${GREEN}Congratulations\041\041\041${BLACK} The project was successfully started and configured. =)
 A superuser with username ${BOLD}admin${BLACK} and password ${BOLD}senha${BLACK} was created
-Type ${CYAN}cd $PROJECT_NAME${BLACK} to access project's root directory
-Type ${CYAN}runserver${BLACK} to execute the application
-Type ${CYAN}runtests${BLACK} to run the automatic tests
-Type ${CYAN}sync${BLACK} to syncronize the models with database
+Type \"${CYAN}cd $PROJECT_NAME${BLACK}\" to access project's root directory
+Type \"${CYAN}python manage.py runserver${BLACK}\" to execute the application
+Type \"${CYAN}python manage.py test${BLACK}\" to run the automatic tests
+Type \"${CYAN}python manage.py sync${BLACK}\" to syncronize the models with database
 "
 
