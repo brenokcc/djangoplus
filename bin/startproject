@@ -6,12 +6,18 @@ GREEN='\033[1;32m'
 BLACK='\033[0m'
 SECRET_KEY=$(mktemp XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX)
 
+LANGUAGE_CODE="pt-br"
+
 if [[ "$1" != "" ]]; then
     PROJECT_NAME=$1
 	mkdir -p $1
 	cd $1
 else
     PROJECT_NAME=${PWD##*/}
+fi
+
+if [[ "$2" != "" ]]; then
+    LANGUAGE_CODE=$2
 fi
 
 printf "import os
@@ -207,6 +213,8 @@ EXTRA_CSS = ['/static/css/$PROJECT_NAME.css']
 DIGITAL_OCEAN_TOKEN = ''
 DIGITAL_OCEAN_SERVER = ''
 DIGITAL_OCEAN_DOMAIN = ''
+
+LANGUAGE_CODE = '$LANGUAGE_CODE'
 
 " > $PROJECT_NAME/settings.py
 

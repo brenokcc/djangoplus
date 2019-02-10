@@ -75,9 +75,9 @@ def password(request, pk, token):
     return locals()
 
 
-@view(_('Recover Password'), login_required=False, template='login/recover.html')
-def recover(request):
-    title = _('Recover Password')
+@view(_('Reset Password'), login_required=False, template='login/reset.html')
+def reset(request):
+    title = _('Reset Password')
     form = RecoverPassowordForm(request)
     if form.is_valid():
         msg = _('Click on the link sent to your e-mail to reset your password.')
@@ -164,7 +164,7 @@ def profile(request):
 def configure(request):
     if not request.user.is_superuser:
         return httprr(request, '/', _('You do not have permission to access this page!'), 'error')
-    title = 'Configurações'
+    title = _('Settings')
     form = SettingsForm(request)
     if form.is_valid():
         form.save()
@@ -190,7 +190,7 @@ def login_as(request, pk):
     return httprr(request, '/admin/', _('User successfully authenticated.'))
 
 
-@view(_('View E-mails'))
+@view(_('View E-mails'), login_required=False)
 def emails(request):
     messages = utils.load_emails()
     return locals()

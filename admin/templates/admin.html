@@ -56,7 +56,7 @@
         <h1 class="navbar-header">
             <a href="/admin/" class="navbar-brand ajax" title="{{ settings.initials }}">
                 {% if settings.logo %}
-                    <img height="50px" src="/media/{{ settings.logo }}" alt="Logotipo de {{ settings.initials }}" />
+                    <img height="50px" src="/media/{{ settings.logo }}" alt="{% trans "Logo of" %} {{ settings.initials }}" />
                 {% else %}
                     <span>{{ settings.initials|truncatechars:17 }}</span>
                 {% endif %}
@@ -72,8 +72,8 @@
         <!-- Top Navigation: Left Menu -->
         {% if request.user.is_authenticated %}
         <ul class="nav navbar-nav navbar-left navbar-top-links">
-            <li><a class="ajax" href="/admin/" title="Principal"><i class="fa fa-home fa-fw"></i></a></li>
-            <li><a class="ajax referrer-link" href="javascript:" title="Voltar"><i class="fa fa-arrow-left fa-fw"></i></a>
+            <li><a class="ajax" href="/admin/" title="{% trans "Main" %}"><i class="fa fa-home fa-fw"></i></a></li>
+            <li><a class="ajax referrer-link" href="javascript:" title="{% trans "Back" %}"><i class="fa fa-arrow-left fa-fw"></i></a>
         </ul>
         {% endif %}
 
@@ -117,10 +117,10 @@
                                     {% if request.user.is_superuser %}
                                         <li><a class="ajax" href="/admin/configure/"><i class="fa fa-gear fa-fw"></i> {% trans "Settings" %}</a></li>
                                         <li class="divider"></li>
-                                        <li><a href="/list/admin/group/" title="Grupos" class="ajax"><i class="fa fa-users fa-fw"></i> Grupos</a></li>
-                                        <li><a href="/list/admin/permission/" title="Permissões" class="ajax"><i class="fa fa-check fa-fw"></i> Permissões</a></li>
-                                        <li><a href="/list/admin/user/" title="Usuários" class="ajax"><i class="fa fa-user-plus fa-fw"></i> Usuários</a></li>
-                                        <li><a class="ajax" href="/list/admin/log/" title="Logs"><i class="fa fa-history fa-fw"></i> Logs</a></li>
+                                        <li><a href="/list/admin/group/" title="{% trans "Groups" %}" class="ajax"><i class="fa fa-users fa-fw"></i> {% trans "Groups" %}</a></li>
+                                        <li><a href="/list/admin/permission/" title="{% trans "Permissions" %}" class="ajax"><i class="fa fa-check fa-fw"></i> {% trans "Permissions" %}</a></li>
+                                        <li><a href="/list/admin/user/" title="{% trans "Users" %}" class="ajax"><i class="fa fa-user-plus fa-fw"></i> {% trans "Users" %}</a></li>
+                                        <li><a class="ajax" href="/list/admin/log/" title="{% trans "Logs" %}"><i class="fa fa-history fa-fw"></i> {% trans "Logs" %}</a></li>
                                         <li class="divider"></li>
                                     {% endif %}
                                     </li>
@@ -192,7 +192,7 @@
                     {% if settings.email %}
                         {{ settings.email }} |
                     {% endif %}
-                    Versão {{ settings.version }}
+                    {% trans "Version" %} {{ settings.version }}
                 </div>
         </div>
     </main>

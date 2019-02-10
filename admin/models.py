@@ -31,15 +31,15 @@ class Log(models.Model):
     EDIT = 2
     DELETE = 3
 
-    OPERATION_CHOICES = [[ADD, 'Cadastro'], [EDIT, 'Edição'], [DELETE, 'Exclusão']]
+    OPERATION_CHOICES = [[ADD, _('Add')], [EDIT, _('Edit')], [DELETE, _('Delete')]]
 
-    content_type = models.ForeignKey(ContentType, verbose_name='Objeto', filter=True)
-    operation = models.IntegerField(verbose_name='Operação', choices=OPERATION_CHOICES, filter=True)
-    user = models.ForeignKey('admin.User', filter=True)
-    date = models.DateTimeField(verbose_name='Data/Hora', auto_now=True, filter=True)
-    object_id = models.IntegerField(verbose_name='Identificador', search=True)
-    object_description = models.CharField(verbose_name='Descrição do Objeto')
-    content = models.TextField(verbose_name='Conteúdo', null=True)
+    content_type = models.ForeignKey(ContentType, verbose_name=_('Content Type'), filter=True)
+    operation = models.IntegerField(verbose_name=_('Operation'), choices=OPERATION_CHOICES, filter=True)
+    user = models.ForeignKey('admin.User', filter=True, verbose_name=_('User'))
+    date = models.DateTimeField(verbose_name=_('Date/Time'), auto_now=True, filter=True)
+    object_id = models.IntegerField(verbose_name=_('Identifier'), search=True)
+    object_description = models.CharField(verbose_name=_('Object Description'))
+    content = models.TextField(verbose_name=_('Content'), null=True)
 
     fieldsets = (
         (_('General Data'), {'fields': (
@@ -50,8 +50,8 @@ class Log(models.Model):
     objects = models.Manager()
 
     class Meta:
-        verbose_name = 'Log'
-        verbose_name_plural = 'Logs'
+        verbose_name = _('Log')
+        verbose_name_plural = _('Logs')
         icon = 'fa-history'
         list_per_page = 25
 
@@ -68,7 +68,7 @@ class Log(models.Model):
         return False
 
     def get_action_description(self):
-        return ('adiciono', 'editou', 'removeu')[self.operation - 1]
+        return (_('added'), _('edited'), _('deleted'))[self.operation - 1]
 
     def get_style(self):
         return ('success', 'info', 'danger')[self.operation - 1]
@@ -89,13 +89,13 @@ class Log(models.Model):
 
 
 class LogIndex(models.Model):
-    log = models.ForeignKey(Log, verbose_name='Log', composition=True)
-    content_type = models.ForeignKey('contenttypes.ContentType', verbose_name='Dado')
-    object_id = models.IntegerField(verbose_name='Identificador', search=True)
+    log = models.ForeignKey(Log, verbose_name=_('Log'), composition=True)
+    content_type = models.ForeignKey('contenttypes.ContentType', verbose_name=_('Content Type'))
+    object_id = models.IntegerField(verbose_name=_('Identifier'), search=True)
 
     class Meta:
-        verbose_name = 'Index'
-        verbose_name_plural = 'Indexes'
+        verbose_name = _('Index')
+        verbose_name_plural = _('Indexes')
 
     def __str__(self):
         return 'Index #{}'.format(self.pk)
@@ -103,14 +103,14 @@ class LogIndex(models.Model):
 
 class Scope(models.AsciiModel):
     class Meta:
-        verbose_name = 'Scope'
-        verbose_name_plural = 'Scopes'
+        verbose_name = _('Scope')
+        verbose_name_plural = _('Scopes')
 
 
 class Organization(Scope):
     class Meta:
-        verbose_name = 'Organização'
-        verbose_name_plural = 'Organizações'
+        verbose_name = _('Organization')
+        verbose_name_plural = _('Organizations')
 
     @classmethod
     def subclass(cls):
@@ -127,8 +127,8 @@ class Organization(Scope):
 
 class Unit(Scope):
     class Meta:
-        verbose_name = 'Unidade'
-        verbose_name_plural = 'Unidades'
+        verbose_name = _('Unit')
+        verbose_name_plural = _('Units')
 
     @classmethod
     def subclass(cls):
@@ -173,8 +173,7 @@ class UserManager(DjangoUserManager):
         if not username:
             raise ValueError('The given username must be set')
         email = self.normalize_email(email)
-        user = self.model(username=username, email=email, active=True, is_superuser=is_superuser,
-                          last_login=None)
+        user = self.model(username=username, email=email, active=True, is_superuser=is_superuser, last_login=None)
         if password:
             user.set_password(password)
         user.save(using=self._db)
@@ -188,28 +187,29 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
-    name = models.CharField('Nome', max_length=30, blank=True, search=True)
-    username = models.CharField('Login', max_length=30, unique=True, search=True)
-    email = models.CharField('E-mail', max_length=75, blank=True, default='')
-    active = models.BooleanField(verbose_name='Ativo?', default=True, filter=True)
-    photo = models.ImageField(upload_to='profiles', null=True, blank=True, default='/static/images/user.png', verbose_name='Foto', exclude=True)
+    name = models.CharField(_('Name'), max_length=30, blank=True, search=True)
+    username = models.CharField(_('Username'), max_length=30, unique=True, search=True)
+    email = models.CharField(_('E-mail'), max_length=75, blank=True, default='')
+    active = models.BooleanField(verbose_name=_('Active'), default=True, filter=True)
+    photo = models.ImageField(upload_to='profiles', null=True, blank=True,
+                              default='/static/images/user.png', verbose_name=_('Photo'), exclude=True)
 
-    permission_mapping = models.JsonField(verbose_name='Mapeamento de Permissão', exclude=True, display=False)
+    permission_mapping = models.JsonField(verbose_name=_('Permissions Mapping'), exclude=True, display=False)
     objects = UserManager()
 
     fieldsets = (
-        ('Identificação', {'fields': (('name', 'email'),), 'image':'photo'}),
-        ('Acesso', {'fields': (('username', 'is_superuser'), ('active',))}),
-        ('Funções', {'relations': ('role_set',)}),
-        ('Mapeamento de Permissão', {'fields': ('permission_mapping',)}),
+        (_('Identification'), {'fields': (('name', 'email'),), 'image': 'photo'}),
+        (_('Access'), {'fields': (('username', 'is_superuser'), ('active',))}),
+        (_('Roles'), {'relations': ('role_set',)}),
+        (_('Permissions Mapping'), {'fields': ('permission_mapping',)}),
     )
 
-    class Meta():
-        verbose_name = 'Usuário'
-        verbose_name_plural = 'Usuários'
+    class Meta:
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
         list_display = 'photo', 'username', 'name', 'email', 'groups'
         add_form = 'UserForm'
-        can_admin = 'Gerenciador de Usuários'
+        can_admin = _('User Manager')
         icon = 'fa-users'
         # list_template = 'image_cards.html'
 
@@ -225,38 +225,42 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.set_password(password)
         super(User, self).save(*args, **kwargs)
         if self.is_superuser:
-            group = Group.objects.get_or_create(name='Superuser')[0]
+            group = Group.objects.get_or_create(name=_('Superuser'))[0]
             self.groups.add(group)
+        group = Group.objects.get_or_create(name=_('User'))[0]
+        self.groups.add(group)
 
     def __str__(self):
         return self.name or self.username
 
-    @action('Alterar Senha', input='ChangePasswordForm', inline=True)
+    @action(_('Change Password'), input='ChangePasswordForm', inline=True)
     def change_password(self, new_password, confirm_password):
         self.set_password(new_password)
         self.save()
 
-    @action('Enviar Convite de Acesso', inline=True, condition='email', category=None)
+    @action(_('Send Access Invitation'), inline=True, condition='email', category=None)
     def send_access_invitation(self):
         self.send_access_invitation_for_group(None)
 
     def send_access_invitation_for_group(self, group):
         project_name = Settings.default().initials
-        subject = 'Acesso ao Sistema - "{}"'.format(project_name)
+        subject = '{} - "{}"'.format(_('System Access'), project_name)
         if group:
-            message = '''Você foi cadastrado no sistema <b>{}</b> como <b>{}</b>.
-                Caso já seja um usuário, clique no botão "Acessar agora!" para acessar o sistema.
-                Caso nunca tenha acessado o sistema, clique no botão "Definir senha!" para informar sua senha de acesso.
-            '''.format(project_name, group)
+            extra = _('''If you are already a user, click on the button "Access now!" to authenticate.
+                Otherwise, click on the button "Define password!" to provide your access password.''')
+            message = '''{} <b>{}</b> {} <b>{}</b>.
+                {}
+            '''.format(_('You were registered in the system.'), project_name, _(' as '), group, extra)
             actions = [
-                ('Acessar agora!', '/admin/'),
-                ('Definir senha!', '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))
+                (_('Access now!'), '/admin/'),
+                (_('Define password!'), '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))
             ]
         else:
-            message = '''Você foi cadastrado no sistema <b>{}</b>.
-                Para (re)definir sua senha de acesso, clique no botão abaixo.
-            '''.format(project_name)
-            actions = [('Acessar agora!', '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
+            extra = _('Click on the button bellow to (re)define your password.')
+            message = '''{} <b>{}</b>.
+                {}.
+            '''.format(_('You were registered in the system'), project_name, extra)
+            actions = [(_('Access now!'), '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
         send_mail(subject, message, self.email, actions=actions)
 
     def units(self, group_name=None):
@@ -292,7 +296,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             else:
                 role_username = get_metadata(field.remote_field.model, 'role_username')
                 if role_username:
-                    role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(lookup, role_username)
+                    role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(
+                        lookup, role_username)
                 for subclass in field.remote_field.model.__subclasses__():
                     role_username = get_metadata(subclass, 'role_username')
                     if role_username:
@@ -380,13 +385,15 @@ class User(AbstractBaseUser, PermissionsMixin):
                     if type(obj) in loader.permissions_by_scope:
                         can_view = group_name in loader.permissions_by_scope[type(obj)].get('add', [])
                         can_view_by_unit = group_name in loader.permissions_by_scope[type(obj)].get('add_by_unit', [])
-                        can_view_by_organization = group_name in loader.permissions_by_scope[type(obj)].get('add_by_organization', [])
+                        can_view_by_organization = group_name in loader.permissions_by_scope[type(obj)].get(
+                            'add_by_organization', [])
 
                 if (can_view or can_view_by_role or can_view_by_unit or can_view_by_organization) is False:
                     can_view = group_name in loader.permissions_by_scope[model].get('view', [])
                     can_view_by_role = group_name in loader.permissions_by_scope[model].get('view_by_role', [])
                     can_view_by_unit = group_name in loader.permissions_by_scope[model].get('view_by_unit', [])
-                    can_view_by_organization = group_name in loader.permissions_by_scope[model].get('view_by_organization', [])
+                    can_view_by_organization = group_name in loader.permissions_by_scope[model].get(
+                        'view_by_organization', [])
 
                 if can_view:
                     can_view_globally = True
@@ -406,7 +413,8 @@ class User(AbstractBaseUser, PermissionsMixin):
                 can_edit = group_name in loader.permissions_by_scope[model].get('edit', [])
                 can_edit_by_role = group_name in loader.permissions_by_scope[model].get('edit_by_role', [])
                 can_edit_by_unit = group_name in loader.permissions_by_scope[model].get('edit_by_unit', [])
-                can_edit_by_organization = group_name in loader.permissions_by_scope[model].get('edit_by_organization', [])
+                can_edit_by_organization = group_name in loader.permissions_by_scope[model].get(
+                    'edit_by_organization', [])
 
                 if can_edit:
                     can_edit_globally = True
@@ -424,7 +432,8 @@ class User(AbstractBaseUser, PermissionsMixin):
                 can_delete = group_name in loader.permissions_by_scope[model].get('delete', [])
                 can_delete_by_role = group_name in loader.permissions_by_scope[model].get('delete_by_role', [])
                 can_delete_by_unit = group_name in loader.permissions_by_scope[model].get('delete_by_unit', [])
-                can_delete_by_organization = group_name in loader.permissions_by_scope[model].get('delete_by_organization', [])
+                can_delete_by_organization = group_name in loader.permissions_by_scope[model].get(
+                    'delete_by_organization', [])
 
                 if can_delete:
                     can_delete_globally = True
@@ -444,10 +453,14 @@ class User(AbstractBaseUser, PermissionsMixin):
                         for key in list(actions_dict[model][category].keys()):
                             execute_lookups = []
                             view_name = actions_dict[model][category][key]['view_name']
-                            can_execute = group_name in loader.permissions_by_scope[model].get('{}'.format(view_name), [])
-                            can_execute_by_role = group_name in loader.permissions_by_scope[model].get('{}_by_role'.format(view_name), [])
-                            can_execute_by_unit = group_name in loader.permissions_by_scope[model].get('{}_by_unit'.format(view_name), [])
-                            can_execute_by_organization = group_name in loader.permissions_by_scope[model].get('{}_by_organization'.format(view_name), [])
+                            can_execute = group_name in loader.permissions_by_scope[model].get('{}'.format(
+                                view_name), [])
+                            can_execute_by_role = group_name in loader.permissions_by_scope[model].get(
+                                '{}_by_role'.format(view_name), [])
+                            can_execute_by_unit = group_name in loader.permissions_by_scope[model].get(
+                                '{}_by_unit'.format(view_name), [])
+                            can_execute_by_organization = group_name in loader.permissions_by_scope[model].get(
+                                '{}_by_organization'.format(view_name), [])
                             if can_execute:
                                 execute_lookups = None
                             else:
@@ -476,8 +489,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             if model in loader.permissions_by_scope:
                 if loader.permissions_by_scope[model].get('{}_by_unit'.format(codename)) and not unit_lookups:
                     raise Exception('A "lookup" meta-attribute must point to a Unit model in {}'.format(model))
-                if loader.permissions_by_scope[model].get('{}_by_organization'.format(codename)) and (not organization_lookups and not unit_lookups):
-                    raise Exception('A "lookup" meta-attribute must point to a Unit or Organization model in {}'.format(model))
+                if loader.permissions_by_scope[model].get('{}_by_organization'.format(codename)) and (
+                        not organization_lookups and not unit_lookups):
+                    raise Exception('A "lookup" meta-attribute must point to a Unit or Organization model in {}'.format(
+                        model))
                 if loader.permissions_by_scope[model].get('{}_by_role'.format(codename)) and not role_lookups:
                     raise Exception('A "lookup" meta-attribute must point to a role model in {}'.format(model))
 
@@ -486,7 +501,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         return self.permission_mapping[permission_mapping_key]
 
-    # gieve a set of group or permission names, this method returns the groups the user belongs to
+    # given a set of group or permission names, this method returns the groups the user belongs to
     def find_groups(self, perm_or_group, exclude=None):
         qs = self.groups.all()
         if perm_or_group:
@@ -517,21 +532,21 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class Role(models.Model):
-    user = models.ForeignKey('admin.User', verbose_name='Usuário', composition=True)
-    group = models.ForeignKey('admin.Group', verbose_name='Grupo')
-    scope = models.ForeignKey('admin.Scope', verbose_name='Scope', null=True, blank=True)
-    active = models.BooleanField(verbose_name='Active', default=True)
+    user = models.ForeignKey('admin.User', verbose_name=_('User'), composition=True)
+    group = models.ForeignKey('admin.Group', verbose_name=_('Group'))
+    scope = models.ForeignKey('admin.Scope', verbose_name=_('Scope'), null=True, blank=True)
+    active = models.BooleanField(verbose_name=_('Active'), default=True)
     fieldsets = (
-        ('Dados Gerais', {'fields': ('user', 'group')}),
-        ('Scope', {'fields': ('scope', 'active')}),
+        (_('General Data'), {'fields': ('user', 'group')}),
+        (_('Scope'), {'fields': ('scope', 'active')}),
     )
 
     objects = models.Manager()
 
     class Meta:
-        verbose_name = 'Função'
-        verbose_name_plural = 'Funções'
-        can_admin = 'Gerenciador de Usuários'
+        verbose_name = _('Role')
+        verbose_name_plural = _('Roles')
+        can_admin = _('User Manager')
 
     def save(self, *args, **kwargs):
         super(Role, self).save(*args, **kwargs)
@@ -558,34 +573,35 @@ class PermissionManager(models.Manager):
 
 class Permission(Permission):
     class Meta:
-        verbose_name = 'Permissão'
-        verbose_name_plural = 'Permissões'
+        verbose_name = _('Permission')
+        verbose_name_plural = _('Permissions')
         proxy = True
         icon = 'fa-check'
 
     fieldsets = (
-        ('Dados Gerais', {'fields': ('name',)}),
-        ('Usuários', {'relations': ('user_set',)}),
+        (_('General Data'), {'fields': ('name',)}),
+        (_('Users'), {'relations': ('user_set',)}),
     )
 
     objects = PermissionManager()
 
-setattr(Permission._meta, 'search_fields', ['codename', 'name'])
-setattr(Permission._meta, 'list_filter', ['content_type'])
+
+setattr(getattr(Permission, '_meta'), 'search_fields', ['codename', 'name'])
+setattr(getattr(Permission, '_meta'), 'list_filter', ['content_type'])
 
 
 class Group(Group):
     class Meta:
-        verbose_name = 'Grupo'
-        verbose_name_plural = 'Grupos'
+        verbose_name = _('Group')
+        verbose_name_plural = _('Groups')
         proxy = True
         icon = 'fa-users'
         add_form = 'GroupForm'
 
     fieldsets = (
-        ('Dados Gerais', {'fields': ('name',)}),
-        ('Permissões::Permissões', {'relations': ('permissions',)}),
-        ('Usuários::Usuários', {'relations': ('user_set',)}),
+        (_('General Data'), {'fields': ('name',)}),
+        ('{}::{}'.format(_('Permissions'), _('Permissions')), {'relations': ('permissions',)}),
+        ('{}::{}'.format(_('Users'), _('Users')), {'relations': ('user_set',)}),
     )
 
     objects = models.Manager()
@@ -594,46 +610,46 @@ class Group(Group):
 class Settings(models.Model):
 
     class Meta:
-        verbose_name = 'Configuração'
-        verbose_name_plural = 'Configurações'
+        verbose_name = _('Settings')
+        verbose_name_plural = _('Settings')
 
     fieldsets = (
-        ('Configuração Geral', {'fields': (('initials', 'name'), ('logo', 'logo_pdf'), ('icon', 'background'))}),
-        ('Social', {'fields': (('twitter', 'facebook'), ('google', 'pinterest'), ('linkedin', 'rss'))}),
-        ('Direitos Autorais', {'fields': ('company', ('phone_1', 'phone_2'), 'address', 'email')}),
-        ('Aparência', {'fields': ('default_color',)}),
-        ('Servidor', {'fields': (('server_address', 'system_email_address'),)}),
-        ('Versão', {'fields': ('version',)}),
+        (_('General Data'), {'fields': (('initials', 'name'), ('logo', 'logo_pdf'), ('icon', 'background'))}),
+        (_('Social Data'), {'fields': (('twitter', 'facebook'), ('google', 'pinterest'), ('linkedin', 'rss'))}),
+        (_('Copyright'), {'fields': ('company', ('phone_1', 'phone_2'), 'address', 'email')}),
+        (_('Look and Feel'), {'fields': ('default_color',)}),
+        (_('Server'), {'fields': (('server_address', 'system_email_address'),)}),
+        (_('Version'), {'fields': ('version',)}),
     )
 
     # Application
-    initials = models.CharField('Nome', default='Django+')
-    name = models.CharField('Descrição', default='Django Plus')
-    logo = models.ImageField('Logotipo', upload_to='config', null=True, blank=True, default='')
-    logo_pdf = models.ImageField('Logotipo para PDF', upload_to='config', help_text='Imagem sem fundo transparente',
+    initials = models.CharField(_('Name'), default='Django+')
+    name = models.CharField(_('Description'), default='Django Plus')
+    logo = models.ImageField(_('Logo'), upload_to='config', null=True, blank=True, default='')
+    logo_pdf = models.ImageField(_('PDF Logo'), upload_to='config', help_text=_('No-background image'),
                                  null=True, blank=True, default='')
-    icon = models.ImageField('Ícone', upload_to='config', null=True, blank=True)
+    icon = models.ImageField(_('Icon'), upload_to='config', null=True, blank=True)
     background = models.ImageField('Background', upload_to='config', default='', blank=True)
 
     # Social params
     twitter = models.CharField('Twitter', null=True, blank=True)
     facebook = models.CharField('Facebook', null=True, blank=True)
     google = models.CharField('Google', null=True, blank=True)
-    pinterest = models.CharField('pinterest', null=True, blank=True)
+    pinterest = models.CharField('Pinterest', null=True, blank=True)
     linkedin = models.CharField('Linkedin', null=True, blank=True)
     rss = models.CharField('RSS', null=True, blank=True)
 
     # Company
-    company = models.CharField('Empresa', null=True, blank=True)
-    address = models.TextField('Endereço', null=True, blank=True)
-    phone_1 = models.PhoneField('Telefone Principal', null=True, blank=True)
-    phone_2 = models.PhoneField('Telefone Secundário', null=True, blank=True)
-    email = models.CharField('E-mail', null=True, blank=True)
+    company = models.CharField(_('Company Name'), null=True, blank=True)
+    address = models.TextField(_('Address'), null=True, blank=True)
+    phone_1 = models.PhoneField(_('Primary Phome'), null=True, blank=True)
+    phone_2 = models.PhoneField(_('Secondary Phone'), null=True, blank=True)
+    email = models.CharField(_('Email'), null=True, blank=True)
 
     # Server configuration
-    version = models.CharField('Versão do Sistema', exclude=True)
-    server_address = models.CharField('Endereço de Acesso', default='http://localhost:8000')
-    system_email_address = models.CharField('E-mail de Notificação', default='no-reply@djangoplus.net')
+    version = models.CharField(_('System Version'), exclude=True)
+    server_address = models.CharField(_('Server URL'), default='http://localhost:8000')
+    system_email_address = models.CharField(_('Notificaton E-mail'), default='no-reply@djangoplus.net')
 
     @staticmethod
     def default():
@@ -641,23 +657,23 @@ class Settings(models.Model):
         if not loader.settings_instance:
             loader.settings_instance = Settings.objects.first()
         if not loader.settings_instance:
-            settings = Settings()
-            settings.initials = 'Sistema'
-            settings.name = 'Sistema de gerenciamento online, responsivo e multiplataforma'
-            settings.twitter = 'https://twitter.com/'
-            settings.facebook = 'https://www.facebook.com/'
-            settings.google = 'https://plus.google.com/'
-            settings.pinterest = 'https://www.pinterest.com/'
-            settings.linkedin = 'https://www.linkedin.com/'
-            settings.rss = 'https://www.rss.com/'
-            settings.company = ''
-            settings.address = ''
-            settings.phone_1 = ''
-            settings.phone_2 = ''
-            settings.email = ''
-            settings.version = '1.0'
-            settings.save()
-            loader.settings_instance = settings
+            s = Settings()
+            s.initials = _('System')
+            s.name = _('Online, responsive e multiplatform system')
+            s.twitter = 'https://twitter.com/'
+            s.facebook = 'https://www.facebook.com/'
+            s.google = 'https://plus.google.com/'
+            s.pinterest = 'https://www.pinterest.com/'
+            s.linkedin = 'https://www.linkedin.com/'
+            s.rss = 'https://www.rss.com/'
+            s.company = ''
+            s.address = ''
+            s.phone_1 = ''
+            s.phone_2 = ''
+            s.email = ''
+            s.version = '1.0'
+            s.save()
+            loader.settings_instance = s
         return loader.settings_instance
 
     def save(self, *args, **kwargs):

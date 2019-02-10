@@ -11,7 +11,7 @@
 {% endif %}
 
 {% if self.title and not self.inline and not self.partial %}
-    <h2>{% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}</h2>
+    <h2>{% if not self.fields.icon and self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}</h2>
 {% endif %}
 
 {% if self.has_errors %}

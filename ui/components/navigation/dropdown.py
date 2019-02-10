@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import copy
-from collections import OrderedDict
 from datetime import datetime
+from djangoplus.utils import http
+from collections import OrderedDict
 from djangoplus.ui import RequestComponent
+from django.utils.translation import ugettext as _
+from djangoplus.utils.metadata import check_condition
 from djangoplus.utils import permissions, should_add_action
 from djangoplus.utils.metadata import get_metadata, get_can_execute
-from djangoplus.utils.metadata import check_condition
-from djangoplus.utils import http
 
 
 class GroupDropDown(RequestComponent):
@@ -14,11 +15,13 @@ class GroupDropDown(RequestComponent):
         super(GroupDropDown, self).__init__('groupdropdown', request)
         self.actions = OrderedDict()
         self.mobile = http.mobile(self.request)
-        self.actions['Ações'] = []
+        self.actions[_('Actions')] = []
 
-    def add_action(self, label, url, css='popup', icon=None, category='Ações'):
+    def add_action(self, label, url, css='popup', icon=None, category=None):
+        if category is None:
+            category = _('Actions')
         if self.mobile:
-            category = 'Ações'
+            category = _('Actions')
         if category not in self.actions:
             self.actions[category] = []
         item = dict(label=label, url=url, css=css, icon=icon)
@@ -60,7 +63,9 @@ class ModelDropDown(GroupDropDown):
             if category not in self.actions:
                 self.actions[category] = []
 
-    def add_action(self, label, url, css='popup', icon=None, category='Ações'):
+    def add_action(self, label, url, css='popup', icon=None, category=None):
+        if category is None:
+            category = _('Actions')
         if category not in self.actions:
             self.actions[category] = []
         if self.obj:

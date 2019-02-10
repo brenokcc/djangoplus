@@ -5,9 +5,11 @@ from djangoplus.test import cache
 from djangoplus.cache import loader
 from djangoplus.utils import permissions
 from djangoplus.admin.models import Settings
+from djangoplus.mail.utils import should_display
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.ui.components.utils import RoleSelector
 from djangoplus.ui.components.navigation.menu import Menu
+
 
 
 def context_processor(request):
@@ -47,7 +49,7 @@ def context_processor(request):
         settings=app_settings,
         menu=menu,
         alerts=alerts,
-        display_emails=False,  # not executing_tests and should_display(),
+        display_emails=settings.DEBUG and False and not executing_tests and should_display(),
         display_fake_mouse=cache.RECORD,
         executing_tests=executing_tests
     )

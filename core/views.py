@@ -3,25 +3,25 @@ import traceback
 from django.apps import apps
 from django.conf import settings
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
-
 from djangoplus.cache import loader
 from django.http import HttpResponse
 from django.views.static import serve
-from djangoplus.utils.storage import dropbox
-from djangoplus.ui import ComponentHasResponseException
 from djangoplus.utils import permissions
-from djangoplus.ui.components.panel import ModelPanel
-from djangoplus.ui.components.navigation.breadcrumbs import httprr
+from django.http import HttpResponseRedirect
+from djangoplus.utils.storage import dropbox
 from django.template import Template, Context
-from djangoplus.ui.components.paginator import Paginator
-from django.views.defaults import page_not_found, server_error
+from django.views.defaults import page_not_found
+from django.utils.translation import ugettext as _
 from django.core.exceptions import ValidationError
+from djangoplus.ui.components.forms import factory
+from djangoplus.ui.components.panel import ModelPanel
 from django.http.response import HttpResponseForbidden
+from djangoplus.ui import ComponentHasResponseException
+from djangoplus.ui.components.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
-from djangoplus.utils.metadata import list_related_objects, \
-    is_many_to_many, is_one_to_one, get_metadata, check_condition, is_one_to_many, getattr2, is_one_to_many_reverse
-from djangoplus.ui.components.forms import factory, DEFAULT_FORM_TITLE, DEFAULT_SUBMIT_LABEL
+from djangoplus.ui.components.navigation.breadcrumbs import httprr
+from djangoplus.utils.metadata import list_related_objects, is_many_to_many, is_one_to_one, get_metadata, \
+    check_condition, is_one_to_many, getattr2, is_one_to_many_reverse
 
 
 def listt(request, app, cls, subset=None):
@@ -60,10 +60,9 @@ def listt(request, app, cls, subset=None):
     qs = _model.objects.all(request.user)
     list_subsets = subset and [subset] or None
 
-    paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True, list_display=list_display, list_filter=list_filter, search_fields=search_fields)
+    paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True,
+                          list_display=list_display, list_filter=list_filter, search_fields=search_fields)
     paginator.process_request()
-
-
 
     paginator.add_actions()
     return render(request, 'default.html', locals())
@@ -125,10 +124,12 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
                     setattr(related_obj, rel.field.name, obj)
                     setattr(related_obj, '{}_id'.format(rel.field.name), obj.pk)
                     if related_pk:
-                        if not permissions.has_edit_permission(request, rel.related_model) or not permissions.can_edit(request, related_obj):
+                        if not permissions.has_edit_permission(
+                                request, rel.related_model) or not permissions.can_edit(request, related_obj):
                             return HttpResponseForbidden()
                     else:
-                        if not permissions.has_add_permission(request, rel.related_model) or not permissions.can_add(request, related_obj):
+                        if not permissions.has_add_permission(
+                                request, rel.related_model) or not permissions.can_add(request, related_obj):
                             return HttpResponseForbidden()
                     form = factory.get_many_to_one_form(request, obj, rel.get_accessor_name(), related_obj)
                     title = form.title
@@ -141,7 +142,7 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
             if 'select' in request.GET:
                 return HttpResponse('{}|{}|{}'.format(obj.pk, obj, request.GET['select']));
             elif related_field_name:
-                message = 'Ação realizada com sucesso'
+                message = _('Action successfully performed.')
                 url = '..'
             else:
                 message = get_metadata(form.instance.__class__, 'add_message')
@@ -149,13 +150,14 @@ def add(request, app, cls, pk=None, related_field_name=None, related_pk=None):
                     if hasattr(obj, 'get_absolute_url'):
                         url = obj.get_absolute_url()
                     else:
-                        url = '/view/{}/{}/{}/'.format(get_metadata(obj.__class__, 'app_label'), obj.__class__.__name__.lower(), obj.pk)
+                        url = '/view/{}/{}/{}/'.format(
+                            get_metadata(obj.__class__, 'app_label'), obj.__class__.__name__.lower(), obj.pk)
                 else:
                     url = '..'
                 if is_editing:
-                    message = message or 'Atualização realizada com sucesso'
+                    message = message or _('Action successfully performed.')
                 else:
-                    message = message or 'Cadastro realizado com sucesso'
+                    message = message or _('Registration successfully performed.')
             return httprr(request, url, message)
         except ValidationError as e:
             form.add_error(None, str(e.message))
@@ -195,7 +197,7 @@ def view(request, app, cls, pk, tab=None):
     log_data = get_metadata(obj.__class__, 'log', False)
     if log_data and request.user.is_superuser and request.user.has_perm('admin.list_log'):
         url = '/log/{}/{}/'.format(app, cls)
-        panel.drop_down.add_action('Visualizar Log', url, 'ajax', 'fa fa-history')
+        panel.drop_down.add_action('{} {}'.format(_('View'), _('Log')), url, 'ajax', 'fa fa-history')
 
     return render(request, 'default.html', locals())
 
@@ -229,7 +231,8 @@ def action(request, app, cls, action_name, pk=None):
     title = action_title
     redirect_to = None
 
-    if check_condition(action_condition, obj) and (not action_can_execute or permissions.check_group_or_permission(request, action_permission)):
+    if check_condition(action_condition, obj) and (
+            not action_can_execute or permissions.check_group_or_permission(request, action_permission)):
         f_return = None
         func = getattr(_model, action_function.__name__, action_function)
         form = factory.get_action_form(request, obj, form_action)
@@ -293,9 +296,9 @@ def action(request, app, cls, action_name, pk=None):
         elif redirect_to:
             return httprr(request, redirect_to, action_message)
 
-        if form.title == DEFAULT_FORM_TITLE:
+        if form.title == _('Form'):
             form.title = action_title
-        if form.submit_label == DEFAULT_SUBMIT_LABEL:
+        if form.submit_label == _('Send'):
             form.submit_label = action_title
         return render(request, 'default.html', locals())
     else:
@@ -316,13 +319,13 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
     if permissions.can_delete(request, obj):
         if related_field_name:
             getattr(obj, related_field_name).remove(related_pk)
-            return httprr(request, '..', 'Removido com sucesso')
+            return httprr(request, '..', _('Deletion successfully performed.'))
         else:
-            title = 'Excluir {}'.format(str(obj))
+            title = '{} {}'.format(_('Delete'), str(obj))
             form = factory.get_delete_form(request, obj)
             if form.is_valid():
                 obj.delete()
-                return httprr(request, '..', 'Exclusão realizada com sucesso.')
+                return httprr(request, '..', _('Action successfully performed.'))
             return render(request, 'delete.html', locals())
     else:
         return HttpResponseForbidden()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from djangoplus import cache
+from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import set_metadata, iterable
 
 
@@ -41,10 +42,10 @@ def subset(title, help_text=None, list_display=(), list_filter=None, search_fiel
     return decorate
 
 
-def action(verbose_name, help_text=None, condition=None, inline=(), icon=None, category='Ações', style='popup',
-           message='Ação realizada com sucesso.', redirect_to=None, menu=None, initial=None, choices=None, display=None,
-           input=None, usecase=None, can_execute=(), can_execute_by_organization=None, can_execute_by_unit=None,
-           can_execute_by_role=None):
+def action(verbose_name, help_text=None, condition=None, inline=(), icon=None, category=_('Actions'), style='popup',
+           message=_('Action successfully performed.'), redirect_to=None, menu=None, initial=None, choices=None,
+           display=None, input=None, usecase=None, can_execute=(), can_execute_by_organization=None,
+           can_execute_by_unit=None, can_execute_by_role=None):
     def decorate(function):
         function._action = dict(
             title=verbose_name, can_execute=iterable(can_execute), help_text=help_text,

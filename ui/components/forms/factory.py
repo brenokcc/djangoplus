@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-
+from django.apps import apps
 from django.conf import settings
 from djangoplus.ui.components import forms
-from django.apps import apps
+from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import get_metadata, find_field_by_name, list_related_objects, get_fiendly_name, getattr2
 
 
@@ -24,12 +24,12 @@ def get_register_form(request, obj):
         Form = getattr(forms_module, form_name)
     else:
         if obj.pk:
-            form_title = 'Atualização de {}'.format(str(verbose_name))
-            button_label = 'Atualizar'
+            form_title = '{} {}'.format(_('Edit'), str(verbose_name))
+            button_label = _('Save')
         else:
             add_label = get_metadata(_model, 'add_label', None)
-            form_title = add_label or 'Cadastro de {}'.format(str(verbose_name))
-            button_label = add_label or 'Cadastrar'
+            form_title = add_label or '{} {}'.format(_('Register'), str(verbose_name))
+            button_label = add_label or _('Save')
 
         class Form(forms.ModelForm):
             class Meta:
@@ -90,8 +90,9 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
         form_title = add_label
         button_label = add_label
     else:
-        action = related_obj.pk and 'Atualizar' or 'Adicionar'
-        form_title = '{} {}'.format(action, get_metadata(rel.related_model, 'verbose_name'))
+        title = _('Add ')
+        action = _('Save')
+        form_title = '{} {}'.format(title, get_metadata(rel.related_model, 'verbose_name'))
         button_label = action
     related_field_name = rel.field.name
 
@@ -173,8 +174,9 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
     related_field_model = find_field_by_name(_model, related_field_name).remote_field.model
 
     class Form(forms.ModelForm):
-        related_objects = forms.MultipleModelChoiceField(related_field_model.objects.all(),
-                                                         label=get_metadata(related_field_model, 'verbose_name'))
+        related_objects = forms.MultipleModelChoiceField(
+            related_field_model.objects.all(), label=get_metadata(related_field_model, 'verbose_name')
+        )
 
         class Meta:
             model = _model
@@ -204,8 +206,9 @@ def get_many_to_many_reverse_form(request, obj, related_field_name):
     related_field_model = field.rel.remote_field.model
 
     class Form(forms.ModelForm):
-        related_objects = forms.MultipleModelChoiceField(related_field_model.objects.all(),
-                                                         label=get_metadata(related_field_model, 'verbose_name'))
+        related_objects = forms.MultipleModelChoiceField(
+            related_field_model.objects.all(), label=get_metadata(related_field_model, 'verbose_name')
+        )
 
         class Meta:
             model = _model
@@ -328,7 +331,9 @@ def get_action_form(request, obj, action):
         for lookup in action_display:
             label = get_fiendly_name(func.__self__.__class__, lookup)
             value = getattr2(obj, lookup)
-            form.fields[lookup] = forms.CharField(label=label, initial=value, required=False, widget=forms.widgets.DisplayInput(value))
+            form.fields[lookup] = forms.CharField(
+                label=label, initial=value, required=False, widget=forms.widgets.DisplayInput(value)
+            )
 
     if action_choices:
         for field_name in action_choices:
@@ -346,7 +351,7 @@ def get_action_form(request, obj, action):
 def get_delete_form(request, obj):
     class Form(forms.Form):
         class Meta:
-            submit_label = 'Confirmar Exclusão'
+            submit_label = _('Confirm Deletion')
             submit_style = 'danger'
 
         def __init__(self, *args, **kwargs):

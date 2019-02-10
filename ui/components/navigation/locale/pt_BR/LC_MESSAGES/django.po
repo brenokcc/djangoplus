@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-09 18:42-0300\n"
+"POT-Creation-Date: 2019-02-10 13:07-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,6 +18,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+#: ui/components/navigation/dropdown.py:18
+#: ui/components/navigation/dropdown.py:22
+#: ui/components/navigation/dropdown.py:24
+#: ui/components/navigation/dropdown.py:68
+msgid "Actions"
+msgstr "Ações"
+
 #: ui/components/navigation/templates/menu.html:9
 msgid "Photo"
 msgstr "Foto"
@@ -25,4 +32,3 @@ msgstr "Foto"
 #: ui/components/navigation/templates/menu.html:9
 msgid "of"
 msgstr "de"
-

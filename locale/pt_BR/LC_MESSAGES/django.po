@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-09 18:42-0300\n"
+"POT-Creation-Date: 2019-02-10 13:07-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,6 +18,74 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+#: core/views.py:145 core/views.py:158 core/views.py:328
+#: decorators/__init__.py:46
+msgid "Action successfully performed."
+msgstr "Ação realizada com sucesso."
+
+#: core/views.py:160
+msgid "Registration successfully performed."
+msgstr "Cadastro realizado com sucesso."
+
+#: core/views.py:200 ui/components/paginator/templatetags/__init__.py:67
+#: ui/components/paginator/templatetags/__init__.py:99
+msgid "View"
+msgstr "Visualizar"
+
+#: core/views.py:200
+msgid "Log"
+msgstr "Log"
+
+#: core/views.py:299 ui/components/forms/__init__.py:41
+msgid "Form"
+msgstr "Formulário"
+
+#: core/views.py:301 ui/components/forms/__init__.py:40
+msgid "Send"
+msgstr "Enviar"
+
+#: core/views.py:322
+msgid "Deletion successfully performed."
+msgstr "Exclusão realizada com sucesso."
+
+#: core/views.py:324 ui/components/paginator/templatetags/__init__.py:87
+#: ui/components/paginator/templatetags/__init__.py:109
+msgid "Delete"
+msgstr "Excluir"
+
+#: decorators/__init__.py:45 decorators/views.py:55
+#: ui/components/paginator/templates/datagrid.html:42
+#: ui/components/paginator/templatetags/__init__.py:143
+msgid "Actions"
+msgstr "Ações"
+
+#: ui/components/forms/__init__.py:74 ui/components/forms/factory.py:28
+#: ui/components/forms/factory.py:32 ui/components/forms/factory.py:94
+msgid "Save"
+msgstr "Salvar"
+
+#: ui/components/forms/__init__.py:281 ui/components/forms/__init__.py:283
+msgid "Confirm that you are not a robot."
+msgstr "Confirme que você não é um robô."
+
+#: ui/components/forms/factory.py:27
+#: ui/components/paginator/templatetags/__init__.py:77
+#: ui/components/paginator/templatetags/__init__.py:104
+msgid "Edit"
+msgstr "Editar"
+
+#: ui/components/forms/factory.py:31
+msgid "Register"
+msgstr "Cadastrar"
+
+#: ui/components/forms/factory.py:93
+msgid "Add "
+msgstr "Adicionar "
+
+#: ui/components/forms/factory.py:354
+msgid "Confirm Deletion"
+msgstr "Confirmar Exclusão"
+
 #: ui/components/forms/templates/form.html:27
 msgid "Please correct the errors below"
 msgstr "Por favor, corrija os erros abaixo"
@@ -26,13 +94,15 @@ msgstr "Por favor, corrija os erros abaixo"
 msgid "Cancel"
 msgstr "Cancelar"
 
+#: ui/components/paginator/__init__.py:226
+#: ui/components/paginator/__init__.py:228
+#: ui/components/paginator/templatetags/__init__.py:114
+msgid "Add"
+msgstr "Cadastrar"
+
 #: ui/components/paginator/templates/datagrid.html:31
 msgid "Options"
 msgstr "Opções"
-
-#: ui/components/paginator/templates/datagrid.html:42
-msgid "Actions"
-msgstr "Ações"
 
 #: ui/components/paginator/templates/paginator.html:31
 #: ui/components/paginator/templates/paginator.html:163
@@ -62,4 +132,3 @@ msgstr "de"
 #: ui/components/utils/templates/timeline.html:22
 msgid "Not completed"
 msgstr "Pendente"
-

@@ -8,6 +8,8 @@ DEBUG_EMAIL_FILE_PATH = os.path.join(settings.MEDIA_ROOT, 'mail.json')
 
 def dump_emails(emails):
     messagens = []
+    if not os.path.exists(settings.MEDIA_ROOT):
+        os.mkdir(settings.MEDIA_ROOT)
     for message in emails:
         data = dict(
             from_email=message.from_email, to=', '.join(message.to), body=message.body,

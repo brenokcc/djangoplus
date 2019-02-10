@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from django.conf import settings
+from djangoplus.docs.views import doc
 from django.views.static import serve
+from djangoplus.core.views import cloud
 from django.conf.urls import include, url
 from djangoplus.docs.views import homologate
-from djangoplus.docs.views import doc
-from djangoplus.core.views import cloud
 
 urlpatterns = [
 

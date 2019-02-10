@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 import copy
 from django.shortcuts import render
-from djangoplus.utils import permissions, should_add_action
 from djangoplus.ui.components import forms
 from django.db.models.aggregates import Sum
 from djangoplus.utils.tabulardata import tolist
 from djangoplus.utils.formatter import normalyze
 from djangoplus.ui.components.forms import factory
 from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext as _
 from django.template.loader import render_to_string
+from djangoplus.utils import permissions, should_add_action
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.ui import RequestComponent, ComponentHasResponseException
-from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, mobile
+from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name, should_filter_or_display, getattr2
 
 
@@ -222,10 +223,11 @@ class Paginator(RequestComponent):
                 if not hasattr(instance, 'can_add') or instance.can_add():
                     if self.relation:
                         verbose_name = get_metadata(self.qs.model, 'verbose_name')
-                        add_label = get_metadata(self.qs.model, 'add_label', 'Cadastrar {}'.format(verbose_name))
+                        add_label = get_metadata(self.qs.model, 'add_label', '{} {}'.format(_('Add'), verbose_name))
                     else:
-                        add_label = get_metadata(self.qs.model, 'add_label', 'Cadastrar')
-                    self.add_action(add_label, '/add/{}/{}/'.format(app_label, self.qs.model.__name__.lower()), 'ajax', 'fa-plus')
+                        add_label = get_metadata(self.qs.model, 'add_label', _('Add'))
+                    add_url = '/add/{}/{}/'.format(app_label, self.qs.model.__name__.lower())
+                    self.add_action(add_label, add_url, 'ajax', 'fa-plus')
 
             for subclass in subclasses:
                 app = get_metadata(subclass, 'app_label')

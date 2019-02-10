@@ -2,9 +2,10 @@
 from django.shortcuts import render
 from djangoplus.utils import permissions
 from djangoplus.utils.http import PdfResponse
+from djangoplus.utils.metadata import iterable
+from django.utils.translation import ugettext as _
 from django.template.loader import render_to_string
 from django.http.response import HttpResponseRedirect
-from djangoplus.utils.metadata import iterable
 
 
 def view(verbose_name, icon=None, menu=None, login_required=True, style='ajax', template=None, shortcut=False,
@@ -51,7 +52,7 @@ def view(verbose_name, icon=None, menu=None, login_required=True, style='ajax', 
     return decorate
 
 
-def action(model, verbose_name, help_text=None, condition=None, inline=(), icon=None, category='Ações', style='ajax',
+def action(model, verbose_name, help_text=None, condition=None, inline=(), icon=None, category=_('Actions'), style='ajax',
            message='Ação realizada com sucesso.', menu=None, can_execute=(),
            can_execute_by_organization=None, can_execute_by_unit=None, can_execute_by_role=None, usecase=None):
 

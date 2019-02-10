@@ -95,8 +95,8 @@ class GroupForm(forms.ModelForm):
     name = forms.CharField(label='Name')
 
     class Meta:
-        title = 'Cadastro de Grupo'
-        submit_label = 'Cadastrar'
+        title = '{} {}'.format(_('Register'), _('Group'))
+        submit_label = _('Save')
         icon = 'fa-users'
         model = Group
         fields = ('name',)
@@ -109,8 +109,8 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('username', 'name', 'active', 'email', 'is_superuser', 'photo')
-        title = _('Sign-up')
-        submit_label = _('Sign-up')
+        title = '{} {}'.format(_('Register'), _('User'))
+        submit_label = _('Save')
         icon = 'fa-user'
 
     def __init__(self, *args, **kwargs):
@@ -182,7 +182,7 @@ class RegisterForm(forms.Form):
 
 class ChangePasswordForm(forms.ModelForm):
     new_password = forms.PasswordField(label=_('Password'), required=True)
-    confirm_password = forms.PasswordField(label=_('Password'), required=True, help_text=_('Repeat the password'))
+    confirm_password = forms.PasswordField(label=_('Confirm Password'), required=True, help_text=_('Repeat the password'))
 
     fieldsets = ((_('Password'), {'fields': ('new_password', 'confirm_password',)}),)
 
@@ -190,7 +190,7 @@ class ChangePasswordForm(forms.ModelForm):
         model = User
         fields = ('id',)
         title = _('Change Password')
-        submit_label = _('Change')
+        submit_label = _('Save')
         icon = 'fa-key'
 
     def clean(self):
@@ -225,13 +225,13 @@ class RecoverPassowordForm(forms.Form):
 
 class ProfileForm(forms.ModelForm):
     new_password = forms.PasswordField(label=_('Password'), required=False)
-    confirm_password = forms.PasswordField(label=_('Password'), required=False, help_text=_('Repeat the password'))
+    confirm_password = forms.PasswordField(label=_('Confirm Password'), required=False, help_text=_('Repeat the password'))
 
     class Meta:
         model = User
         fields = ('name', 'photo', 'username', 'email')
-        title = _('Update Profile')
-        submit_label = _('Update')
+        title = _('Edit Profile')
+        submit_label = _('Save')
         icon = 'fa-user'
 
     fieldsets = (
@@ -269,6 +269,7 @@ class ProfileForm(forms.ModelForm):
 
 class SettingsForm(forms.ModelForm):
     class Meta:
+        title = _('Settings')
         model = Settings
         exclude = ()
 

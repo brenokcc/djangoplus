@@ -2,11 +2,14 @@
 import datetime
 from decimal import Decimal
 from django import template
-from django.utils.safestring import mark_safe
-from django.template.loader import render_to_string
 from djangoplus.utils import permissions
+from django.utils.safestring import mark_safe
+from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import get_metadata
 from django.template.defaultfilters import slugify
+from django.template.loader import render_to_string
+
+
 register = template.Library()
 
 
@@ -60,8 +63,8 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_
 
     if relation:
         view_url = relation.view_url.format(obj.pk)
-        btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i><span> Visualizar</span></a>'
-        l.append(btn.format(slugify(view_url), css.format('ajax'), view_url, 'Visualizar'))
+        btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i><span> {}</span></a>'
+        l.append(btn.format(slugify(view_url), css.format('ajax'), view_url, _('View'), _('View')))
 
         if relation.edit_url:
             if relation.is_one_to_many or relation.is_many_to_many:
@@ -70,8 +73,8 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_
                 has_edit_permission = permissions.has_edit_permission(request, relation.relation_model)
             if has_edit_permission and (not hasattr(obj, 'can_edit') or obj.can_edit()):
                 edit_url = relation.edit_url.format(obj.pk)
-                btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i><span> Editar</span></a>'
-                l.append(btn.format(slugify(edit_url), css.format('popup'), edit_url, 'Editar'))
+                btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i><span> {}</span></a>'
+                l.append(btn.format(slugify(edit_url), css.format('popup'), edit_url, _('Edit'), _('Edit')))
 
         if relation.delete_url:
             if relation.is_one_to_many or relation.is_many_to_many:
@@ -80,8 +83,8 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_
                 has_delete_permission = permissions.has_delete_permission(request, relation.relation_model)
             if has_delete_permission and (not hasattr(obj, 'can_delete') or obj.can_delete()):
                 delete_url = relation.delete_url.format(obj.pk)
-                btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i><span> Excluir</span></a>'
-                l.append(btn.format(slugify(delete_url), css.format('popup'), delete_url, 'Excluir'))
+                btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i><span> {}</span></a>'
+                l.append(btn.format(slugify(delete_url), css.format('popup'), delete_url, _('Delete'), _('Delete')))
     else:
         model = type(obj)
         cls = model.__name__.lower()
@@ -92,23 +95,23 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_
             tree_index_field = obj.get_tree_index_field()
 
         view_url = hasattr(obj, 'get_absolute_url') and obj.get_absolute_url() or '/view/{}/{}/{}/'.format(app, cls, obj.pk)
-        btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i><span> Visualizar</span></a>'
-        l.append(btn.format(slugify(view_url), css.format('ajax'), view_url, 'Visualizar'))
+        btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i><span> {}</span></a>'
+        l.append(btn.format(slugify(view_url), css.format('ajax'), view_url, _('View'), _('View')))
 
         if edit and permissions.has_edit_permission(request, model) and (not hasattr(obj, 'can_edit') or obj.can_edit()):
             edit_url = '/add/{}/{}/{}/'.format(app, cls, obj.pk)
-            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i><span> Editar</span></a>'
-            l.append(btn.format(slugify(edit_url), css.format('ajax'), edit_url, 'Editar'))
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i><span> {}</span></a>'
+            l.append(btn.format(slugify(edit_url), css.format('ajax'), edit_url, _('Edit'), _('Edit')))
 
         if delete and permissions.has_delete_permission(request, model) and (not hasattr(obj, 'can_delete') or obj.can_delete()):
             delete_url = '/delete/{}/{}/{}/'.format(app, cls, obj.pk)
-            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i><span> Excluir</span></a>'
-            l.append(btn.format(slugify(delete_url), css.format('popup'), delete_url, 'Excluir'))
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-close fa-lg"></i><span> {}</span></a>'
+            l.append(btn.format(slugify(delete_url), css.format('popup'), delete_url, _('Delete'), _('Delete')))
 
         if tree_index_field:
             add_url = '/add/{}/{}/{}/{}/'.format(app, cls, obj.pk, cls)
-            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-plus fa-lg"><span> Adicionar</span></i></a>'
-            l.append(btn.format(slugify(view_url), css.format('popup'), add_url, 'Adicionar'))
+            btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-plus fa-lg"><span> {}</span></i></a>'
+            l.append(btn.format(slugify(view_url), css.format('popup'), add_url, _('Add'), _('Add')))
 
     return mark_safe(''.join(l))
 
@@ -137,7 +140,7 @@ def paginate(paginator):
 
 @register.simple_tag()
 def add_grouped_actions(paginator, obj):
-    return add_actions(paginator, obj, category='Ações')
+    return add_actions(paginator, obj, category=_('Actions'))
 
 
 @register.simple_tag()

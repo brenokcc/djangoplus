@@ -1,21 +1,23 @@
 # -*- coding: utf-8 -*-
 import copy
-import urllib
 import json
+import urllib
 from django.conf import settings
 from django.db import transaction
 from django.template import loader
-from djangoplus.ui.components.forms.fields import *
-from djangoplus.ui.components.forms import widgets
 from django import forms as django_forms
 from django.forms.forms import BoundField
 from djangoplus.templatetags import mobile
 from django.utils.html import conditional_escape
-from djangoplus.utils.metadata import get_metadata, iterable
 from django.db.models.fields import NOT_PROVIDED
+from django.utils.translation import ugettext as _
+from djangoplus.ui.components.forms import widgets
+from djangoplus.ui.components.forms.fields import *
+from djangoplus.utils.metadata import get_metadata, iterable
+
+
 ValidationError = django_forms.ValidationError
-DEFAULT_FORM_TITLE = 'Formulário'
-DEFAULT_SUBMIT_LABEL = 'Enviar'
+
 
 
 class Form(django_forms.Form):
@@ -25,7 +27,8 @@ class Form(django_forms.Form):
     def __init__(self, request, *args, **kwargs):
         metaclass = hasattr(self.__class__, 'Meta') and self.__class__.Meta or None
         self.request = request
-        self.method = kwargs.pop('method', None) or metaclass and hasattr(metaclass, 'method') and metaclass.method or 'post'
+        self.method = kwargs.pop('method', None) or metaclass and hasattr(
+            metaclass, 'method') and metaclass.method or 'post'
         self.horizontal = True
         self.id = self.__class__.__name__.lower()
         self.inline = kwargs.pop('inline', False)
@@ -34,8 +37,8 @@ class Form(django_forms.Form):
         self.str_hidden = ''
         self.inner_forms = []
         self.configured_fieldsets = []
-        self.submit_label = DEFAULT_SUBMIT_LABEL
-        self.title = DEFAULT_FORM_TITLE
+        self.submit_label = _('Send')
+        self.title = _('Form')
         self.is_inner = False
         self.captcha = False
 
@@ -61,13 +64,14 @@ class Form(django_forms.Form):
             self.note = hasattr(metaclass, 'note') and metaclass.note or ''
             self.is_inner = hasattr(metaclass, 'is_inner') and metaclass.is_inner or False
             self.horizontal = hasattr(metaclass, 'horizontal') and metaclass.horizontal or False
-            self.perm_or_group = hasattr(metaclass, 'perm_or_group') and iterable(metaclass.perm_or_group) or self.perm_or_group
+            self.perm_or_group = hasattr(metaclass, 'perm_or_group') and iterable(
+                metaclass.perm_or_group) or self.perm_or_group
             self.captcha = hasattr(metaclass, 'captcha') and metaclass.captcha or False
 
             if hasattr(metaclass, 'submit_label'):
                 self.submit_label = metaclass.submit_label
             elif hasattr(self, 'instance'):
-                self.submit_label = self.instance.pk and 'Atualizar' or 'Cadastrar'
+                self.submit_label = _('Save')
 
             self.submit_style = hasattr(metaclass, 'submit_style') and metaclass.submit_style or 'default'
             self.method = hasattr(metaclass, 'method') and metaclass.method or 'post'
@@ -99,8 +103,10 @@ class Form(django_forms.Form):
                         if role_username and self.request.user.groups.filter(name=subclass._meta.verbose_name):
                             obj = subclass.objects.get(**{role_username: self.request.user.username})
                     if obj:
-                        groups = self.request.user.find_groups(self.perm_or_group, get_metadata(obj.__class__, 'verbose_name'))
-                        # if the user is not superuser or there is only one group that allows the user to register the object
+                        groups = self.request.user.find_groups(self.perm_or_group, get_metadata(
+                            obj.__class__, 'verbose_name'))
+                        # if the user is not superuser or there is only one group that allows the user to register
+                        # the object
                         if not self.request.user.is_superuser and not groups.exists():
                             field.widget = widgets.HiddenInput(attrs={'value': obj.pk})
                             # field.widget = widgets.DisplayInput(obj)
@@ -268,12 +274,13 @@ class Form(django_forms.Form):
             if captcha_response:
                 if not self.is_inner:
                     data = dict(secret=captcha_secret, response=captcha_response)
-                    response = json.loads(urllib.request.urlopen(captcha_url, urllib.parse.urlencode(data).encode('utf-8')).read().decode('utf-8'))
+                    response = json.loads(urllib.request.urlopen(
+                        captcha_url, urllib.parse.urlencode(data).encode('utf-8')).read().decode('utf-8'))
                     print(response)
                     if not response.get('success'):
-                        raise ValidationError('Confirme que você não é um robô.')
+                        raise ValidationError(_('Confirm that you are not a robot.'))
             else:
-                raise ValidationError('Confirme que você não é um robô.')
+                raise ValidationError(_('Confirm that you are not a robot.'))
         return super(Form, self).clean(*args, **kwargs)
 
     def is_valid(self, *args, **kwargs):
@@ -350,6 +357,7 @@ class ModelForm(Form, django_forms.ModelForm):
                     else:
                         if form.instance.pk:
                             form.instance.delete()
+
 
 class ModelFormOptions(object):
     def __init__(self, options=None):
