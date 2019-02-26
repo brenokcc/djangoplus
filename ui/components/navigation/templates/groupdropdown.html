@@ -6,9 +6,9 @@
                 <div class="btn-group">
                     <!-- Dropdown Trigger -->
                     {% if self.mobile %}
-                        <button style="background-color: inherit" class="btn dropdown-toggle" data-toggle="dropdown"><span class="fa fa-ellipsis-h fa-2x"></span></button>
+                        <button style="background-color: inherit" class="{% if self.style %}{{ self.style }}{% endif %} btn dropdown-toggle" data-toggle="dropdown"><span class="fa fa-ellipsis-h fa-2x"></span></button>
                     {% else %}
-                        <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">{{ group }} <span class="caret"></span></button>
+                        <button class="{% if self.style %}{{ self.style }}{% endif %} btn btn-default dropdown-toggle" data-toggle="dropdown">{{ group }} <span class="caret"></span></button>
                     {% endif %}
                     <!-- Dropdown Structure -->
                     <ul class="dropdown-menu slidedown">

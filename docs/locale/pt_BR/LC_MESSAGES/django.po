@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-10 13:07-0300\n"
+"POT-Creation-Date: 2019-02-18 18:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,298 +18,315 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: docs/__init__.py:45 docs/usecase.py:72
+#: djangoplus/docs/__init__.py:44 djangoplus/docs/usecase.py:72
 msgid "Access"
 msgstr "Acessar"
 
-#: docs/diagrams.py:26 docs/templates/doc.html:136 docs/usecase.py:326
-#: docs/usecase.py:560
+#: djangoplus/docs/diagrams.py:26 djangoplus/docs/templates/doc.html:136
+#: djangoplus/docs/usecase.py:328 djangoplus/docs/usecase.py:563
 msgid "Superuser"
 msgstr "Superusuário"
 
-#: docs/diagrams.py:27
+#: djangoplus/docs/diagrams.py:27
 msgid "Acessar como"
 msgstr "Acessar como"
 
-#: docs/diagrams.py:31 docs/usecase.py:356 docs/usecase.py:364
-#: docs/usecase.py:502 docs/usecase.py:515
+#: djangoplus/docs/diagrams.py:31 djangoplus/docs/usecase.py:359
+#: djangoplus/docs/usecase.py:367 djangoplus/docs/usecase.py:505
+#: djangoplus/docs/usecase.py:518
 msgid " in "
 msgstr " em "
 
-#: docs/management/commands/documentation.py:30
+#: djangoplus/docs/management/commands/documentation.py:30
 msgid "Description:"
 msgstr "Descrição"
 
-#: docs/management/commands/documentation.py:33
+#: djangoplus/docs/management/commands/documentation.py:33
 msgid "Actors:"
 msgstr "Atores"
 
-#: docs/management/commands/documentation.py:37
+#: djangoplus/docs/management/commands/documentation.py:37
 msgid "Workflow:"
 msgstr "Fluxo:"
 
-#: docs/management/commands/documentation.py:41
+#: djangoplus/docs/management/commands/documentation.py:41
 msgid "Usecases:"
 msgstr "Casos de Uso:"
 
-#: docs/management/commands/documentation.py:46
+#: djangoplus/docs/management/commands/documentation.py:46
 msgid "Name"
 msgstr "Nome"
 
-#: docs/management/commands/documentation.py:47 docs/templates/doc.html:117
-#: docs/templates/doc.html:195
+#: djangoplus/docs/management/commands/documentation.py:47
+#: djangoplus/docs/templates/doc.html:117
+#: djangoplus/docs/templates/doc.html:195
 msgid "Description"
 msgstr "Descrição"
 
-#: docs/management/commands/documentation.py:48 docs/templates/doc.html:111
+#: djangoplus/docs/management/commands/documentation.py:48
+#: djangoplus/docs/templates/doc.html:111
 msgid "Actors"
 msgstr "Atores"
 
-#: docs/management/commands/documentation.py:49
+#: djangoplus/docs/management/commands/documentation.py:49
 msgid "Buniness Rules"
 msgstr "Regras de Negócio"
 
-#: docs/management/commands/documentation.py:50
+#: djangoplus/docs/management/commands/documentation.py:50
 msgid "Pre-conditions"
 msgstr "Pré-condicões"
 
-#: docs/management/commands/documentation.py:51
+#: djangoplus/docs/management/commands/documentation.py:51
 msgid "Post-condition"
 msgstr "Pós-condições"
 
-#: docs/management/commands/documentation.py:52
+#: djangoplus/docs/management/commands/documentation.py:52
 msgid "Main-scenario"
 msgstr "Fluxo Principal"
 
-#: docs/management/commands/documentation.py:57
+#: djangoplus/docs/management/commands/documentation.py:57
 msgid "Class Diagrams:"
 msgstr "Diagrama de Classes"
 
-#: docs/management/commands/documentation.py:59
+#: djangoplus/docs/management/commands/documentation.py:59
 msgid "Diagram"
 msgstr "Diagrama"
 
-#: docs/templates/doc.html:60
+#: djangoplus/docs/templates/doc.html:60
 msgid "Documentation"
 msgstr "Documentação"
 
-#: docs/templates/doc.html:61
+#: djangoplus/docs/templates/doc.html:61
 msgid "This document describes the actors and funcionalities of the system"
 msgstr "Este documento descreve os atores e funcionalidades do sistema"
 
-#: docs/templates/doc.html:116 docs/templates/homologate.html:26
+#: djangoplus/docs/templates/doc.html:116
+#: djangoplus/docs/templates/homologate.html:26
 msgid "Group"
 msgstr "Perfil"
 
-#: docs/templates/doc.html:119
+#: djangoplus/docs/templates/doc.html:119
 msgid "Scope"
 msgstr "Escopo"
 
-#: docs/templates/doc.html:168
+#: djangoplus/docs/templates/doc.html:168
 msgid "Use Cases"
 msgstr "Casos de Uso"
 
-#: docs/templates/doc.html:191
+#: djangoplus/docs/templates/doc.html:191
 msgid "Title"
 msgstr "Título"
 
-#: docs/templates/doc.html:199
+#: djangoplus/docs/templates/doc.html:199
 msgid "Primary Actor"
 msgstr "Ator Primário"
 
-#: docs/templates/doc.html:205
+#: djangoplus/docs/templates/doc.html:205
 msgid "Secondary Actors"
 msgstr "Atores Secundários"
 
-#: docs/templates/doc.html:212
+#: djangoplus/docs/templates/doc.html:212
 msgid "Preconditions"
 msgstr "Pré-condicões"
 
-#: docs/templates/doc.html:219
+#: djangoplus/docs/templates/doc.html:219
 msgid "Business Rules"
 msgstr "Regras de Negócio"
 
-#: docs/templates/doc.html:224
+#: djangoplus/docs/templates/doc.html:224
 msgid "Postconditions"
 msgstr "Pós-condições"
 
-#: docs/templates/doc.html:228
+#: djangoplus/docs/templates/doc.html:228
 msgid "Main Scenario"
 msgstr "Fluxo Principal"
 
-#: docs/templates/doc.html:234
+#: djangoplus/docs/templates/doc.html:234
 msgid "Extensions"
 msgstr "Fluxos Alternativos"
 
-#: docs/templates/homologate.html:13
+#: djangoplus/docs/templates/homologate.html:13
 msgid "Systemic Users"
 msgstr "Usuários Sistêmicos"
 
-#: docs/templates/homologate.html:27
+#: djangoplus/docs/templates/homologate.html:27
 msgid "Username"
 msgstr "Login"
 
-#: docs/templates/homologate.html:58
+#: djangoplus/docs/templates/homologate.html:58
 msgid "Organization's Users"
 msgstr "Usuários da Organização"
 
-#: docs/usecase.py:74 docs/usecase.py:206
+#: djangoplus/docs/usecase.py:74 djangoplus/docs/usecase.py:206
 msgid "List"
 msgstr "Listar"
 
-#: docs/usecase.py:76 docs/usecase.py:78 docs/usecase.py:290
-#: docs/usecase.py:291 docs/usecase.py:300 docs/usecase.py:302
+#: djangoplus/docs/usecase.py:76 djangoplus/docs/usecase.py:78
+#: djangoplus/docs/usecase.py:290 djangoplus/docs/usecase.py:291
+#: djangoplus/docs/usecase.py:301 djangoplus/docs/usecase.py:303
 msgid "Register"
 msgstr "Cadastrar"
 
-#: docs/usecase.py:78 docs/usecase.py:399
+#: djangoplus/docs/usecase.py:78 djangoplus/docs/usecase.py:402
 msgid "in"
 msgstr "em"
 
-#: docs/usecase.py:80 docs/usecase.py:354 docs/usecase.py:356
-msgid "Add"
+#: djangoplus/docs/usecase.py:80 djangoplus/docs/usecase.py:357
+#: djangoplus/docs/usecase.py:359
+msgid "Add "
 msgstr "Adicionar"
 
-#: docs/usecase.py:97
+#: djangoplus/docs/usecase.py:97
 msgid "as"
 msgstr "como"
 
-#: docs/usecase.py:105
+#: djangoplus/docs/usecase.py:105
 msgid "The user access the system as"
 msgstr "O usuário acessa o sistema como"
 
-#: docs/usecase.py:107
+#: djangoplus/docs/usecase.py:107
 msgid "The system displays the main page"
 msgstr "O sistema exibe a página principal"
 
-#: docs/usecase.py:125 docs/usecase.py:189
+#: djangoplus/docs/usecase.py:125 djangoplus/docs/usecase.py:189
 msgid "The user looks at the painel"
 msgstr "O usuário olha para o painel"
 
-#: docs/usecase.py:131
+#: djangoplus/docs/usecase.py:131
 msgid "The user clicks on the shortcut card"
 msgstr "O usuário clica no cartão de atalho"
 
-#: docs/usecase.py:132
+#: djangoplus/docs/usecase.py:132
 msgid "in the dashboard at main page"
 msgstr "no painel de controle na página principal"
 
-#: docs/usecase.py:136
+#: djangoplus/docs/usecase.py:136
 msgid "The system displays the listing page"
 msgstr "O sistema exibe a página de listagem"
 
-#: docs/usecase.py:148
+#: djangoplus/docs/usecase.py:148
 msgid "The user access the menu"
 msgstr "O usuário acessa o menu"
 
-#: docs/usecase.py:165 docs/usecase.py:194
+#: djangoplus/docs/usecase.py:165 djangoplus/docs/usecase.py:194
 msgid "The user locates the record and clicks the visualization icon"
 msgstr "O usuário localiza o registro e clica na lupa"
 
-#: docs/usecase.py:166 docs/usecase.py:195
+#: djangoplus/docs/usecase.py:166 djangoplus/docs/usecase.py:195
 msgid "The system displays the visualization page"
 msgstr "O sistema exibe a página de visualização"
 
-#: docs/usecase.py:186
+#: djangoplus/docs/usecase.py:186
 msgid "The user clicks the tab"
 msgstr "O usuário clica na aba"
 
-#: docs/usecase.py:226
+#: djangoplus/docs/usecase.py:226
 msgid "The user clicks the pill"
 msgstr "O usuário clica na aba"
 
-#: docs/usecase.py:236
+#: djangoplus/docs/usecase.py:236
 msgid "The system displays the registered records"
 msgstr "O sistema exibe os registros cadastrados"
 
-#: docs/usecase.py:251
+#: djangoplus/docs/usecase.py:251
 msgid "The user optionally performs a search by"
 msgstr "O usuário opcionalmente busca por"
 
-#: docs/usecase.py:256
+#: djangoplus/docs/usecase.py:256
 msgid "The user optionally filter the records by"
 msgstr "O usuário opcionalmente filtra os registros por"
 
-#: docs/usecase.py:259
+#: djangoplus/docs/usecase.py:259
 msgid "The system displays"
 msgstr "O sistema exibe"
 
-#: docs/usecase.py:260
+#: djangoplus/docs/usecase.py:260
 msgid "of previous registered records"
 msgstr "os registros previamente cadastrados"
 
-#: docs/usecase.py:275
+#: djangoplus/docs/usecase.py:275
 msgid "The user access login page"
 msgstr "O usuário acessa a página de login"
 
-#: docs/usecase.py:279
+#: djangoplus/docs/usecase.py:279
 msgid "The user clicks the link"
 msgstr "O usuário clica no link"
 
-#: docs/usecase.py:280 docs/usecase.py:281
+#: djangoplus/docs/usecase.py:280 djangoplus/docs/usecase.py:281
 msgid "Sign-up"
 msgstr "Cadastrar-se"
 
-#: docs/usecase.py:283 docs/usecase.py:413 docs/usecase.py:536
+#: djangoplus/docs/usecase.py:283 djangoplus/docs/usecase.py:416
+#: djangoplus/docs/usecase.py:539
 msgid "The system displays a popup window"
 msgstr "O sistema exibte uma janela pop-up"
 
-#: docs/usecase.py:289 docs/usecase.py:340 docs/usecase.py:347
-#: docs/usecase.py:411 docs/usecase.py:421 docs/usecase.py:534
-#: docs/usecase.py:545 docs/usecase.py:563 docs/usecase.py:568
+#: djangoplus/docs/usecase.py:289 djangoplus/docs/usecase.py:342
+#: djangoplus/docs/usecase.py:349 djangoplus/docs/usecase.py:414
+#: djangoplus/docs/usecase.py:425 djangoplus/docs/usecase.py:537
+#: djangoplus/docs/usecase.py:548 djangoplus/docs/usecase.py:566
+#: djangoplus/docs/usecase.py:571
 msgid "The user clicks the button"
 msgstr "O usuário clica no botão"
 
-#: docs/usecase.py:307
+#: djangoplus/docs/usecase.py:298 djangoplus/docs/usecase.py:304
+#: djangoplus/docs/usecase.py:424
+msgid "Save"
+msgstr ""
+
+#: djangoplus/docs/usecase.py:309
 msgid "Add new records of"
 msgstr "Insere novos registros de"
 
-#: docs/usecase.py:307
+#: djangoplus/docs/usecase.py:309
 msgid "in the system"
 msgstr "no sistema"
 
-#: docs/usecase.py:309
+#: djangoplus/docs/usecase.py:311
 msgid "The record will be successfully registered in the system"
 msgstr "O registro estará devidamente cadastrado no sistema"
 
-#: docs/usecase.py:317
+#: djangoplus/docs/usecase.py:319
 msgid ""
 "The following information must have been previouly registered in the system: "
 msgstr ""
 "As seguintes informações devem ter sido previamente cadastradas no sistema:"
 
-#: docs/usecase.py:341
+#: djangoplus/docs/usecase.py:343
 msgid "on the right-side of the action bar"
 msgstr "no canto superior direito da barra de ações"
 
-#: docs/usecase.py:399
+#: djangoplus/docs/usecase.py:402
 msgid "add"
 msgstr "adicionar"
 
-#: docs/usecase.py:432
+#: djangoplus/docs/usecase.py:435
 msgid "The system displays the input form"
 msgstr "O sistema exibe o formulário"
 
-#: docs/usecase.py:440
+#: djangoplus/docs/usecase.py:443
 msgid "The user looks at fieldset"
 msgstr "O usuário olha para o fieldset"
 
-#: docs/usecase.py:486
+#: djangoplus/docs/usecase.py:489
 msgid "The user chooses"
 msgstr "O usuário seleciona"
 
-#: docs/usecase.py:491
+#: djangoplus/docs/usecase.py:494
 msgid "The user enters"
 msgstr "O usuário informa"
 
-#: docs/usecase.py:552
+#: djangoplus/docs/usecase.py:555
 msgid "Action successfully performed"
 msgstr "Ação realizada com sucesso"
 
-#: docs/utils.py:35 docs/utils.py:48
+#: djangoplus/docs/utils.py:35 djangoplus/docs/utils.py:48
 msgid " or "
 msgstr " ou "
 
-#: docs/utils.py:60
+#: djangoplus/docs/utils.py:60
 msgid " and "
 msgstr " e "
+
+#~ msgid "Add"
+#~ msgstr "Adicionar"

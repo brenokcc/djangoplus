@@ -7,7 +7,8 @@ from django.template.loader import render_to_string
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.metadata import get_metadata, get_fieldsets, find_field_by_name, get_fiendly_name, \
-    check_condition, is_one_to_one, is_many_to_one, should_filter_or_display
+    check_condition, is_one_to_one, is_many_to_one, should_filter_or_display, count_parameters_names, \
+    get_role_values_for_condition
 
 
 class Panel(RequestComponent):
@@ -41,7 +42,7 @@ class ModelPanel(RequestComponent):
 
         if self.complete:
             self.drop_down = ModelDropDown(self.request, type(self.obj))
-            self.drop_down.add_actions(self.obj, fieldset_title='')
+            self.drop_down.add_actions(self.obj, fieldset='')
             if self.printable:
                 self.drop_down.add_action('Imprimir', url='?pdf={}&pk='.format(self.id), css='ajax', icon='fa-print', category='Imprimir')
         else:
@@ -62,12 +63,12 @@ class ModelPanel(RequestComponent):
             fieldset_image = info.get('image')
 
             if fieldset_actions:
-                drop_down.add_actions(self.obj, fieldset_title=title)
+                drop_down.add_actions(self.obj, fieldset=title)
 
             if 'condition' in fieldset[1]:
                 condition = fieldset[1]['condition']
                 self.obj.request = self.request
-                if not check_condition(condition, self.obj):
+                if not check_condition(self.request.user, condition, self.obj):
                     continue
 
             if '::' in title:
@@ -312,7 +313,7 @@ class DashboardPanel(RequestComponent):
 
             model = item['model']
             title = item['title']
-            function = item['function']
+            func_name = item['function']
             dashboard = item['dashboard']
             formatter = item['formatter']
             list_display = item.get('list_display')
@@ -329,7 +330,9 @@ class DashboardPanel(RequestComponent):
             for position, group_names in l:
                 if permissions.check_group_or_permission(request, group_names, ignore_superuser=True):
                     qs = model.objects.all(request.user)
-                    f_return = getattr(qs, function)()
+                    func = getattr(qs, func_name)
+                    params = get_role_values_for_condition(func, self.request.user)
+                    f_return = func(*params)
                     html = ''
 
                     if type(f_return) in (int, Decimal):
@@ -343,7 +346,7 @@ class DashboardPanel(RequestComponent):
 
                     if formatter:
                         func = loader.formatters[formatter]
-                        if len(func.__code__.co_varnames) == 1:
+                        if count_parameters_names(func) == 1:
                             html = str(func(f_return))
                         else:
                             html = str(func(f_return, request=self.request, verbose_name=title))
@@ -354,8 +357,8 @@ class DashboardPanel(RequestComponent):
                         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
                         if link:
                             title = '{} {}'.format(verbose_name_plural, title)
-                        url = '/list/{}/{}/{}/'.format(app_label, model_name, function)
-                        paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[function], url=link and url or None)
+                        url = '/list/{}/{}/{}/'.format(app_label, model_name, func_name)
+                        paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[func_name], url=link and url or None)
                         if compact:
                             paginator.column_names = paginator.column_names[0:1]
                         html = str(paginator)
@@ -364,10 +367,10 @@ class DashboardPanel(RequestComponent):
 
         for item in loader.widgets:
             if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):
-                function = item['function']
+                func = item['function']
                 position = item['position']
-                f_return = function(request)
-                html = render_to_string(['{}.html'.format(function.__name__), 'dashboard.html'], f_return, request)
+                f_return = func(request)
+                html = render_to_string(['{}.html'.format(func.__name__), 'dashboard.html'], f_return, request)
                 self.add(html, position)
 
     def add(self, component, position):

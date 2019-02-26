@@ -4,7 +4,7 @@ import json
 import uuid
 from djangoplus.db import models
 from django.conf import settings
-from djangoplus.utils.mail import send_mail
+from djangoplus.mail import send_mail
 from djangoplus.utils.aescipher import encrypt
 from django.utils.translation import ugettext as _
 from djangoplus.decorators import action, meta, subset
@@ -242,6 +242,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def send_access_invitation(self):
         self.send_access_invitation_for_group(None)
 
+    def send_reset_password_notification(self):
+        project_name = Settings.default().initials
+        subject = '{} - "{}"'.format(_('Reset Password'), project_name)
+        message = _('Click on the button bellow to (re)define your password.')
+        actions = [(_('Reset Password!'), '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
+        send_mail(subject, message, self.email, actions=actions)
+
     def send_access_invitation_for_group(self, group):
         project_name = Settings.default().initials
         subject = '{} - "{}"'.format(_('System Access'), project_name)
@@ -448,7 +455,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                         for organization_lookup in organization_lookups:
                             lookups['delete_lookups'].append((organization_lookup, organization_ids))
 
-                for actions_dict in (loader.actions, loader.class_actions):
+                for actions_dict in (loader.instance_actions, loader.queryset_actions):
                     for category in actions_dict.get(model, ()):
                         for key in list(actions_dict[model][category].keys()):
                             execute_lookups = []

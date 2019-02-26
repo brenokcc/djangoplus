@@ -93,7 +93,7 @@ from djangoplus.decorators import action
 printf "# -*- coding: utf-8 -*-
 import datetime
 from djangoplus.db import models
-from djangoplus.utils.mail import send_mail
+from djangoplus.mail import send_mail
 from django.core.exceptions import ValidationError
 from djangoplus.decorators import meta, action, subset, role
 

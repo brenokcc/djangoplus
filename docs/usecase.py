@@ -12,7 +12,7 @@ from djangoplus.db.models import fields as model_fields
 from djangoplus.ui.components.forms import factory, fields as form_fields
 from djangoplus.utils import get_fieldsets
 from djangoplus.utils.metadata import get_metadata, find_action, find_model_by_verbose_name,\
-    find_model_by_add_label, get_field, find_model_by_verbose_name_plural, find_subset_by_title
+    find_model_by_add_label, get_field, find_model_by_verbose_name_plural, find_subset_by_title, get_parameters_names
 
 
 class Actor(object):
@@ -77,7 +77,7 @@ class UseCase(object):
             self._signup(name)
         elif name.startswith(_('Register')) and _('in') not in name:
             self._register(name)
-        elif name.startswith(_('Add')):
+        elif name.startswith(_('Add ')):
             self._add(name)
         else:
             self._execute(name)
@@ -295,11 +295,13 @@ class UseCase(object):
         if model:
             verbose_name = get_metadata(model, 'verbose_name')
             button_label = get_metadata(model, 'add_label')
+            save_button_label = get_metadata(model, 'add_label', _('Save'))
             func_name = slugify(button_label).replace('-', '_')
         else:
             verbose_name = action.replace(_('Register'), '').strip()
             model = find_model_by_verbose_name(verbose_name)
             button_label = _('Register')
+            save_button_label = _('Save')
             func_name = 'cadastrar_{}'.format(model.__name__.lower())
 
         # set the attributes of the usecase
@@ -345,15 +347,16 @@ class UseCase(object):
         self._fill_out(form)
 
         interaction = _('The user clicks the button')
-        self._interactions.append('{} "{}"'.format(interaction, button_label))
-        self._test_function_code.append("        self.click_button('{}')".format(button_label))
+        self._interactions.append('{} "{}"'.format(interaction, save_button_label))
+        self._test_function_code.append("        self.click_button('{}')".format(save_button_label))
+        self._test_function_code.append("        self.click_icon('{}')".format('Principal'))
 
     def _add(self, action):
         model = None
 
-        if action.startswith(_('Add')):
+        if action.startswith(_('Add ')):
             # not add_label was defined for the related model
-            tokens = action.replace(_('Add'), '').split(_(' in '))
+            tokens = action.replace(_('Add '), '').split(_(' in '))
             verbose_name = tokens[0].strip()
             if len(tokens) > 1:
                 relation_verbose_name = tokens[1].strip()
@@ -418,10 +421,10 @@ class UseCase(object):
             form = factory.get_many_to_one_form(self._mocked_request(), model(), relation_name, related_model())
             self._fill_out(form)
 
+            save_button_label = get_metadata(related_model, 'add_label', _('Save'))
             interaction = _('The user clicks the button')
-            self._interactions.append('{} "{}"'.format(interaction, button_label))
-
-            self._test_function_code.append("        self.click_button('{}')".format(button_label))
+            self._interactions.append('{} "{}"'.format(interaction, save_button_label))
+            self._test_function_code.append("        self.click_button('{}')".format(save_button_label))
             self._test_function_code.append("        self.click_icon('{}')".format('Principal'))
         else:
             raise ValueError('Please add the {}\'s relation in the fieldsets of model {}'.format(related_model.__name__, model.__name__))
@@ -529,7 +532,7 @@ class UseCase(object):
         self._view(model, True)
         if hasattr(func, '_action'):
             button_label = func._action['title']
-            params = func.__code__.co_varnames[1:func.__code__.co_argcount]
+            params = get_parameters_names(func)
             if params:
                 interaction = _('The user clicks the button')
                 self._interactions.append('{} "{}"'.format(interaction, button_label))

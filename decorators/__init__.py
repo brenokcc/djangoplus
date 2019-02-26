@@ -18,45 +18,44 @@ def meta(verbose_name, help_text=None, formatter=None, dashboard=None, can_view=
 
 
 def subset(title, help_text=None, list_display=(), list_filter=None, search_fields=None, template=None, menu=None,
-           dashboard=None, inline=False, usecase=None, can_view=(), can_alert=(), can_notify=()):
-    def decorate(function):
-        set_metadata(function, 'type', 'subset')
-        set_metadata(function, 'tab', True)
-        set_metadata(function, 'title', title)
-        set_metadata(function, 'alert', can_alert)
-        set_metadata(function, 'notify', can_notify)
-        set_metadata(function, 'menu', menu)
-        set_metadata(function, 'help_text', help_text)
-        set_metadata(function, 'usecase', usecase)
-        set_metadata(function, 'can_view', iterable(can_view))
-        set_metadata(function, 'inline', inline)
-        set_metadata(function, 'name', function.__name__)
-        set_metadata(function, 'order', cache.next_number())
-        set_metadata(function, 'dashboard', dashboard)
-        set_metadata(function, 'list_display', list_display)
-        set_metadata(function, 'list_filter', list_filter)
-        set_metadata(function, 'search_fields', search_fields)
-        set_metadata(function, 'template', template)
-        return function
+           dashboard=None, usecase=None, can_view=(), can_alert=(), can_notify=()):
+    def decorate(func):
+        set_metadata(func, 'type', 'subset')
+        set_metadata(func, 'tab', True)
+        set_metadata(func, 'title', title)
+        set_metadata(func, 'alert', can_alert)
+        set_metadata(func, 'notify', can_notify)
+        set_metadata(func, 'menu', menu)
+        set_metadata(func, 'help_text', help_text)
+        set_metadata(func, 'usecase', usecase)
+        set_metadata(func, 'can_view', iterable(can_view))
+        set_metadata(func, 'name', func.__name__)
+        set_metadata(func, 'order', cache.next_number())
+        set_metadata(func, 'dashboard', dashboard)
+        set_metadata(func, 'list_display', list_display)
+        set_metadata(func, 'list_filter', list_filter)
+        set_metadata(func, 'search_fields', search_fields)
+        set_metadata(func, 'template', template)
+        return func
 
     return decorate
 
 
-def action(verbose_name, help_text=None, condition=None, inline=(), icon=None, category=_('Actions'), style='popup',
-           message=_('Action successfully performed.'), redirect_to=None, menu=None, initial=None, choices=None,
-           display=None, input=None, usecase=None, can_execute=(), can_execute_by_organization=None,
+def action(verbose_name, help_text=None, condition=None, inline=False, subset=(), icon=None, category=None,
+           style='popup', message=_('Action successfully performed.'), redirect_to=None, menu=None, initial=None,
+           choices=None, display=None, input=None, usecase=None, can_execute=(), can_execute_by_organization=None,
            can_execute_by_unit=None, can_execute_by_role=None):
-    def decorate(function):
-        function._action = dict(
+    def decorate(func):
+        func._action = dict(
             title=verbose_name, can_execute=iterable(can_execute), help_text=help_text,
-            input=input, group=category or verbose_name, css=style, condition=condition, view_name=function.__name__,
-            message=message, initial=initial or '{}_initial'.format(function.__name__), function=function,
-            choices=choices or '{}_choices'.format(function.__name__), inline=iterable(inline), icon=icon,
-            doc=function.__doc__, usecase=usecase, can_execute_by_organization=iterable(can_execute_by_organization),
+            input=input, group=category or verbose_name, style=style, condition=condition, view_name=func.__name__,
+            message=message, initial=initial or '{}_initial'.format(func.__name__), function=func,
+            choices=choices or '{}_choices'.format(func.__name__), inline=inline, subsets=iterable(subset), icon=icon,
+            doc=func.__doc__, usecase=usecase, can_execute_by_organization=iterable(can_execute_by_organization),
             can_execute_by_unit=iterable(can_execute_by_unit), can_execute_by_role=iterable(can_execute_by_role),
             redirect_to=redirect_to, menu=menu, display=display, source='model'
         )
-        return function
+        return func
 
     return decorate
 

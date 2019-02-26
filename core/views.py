@@ -8,6 +8,8 @@ from django.http import HttpResponse
 from django.views.static import serve
 from djangoplus.utils import permissions
 from django.http import HttpResponseRedirect
+
+from djangoplus.utils.http import return_response
 from djangoplus.utils.storage import dropbox
 from django.template import Template, Context
 from django.views.defaults import page_not_found
@@ -21,7 +23,8 @@ from djangoplus.ui.components.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.utils.metadata import list_related_objects, is_many_to_many, is_one_to_one, get_metadata, \
-    check_condition, is_one_to_many, getattr2, is_one_to_many_reverse
+    check_condition, is_one_to_many, getattr2, is_one_to_many_reverse, get_parameters_names, count_parameters_names, \
+    get_role_value_for_action
 
 
 def listt(request, app, cls, subset=None):
@@ -64,7 +67,7 @@ def listt(request, app, cls, subset=None):
                           list_display=list_display, list_filter=list_filter, search_fields=search_fields)
     paginator.process_request()
 
-    paginator.add_actions()
+    paginator.load_actions()
     return render(request, 'default.html', locals())
 
 
@@ -209,11 +212,11 @@ def action(request, app, cls, action_name, pk=None):
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
 
-    for group in loader.actions[_model]:
-        if action_name in loader.actions[_model][group]:
+    for group in loader.instance_actions[_model]:
+        if action_name in loader.instance_actions[_model][group]:
             break
 
-    form_action = loader.actions[_model][group][action_name]
+    form_action = loader.instance_actions[_model][group][action_name]
     action_title = form_action['title']
     action_can_execute = form_action['can_execute']
     action_condition = form_action['condition']
@@ -222,7 +225,7 @@ def action(request, app, cls, action_name, pk=None):
     action_permission = '{}.{}'.format(_model._meta.app_label, action_function.__name__)
     action_input = form_action['input']
     action_display = form_action['display']
-    action_style = form_action['css']
+    action_style = form_action['style']
     action_redirect = form_action['redirect_to']
 
     obj = pk and _model.objects.all(request.user).distinct().get(pk=pk) or _model()
@@ -231,25 +234,26 @@ def action(request, app, cls, action_name, pk=None):
     title = action_title
     redirect_to = None
 
-    if check_condition(action_condition, obj) and (
+    if check_condition(request.user, action_condition, obj) and (
             not action_can_execute or permissions.check_group_or_permission(request, action_permission)):
         f_return = None
         func = getattr(_model, action_function.__name__, action_function)
         form = factory.get_action_form(request, obj, form_action)
-
-        if func.__code__.co_argcount > 1 or action_input:
+        if count_parameters_names(func) > 1 or action_input:
             if form.is_valid():
                 if 'instance' in form.fields:
                     obj = form.cleaned_data['instance']
                 func = getattr(obj, action_function.__name__, action_function)
                 params = []
-                for param in func.__code__.co_varnames[1:func.__code__.co_argcount]:
+                for param in get_parameters_names(func, include_annotated=True):
                     if param in form.cleaned_data:
                         params.append(form.cleaned_data[param])
+                    else:
+                        params.append(get_role_value_for_action(func, request.user, param))
                 try:
                     f_return = func(*params)
                     if not action_redirect:
-                        if func.__code__.co_argcount > 1 or action_display:
+                        if count_parameters_names(func) > 0 or action_display:
                             redirect_to = '..'
                         else:
                             redirect_to = '.'
@@ -263,9 +267,12 @@ def action(request, app, cls, action_name, pk=None):
                     if 'instance' in form.fields:
                         obj = form.cleaned_data['instance']
                     func = getattr(obj, action_function.__name__, action_function)
-                    f_return = func()
+                    params = []
+                    for param in get_parameters_names(func, include_annotated=True):
+                        params.append(get_role_value_for_action(func, request.user, param))
+                    f_return = func(*params)
                     if not action_redirect:
-                        if func.__code__.co_argcount > 1 or action_display:
+                        if count_parameters_names(func) > 0 or action_display:
                             redirect_to = '..'
                         else:
                             redirect_to = '.'
@@ -277,22 +284,9 @@ def action(request, app, cls, action_name, pk=None):
                 return httprr(request, '.', e.message, error=True)
 
         if f_return:
-            if 'pdf' in action_style:
-                request.GET._mutable = True
-                request.GET['pdf'] = 1
-                request.GET._mutable = False
-                from datetime import datetime
-                from djangoplus.admin.models import Settings
-                from djangoplus.utils.http import PdfResponse
-                from django.template.loader import render_to_string
-                app_settings = Settings.default()
-                f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
-                f_return['project_name'] = app_settings.initials
-                f_return['project_description'] = app_settings.name
-                f_return['today'] = datetime.now()
-                template_list = ['{}.html'.format(action_function.__name__), 'report.html']
-                landscape = 'landscape' in action_style
-                return PdfResponse(render_to_string(template_list, f_return, request=request), landscape=landscape)
+            template_name = '{}.html'.format(action_function.__name__)
+            return return_response(f_return, request, title, action_style, template_name)
+
         elif redirect_to:
             return httprr(request, redirect_to, action_message)
 

@@ -100,7 +100,7 @@
             </li>
             {% endif %}
             <li class="dropdown">
-                <a class="dropdown-toggle" href="javascript:" title="Configurações" onclick="$('#user-drop-down').toggle()">
+                <a class="dropdown-toggle" href="javascript:" title="{% trans "Settings" %}" onclick="$('#user-drop-down').toggle()">
                     <span class="hide-mobile">{{ request.user.name }}</span> <i class="fa fa-ellipsis-v fa-fw"></i></b>
                 </a>
                 <div id="user-drop-down" class="dropdown-menu" onmouseleave="$(this).toggle()">

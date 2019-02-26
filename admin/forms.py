@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import datetime
 from django.contrib import auth
 from django.conf import settings
@@ -209,7 +210,7 @@ class RecoverPassowordForm(forms.Form):
     email = forms.EmailField(label='E-mail')
 
     class Meta:
-        captcha = True
+        captcha = 'test' not in sys.argv
 
     def clean(self):
         cleaned_data = super(RecoverPassowordForm, self).clean()
@@ -217,7 +218,7 @@ class RecoverPassowordForm(forms.Form):
             email=cleaned_data['email']
         )
         if qs.exists():
-            qs.first().send_access_invitation()
+            qs.first().send_reset_password_notification()
             return cleaned_data
         else:
             raise forms.ValidationError(_('User not found.'))

@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                 ('username', djangoplus.db.models.fields.CharField(max_length=30, unique=True, verbose_name='Login')),
                 ('email', djangoplus.db.models.fields.CharField(blank=True, default='', max_length=75, verbose_name='E-mail')),
                 ('active', djangoplus.db.models.fields.BooleanField(default=True, verbose_name='Ativo?')),
-                ('photo', djangoplus.db.models.fields.ImageField(blank=True, default='/static/images/user.png', null=True, upload_to='profiles', verbose_name='Foto')),
+                ('photo', djangoplus.db.models.fields.ImageField(blank=True, default='user.png', null=True, upload_to='profiles', verbose_name='Foto')),
             ],
             options={
                 'verbose_name': 'Usu\xe1rio',
@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
                 ('name', djangoplus.db.models.fields.CharField(default='Django Plus', max_length=255, verbose_name='Descri\xe7\xe3o')),
                 ('logo', djangoplus.db.models.fields.ImageField(blank=True, default='', null=True, upload_to='config', verbose_name='Logotipo')),
                 ('logo_pdf', djangoplus.db.models.fields.ImageField(blank=True, default='', help_text='Imagem sem fundo transparente', null=True, upload_to='config', verbose_name='Logotipo para PDF')),
-                ('icon', djangoplus.db.models.fields.ImageField(blank=True, default='/static/images/blank.png', null=True, upload_to='config', verbose_name='\xcdcone')),
+                ('icon', djangoplus.db.models.fields.ImageField(blank=True, default='blank.png', null=True, upload_to='config', verbose_name='\xcdcone')),
                 ('background', djangoplus.db.models.fields.ImageField(blank=True, default='', upload_to='config', verbose_name='Background')),
                 ('twitter', djangoplus.db.models.fields.CharField(blank=True, max_length=255, null=True, verbose_name='Twitter')),
                 ('facebook', djangoplus.db.models.fields.CharField(blank=True, max_length=255, null=True, verbose_name='Facebook')),

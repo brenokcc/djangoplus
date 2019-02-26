@@ -50,7 +50,7 @@
 
             <div class="panel-body">
 
-                {% if self.is_list_view or self.subset_dropdown.has_items or self.paginator_dropdown.has_items  %}
+                {% if self.is_list_view or self.queryset_dropdown.has_items or self.class_dropdown.has_items  %}
                 <div class="action-bar">
                     {% if self.is_list_view %}
                     <div class="pull-left">
@@ -59,8 +59,8 @@
                     {% endif %}
                     <div class="pull-right">
                         {% if not self.request.GET.popup %}
-                            {{ self.subset_dropdown }}
-                            {{ self.paginator_dropdown }}
+                            {{ self.queryset_dropdown }}
+                            {{ self.class_dropdown }}
                         {% endif %}
                     </div>
                 </div>
@@ -163,11 +163,11 @@
                     <div class="alert alert-warning">{% trans "No records found" %}.</div>
                 {% endif %}
 
-                {% if self.subset_dropdown.actions and not self.request.GET.popup %}
-                    <div class="col s12 disabled" id="subset-actions-btn{{ self.id }}">
+                {% if self.queryset_dropdown.actions and not self.request.GET.popup %}
+                    <div class="col s12 disabled" id="queryset-actions-btn{{ self.id }}">
 
                         <div class="pull-left">
-                            {{ self.subset_dropdown }}
+                            {{ self.queryset_dropdown }}
                         </div>
 
                     </div>
@@ -185,19 +185,19 @@
         if($('#table{{ self.id }} .paginator-actions .btn').length == 0) $('#table{{ self.id }} .paginator-actions').hide();
         function check{{ self.id }}(){
             if($('input[name=\'pk\']:checked').length>0){
-                $('.paginator-actions a, .global-action').addClass('disabled');
-                $('.subset-action').removeClass('disabled');
-                $('#subset-actions-btn{{ self.id }}').removeClass('disabled');
+                $('.paginator-actions .btn, .class-action').addClass('disabled');
+                $('.queryset-action').removeClass('disabled');
+                $('#queryset-actions-btn{{ self.id }}').removeClass('disabled');
                 $('#paginator{{ self.id }}').addClass('disabled');
             } else {
                 $('#paginator{{ self.id }}').removeClass('disabled');
-                $('#subset-actions-btn{{ self.id }}').addClass('disabled')
-                $('.paginator-actions a, .global-action').removeClass('disabled');
-                $('.global-action').removeClass('disabled');
-                $('.subset-action').addClass('disabled');
+                $('#queryset-actions-btn{{ self.id }}').addClass('disabled');
+                $('.paginator-actions .btn, .class-action').removeClass('disabled');
+                $('.class-action').removeClass('disabled');
+                $('.queryset-action').addClass('disabled');
             }
         }
-        $('#table{{ self.id }}').find('a.subset-action').click(function (e) {
+        $('#table{{ self.id }}').find('a.queryset-action').click(function (e) {
             var url = this.href.split('&ids=')[0];
             url+='&ids='+$('input:checked[name=\'pk\']').map(function(){return $(this).attr('value');}).get().join(',');
             if(window['executing_tests']){

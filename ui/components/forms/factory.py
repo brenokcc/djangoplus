@@ -3,7 +3,8 @@ from django.apps import apps
 from django.conf import settings
 from djangoplus.ui.components import forms
 from django.utils.translation import ugettext as _
-from djangoplus.utils.metadata import get_metadata, find_field_by_name, list_related_objects, get_fiendly_name, getattr2
+from djangoplus.utils.metadata import get_metadata, find_field_by_name, list_related_objects, get_fiendly_name,\
+    getattr2, get_parameters_names
 
 
 def get_register_form(request, obj):
@@ -251,14 +252,14 @@ def get_class_action_form(request, _model, action, func):
             class Form(forms.ModelForm):
                 class Meta:
                     model = action_input
-                    fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
+                    fields = get_parameters_names(func)
                     title = action_title
                     submit_label = action_title
     else:
         class Form(forms.ModelForm):
             class Meta:
                 model = _model
-                fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
+                fields = get_parameters_names(func)
                 title = action_title
                 submit_label = action_title
 
@@ -303,17 +304,16 @@ def get_action_form(request, obj, action):
             class Form(forms.ModelForm):
                 class Meta:
                     model = action_input
-                    fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
+                    fields = get_parameters_names(func)
                     title = action_title
                     submit_label = action_title
 
             form_cls = Form
     else:
-
         class Form(forms.ModelForm):
             class Meta:
                 model = func.__self__.__class__
-                fields = func.__code__.co_varnames[1:func.__code__.co_argcount]
+                fields = get_parameters_names(func)
                 title = action_title
                 submit_label = action_title
 

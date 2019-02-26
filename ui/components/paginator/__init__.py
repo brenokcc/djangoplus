@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
-from django.shortcuts import render
+from collections import OrderedDict
 from djangoplus.ui.components import forms
 from django.db.models.aggregates import Sum
 from djangoplus.utils.tabulardata import tolist
@@ -8,19 +8,19 @@ from djangoplus.utils.formatter import normalyze
 from djangoplus.ui.components.forms import factory
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
-from django.template.loader import render_to_string
 from djangoplus.utils import permissions, should_add_action
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.ui import RequestComponent, ComponentHasResponseException
-from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, mobile
+from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, mobile, return_response
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
-from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name, should_filter_or_display, getattr2
+from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name, should_filter_or_display, getattr2, \
+    get_parameters_names, count_parameters_names
 
 
 class Paginator(RequestComponent):
     def __init__(self, request, qs, title=None, list_display=None, list_filter=None, search_fields=None,
                  list_per_page=25, list_subsets=None, exclude=None, relation=None, readonly=False, is_list_view=False,
-                 help_text=None, url=None, template='datagrid.html'):
+                 help_text=None, url=None, template='datagrid.html', uid=None):
 
         super(Paginator, self).__init__(is_list_view and '_' or abs(hash(title)), request)
         if relation:
@@ -33,7 +33,7 @@ class Paginator(RequestComponent):
         self.list_filter = list_filter
         self.search_fields = search_fields
         self.list_per_page = list_per_page
-        self.list_subsets = list_subsets
+        self.subsets = None
         self.exclude = exclude
         self.relation = relation
         self.readonly = readonly
@@ -45,6 +45,7 @@ class Paginator(RequestComponent):
         self.help_text = help_text
         self.url = url
         self.display_checkboxes = False
+        self.action_names = None
 
         self.filters = []
         self.pagination = ''
@@ -55,6 +56,10 @@ class Paginator(RequestComponent):
         # tabs
         self.tabs = []
         self.current_tab = self._get_from_request('tab', None)
+        if list_subsets is not None:
+            self.subsets = OrderedDict()
+            for subset_name in list_subsets:
+                self.subsets[subset_name] = {}
         self._load_tabs()
 
         # list display
@@ -65,8 +70,8 @@ class Paginator(RequestComponent):
         self._configure_column_names()
 
         # drop down
-        self.paginator_dropdown = GroupDropDown(request)
-        self.subset_dropdown = GroupDropDown(request)
+        self.class_dropdown = GroupDropDown(request, style='class-action')
+        self.queryset_dropdown = GroupDropDown(request, style='queryset-action disabled')
         self.drop_down = ModelDropDown(request, qs.model)
         self.mobile = mobile(self.request)
 
@@ -153,7 +158,7 @@ class Paginator(RequestComponent):
                             qs = field.remote_field.model.objects.get_queryset().filter(pk__in=pks)
                         empty_label = ''
 
-                        form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False, lazy=False, ignore_lookup=True, minimum_input_length=0)
+                        form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False, lazy=True, ignore_lookup=True, minimum_input_length=0)
                     form.fields[form_field_name].widget.attrs['data-placeholder'] = field.verbose_name
                     if initial:
                         label = form.fields[form_field_name].label
@@ -173,23 +178,26 @@ class Paginator(RequestComponent):
             ids = 0 not in ids and ids or None
         return ids
 
-    def add_action(self, label, url, css, icon=None):
-        self.paginator_dropdown.add_action(label, url, 'global-action {}'.format(css), icon, label)
+    def add_action(self, label, url, css, icon=None, category=None):
+        self.class_dropdown.add_action(label, url, 'class-action {}'.format(css), icon, category)
 
-    def add_subset_action(self, label, url, css, icon=None, subset=None):
+    def add_queryset_action(self, label, url, css, icon=None, category=None, subset=None):
         if not subset or self.get_tab() == subset:
             if not self.mobile:
-                self.subset_dropdown.add_action(label, url, 'subset-action disabled {}'.format(css), icon, label)
+                self.queryset_dropdown.add_action(label, url, 'queryset-action disabled {}'.format(css), icon, category)
 
-    def add_actions(self):
+    def load_actions(self, action_names=None):
+
+        from djangoplus.cache import loader
         export_url = self.request.get_full_path()
         list_csv = get_metadata(self.qs.model, 'list_csv')
         list_xls = get_metadata(self.qs.model, 'list_xls')
         log = get_metadata(self.qs.model, 'log')
         app_label = get_metadata(self.qs.model, 'app_label')
         list_pdf = get_metadata(self.qs.model, 'list_pdf')
+        self.action_names = action_names or []
 
-        subset = self.list_subsets and self.list_subsets[0] or None
+        subset = self.subsets and list(self.subsets.keys())[0] or None
         if subset:
             subsetp = None
         else:
@@ -197,27 +205,115 @@ class Paginator(RequestComponent):
             subsetp = self.request.GET.get('tab{}'.format(tid))
         subset_name = subsetp or subset or None
 
-        if list_csv and not self.relation:
-            export_url = '?' in export_url and '{}&export=csv'.format(export_url) or '{}?export=csv'.format(export_url)
-            self.add_action('Exportar CSV', export_url, 'ajax', 'fa-table')
+        # class actions defined in the manager
+        if self.qs.model in loader.class_actions:
+            for group in loader.class_actions[self.qs.model]:
+                for view_name in loader.class_actions[self.qs.model][group]:
+                    _action = loader.class_actions[self.qs.model][group][view_name]
+                    action_title = _action['title']
+                    action_inline = _action['inline']
+                    action_subsets = _action['subsets']
+                    action_can_execute = _action['can_execute']
+                    action_category = _action['group']
+                    action_style = _action['style'] or 'popup'
+                    if 'popup' not in action_style:
+                        action_style = '{} popup'.format(action_style)
+                    if self.is_list_view or view_name in self.action_names:
+                        add_action = should_add_action(action_inline, action_subsets, subset_name)
+                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 111)
+                        if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
+                            func = getattr(self.qs, view_name)
+                            ignore_pdf = False
+                            if count_parameters_names(func) > 0:
+                                action_style = action_style.replace('pdf', '')
+                                ignore_pdf = True
+                            char = '?' in self.request.get_full_path() and '&' or '?'
+                            url = '{}{}{}'.format(self.request.get_full_path(), char, '{}='.format(view_name))
+                            self.add_action(action_title, url, action_style, None, action_category)
+                            if view_name in self.request.GET:
+                                self._proccess_request(func, _action, ignore_pdf)
 
-        if list_xls and not self.relation:
-            export_url = '?' in export_url and '{}&export=excel'.format(export_url) or '{}?export=excel'.format(export_url)
-            self.add_action('Exportar Excel', export_url, 'ajax', 'fa-file-excel-o')
+        # subset actions defined in the manager
+        if self.qs.model in loader.queryset_actions:
+            for group in loader.queryset_actions[self.qs.model]:
+                for view_name in loader.queryset_actions[self.qs.model][group]:
+                    _action = loader.queryset_actions[self.qs.model][group][view_name]
+                    action_title = _action['title']
+                    action_can_execute = _action['can_execute']
+                    action_inline = _action['inline']
+                    action_subsets = _action['subsets']
+                    action_condition = _action['condition']
+                    action_source = _action['source']
+                    action_category = _action['group']
+                    action_style = _action['style'] or 'popup'
+                    if 'popup' not in action_style:
+                        action_style = '{} popup'.format(action_style)
+                    if self.is_list_view or view_name in self.action_names:
+                        add_action = should_add_action(action_inline, action_subsets, subset_name)
+                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 222)
+                        if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
+                            self.display_checkboxes = self.display_checkboxes or not action_source == 'view'
+                            func = getattr(self.qs, view_name)
+                            ignore_pdf = False
+                            char = '?' in self.request.get_full_path() and '&' or '?'
+                            url = '{}{}{}'.format(self.request.get_full_path(), char, '{}='.format(view_name))
+                            if count_parameters_names(func) > 0:
+                                ignore_pdf = True
+                                action_style = action_style.replace('pdf', '')
+                            self.add_queryset_action(
+                                action_title, url, action_style, None, action_category, action_condition
+                            )
 
-        if log and not self.relation:
-            log_url = '/log/{}/{}/'.format(app_label, self.qs.model.__name__.lower())
-            if self.request.user.has_perm('admin.list_log'):
-                self.add_action('Visualizar Log', log_url, 'ajax', 'fa-history')
+                            if view_name in self.request.GET:
+                                ids = self.get_selected_ids()
+                                if ids:
+                                    qs = self.get_queryset(paginate=False).filter(id__in=ids)
+                                else:
+                                    break
+                                func = getattr(qs, view_name)
+                                self._proccess_request(func, _action, ignore_pdf)
 
-        if list_pdf and not self.relation:
-            pdf_url = '?' in export_url and '{}&export=pdf'.format(export_url) or '{}?export=pdf'.format(export_url)
-            self.add_action('Imprimir', pdf_url, 'ajax', 'fa-print')
+        # class actions defined in views module
+        if self.qs.model in loader.class_view_actions:
+            for group in loader.class_view_actions[self.qs.model]:
+                for view_name in loader.class_view_actions[self.qs.model][group]:
+                    _action = loader.class_view_actions[self.qs.model][group][view_name]
+                    action_title = _action['title']
+                    action_inline = _action['inline']
+                    action_subsets = _action['subsets']
+                    action_can_execute = _action['can_execute']
+                    action_category = _action['group']
+                    action_style = _action['style'] or 'popup'
+                    url = '/{}/{}/'.format(get_metadata(self.qs.model, 'app_label'), view_name)
+                    action_style = action_style.replace('popup', '')
+                    if self.is_list_view or view_name in self.action_names:
+                        add_action = should_add_action(action_inline, action_subsets, subset_name)
+                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 333)
+                        if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
+                            self.add_action(action_title, url, action_style, None, action_category)
 
-        subclasses = self.qs.model.__subclasses__()
+        if self.is_list_view:
+            # utility actions
+            if list_csv:
+                export_url = '?' in export_url and '{}&export=csv'.format(export_url) or '{}?export=csv'.format(export_url)
+                self.add_action('Exportar CSV', export_url, 'ajax', 'fa-table')
 
-        if not self.relation:  # and not subset_name
-            if not subclasses and not self.list_subsets and permissions.has_add_permission(self.request, self.qs.model):
+            if list_xls:
+                export_url = '?' in export_url and '{}&export=excel'.format(export_url) or '{}?export=excel'.format(export_url)
+                self.add_action('Exportar Excel', export_url, 'ajax', 'fa-file-excel-o')
+
+            if log:
+                log_url = '/log/{}/{}/'.format(app_label, self.qs.model.__name__.lower())
+                if self.request.user.has_perm('admin.list_log'):
+                    self.add_action('Visualizar Log', log_url, 'ajax', 'fa-history')
+
+            if list_pdf:
+                pdf_url = '?' in export_url and '{}&export=pdf'.format(export_url) or '{}?export=pdf'.format(export_url)
+                self.add_action('Imprimir', pdf_url, 'ajax', 'fa-print')
+
+            # registration action
+            subclasses = self.qs.model.__subclasses__()
+            if not subclasses and not self.subsets and permissions.has_add_permission(self.request, self.qs.model):
                 instance = self.qs.model()
                 instance.user = self.request.user
                 if not hasattr(instance, 'can_add') or instance.can_add():
@@ -236,105 +332,52 @@ class Paginator(RequestComponent):
                 if permissions.has_add_permission(self.request, subclass):
                     self.add_action(verbose_name, '/add/{}/{}/'.format(app, cls), False, 'fa-plus')
 
-        from djangoplus.cache import loader
-        if self.qs.model in loader.class_actions:
-            for group in loader.class_actions[self.qs.model]:
-                for view_name in loader.class_actions[self.qs.model][group]:
-                    _action = loader.class_actions[self.qs.model][group][view_name]
-                    action_title = _action['title']
-                    action_message = _action['message']
-                    action_can_execute = _action['can_execute']
-                    action_inline = _action['inline']
-                    action_css = _action['css']
-                    action_condition = _action['condition']
-                    action_source = _action['source']
+    def _proccess_request(self, func, _action, ignore_pdf):
 
-                    add_action = should_add_action(action_inline, subset_name)
+        form = None
+        f_return = None
+        redirect_url = None
 
-                    if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
-                        self.display_checkboxes = self.display_checkboxes or not action_source == 'view'
-                        func = hasattr(self.qs, view_name) and getattr(self.qs, view_name) or None
-                        if func:
-                            char = '?' in self.request.get_full_path() and '&' or '?'
-                            url = '{}{}{}'.format(self.request.get_full_path(), char, '{}='.format(view_name))
-                            code = getattr(func, '__code__')
-                            has_input = code.co_argcount > 1
+        if count_parameters_names(func) > 0:
+            form = factory.get_class_action_form(self.request, self.qs.model, _action, func)
+            if form.is_valid():
+                params = []
+                for param in get_parameters_names(func):
+                    if param in form.cleaned_data:
+                        params.append(form.cleaned_data[param])
+                try:
+                    f_return = func(*params)
+                    ignore_pdf = False
+                    if f_return is None:
+                        redirect_url = '..'
+                except ValidationError as e:
+                    form.add_error(None, str(e.message))
+        else:
+            f_return = func()
+            ignore_pdf = False
+            if f_return is None:
+                redirect_url = '.'
 
-                            if not has_input:
-                                action_css = action_css.replace('popup', '')
-                            self.add_subset_action(action_title, url, action_css, None, action_condition)
-
-                            if view_name in self.request.GET:
-                                ids = self.get_selected_ids()
-                                if ids:
-                                    qs = self.get_queryset(paginate=False).filter(id__in=ids)
-                                else:
-                                    break
-                                    # qs = self.get_queryset(paginate=False)
-
-                                func = getattr(qs, view_name)
-                                form = None
-                                f_return = None
-                                redirect_url = None
-
-                                if has_input:
-                                    form = factory.get_class_action_form(self.request, self.qs.model, _action, func)
-                                    paginator = ''
-                                    if form.is_valid():
-                                        params = []
-                                        for param in func.__code__.co_varnames[1:func.__code__.co_argcount]:
-                                            if param in form.cleaned_data:
-                                                params.append(form.cleaned_data[param])
-                                        try:
-                                            f_return = func(*params)
-                                            if not f_return:
-                                                redirect_url = '..'
-                                        except ValidationError as e:
-                                            form.add_error(None, str(e.message))
-                                else:
-                                    f_return = func()
-                                    if not f_return:
-                                        redirect_url = '.'
-
-                                if redirect_url:
-                                    self.request.GET._mutable = True
-                                    del self.request.GET['ids']
-                                    del self.request.GET[view_name]
-                                    self.request.GET._mutable = False
-                                    raise ComponentHasResponseException(
-                                        httprr(self.request, redirect_url, action_message)
-                                    )
-                                else:
-                                    template_names = ['{}.html'.format(view_name), 'default.html']
-                                    context = f_return or dict(form=form)
-
-                                    if 'pdf' in action_css:
-                                        self.request.GET._mutable = True
-                                        self.request.GET['pdf'] = 1
-                                        self.request.GET._mutable = False
-                                        from datetime import datetime
-                                        from djangoplus.admin.models import Settings
-                                        from djangoplus.utils.http import PdfResponse
-                                        app_settings = Settings.default()
-                                        f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
-                                        f_return['project_name'] = app_settings.initials
-                                        f_return['project_description'] = app_settings.name
-                                        f_return['today'] = datetime.now()
-                                        landscape = 'landscape' in action_css
-                                        raise ComponentHasResponseException(
-                                            PdfResponse(render_to_string(
-                                                template_names, f_return, request=self.request
-                                            ), landscape=landscape)
-                                        )
-                                    else:
-                                        raise ComponentHasResponseException(render(self.request, template_names, context))
-                        else:
-                            url = '/{}/{}/'.format(get_metadata(self.qs.model, 'app_label'), view_name)
-                            if view_name in self.request.GET:
-                                raise ComponentHasResponseException(httprr(self.request, url))
-                            else:
-                                action_css = action_css.replace('popup', '')
-                                self.add_action(action_title, url, action_css, None)
+        if redirect_url:
+            self.request.GET._mutable = True
+            if 'ids' in self.request.GET:
+                del self.request.GET['ids']
+            del self.request.GET[_action['view_name']]
+            self.request.GET._mutable = False
+            raise ComponentHasResponseException(
+                httprr(self.request, redirect_url, _action['message'])
+            )
+        else:
+            action_style = _action['style']
+            if f_return is None:
+                f_return = dict(form=form)
+                template_name = 'default.html'
+            else:
+                template_name = '{}.html'.format(_action['view_name'])
+            return_response(
+                f_return, self.request, None, action_style, template_name,
+                raise_response=True, ignore_pdf=ignore_pdf
+            )
 
     def get_total(self):
         if self.list_total:
@@ -440,25 +483,20 @@ class Paginator(RequestComponent):
 
     def _load_tabs(self):
         from djangoplus.cache import loader
-        list_subsets = []
-        if self.list_subsets is None:
-            list_subsets = loader.subsets[self.qs.model]
-        elif self.list_subsets:
-            list_subsets = []
-            for subset_name in self.list_subsets:
+
+        subsets = []
+        if self.subsets is None:
+            subsets = loader.subsets[self.qs.model]
+        elif self.subsets:
+            for subset_name in self.subsets.keys():
                 for subset in loader.subsets[self.qs.model]:
                     if subset['name'] == subset_name:
-                        list_subsets.append(subset)
-        elif self.relation:
-            list_subsets = []
-            for subset in loader.subsets[self.qs.model]:
-                inline = subset['inline']
-                if inline:
-                    list_subsets.append(subset)
+                        subsets.append(subset)
 
+        tab_qs = None
         active_queryset = None
         create_default_tab = True
-        for subset in list_subsets:
+        for subset in subsets:
             tab_title = subset['title']
             tab_function = subset['function']
             tab_can_view = subset['can_view']
@@ -473,7 +511,7 @@ class Paginator(RequestComponent):
                 tab_qs = getattr(self.qs, tab_function.__func__.__name__)()
                 tab_active = self.current_tab == tab_name
                 self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order, tab_help_text])
-                if (tab_active or len(list_subsets) == 1) and tab_help_text:
+                if (tab_active or len(subsets) == 1) and tab_help_text:
                     self.help_text = tab_help_text
             if tab_name == 'all':
                 create_default_tab = False
@@ -485,7 +523,7 @@ class Paginator(RequestComponent):
                 self.search_fields = tab_search_fields
 
         self.tabs = sorted(self.tabs, key=lambda k: k[4])
-        if (self.list_subsets is None or self.relation) and create_default_tab:
+        if (self.subsets is None or self.relation) and create_default_tab:
             tab_title = get_metadata(self.qs.model, 'verbose_female') and 'Todas' or 'Todos'
             tab_qs = self.original_qs.all()
             tab_active = self.current_tab == 'all'
@@ -596,3 +634,6 @@ class Paginator(RequestComponent):
         self.as_pdf = True
         landscape = len(self.list_display) > 4
         return ReportResponse(self.title, self.request, [self], landscape)
+
+    def __str__(self):
+        return self.render('base/paginator.html')

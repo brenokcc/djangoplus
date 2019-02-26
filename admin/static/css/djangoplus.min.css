@@ -277,8 +277,9 @@ main .padding-md {
     min-height: 40px;
 }
 
-.action-bar a{
-    margin-left: 10px;
+.action-bar a, .action-bar .btn-group{
+    margin-right: 10px;
+    margin-bottom: 5px;
 }
 
 .notification-label {

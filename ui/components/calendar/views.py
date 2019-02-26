@@ -2,6 +2,7 @@
 import json
 import datetime
 from django.http.response import HttpResponse
+from django.utils.translation import ugettext as _
 from djangoplus.ui.components.paginator.templatetags import obj_icons
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown
 from django.views.decorators.csrf import csrf_exempt
@@ -44,8 +45,8 @@ def populate(request):
 
         if end:
             html.append('<dl>')
-            html.append('<dt>Início</dt><dd>{}</dd>'.format(fstart))
-            html.append('<dt>Fim</dt><dd>{}</dd>'.format(fend))
+            html.append('<dt>{}</dt><dd>{}</dd>'.format(_('Start'), fstart))
+            html.append('<dt>{}</dt><dd>{}</dd>'.format(_('End'), fend))
             html.append('</dl>')
         else:
             html.append('{}'.format(fstart))

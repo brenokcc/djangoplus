@@ -8,16 +8,16 @@ from djangoplus.ui.components.forms import ModelForm, ValidationError
 
 
 class Relation(object):
-    def __init__(self, instance, relation_name):
+    def __init__(self, instance, relation_info):
         self.instance = instance
         self.model = type(self.instance)
-        self.relation_name = relation_name
+        self.relation_name = None
         self.relation_verbose_name = None
         self.relation_model = None
         self.relation_value = None
         self.relation_type = None
         self.hidden_field_name = None
-        self.subset_names = []
+        self.subsets = {}
 
         app_label = get_metadata(self.model, 'app_label')
         model_name = self.model.__name__.lower()
@@ -35,9 +35,25 @@ class Relation(object):
         self.is_one_to_many_reverse = False
         self.is_many_to_many = False
 
-        if ':' in self.relation_name:
-            tokens = self.relation_name.split(':')
-            self.relation_name, self.subset_names = tokens[0], tokens[1].split(',')
+        if ':' in relation_info:
+            # 'relation_name:all[action_a,action_b],subset[action_c]'
+            tokens = relation_info.replace(' ', '').split(':')
+            self.relation_name, subsets_info = tokens[0], tokens[1].split('],')
+            for subset_info in subsets_info:
+                tokens = subset_info.split('[')
+                if len(tokens) > 1:
+                    subset_name, subset_actions = tokens[0], tokens[1].replace(']', '').split(',')
+                else:
+                    subset_name, subset_actions = tokens[0], []
+                self.subsets[subset_name] = subset_actions
+        elif '[' in relation_info:
+            # 'relation_name[action_a,action_b]'
+            tokens = relation_info.replace(' ', '').split('[')
+            self.relation_name, subset_actions = tokens[0], tokens[1].replace(']', '').split(',')
+            self.subsets['all'] = subset_actions
+        else:
+            # 'relation_name'
+            self.relation_name = relation_info
 
         attr = getattr(self.model, self.relation_name)
         descriptor_name = attr.__class__.__name__
@@ -193,14 +209,15 @@ class Relation(object):
 
             component = Paginator(
                 request, self.relation_value.all(request.user), title, relation=self,
-                list_subsets=self.subset_names, readonly=not has_add_permission
+                list_subsets=list(self.subsets.keys()), readonly=not has_add_permission, uid=slugify(self.relation_name)
             )
-            component.id = slugify(self.relation_name)
-            component.add_actions()
+            action_names = self.subsets.get(component.current_tab or 'all', [])
+            component.load_actions(action_names)
             instance = self.relation_model()
             if self.hidden_field_name:
                 setattr(instance, self.hidden_field_name, self.instance)
             can_add = not hasattr(instance, 'can_add') or instance.can_add()
+
             if self.add_url and has_add_permission and can_add:
                 if self.relation_name in inlines:
                         form_name = get_metadata(self.relation_model, 'add_form')

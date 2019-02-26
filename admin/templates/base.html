@@ -8,7 +8,9 @@
         <meta name="description" content="">
         <meta name="author" content="">
 
-        <link rel="apple-touch-icon" href="{% if settings.background %}/media/{{ settings.background }}{% else %}/static/images/project.jpg{% endif %}"/>
+        {% if settings.background %}
+        <link rel="apple-touch-icon" href="/media/{{ settings.background }}"/>
+        {% endif %}
 
         {% if settings.icon %}
             <link rel="icon" href="/media/{{ settings.icon }}">
@@ -122,11 +124,16 @@
 
                 </div>
                 <div class="modal-footer">
+                    <div class="modal-footer-form-buttons">
                     <button class="btn btn-default btn-sm" onclick="cancelPopup();" aria-hidden="true" id="modal-closer">
                         Cancelar
                     </button>
                     <button class="btn submit-button" onclick="$('#app-modal-content').find('form').submit();">
                         <i class="fa fa-chevron-right"></i> <span id="modal-form-submit-label">Enviar</span>
+                    </button>
+                    </div>
+                    <button class="btn btn-default btn-sm modal-footer-close-button" onclick="cancelPopup(true);" aria-hidden="true" id="modal-closer">
+                        Fechar
                     </button>
                 </div>
             </div><!-- /.modal-content -->

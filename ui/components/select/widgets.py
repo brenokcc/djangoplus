@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import os
+from djangoplus import test
 from django.forms import widgets
-from djangoplus.test import cache
 from django.utils.safestring import mark_safe
 from djangoplus.utils.metadata import get_metadata
 from django.template.loader import render_to_string
@@ -120,7 +119,7 @@ class SelectWidget(widgets.Select):
 
     def render(self, name, value, attrs=None, renderer=None):
 
-        if cache.HEADLESS:
+        if test.CACHE['HEADLESS']:
             self.lazy = False
 
         attrs['class'] = 'form-control'
@@ -204,7 +203,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
 
     def render(self, name, value, attrs=None, renderer=None):
 
-        if cache.HEADLESS:
+        if test.CACHE['HEADLESS']:
             self.lazy = False
 
         attrs['class'] = 'form-control'

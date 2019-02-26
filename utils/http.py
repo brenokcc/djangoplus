@@ -7,6 +7,7 @@ import tempfile
 import json
 import os
 import datetime
+
 from djangoplus.utils.formatter import to_ascii
 
 
@@ -102,3 +103,38 @@ class ComponentResponse(HttpResponse):
         super(ComponentResponse, self).__init__(
             render_to_string('default.html', context=dict(paginator=component), request=component.request)
         )
+
+
+def return_response(f_return, request, title, style, template_name, raise_response=False, ignore_pdf=False):
+    from datetime import datetime
+    from django.shortcuts import render
+    from djangoplus.admin.models import Settings
+    from djangoplus.ui import ComponentHasResponseException
+    if type(f_return) == dict:
+        if title and 'title' not in f_return:
+            f_return['title'] = title
+        for key in f_return:
+            if hasattr(f_return[key], 'process_request'):
+                f_return[key].process_request()
+        if 'pdf' in style and not ignore_pdf:
+            request.GET._mutable = True
+            request.GET['pdf'] = 1
+            request.GET._mutable = False
+            app_settings = Settings.default()
+            f_return['logo'] = app_settings.logo_pdf and app_settings.logo_pdf or app_settings.logo
+            f_return['project_name'] = app_settings.initials
+            f_return['project_description'] = app_settings.name
+            f_return['today'] = datetime.now()
+            f_return['default_template'] = 'report.html'
+            template_list = [template_name, 'report.html']
+            landscape = 'landscape' in style
+            response = PdfResponse(render_to_string(template_list, f_return, request=request), landscape=landscape)
+        else:
+            template_list = [template_name, 'default.html']
+            response = render(request, template_list, f_return)
+    else:
+        response = f_return
+    if raise_response:
+        raise ComponentHasResponseException(response)
+    else:
+        return response

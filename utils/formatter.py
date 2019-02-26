@@ -58,17 +58,13 @@ def format_value(value, html=True):
             return format_decimal3(value)
         return format_decimal(value)
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
-        url = '/static/' in str(value) and value or value.url
-        return html and mark_safe('<img width="75" class="materialboxed" src="{}"/>'.format(url)) or value
+        return html and mark_safe('<img width="75" class="materialboxed" src="{}"/>'.format(value.url)) or value
     elif isinstance(value, FieldFile):
-        url = '/static/' in str(value) and value or value.url
         file_name = value.name.split('/')[-1]
-        if url.lower().endswith('.pdf'):
-            return html and mark_safe(
-                '<a class="ajax pdf" href="{}">{}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{}"><i class="mdi-file-file-download"></i></a>'.format(
-                url, file_name, url)) or file_name
+        if value.url.lower().endswith('.pdf'):
+            return html and mark_safe('<a class="ajax pdf" href="{}">{}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{}"><i class="mdi-file-file-download"></i></a>'.format(value.url, file_name, value.url)) or file_name
         else:
-            return html and mark_safe('<a target="_blank" href="{}">{}</a>'.format(url, file_name)) or url
+            return html and mark_safe('<a target="_blank" href="{}">{}</a>'.format(value.url, file_name)) or value.url
     elif isinstance(value, bool):
         return value and 'Sim' or 'Não'
     elif value.__class__ == datetime.date:

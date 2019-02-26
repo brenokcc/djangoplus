@@ -145,5 +145,8 @@ def add_grouped_actions(paginator, obj):
 
 @register.simple_tag()
 def add_actions(paginator, obj, category=None):
-    paginator.drop_down.add_actions(obj, inline=True, subset_name=paginator.get_current_tab_name() or None, category=category)
+    paginator.drop_down.add_actions(
+        obj, inline=True, subset_name=paginator.get_current_tab_name() or None, category=category,
+        action_names=paginator.action_names
+    )
     return ''

@@ -2,6 +2,7 @@
 
 # DJANGO FIELDS
 import sys
+import inspect
 from django.utils.text import camel_case_to_spaces
 from django.utils.safestring import mark_safe
 
@@ -351,7 +352,7 @@ def getattr_rec(obj, args):
                 if hasattr(field, 'formatter') and field.formatter:
                     from djangoplus.cache import loader
                     func = loader.formatters[field.formatter]
-                    if len(func.__code__.co_varnames) == 1:
+                    if count_parameters_names(func) == 1:
                         value = func(value)
                     else:
                         value = func(value, request=obj.request, verbose_name=field.verbose_name, instance=obj)
@@ -380,7 +381,7 @@ def getattr_rec(obj, args):
                         if formatter:
                             from djangoplus.cache import loader
                             func = loader.formatters[formatter]
-                            if len(func.__code__.co_varnames) == 1:
+                            if count_parameters_names(func) == 1:
                                 value = func(value)
                             else:
                                 value = func(value, request=obj.request, verbose_name=verbose_name, instance=obj)
@@ -410,17 +411,24 @@ def get_can_execute(action):
     return can_execute
 
 
-def should_add_action(action_inline, subset_name):
-    if action_inline is True:
-        return True
-    else:
-        add_action = False
+def should_add_action(action_inline, action_subsets, current_subset):
+    subsets = []
+    if current_subset == 'all':
+        current_subset = None
+    if action_subsets:
+        for subset_name in action_subsets:
+            if subset_name == 'all':
+                subsets.append(None)
+            else:
+                subsets.append(subset_name)
         if action_inline:
-            for action_subset in action_inline:
-                if (action_subset == subset_name) or (action_subset is True and subset_name is None):
-                    add_action = True
-                    break
-        return add_action
+            if None not in subsets:
+                subsets.append(None)
+    else:
+        if action_inline:
+            subsets.append(None)
+    # #print('  ', current_subset, subsets)
+    return current_subset in subsets
 
 
 def should_filter_or_display(request, model, to):
@@ -445,7 +453,7 @@ def should_filter_or_display(request, model, to):
 
 def find_action(model, action_name):
     from djangoplus.cache import loader
-    for actions in (loader.actions, loader.class_actions):
+    for actions in (loader.instance_actions, loader.queryset_actions):
         for action_group in actions[model]:
             for func_name, action in list(actions[model][action_group].items()):
                 if action['title'] == action_name:
@@ -513,7 +521,7 @@ def find_model_recursively(cls, tokens):
         return cls
 
 
-def check_condition(condition, obj):
+def check_condition(user, condition, obj):
     satisfied = True
     if obj.pk and condition:
         model = type(obj)
@@ -522,7 +530,7 @@ def check_condition(condition, obj):
         if hasattr(obj, attr_name):
             attr = getattr(obj, attr_name)
             if callable(attr):
-                satisfied = attr()
+                satisfied = attr(*get_role_values_for_condition(attr, user))
             else:
                 satisfied = bool(attr)
         else:
@@ -539,4 +547,33 @@ def check_condition(condition, obj):
     return satisfied
 
 
+def get_parameters_names(func, include_annotated=False):
+    parameters_names = []
+    for name, parameter in inspect.signature(func).parameters.items():
+        is_annotated = parameter.annotation is not None and parameter.annotation != inspect._empty
+        if not is_annotated or include_annotated:
+            parameters_names.append(name)
+    return parameters_names
 
+
+def count_parameters_names(func):
+    return len(get_parameters_names(func))
+
+
+def get_role_values_for_condition(func, user):
+    parameters_values = []
+    for name, parameter in inspect.signature(func).parameters.items():
+        role_username = get_metadata(parameter.annotation, 'role_username')
+        lookup = {role_username: user.username}
+        role = parameter.annotation.objects.filter(**lookup).first()
+        parameters_values.append(role)
+    return parameters_values
+
+
+def get_role_value_for_action(func, user, param_name):
+    for name, parameter in inspect.signature(func).parameters.items():
+        if name == param_name:
+            role_username = get_metadata(parameter.annotation, 'role_username')
+            lookup = {role_username: user.username}
+            return parameter.annotation.objects.filter(**lookup).first()
+    return None

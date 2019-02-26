@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-10 13:07-0300\n"
+"POT-Creation-Date: 2019-02-18 18:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,117 +18,138 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: core/views.py:145 core/views.py:158 core/views.py:328
-#: decorators/__init__.py:46
+#: djangoplus/core/views.py:145 djangoplus/core/views.py:158
+#: djangoplus/core/views.py:328 djangoplus/decorators/__init__.py:46
 msgid "Action successfully performed."
 msgstr "Ação realizada com sucesso."
 
-#: core/views.py:160
+#: djangoplus/core/views.py:160
 msgid "Registration successfully performed."
 msgstr "Cadastro realizado com sucesso."
 
-#: core/views.py:200 ui/components/paginator/templatetags/__init__.py:67
-#: ui/components/paginator/templatetags/__init__.py:99
+#: djangoplus/core/views.py:200
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:67
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:99
 msgid "View"
 msgstr "Visualizar"
 
-#: core/views.py:200
+#: djangoplus/core/views.py:200
 msgid "Log"
 msgstr "Log"
 
-#: core/views.py:299 ui/components/forms/__init__.py:41
+#: djangoplus/core/views.py:299 djangoplus/ui/components/forms/__init__.py:41
 msgid "Form"
 msgstr "Formulário"
 
-#: core/views.py:301 ui/components/forms/__init__.py:40
+#: djangoplus/core/views.py:301 djangoplus/ui/components/forms/__init__.py:40
 msgid "Send"
 msgstr "Enviar"
 
-#: core/views.py:322
+#: djangoplus/core/views.py:322
 msgid "Deletion successfully performed."
 msgstr "Exclusão realizada com sucesso."
 
-#: core/views.py:324 ui/components/paginator/templatetags/__init__.py:87
-#: ui/components/paginator/templatetags/__init__.py:109
+#: djangoplus/core/views.py:324
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:87
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:109
 msgid "Delete"
 msgstr "Excluir"
 
-#: decorators/__init__.py:45 decorators/views.py:55
-#: ui/components/paginator/templates/datagrid.html:42
-#: ui/components/paginator/templatetags/__init__.py:143
+#: djangoplus/decorators/__init__.py:45 djangoplus/decorators/views.py:55
+#: djangoplus/ui/components/paginator/templates/datagrid.html:42
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:143
 msgid "Actions"
 msgstr "Ações"
 
-#: ui/components/forms/__init__.py:74 ui/components/forms/factory.py:28
-#: ui/components/forms/factory.py:32 ui/components/forms/factory.py:94
+#: djangoplus/tools/browser.py:236
+msgid "Settings"
+msgstr "Configurações"
+
+#: djangoplus/tools/browser.py:238
+msgid "Logout"
+msgstr "Sair"
+
+#: djangoplus/ui/components/calendar/views.py:48
+msgid "Start"
+msgstr "Início"
+
+#: djangoplus/ui/components/calendar/views.py:49
+msgid "End"
+msgstr "Fim"
+
+#: djangoplus/ui/components/forms/__init__.py:74
+#: djangoplus/ui/components/forms/factory.py:28
+#: djangoplus/ui/components/forms/factory.py:32
+#: djangoplus/ui/components/forms/factory.py:94
 msgid "Save"
 msgstr "Salvar"
 
-#: ui/components/forms/__init__.py:281 ui/components/forms/__init__.py:283
+#: djangoplus/ui/components/forms/__init__.py:281
+#: djangoplus/ui/components/forms/__init__.py:283
 msgid "Confirm that you are not a robot."
 msgstr "Confirme que você não é um robô."
 
-#: ui/components/forms/factory.py:27
-#: ui/components/paginator/templatetags/__init__.py:77
-#: ui/components/paginator/templatetags/__init__.py:104
+#: djangoplus/ui/components/forms/factory.py:27
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:77
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:104
 msgid "Edit"
 msgstr "Editar"
 
-#: ui/components/forms/factory.py:31
+#: djangoplus/ui/components/forms/factory.py:31
 msgid "Register"
 msgstr "Cadastrar"
 
-#: ui/components/forms/factory.py:93
+#: djangoplus/ui/components/forms/factory.py:93
 msgid "Add "
 msgstr "Adicionar "
 
-#: ui/components/forms/factory.py:354
+#: djangoplus/ui/components/forms/factory.py:354
 msgid "Confirm Deletion"
 msgstr "Confirmar Exclusão"
 
-#: ui/components/forms/templates/form.html:27
+#: djangoplus/ui/components/forms/templates/form.html:27
 msgid "Please correct the errors below"
 msgstr "Por favor, corrija os erros abaixo"
 
-#: ui/components/forms/templates/form.html:199
+#: djangoplus/ui/components/forms/templates/form.html:199
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: ui/components/paginator/__init__.py:226
-#: ui/components/paginator/__init__.py:228
-#: ui/components/paginator/templatetags/__init__.py:114
+#: djangoplus/ui/components/paginator/__init__.py:226
+#: djangoplus/ui/components/paginator/__init__.py:228
+#: djangoplus/ui/components/paginator/templatetags/__init__.py:114
 msgid "Add"
 msgstr "Cadastrar"
 
-#: ui/components/paginator/templates/datagrid.html:31
+#: djangoplus/ui/components/paginator/templates/datagrid.html:31
 msgid "Options"
 msgstr "Opções"
 
-#: ui/components/paginator/templates/paginator.html:31
-#: ui/components/paginator/templates/paginator.html:163
-#: ui/components/panel/templates/iconpanel.html:16
-#: ui/components/utils/templates/chart.html:25
-#: ui/components/utils/templates/chart.html:45
-#: ui/components/utils/templates/table.html:86
+#: djangoplus/ui/components/paginator/templates/paginator.html:31
+#: djangoplus/ui/components/paginator/templates/paginator.html:163
+#: djangoplus/ui/components/panel/templates/iconpanel.html:16
+#: djangoplus/ui/components/utils/templates/chart.html:25
+#: djangoplus/ui/components/utils/templates/chart.html:45
+#: djangoplus/ui/components/utils/templates/table.html:86
 msgid "No records found"
 msgstr "Nenhum registro encontrado"
 
-#: ui/components/paginator/templates/paginator.html:114
+#: djangoplus/ui/components/paginator/templates/paginator.html:114
 msgid "Keywords"
 msgstr "Palavras-chaves"
 
-#: ui/components/paginator/templates/paginator.html:143
+#: djangoplus/ui/components/paginator/templates/paginator.html:143
 msgid "Filter"
 msgstr "Filtrar"
 
-#: ui/components/utils/templates/report.html:184
+#: djangoplus/ui/components/utils/templates/report.html:184
 msgid "Page"
 msgstr "Página"
 
-#: ui/components/utils/templates/report.html:184
+#: djangoplus/ui/components/utils/templates/report.html:184
 msgid "of"
 msgstr "de"
 
-#: ui/components/utils/templates/timeline.html:22
+#: djangoplus/ui/components/utils/templates/timeline.html:22
 msgid "Not completed"
 msgstr "Pendente"

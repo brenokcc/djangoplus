@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-10 13:07-0300\n"
+"POT-Creation-Date: 2019-02-18 18:04-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,40 +18,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: test/__init__.py:114
+#: djangoplus/test/__init__.py:124
 msgid "Username"
 msgstr "Login"
 
-#: test/__init__.py:115
+#: djangoplus/test/__init__.py:125
 msgid "Password"
 msgstr "Senha"
 
-#~ msgid "The user chooses"
-#~ msgstr "O usuário seleciona"
+#: djangoplus/test/__init__.py:126
+msgid "Sign-in"
+msgstr "Acessar"
 
-#~ msgid "The user enters"
-#~ msgstr "O usuário informa"
-
-#~ msgid "The user access the menu"
-#~ msgstr "O usuário acessa o menu"
-
-#~ msgid "The user access the system as"
-#~ msgstr "O usuário acessa o sistema como"
-
-#~ msgid "The system displays the main page"
-#~ msgstr "O sistema exibe a página principal"
-
-#~ msgid "The system displays previous registered records"
-#~ msgstr "O sistema exibe os registros previamente cadastrados"
-
-#~ msgid "The user clicks the button"
-#~ msgstr "O usuário clica no botão"
-
-#~ msgid "on the right-side of the action bar"
-#~ msgstr "no canto superior direito da tela"
-
-#~ msgid "The system displays the input form"
-#~ msgstr "O sistema exibe o formulário de cadastro"
-
-#~ msgid "Visualize"
-#~ msgstr "Visualizar"

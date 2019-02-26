@@ -5,7 +5,6 @@ from django.apps import apps
 from django.conf import settings
 from djangoplus.docs import utils
 from django.utils import translation
-from djangoplus.tools import terminal
 from django.utils.translation import ugettext as _
 
 

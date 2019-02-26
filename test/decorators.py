@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+
 import os
+from djangoplus import test
 from django.conf import settings
-from djangoplus.test import cache
 
 
 def parametrized(dec):
@@ -21,7 +22,7 @@ def testcase(func, title, username=settings.DEFAULT_SUPERUSER, password=settings
                 self.login(username, password)
             self.back()
 
-        if cache.RECORD and record:
+        if test.CACHE['RECORD'] and record:
             print('Start recording {}'.format(func.__name__))
             self.recorder.start()
             if title:
@@ -29,7 +30,7 @@ def testcase(func, title, username=settings.DEFAULT_SUPERUSER, password=settings
 
         func(self)
 
-        if cache.RECORD and record:
+        if test.CACHE['RECORD'] and record:
             self.wait(6)
             output_dir = os.path.join(settings.BASE_DIR, 'videos')
             self.recorder.stop(title, output_dir, self.AUDIO_FILE_PATH)
@@ -37,8 +38,8 @@ def testcase(func, title, username=settings.DEFAULT_SUPERUSER, password=settings
 
         self.dump(func.__name__)
 
-    cache.SEQUENCE += 1
-    wrapper._sequence = cache.SEQUENCE
+    test.CACHE['SEQUENCE'] += 1
+    wrapper._sequence = test.CACHE['SEQUENCE']
     wrapper._funcname = func.__name__
-    cache.RECORDING = False
+    test.CACHE['RECORDING'] = False
     return wrapper

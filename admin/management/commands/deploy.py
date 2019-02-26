@@ -423,6 +423,17 @@ def _setup_gunicorn_file():
         run('chmod a+x {}'.format(file_path))
 
 
+def _setup_postgres():
+    file_path = '/etc/postgresql/9.4/main/pg_hba.conf '
+    if not exists(file_path):
+        run('apt-get -y install postgresql postgresql-contrib')
+        run('cp {} /tmp'.format(file_path))
+        run('echo "local   all             postgres                                trust\\nhost    all             '
+            'postgres        127.0.0.1/32            trust\\nhost    all             postgres        ::1/128       '
+            '          trust" > {}'.format(file_path))
+        run('/etc/init.d/postgresql restart')
+
+
 def _setup_remote_webserver():
     _setup_nginx_file()
     _setup_supervisor_file()
@@ -634,6 +645,7 @@ def backupdb():
 
 def deploy():
     _execute_aptget()
+    _setup_postgres()
     _check_remote_keys()
     _setup_local_repository()
     _push_local_changes()

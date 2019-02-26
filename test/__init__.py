@@ -3,7 +3,6 @@ import os
 import json
 import warnings
 from django.conf import settings
-from djangoplus.test import cache
 from djangoplus.tools.browser import Browser
 from djangoplus.tools.subtitle import Subtitle
 from djangoplus.tools.terminal import Terminal
@@ -12,6 +11,17 @@ from djangoplus.tools.video import VideoRecorder
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.staticfiles.testing import LiveServerTestCase
 from django.contrib.staticfiles.handlers import StaticFilesHandler
+
+
+CACHE = dict(
+    SEQUENCE=0,
+    STEP=None,
+    CONTINUE=None,
+    RESUME=None,
+    RECORD=None,
+    HEADLESS=None,
+    PAUSE=False
+)
 
 
 class TestStaticFilesHandler(StaticFilesHandler):
@@ -40,9 +50,9 @@ class TestCase(LiveServerTestCase):
         cls.subtitle = Subtitle()
         cls.recorder = VideoRecorder()
         cls.terminal = Terminal()
-        if not cache.HEADLESS:
+        if not CACHE['HEADLESS']:
             cls.terminal.hide()
-        if cache.RECORD:
+        if CACHE['RECORD']:
             cls.browser.slowly = True
         for app_label in settings.INSTALLED_APPS:
             app_module = __import__(app_label)
@@ -113,7 +123,7 @@ class TestCase(LiveServerTestCase):
         self.open('/admin/login/')
         self.enter(_('Username'), username)
         self.enter(_('Password'), password)
-        self.click_button('Acessar')
+        self.click_button(_('Sign-in'))
         self.wait()
 
     def logout(self):
@@ -123,7 +133,7 @@ class TestCase(LiveServerTestCase):
     @classmethod
     def tearDownClass(cls):
         super(TestCase, cls).tearDownClass()
-        if not cache.HEADLESS:
+        if not CACHE['HEADLESS']:
             cls.terminal.show()
         cls.browser.close()
         cls.browser.service.stop()
@@ -159,7 +169,7 @@ class TestCase(LiveServerTestCase):
                 if hasattr(attr, '_sequence'):
                     flow.append(attr)
 
-        if cache.STEP or cache.RESUME or cache.CONTINUE:
+        if CACHE['STEP'] or CACHE['RESUME'] or CACHE['CONTINUE']:
             execute = False
         else:
             execute = True
@@ -167,21 +177,21 @@ class TestCase(LiveServerTestCase):
         for i, testcase in enumerate(flow):
             if execute:
                 testcase()
-            elif cache.RESUME:
-                if cache.RESUME == testcase._funcname:
-                    self.restore(cache.RESUME)
+            elif CACHE['RESUME']:
+                if CACHE['RESUME'] == testcase._funcname:
+                    self.restore(CACHE['RESUME'])
                     execute = True
-            elif cache.STEP:
-                if cache.STEP == testcase._funcname:
+            elif CACHE['STEP']:
+                if CACHE['STEP'] == testcase._funcname:
                     if i > 0:
                         self.restore(flow[i-1]._funcname)
                     testcase()
-            elif cache.CONTINUE:
-                if cache.CONTINUE == testcase._funcname:
+            elif CACHE['CONTINUE']:
+                if CACHE['CONTINUE'] == testcase._funcname:
                     if i > 0:
                         self.restore(flow[i-1]._funcname)
                     testcase()
                     execute = True
 
-        if cache.PAUSE and not cache.HEADLESS:
+        if CACHE['PAUSE'] and not CACHE['HEADLESS']:
             input('Type enter to continue...')

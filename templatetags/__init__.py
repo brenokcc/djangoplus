@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
+
 import re
 import json
 import locale
 import qrcode
-from django import template
-from django.conf import settings
-from django.utils.safestring import mark_safe
-from djangoplus.utils import http
-from djangoplus.utils.formatter import format_value, normalyze
-from djangoplus.utils.metadata import get_metadata, getattr2
-from uuid import uuid4
 import base64
 import tempfile
+from uuid import uuid4
+from django import template
+from django.conf import settings
+from djangoplus.utils import http
+from django.utils.safestring import mark_safe
+from djangoplus.utils.formatter import format_value, normalyze
+from djangoplus.utils.metadata import get_metadata, getattr2
+
+
 register = template.Library()
 
 
@@ -63,25 +66,20 @@ def print_format(value):
 
 @register.filter
 def ordered_list(value):
-    l = ['<ol style="padding-left:13px">']
+    ol = ['<ol style="padding-left:13px">']
     for obj in value:
-        l.append('<li style="list-style-type:decimal">{}</li>'.format(obj))
-    l.append('</ol>')
-    return mark_safe(''.join(l))
+        ol.append('<li style="list-style-type:decimal">{}</li>'.format(obj))
+    ol.append('</ol>')
+    return mark_safe(''.join(ol))
 
 
 @register.simple_tag()
 def value_at(col_value, col_index, template_filters):
     from . import utils
     value = col_value
-
-    # Se há um template filter com o mesmo índice da coluna, então
-    # é sinal que este deverá ser o template_filter a ser utilizado.
     if col_index in template_filters:
         template_filter = template_filters[col_index]
         value = utils.apply_filter(value, template_filter)
-
-    # Realizando a formatação padrão.
     value = utils.apply_filter(value, 'format2')
     return value
 
@@ -112,9 +110,6 @@ def link(value):
 @register.filter()
 def mobile(request):
     return http.mobile(request)
-
-
-
 
 
 @register.filter
@@ -167,14 +162,15 @@ def sorted_items(d):
 @register.filter
 def photo(user):
     if user and user.is_authenticated:
-        if user.photo and 'static' not in user.photo.name:
-            return '/media/{}'.format(user.photo)
-    return '/static/images/user.png'
+        if user.photo:
+            return '/media/{}'.format(user.photo.name)
+    return '/media/user.png'
 
 
 @register.filter
-def toast(message):
-    return mark_safe("<script>$.toast({{ text: '{}', loader: false, position : {{top: 60, right: 30}}, hideAfter: 10000}});</script>".format(message.message))
+def toast(m):
+    params = "{{ text: '{}', loader: false, position : {{top: 60, right: 30}}, hideAfter: 10000}}".format(m.message)
+    return mark_safe("<script>$.toast({});</script>".format(params))
 
 
 @register.simple_tag()

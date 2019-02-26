@@ -68,10 +68,13 @@ class ClassDiagram(object):
                         associations_count[model] += 1
                         associations_count[related_object.related_model] += 1
                     else:
-                        if (model not in loader.role_models or class_diagram_name == related_verbose_name) or (
-                                        class_diagram_name == verbose_name and related_object.related_model not in loader.role_models):
+                        first_condition = model not in loader.role_models or class_diagram_name == related_verbose_name
+                        second_condition = class_diagram_name == verbose_name and related_object.related_model not in \
+                            loader.role_models
+                        if first_condition or second_condition:
                             self.agregations.append(
-                                [verbose_name, related_verbose_name, related_object.field.name])
+                                [verbose_name, related_verbose_name, related_object.field.name]
+                            )
                             associations_count[related_object.related_model] += 1
                             associations_count[model] += 1
         sorted_associations_count = sorted(associations_count, key=associations_count.get, reverse=True)

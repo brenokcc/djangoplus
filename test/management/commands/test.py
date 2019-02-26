@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import os
 import json
 from os import path
+from djangoplus import test
 from django.conf import settings
-from djangoplus.test import cache
 from djangoplus.docs.diagrams import Workflow
 from djangoplus.docs.usecase import UseCase
-from django.core.management.commands import test
+from django.core.management.commands.test import Command as DjangoTestComand
 
 
-class Command(test.Command):
+class Command(DjangoTestComand):
 
     def add_arguments(self, parser):
         super(Command, self).add_arguments(parser)
@@ -40,14 +39,11 @@ class Command(test.Command):
         upload = options.pop('upload', False)
         pause = options.pop('pause', False)
 
-        usecases = options.pop('usecases', False)
-        usecase = options.pop('usecase', False)
-
         if not watch and not record:
-            cache.HEADLESS = True
+            test.CACHE['HEADLESS'] = True
         if record or upload:
-            cache.RECORD = True
-        cache.PAUSE = pause
+            test.CACHE['RECORD'] = True
+        test.CACHE['PAUSE'] = pause
 
         if options.pop('generate', False):
             workflow = Workflow()
@@ -62,7 +58,6 @@ class Command(test.Command):
                         code_list.append(code)
                 if code_list:
                     new_file_content = '{}\n{}\n'.format(file_content, '\n\n'.join(code_list))
-                    # print(new_file_content)
                     open(test_file_path, 'w').write(new_file_content)
                     print('Testcases succesfully generanted into file "{}/tests.py"'.format(settings.PROJECT_NAME))
             except ZeroDivisionError as e:
@@ -74,12 +69,12 @@ class Command(test.Command):
                 file_content = path.exists(file_path) and open(file_path).read() or ''
                 if file_content:
                     data = json.loads(file_content)
-                    cache.RESUME = data.get('step', None)
-                    print('Resuming from step #{}'.format(cache.RESUME))
+                    test.CACHE['RESUME'] = data.get('step', None)
+                    print('Resuming from step #{}'.format(test.CACHE['RESUME']))
             elif options.get('testcase', False):
-                cache.STEP = options.get('testcase')[0]
-                print('Executing step #{}'.format(cache.STEP))
+                test.CACHE['STEP'] = options.get('testcase')[0]
+                print('Executing step #{}'.format(test.CACHE['STEP']))
             elif options.get('continue', False):
-                cache.CONTINUE = options.get('continue')[0]
-                print('Continuing from step #{}'.format(cache.CONTINUE))
+                test.CACHE['CONTINUE'] = options.get('continue')[0]
+                print('Continuing from step #{}'.format(test.CACHE['CONTINUE']))
             super(Command, self).handle(*args, **options)

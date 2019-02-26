@@ -111,7 +111,7 @@ def sync_permissions():
                 for group in Group.objects.filter(name__in=can_view):
                     group.permissions.add(permission)
 
-    for actions_dict in (loader.actions, loader.class_actions):
+    for actions_dict in (loader.instance_actions, loader.queryset_actions):
         for model in actions_dict:
             app_label = get_metadata(model, 'app_label')
             content_type = ContentType.objects.get(app_label=app_label, model=model.__name__.lower())

@@ -180,9 +180,8 @@ function lookAtPanel(text){
 
 function enter(name, value, submit){
     if(String(value)!='null' && String(value)){
-        var element = $(cursor).find( "input[name='"+name+"'], textarea[name='"+name+"']" ).first();
-        if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('input, textarea').first();
-
+        var element = $(cursor).find( "input[name='"+name+"'], textarea[name='"+name+"']" ).not("input[type='checkbox']").first();
+        if (!element[0]) element = $(cursor).find( "label:contains('"+name+"')" ).parent().find('input, textarea').not("input[type='checkbox']").first();
         $('input[name=hidden-upload-value]').remove();
         if(element.prop("type")=='file'){
             $('<input type="hidden" name="hidden-upload-value" value="'+element[0].id+':'+value+'">').appendTo(document.body);

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-
+import os
+import shutil
+import djangoplus
 from django.apps import apps
 from threading import Thread
 from django.conf import settings
-from djangoplus.utils.metadata import get_metadata, get_scope, get_can_execute
+from djangoplus.utils.metadata import get_metadata, get_scope, get_can_execute, count_parameters_names
 
 initialized = False
 settings_instance = None
@@ -23,8 +25,10 @@ abstract_role_models = dict()
 abstract_role_model_names = dict()
 
 # actions
-actions = dict()
+instance_actions = dict()
+queryset_actions = dict()
 class_actions = dict()
+class_view_actions = dict()
 fieldset_actions = dict()
 add_inline_actions = dict()
 
@@ -49,6 +53,7 @@ last_authenticated_username = None
 
 if not initialized:
     initialized = True
+
     for model in apps.get_models():
         model_name = model.__name__.lower()
         app_label = get_metadata(model, 'app_label')
@@ -73,8 +78,10 @@ if not initialized:
 
         if model not in subsets:
             subsets[model] = []
-        if model not in actions:
-            actions[model] = dict()
+        if model not in instance_actions:
+            instance_actions[model] = dict()
+        if model not in queryset_actions:
+            queryset_actions[model] = dict()
         if model not in class_actions:
             class_actions[model] = dict()
         if model not in fieldset_actions:
@@ -129,7 +136,6 @@ if not initialized:
                     subset_alert = attr._metadata['{}:alert'.format(attr_name)]
                     subset_notify = attr._metadata['{}:notify'.format(attr_name)]
                     subset_can_view = attr._metadata['{}:can_view'.format(attr_name)]
-                    subset_inline = attr._metadata['{}:inline'.format(attr_name)]
                     subset_order = attr._metadata['{}:order'.format(attr_name)]
                     subset_menu = attr._metadata['{}:menu'.format(attr_name)]
                     subset_dashboard = attr._metadata['{}:dashboard'.format(attr_name)]
@@ -143,7 +149,7 @@ if not initialized:
                         title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
                         menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify,
                         order=subset_order, help_text=subset_help_text, list_display=subset_list_display,
-                        list_filter=subset_list_filter, search_fields=subset_search_fields, inline=subset_inline
+                        list_filter=subset_list_filter, search_fields=subset_search_fields
                     )
                     subsets[model].append(item)
 
@@ -178,36 +184,46 @@ if not initialized:
         # indexing the actions defined in models
         for attr in dir(model):
             if attr[0] != '_' and attr not in field_names:
-                function = getattr(model, attr)
-                if hasattr(function, '_action'):
-                    action = getattr(function, '_action')
+                func = getattr(model, attr)
+                if hasattr(func, '_action'):
+                    action = getattr(func, '_action')
                     action_group = action['group']
 
                     action_can_execute = get_can_execute(action)
                     action_title = action['title']
                     action_workflow = action['usecase']
                     action_menu = action['menu']
-                    action_inline = action['inline']
                     view_name = action['view_name']
-                    if action_group not in actions[model]:
-                        actions[model][action_group] = dict()
-                    actions[model][action_group][view_name] = action
+                    if action_group not in instance_actions[model]:
+                        instance_actions[model][action_group] = dict()
+                    instance_actions[model][action_group][view_name] = action
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
                         workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
                     if action_menu:
                         url = '/action/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), attr)
-                        action_view = dict(title=action_title, function=None, url=url, can_view=action_can_execute, menu=action_menu, icon=None,
-                              style='ajax', add_shortcut=False, doc=function.__doc__, usecase=None)
+                        action_view = dict(
+                            title=action_title, function=None, url=url, can_view=action_can_execute, menu=action_menu,
+                            icon=None, style='ajax', add_shortcut=False, doc=func.__doc__, usecase=None
+                        )
                         views.append(action_view)
 
-        # indexing the actions related to related whose model has the add_inline meta-attribute
+        # indexing the actions related to relations whose model has the add_inline meta-attribute
         inlines = []
         if hasattr(model, 'fieldsets'):
             for fieldset in model.fieldsets:
                 if 'relations' in fieldset[1]:
                     for item in fieldset[1]['relations']:
-                        tmp = getattr(model, item.split(':')[0])
+                        if ':' in item:
+                            # 'relation_name:all[action_a,action_b],subset[action_c]'
+                            relation_name = item.split(':')[0]
+                        elif '[' in item:
+                            # 'relation_name[action_a,action_b]'
+                            relation_name = item.split('[')[0]
+                        else:
+                            # 'relation_name'
+                            relation_name = item
+                        tmp = getattr(model, relation_name)
                         if hasattr(tmp, 'rel'):
                             add_inline = get_metadata(tmp.rel.related_model, 'add_inline')
                             if add_inline:
@@ -223,22 +239,29 @@ if not initialized:
                                 add_inline_actions[model].append(add_inline_action)
 
         # indexing the actions defined in managers
-        for attr_name in dir(model.objects.get_queryset()):
+        qs_manager_class = type(model.objects.get_queryset())
+        for attr_name in dir(qs_manager_class):
             if not attr_name[0] == '_':
-                attr = getattr(model.objects.get_queryset(), attr_name)
+                attr = getattr(qs_manager_class, attr_name)
                 if hasattr(attr, '_action'):
                     action = getattr(attr, '_action')
                     action_title = action['title']
                     action_can_execute = get_can_execute(action)
                     action_group = action['group']
-                    view_name = action['view_name']
-                    action_inline = action['inline']
+                    action_name = action['view_name']
+                    action_subsets = action['subsets']
                     action_workflow = action['usecase']
-                    if not action_inline:
+                    is_class_method = isinstance(qs_manager_class.__dict__[attr_name], classmethod)
+                    if not action_subsets:
                         action['inline'] = True
-                    if action_group not in class_actions[model]:
-                        class_actions[model][action_group] = dict()
-                    class_actions[model][action_group][view_name] = action
+                    if is_class_method:
+                        if action_group not in class_actions[model]:
+                            class_actions[model][action_group] = dict()
+                        class_actions[model][action_group][action_name] = action
+                    else:
+                        if action_group not in queryset_actions[model]:
+                            queryset_actions[model][action_group] = dict()
+                        queryset_actions[model][action_group][action_name] = action
 
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
@@ -258,10 +281,10 @@ if not initialized:
             try:
                 module = __import__('{}.views'.format(app_label), fromlist=list(map(str, app_label.split('.'))))
                 for attr_name in dir(module):
-                    function = getattr(module, attr_name)
+                    func = getattr(module, attr_name)
                     # indexing the actions defined in the views
-                    if hasattr(function, '_action'):
-                        action = function._action
+                    if hasattr(func, '_action'):
+                        action = getattr(func, '_action')
                         action_group = action['group']
                         action_model = action['model']
                         action_function = action['function']
@@ -269,37 +292,40 @@ if not initialized:
                         action_title = action['title']
                         action_workflow = action['usecase']
                         action_can_execute = get_can_execute(action)
-                        action_inline = action['inline']
+                        action_subsets = action['subsets']
                         action_menu = action['menu']
 
                         if action_workflow:
                             role = action_can_execute and action_can_execute[0] or 'Superusuário'
                             action_model_verbose_name = get_metadata(action_model, 'verbose_name')
                             workflows[action_workflow] = dict(activity=action_title, role=role, model=action_model_verbose_name)
-                        # object action
-                        if action_function.__code__.co_argcount > 1:
-                            if action_group not in actions[action_model]:
-                                actions[action_model][action_group] = dict()
-                            actions[action_model][action_group][action_name] = action
+                        # instance action
+                        if count_parameters_names(action_function) > 1:
+                            if action_group not in instance_actions[action_model]:
+                                instance_actions[action_model][action_group] = dict()
+                            instance_actions[action_model][action_group][action_name] = action
                         # class action
                         else:
-                            if action_model not in class_actions:
-                                class_actions[action_model] = dict()
-                            if action_group not in class_actions[action_model]:
-                                class_actions[action_model][action_group] = dict()
-                            class_actions[action_model][action_group][action_name] = action
+                            if not action_subsets:
+                                action['inline'] = True
+                            if action_model not in class_view_actions:
+                                class_view_actions[action_model] = dict()
+                            if action_group not in class_view_actions[action_model]:
+                                class_view_actions[action_model][action_group] = dict()
+                            class_view_actions[action_model][action_group][action_name] = action
                     # indexing the views
-                    elif hasattr(function, '_view'):
-                        views.append(function._view)
-                        view_title = function._view['title']
-                        view_workflow = function._view['usecase']
-                        view_can_view = function._view['can_view']
+                    elif hasattr(func, '_view'):
+                        action = getattr(func, '_view')
+                        views.append(action)
+                        view_title = action['title']
+                        view_workflow = action['usecase']
+                        view_can_view = action['can_view']
                         if view_workflow:
                             role = view_can_view and view_can_view[0] or 'Superusuário'
                             workflows[view_workflow] = dict(activity=view_title, role=role, model=None)
                     # indexing the widgets
-                    elif hasattr(function, '_widget'):
-                        widgets.append(function._widget)
+                    elif hasattr(func, '_widget'):
+                        widgets.append(getattr(func, '_widget'))
             except ImportError as e:
                 pass
 
@@ -374,7 +400,7 @@ if not initialized:
                 if group_name not in permission_by_scope[permission_key]:
                     permission_by_scope[permission_key].append(group_name)
 
-        for actions_dict in (actions, class_actions):
+        for actions_dict in (instance_actions, queryset_actions):
             for category in actions_dict[model]:
                 for key in list(actions_dict[model][category].keys()):
                     name = actions_dict[model][category][key]['title']
