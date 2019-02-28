@@ -232,7 +232,7 @@ def get_many_to_many_reverse_form(request, obj, related_field_name):
 
 
 def get_class_action_form(request, _model, action, func):
-    action_title = action['title']
+    action_verbose_name = action['verbose_name']
     initial = action['initial']
     action_input = action['input']
     app_label = get_metadata(_model, 'app_label')
@@ -253,15 +253,15 @@ def get_class_action_form(request, _model, action, func):
                 class Meta:
                     model = action_input
                     fields = get_parameters_names(func)
-                    title = action_title
-                    submit_label = action_title
+                    title = action_verbose_name
+                    submit_label = action_verbose_name
     else:
         class Form(forms.ModelForm):
             class Meta:
                 model = _model
                 fields = get_parameters_names(func)
-                title = action_title
-                submit_label = action_title
+                title = action_verbose_name
+                submit_label = action_verbose_name
 
     initial = hasattr(_model.objects, initial) and getattr(_model.objects, initial)() or None
     form = Form(request, initial=initial)
@@ -270,7 +270,7 @@ def get_class_action_form(request, _model, action, func):
 
 def get_action_form(request, obj, action):
     action_function = action['function']
-    action_title = action['title']
+    action_verbose_name = action['verbose_name']
     initial = action['initial']
     action_input = action['input']
     action_choices = action['choices']
@@ -305,8 +305,8 @@ def get_action_form(request, obj, action):
                 class Meta:
                     model = action_input
                     fields = get_parameters_names(func)
-                    title = action_title
-                    submit_label = action_title
+                    title = action_verbose_name
+                    submit_label = action_verbose_name
 
             form_cls = Form
     else:
@@ -314,8 +314,8 @@ def get_action_form(request, obj, action):
             class Meta:
                 model = func.__self__.__class__
                 fields = get_parameters_names(func)
-                title = action_title
-                submit_label = action_title
+                title = action_verbose_name
+                submit_label = action_verbose_name
 
         form_cls = Form
 

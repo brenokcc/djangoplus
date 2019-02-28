@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import copy
 from collections import OrderedDict
 from djangoplus.ui.components import forms
@@ -210,7 +211,7 @@ class Paginator(RequestComponent):
             for group in loader.class_actions[self.qs.model]:
                 for view_name in loader.class_actions[self.qs.model][group]:
                     _action = loader.class_actions[self.qs.model][group][view_name]
-                    action_title = _action['title']
+                    action_verbose_name = _action['verbose_name']
                     action_inline = _action['inline']
                     action_subsets = _action['subsets']
                     action_can_execute = _action['can_execute']
@@ -220,7 +221,6 @@ class Paginator(RequestComponent):
                         action_style = '{} popup'.format(action_style)
                     if self.is_list_view or view_name in self.action_names:
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
-                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 111)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
                             func = getattr(self.qs, view_name)
                             ignore_pdf = False
@@ -229,7 +229,7 @@ class Paginator(RequestComponent):
                                 ignore_pdf = True
                             char = '?' in self.request.get_full_path() and '&' or '?'
                             url = '{}{}{}'.format(self.request.get_full_path(), char, '{}='.format(view_name))
-                            self.add_action(action_title, url, action_style, None, action_category)
+                            self.add_action(action_verbose_name, url, action_style, None, action_category)
                             if view_name in self.request.GET:
                                 self._proccess_request(func, _action, ignore_pdf)
 
@@ -238,7 +238,7 @@ class Paginator(RequestComponent):
             for group in loader.queryset_actions[self.qs.model]:
                 for view_name in loader.queryset_actions[self.qs.model][group]:
                     _action = loader.queryset_actions[self.qs.model][group][view_name]
-                    action_title = _action['title']
+                    action_verbose_name = _action['verbose_name']
                     action_can_execute = _action['can_execute']
                     action_inline = _action['inline']
                     action_subsets = _action['subsets']
@@ -250,7 +250,6 @@ class Paginator(RequestComponent):
                         action_style = '{} popup'.format(action_style)
                     if self.is_list_view or view_name in self.action_names:
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
-                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 222)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
                             self.display_checkboxes = self.display_checkboxes or not action_source == 'view'
                             func = getattr(self.qs, view_name)
@@ -261,7 +260,7 @@ class Paginator(RequestComponent):
                                 ignore_pdf = True
                                 action_style = action_style.replace('pdf', '')
                             self.add_queryset_action(
-                                action_title, url, action_style, None, action_category, action_condition
+                                action_verbose_name, url, action_style, None, action_category, action_condition
                             )
 
                             if view_name in self.request.GET:
@@ -278,7 +277,7 @@ class Paginator(RequestComponent):
             for group in loader.class_view_actions[self.qs.model]:
                 for view_name in loader.class_view_actions[self.qs.model][group]:
                     _action = loader.class_view_actions[self.qs.model][group][view_name]
-                    action_title = _action['title']
+                    action_verbose_name = _action['verbose_name']
                     action_inline = _action['inline']
                     action_subsets = _action['subsets']
                     action_can_execute = _action['can_execute']
@@ -288,9 +287,8 @@ class Paginator(RequestComponent):
                     action_style = action_style.replace('popup', '')
                     if self.is_list_view or view_name in self.action_names:
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
-                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 333)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
-                            self.add_action(action_title, url, action_style, None, action_category)
+                            self.add_action(action_verbose_name, url, action_style, None, action_category)
 
         if self.is_list_view:
             # utility actions
@@ -497,7 +495,7 @@ class Paginator(RequestComponent):
         active_queryset = None
         create_default_tab = True
         for subset in subsets:
-            tab_title = subset['title']
+            tab_title = subset['verbose_name']
             tab_function = subset['function']
             tab_can_view = subset['can_view']
             tab_name = subset['name']

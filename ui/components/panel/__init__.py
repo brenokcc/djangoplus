@@ -2,7 +2,7 @@
 from decimal import Decimal
 from djangoplus.ui import RequestComponent
 from django.utils.text import slugify
-from djangoplus.utils import permissions
+from djangoplus.utils import permissions, execute_and_format
 from django.template.loader import render_to_string
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
@@ -181,7 +181,7 @@ class ShortcutPanel(RequestComponent):
         for item in loader.views:
             if item['add_shortcut']:
                 if permissions.check_group_or_permission(request, item['can_view']):
-                    self.add(item['icon'], item['title'], None, item['url'], item['can_view'], item['style'])
+                    self.add(item['icon'], item['verbose_name'], None, item['url'], item['can_view'], item['style'])
 
     def add(self, icon, description, count=None, url=None, perm_or_group=None, style='ajax'):
         if permissions.check_group_or_permission(self.request, perm_or_group):
@@ -242,7 +242,7 @@ class CardPanel(RequestComponent):
                             count = qs.count()
                             if count:
                                 url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                                self.add(icon, title, count, url, '', None, item['title'])
+                                self.add(icon, title, count, url, '', None, item['verbose_name'])
 
         for item in loader.views:
             if False:  # TODO False
@@ -279,100 +279,6 @@ class DashboardPanel(RequestComponent):
         self.right = []
         self.bottom = []
 
-        from djangoplus.cache import loader
-        for model in loader.subsets:
-            icon = get_metadata(model, 'icon', 'fa-bell-o')
-            title = get_metadata(model, 'verbose_name_plural')
-            app_label = get_metadata(model, 'app_label')
-            model_name = model.__name__.lower()
-            for item in loader.subsets[model]:
-                description = item['title']
-                notify = item['notify']
-                if notify is True or notify and permissions.check_group_or_permission(request, notify):
-                    attr_name = item['function'].__func__.__name__
-                    qs = model.objects.all(request.user)
-                    qs = getattr(qs, attr_name)()
-                    count = qs.count()
-                    if count:
-                        url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                        notification_panel = NotificationPanel(request, title, count, url, description, icon)
-                        self.right.append(notification_panel)
-        for model in loader.list_dashboard:
-            title = get_metadata(model, 'verbose_name_plural')
-            position = get_metadata(model, 'dashboard')
-            paginator = Paginator(request, model.objects.all(request.user), title)
-            self.add(paginator, position)
-
-        icon_panel = ShortcutPanel(request)
-        card_panel = CardPanel(request)
-
-        self.top.append(icon_panel)
-        self.center.append(card_panel)
-
-        for item in loader.subset_widgets:
-
-            model = item['model']
-            title = item['title']
-            func_name = item['function']
-            dashboard = item['dashboard']
-            formatter = item['formatter']
-            list_display = item.get('list_display')
-            link = item['link']
-
-            l = []
-            if type(dashboard) == dict:
-                for position, group_names in list(dashboard.items()):
-                    group_names = type(group_names) == tuple and group_names or (group_names,)
-                    l.append((position, group_names))
-            else:
-                l.append((dashboard, item['can_view']))
-
-            for position, group_names in l:
-                if permissions.check_group_or_permission(request, group_names, ignore_superuser=True):
-                    qs = model.objects.all(request.user)
-                    func = getattr(qs, func_name)
-                    params = get_role_values_for_condition(func, self.request.user)
-                    f_return = func(*params)
-                    html = ''
-
-                    if type(f_return) in (int, Decimal):
-                        verbose_name = get_metadata(model, 'verbose_name_plural')
-                        icon = get_metadata(model, 'icon')
-                        panel = NumberPanel(request, verbose_name, f_return, title, icon)
-                        html = str(panel)
-
-                    if type(f_return).__name__ == 'QueryStatistics' and not formatter:
-                        formatter = 'statistics'
-
-                    if formatter:
-                        func = loader.formatters[formatter]
-                        if count_parameters_names(func) == 1:
-                            html = str(func(f_return))
-                        else:
-                            html = str(func(f_return, request=self.request, verbose_name=title))
-                    elif hasattr(f_return, 'model'):
-                        compact = position in ('left', 'right')
-                        app_label = get_metadata(model, 'app_label')
-                        model_name = model.__name__.lower()
-                        verbose_name_plural = get_metadata(model, 'verbose_name_plural')
-                        if link:
-                            title = '{} {}'.format(verbose_name_plural, title)
-                        url = '/list/{}/{}/{}/'.format(app_label, model_name, func_name)
-                        paginator = Paginator(self.request, f_return, title, readonly=compact, list_display=list_display, list_filter=(), search_fields=(), list_subsets=[func_name], url=link and url or None)
-                        if compact:
-                            paginator.column_names = paginator.column_names[0:1]
-                        html = str(paginator)
-
-                    self.add(html, position)
-
-        for item in loader.widgets:
-            if permissions.check_group_or_permission(request, item['can_view'], ignore_superuser=True):
-                func = item['function']
-                position = item['position']
-                f_return = func(request)
-                html = render_to_string(['{}.html'.format(func.__name__), 'dashboard.html'], f_return, request)
-                self.add(html, position)
-
     def add(self, component, position):
         if position == 'top':
             self.top.append(component)
@@ -384,6 +290,127 @@ class DashboardPanel(RequestComponent):
             self.right.append(component)
         elif position == 'bottom':
             self.bottom.append(component)
+
+    def add_widget(self, obj, item):
+        model = item['model']
+        title = item['verbose_name']
+        func_name = item['function']
+        dashboard = item['dashboard']
+        list_display = item.get('list_display')
+        link = item['link']
+
+        l = []
+        if dashboard:
+            if type(dashboard) == dict:
+                for position, group_names in list(dashboard.items()):
+                    group_names = type(group_names) == tuple and group_names or (group_names,)
+                    l.append((position, group_names))
+            else:
+                l.append((dashboard, item['can_view']))
+
+            for position, group_names in l:
+                if permissions.check_group_or_permission(self.request, group_names, ignore_superuser=True):
+                    func = getattr(obj, func_name)
+                    f_return = execute_and_format(self.request, func)
+
+                    if type(f_return) in (int, Decimal):
+                        verbose_name = get_metadata(model, 'verbose_name_plural')
+                        icon = get_metadata(model, 'icon')
+                        panel = NumberPanel(self.request, verbose_name, f_return, title, icon)
+                        html = str(panel)
+
+                    elif hasattr(f_return, 'model'):
+                        compact = position in ('left', 'right')
+                        app_label = get_metadata(model, 'app_label')
+                        model_name = model.__name__.lower()
+                        verbose_name_plural = get_metadata(model, 'verbose_name_plural')
+                        if link:
+                            title = '{} {}'.format(verbose_name_plural, title)
+                        url = '/list/{}/{}/{}/'.format(app_label, model_name, func_name)
+                        paginator = Paginator(self.request, f_return, title, readonly=compact,
+                                              list_display=list_display, list_filter=(), search_fields=(),
+                                              list_subsets=[func_name], url=link and url or None)
+                        if compact:
+                            paginator.column_names = paginator.column_names[0:1]
+                        html = str(paginator)
+                    else:
+                        html = str(f_return)
+                    self.add(html, position)
+
+    def process_request(self):
+        super(DashboardPanel, self).process_request()
+        for container in (self.top, self.center, self.left, self.right, self.bottom):
+            for component in container:
+                if hasattr(component, 'process_request'):
+                    component.process_request()
+
+
+class AppDashboard(DashboardPanel):
+
+    def __init__(self, request):
+        super(AppDashboard, self).__init__(request)
+        self.load_widgets()
+
+    def load_widgets(self):
+        from djangoplus.cache import loader
+        for model in loader.subsets:
+            icon = get_metadata(model, 'icon', 'fa-bell-o')
+            title = get_metadata(model, 'verbose_name_plural')
+            app_label = get_metadata(model, 'app_label')
+            model_name = model.__name__.lower()
+            for item in loader.subsets[model]:
+                description = item['verbose_name']
+                notify = item['notify']
+                if notify is True or notify and permissions.check_group_or_permission(self.request, notify):
+                    attr_name = item['function'].__func__.__name__
+                    qs = model.objects.all(self.request.user)
+                    qs = getattr(qs, attr_name)()
+                    count = qs.count()
+                    if count:
+                        url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
+                        notification_panel = NotificationPanel(self.request, title, count, url, description, icon)
+                        self.right.append(notification_panel)
+        for model in loader.list_dashboard:
+            title = get_metadata(model, 'verbose_name_plural')
+            position = get_metadata(model, 'dashboard')
+            paginator = Paginator(self.request, model.objects.all(self.request.user), title)
+            self.add(paginator, position)
+
+        icon_panel = ShortcutPanel(self.request)
+        card_panel = CardPanel(self.request)
+
+        self.top.append(icon_panel)
+        self.center.append(card_panel)
+
+        for item in loader.subset_widgets:
+            self.add_widget(item['model'].objects.all(self.request.user), item)
+
+        for item in loader.widgets:
+            if permissions.check_group_or_permission(self.request, item['can_view'], ignore_superuser=True):
+                func = item['function']
+                position = item['position']
+                f_return = func(self.request)
+                html = render_to_string(['{}.html'.format(func.__name__), 'dashboard.html'], f_return, self.request)
+                self.add(html, position)
+
+
+class ModelDashboard(DashboardPanel):
+
+    def __init__(self, request, obj, current_tab=None, parent=None,
+                 fieldsets=None, complete=True, readonly=False, printable=True):
+        super(ModelDashboard, self).__init__(request)
+        self.obj = obj
+        self.model_panel = ModelPanel(
+            request, obj, current_tab=current_tab, parent=parent, fieldsets=fieldsets,
+            complete=complete, readonly=readonly, printable=printable
+        )
+        self.add(self.model_panel, 'center')
+        self.load_widgets()
+
+    def load_widgets(self):
+        from djangoplus.cache import loader
+        for item in loader.model_widgets.get(type(self.obj), ()):
+            self.add_widget(self.obj, item)
 
 
 class NumberPanel(RequestComponent):

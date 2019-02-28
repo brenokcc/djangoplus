@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import copy
 from datetime import datetime
 from djangoplus.utils import http
@@ -93,7 +94,7 @@ class ModelDropDown(GroupDropDown):
                     if add_inline_action['subset'] is True or add_inline_action['subset'] == subset_name:
                         if permissions.check_group_or_permission(self.request, add_inline_action['can_execute']):
                             self.add_action(
-                                add_inline_action['title'], add_inline_action['url'], 'popup', 'fa fa-plus'
+                                add_inline_action['verbose_name'], add_inline_action['url'], 'popup', 'fa fa-plus'
                             )
 
         for action_category in loader.instance_actions[self.model]:
@@ -101,7 +102,7 @@ class ModelDropDown(GroupDropDown):
             for view_name in loader.instance_actions[self.model][action_category]:
                 action = loader.instance_actions[self.model][action_category][view_name]
                 action_function = action.get('function')
-                action_title = action['title']
+                action_verbose_name = action['verbose_name']
                 action_can_execute = get_can_execute(action)
                 action_condition = action['condition']
                 action_style = action['style']
@@ -141,8 +142,8 @@ class ModelDropDown(GroupDropDown):
                             continue
                     else:
                         # it is a list view paginator
-                        add_action = view_name in action_names or should_add_action(action_inline, action_subsets, subset_name)
-                        # #print(action_title, action_inline, action_subsets, subset_name, add_action, 666)
+                        should_add_this_action = should_add_action(action_inline, action_subsets, subset_name)
+                        add_action = view_name in action_names or should_add_this_action
                         if not add_action:
                             continue
 
@@ -167,4 +168,4 @@ class ModelDropDown(GroupDropDown):
                 else:
                     action_url = '/action/{}/{}/{}/'.format(get_metadata(self.model, 'app_label'), self.model.__name__.lower(), view_name)
 
-                self.add_action(action_title, action_url, action_style, action_icon, category or action_category)
+                self.add_action(action_verbose_name, action_url, action_style, action_icon, category or action_category)

@@ -531,7 +531,7 @@ class UseCase(object):
         self._test_function_code.append('    def {}:'.format(self._func_signature))
         self._view(model, True)
         if hasattr(func, '_action'):
-            button_label = func._action['title']
+            button_label = func._action['verbose_name']
             params = get_parameters_names(func)
             if params:
                 interaction = _('The user clicks the button')
@@ -553,7 +553,7 @@ class UseCase(object):
             description = func.__doc__ and func.__doc__.strip() or ''
             business_rules = utils.extract_exception_messages(func)
             post_condition = _('Action successfully performed')
-            self.name = action_dict['title']
+            self.name = action_dict['verbose_name']
             self.description = description
             self.business_rules = business_rules
             self.post_condition = post_condition
@@ -562,7 +562,7 @@ class UseCase(object):
             if not self.actors:
                 self.actors.append(_('Superuser'))
         elif hasattr(func, '_view_action'):
-            button_label = func._view_action['title']
+            button_label = func._view_action['verbose_name']
             interaction = _('The user clicks the button')
             self._interactions.append('{} "{}"'.format(interaction, button_label))
             self._test_function_code.append("        self.click_button('{}')".format(button_label))

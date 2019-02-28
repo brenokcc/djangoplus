@@ -23,7 +23,7 @@ def view(verbose_name, icon=None, menu=None, login_required=True, style='ajax', 
             return return_response(f_return, request, verbose_name, style, template_name)
 
         receive_function_args._view = dict(
-            title=verbose_name, function=func, url=url, can_view=iterable(can_view), menu=menu, icon=icon,
+            verbose_name=verbose_name, function=func, url=url, can_view=iterable(can_view), menu=menu, icon=icon,
             style=style, add_shortcut=shortcut, doc=func.__doc__, usecase=usecase
         )
         return receive_function_args
@@ -45,7 +45,7 @@ def action(model, verbose_name, help_text=None, condition=None, inline=False, su
             return return_response(f_return, request, verbose_name, style, template_name)
 
         _action = dict(
-            title=verbose_name, can_execute=iterable(can_execute), condition=condition, help_text=help_text,
+            verbose_name=verbose_name, can_execute=iterable(can_execute), condition=condition, help_text=help_text,
             view_name=func.__name__, function=func, group=category, style=style, message=message, model=model,
             input=None, initial=None, choices=None, inline=inline, subsets=iterable(subset), icon=icon,
             doc=func.__doc__, usecase=usecase, can_execute_by_organization=iterable(can_execute_by_organization),

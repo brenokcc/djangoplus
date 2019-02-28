@@ -146,10 +146,19 @@ def set_metadata(cls, attr, value):
     cls._metadata['{}:{}'.format(cls.__name__, attr)] = value
 
 
-def get_metadata(model, attr, default=None, iterable=False):
+def get_metadata(model_or_func, attr, default=None, iterable=False):
+    
     _metadata = None
+    
+    if hasattr(model_or_func, '_metadata'):
+        _metadata = getattr(model_or_func, '_metadata')
+        return _metadata['{}:{}'.format(model_or_func.__name__, attr)]
+    else:
+        model = model_or_func
+    
+    metaclass = getattr(model_or_func, '_meta')
 
-    if not hasattr(model._meta, attr):
+    if not hasattr(metaclass, attr):
         field_attr = None
 
         if attr == 'search_fields':
@@ -162,7 +171,7 @@ def get_metadata(model, attr, default=None, iterable=False):
         if field_attr:
             _metadata = []
             fields = []
-            for field in model._meta.fields:
+            for field in metaclass.fields:
                 fields.append(field)
             for m2m in list_m2m_fields_with_model(model):
                 fields.append(m2m[0])
@@ -178,9 +187,9 @@ def get_metadata(model, attr, default=None, iterable=False):
                                     _metadata.append(field.name)
                                 else:
                                     _metadata.append('{}__{}'.format(field.name, lookup))
-            setattr(model._meta, field_attr, _metadata)
+            setattr(metaclass, field_attr, _metadata)
     else:
-        _metadata = getattr(model._meta, attr)
+        _metadata = getattr(metaclass, attr)
         if callable(_metadata):
             _metadata = _metadata()
 
@@ -188,9 +197,9 @@ def get_metadata(model, attr, default=None, iterable=False):
         if attr == 'list_display':
             _metadata = []
             fields = []
-            for field in model._meta.fields:
+            for field in metaclass.fields:
                 fields.append(field)
-            for field in model._meta.local_many_to_many:
+            for field in metaclass.local_many_to_many:
                 fields.append(field)
             for field in fields[1:6]:
                 if not field.name.endswith('_ptr') and not field.name == 'ascii' and not field.name == 'tree_index':
@@ -427,7 +436,6 @@ def should_add_action(action_inline, action_subsets, current_subset):
     else:
         if action_inline:
             subsets.append(None)
-    # #print('  ', current_subset, subsets)
     return current_subset in subsets
 
 
@@ -456,7 +464,7 @@ def find_action(model, action_name):
     for actions in (loader.instance_actions, loader.queryset_actions):
         for action_group in actions[model]:
             for func_name, action in list(actions[model][action_group].items()):
-                if action['title'] == action_name:
+                if action['verbose_name'] == action_name:
                     return action
 
     return None
@@ -485,7 +493,7 @@ def find_model_by_verbose_name_plural(verbose_name_plural):
 def find_subset_by_title(title, model):
     from djangoplus.cache import loader
     for subset in loader.subsets[model]:
-        if subset['title'] == title:
+        if subset['verbose_name'] == title:
             return subset
     return None
 
@@ -577,3 +585,23 @@ def get_role_value_for_action(func, user, param_name):
             lookup = {role_username: user.username}
             return parameter.annotation.objects.filter(**lookup).first()
     return None
+
+
+def execute_and_format(request, func):
+    metadata = getattr(func, '_metadata')
+    verbose_name = get_metadata(func, 'verbose_name')
+    formatter = get_metadata(func, 'formatter')
+    params = get_role_values_for_condition(func, request.user)
+    f_return = func(*params)
+
+    if type(f_return).__name__ == 'QueryStatistics' and not formatter:
+        formatter = 'statistics'
+
+    if formatter:
+        from djangoplus.cache import loader
+        func = loader.formatters[formatter]
+        if count_parameters_names(func) == 1:
+            return func(f_return)
+        else:
+            return func(f_return, request=request, verbose_name=verbose_name)
+    return f_return

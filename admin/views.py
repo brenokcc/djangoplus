@@ -11,7 +11,7 @@ from django.http.response import HttpResponse
 from djangoplus.utils.aescipher import decrypt
 from django.utils.translation import ugettext as _
 from djangoplus.decorators.views import view, action
-from djangoplus.ui.components.panel import DashboardPanel
+from djangoplus.ui.components.panel import AppDashboard
 from djangoplus.admin.models import User, Unit, Organization
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.admin.forms import ProfileForm, ChangePasswordForm, SettingsForm, LoginForm, RecoverPassowordForm
@@ -27,7 +27,7 @@ def public(request):
 
 @view(_('Main'), login_required=True)
 def index(request):
-    widget_panel = DashboardPanel(request)
+    widget_panel = AppDashboard(request)
     return locals()
 
 
@@ -194,3 +194,9 @@ def login_as(request, pk):
 def emails(request):
     messages = utils.load_emails()
     return locals()
+
+
+@view(_('Icons'), login_required=False)
+def icons(request):
+    return locals()
+

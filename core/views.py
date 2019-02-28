@@ -16,7 +16,7 @@ from django.views.defaults import page_not_found
 from django.utils.translation import ugettext as _
 from django.core.exceptions import ValidationError
 from djangoplus.ui.components.forms import factory
-from djangoplus.ui.components.panel import ModelPanel
+from djangoplus.ui.components.panel import ModelDashboard
 from django.http.response import HttpResponseForbidden
 from djangoplus.ui import ComponentHasResponseException
 from djangoplus.ui.components.paginator import Paginator
@@ -40,19 +40,19 @@ def listt(request, app, cls, subset=None):
     search_fields = None
     if subset:
         subset_func = getattr(_model.objects.get_queryset(), subset)
-        can_view = subset_func._metadata['{}:can_view'.format(subset)]
-        list_display = subset_func._metadata['{}:list_display'.format(subset)]
-        list_filter = subset_func._metadata['{}:list_filter'.format(subset)]
-        search_fields = subset_func._metadata['{}:search_fields'.format(subset)]
-        title = '{} - {}'.format(title, subset_func._metadata['{}:title'.format(subset)])
+        can_view = get_metadata(subset_func, 'can_view')
+        list_display = get_metadata(subset_func, 'list_display')
+        list_filter = get_metadata(subset_func, 'list_filter')
+        search_fields = get_metadata(subset_func, 'search_fields')
+        title = '{} - {}'.format(title, get_metadata(subset_func, 'verbose_name'))
     else:
         tid = request.GET.get('tid')
         subsetp = request.GET.get('tab{}'.format(tid))
         if tid and subsetp:
             subset_func = getattr(_model.objects.get_queryset(), subsetp)
-            subset_title = subset_func._metadata['{}:title'.format(subsetp)]
-            can_view = subset_func._metadata['{}:can_view'.format(subsetp)]
-            title = '{} - {}'.format(title, subset_func._metadata['{}:title'.format(subsetp)])
+            subset_title = get_metadata(subset_func, 'verbose_name')
+            can_view = get_metadata(subset_func, 'can_view')
+            title = '{} - {}'.format(title, get_metadata(subset_func, 'verbose_name'))
             if not permissions.check_group_or_permission(request, can_view):
                 return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
         else:
@@ -191,16 +191,16 @@ def view(request, app, cls, pk, tab=None):
     title = str(obj)
     parent = request.GET.get('parent', None)
     printable = get_metadata(_model, 'pdf', False)
-    panel = ModelPanel(request, obj, tab, parent, printable=printable)
-    panel.process_request()
+    widget_panel = ModelDashboard(request, obj, tab, parent, printable=printable)
+    widget_panel.process_request()
 
-    if panel.message:
-        return httprr(request, request.get_full_path(), panel.message)
+    if widget_panel.model_panel.message:
+        return httprr(request, request.get_full_path(), widget_panel.model_panel.message)
 
     log_data = get_metadata(obj.__class__, 'log', False)
     if log_data and request.user.is_superuser and request.user.has_perm('admin.list_log'):
         url = '/log/{}/{}/'.format(app, cls)
-        panel.drop_down.add_action('{} {}'.format(_('View'), _('Log')), url, 'ajax', 'fa fa-history')
+        widget_panel.model_panel.drop_down.add_action('{} {}'.format(_('View'), _('Log')), url, 'ajax', 'fa fa-history')
 
     return render(request, 'default.html', locals())
 
@@ -217,7 +217,7 @@ def action(request, app, cls, action_name, pk=None):
             break
 
     form_action = loader.instance_actions[_model][group][action_name]
-    action_title = form_action['title']
+    action_verbose_name = form_action['verbose_name']
     action_can_execute = form_action['can_execute']
     action_condition = form_action['condition']
     action_function = form_action['function']
@@ -231,7 +231,7 @@ def action(request, app, cls, action_name, pk=None):
     obj = pk and _model.objects.all(request.user).distinct().get(pk=pk) or _model()
     obj.request = request
     obj._user = request.user
-    title = action_title
+    title = action_verbose_name
     redirect_to = None
 
     if check_condition(request.user, action_condition, obj) and (
@@ -291,9 +291,9 @@ def action(request, app, cls, action_name, pk=None):
             return httprr(request, redirect_to, action_message)
 
         if form.title == _('Form'):
-            form.title = action_title
+            form.title = action_verbose_name
         if form.submit_label == _('Send'):
-            form.submit_label = action_title
+            form.submit_label = action_verbose_name
         return render(request, 'default.html', locals())
     else:
         return HttpResponseForbidden()

@@ -142,7 +142,10 @@ class QuerySet(query.QuerySet):
     def __sub__(self, other):
         return self.difference(other)
 
-    def all(self, user=None, obj=None):
+    def all(self, user=None):
+        return self.contextualize(user)
+
+    def contextualize(self, user, obj=None):
         app_label = get_metadata(self.model, 'app_label')
         if user:
             role_username = get_metadata(user, 'role_username')
@@ -324,10 +327,10 @@ class Manager(models.Manager):
     def get_queryset(self):
         return self.queryset_class(self.model, using=self._db)
 
-    def all(self, user=None, obj=None):
+    def all(self, user=None):
         if self.queryset_class != self.model.objects.queryset_class:
-            return self.model.objects.filter(pk=0).union(self.get_queryset().all(user, obj=obj))
-        return self.get_queryset().all(user, obj=obj)
+            return self.model.objects.none().union(self.get_queryset().all(user))
+        return self.get_queryset().all(user)
 
     def count(self, vertical_key=None, horizontal_key=None):
         return self.get_queryset().count(vertical_key, horizontal_key)

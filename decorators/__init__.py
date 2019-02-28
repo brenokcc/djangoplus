@@ -17,12 +17,12 @@ def meta(verbose_name, help_text=None, formatter=None, dashboard=None, can_view=
     return decorate
 
 
-def subset(title, help_text=None, list_display=(), list_filter=None, search_fields=None, template=None, menu=None,
+def subset(verbose_name, help_text=None, list_display=(), list_filter=None, search_fields=None, template=None, menu=None,
            dashboard=None, usecase=None, can_view=(), can_alert=(), can_notify=()):
     def decorate(func):
         set_metadata(func, 'type', 'subset')
         set_metadata(func, 'tab', True)
-        set_metadata(func, 'title', title)
+        set_metadata(func, 'verbose_name', verbose_name)
         set_metadata(func, 'alert', can_alert)
         set_metadata(func, 'notify', can_notify)
         set_metadata(func, 'menu', menu)
@@ -36,6 +36,7 @@ def subset(title, help_text=None, list_display=(), list_filter=None, search_fiel
         set_metadata(func, 'list_filter', list_filter)
         set_metadata(func, 'search_fields', search_fields)
         set_metadata(func, 'template', template)
+        set_metadata(func, 'formatter', None)
         return func
 
     return decorate
@@ -47,7 +48,7 @@ def action(verbose_name, help_text=None, condition=None, inline=False, subset=()
            can_execute_by_unit=None, can_execute_by_role=None):
     def decorate(func):
         func._action = dict(
-            title=verbose_name, can_execute=iterable(can_execute), help_text=help_text,
+            verbose_name=verbose_name, can_execute=iterable(can_execute), help_text=help_text,
             input=input, group=category or verbose_name, style=style, condition=condition, view_name=func.__name__,
             message=message, initial=initial or '{}_initial'.format(func.__name__), function=func,
             choices=choices or '{}_choices'.format(func.__name__), inline=inline, subsets=iterable(subset), icon=icon,

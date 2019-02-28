@@ -96,18 +96,18 @@ def sync_permissions():
                             group.permissions.add(permission)
 
     for view in loader.views:
-        function = view.get('function')
-        if function:
-            name = view.get('title')
+        func = view.get('func')
+        if func:
+            name = view.get('verbose_name')
             can_view = view.get('can_view', ())
             if can_view:
                 content_type = ContentType.objects.get(app_label='admin', model='user')
-                qs_permission = Permission.objects.filter(codename=function.__name__, content_type=content_type)
+                qs_permission = Permission.objects.filter(codename=func.__name__, content_type=content_type)
                 if qs_permission.exists():
                     qs_permission.update(name=name)
                     permission = qs_permission[0]
                 else:
-                    permission = Permission.objects.create(codename=function.__name__, content_type=content_type, name=name)
+                    permission = Permission.objects.create(codename=func.__name__, content_type=content_type, name=name)
                 for group in Group.objects.filter(name__in=can_view):
                     group.permissions.add(permission)
 
@@ -117,7 +117,7 @@ def sync_permissions():
             content_type = ContentType.objects.get(app_label=app_label, model=model.__name__.lower())
             for category in actions_dict[model]:
                 for key in list(actions_dict[model][category].keys()):
-                    name = actions_dict[model][category][key]['title']
+                    name = actions_dict[model][category][key]['verbose_name']
                     can_execute = []
                     for scope in ('', 'role', 'unit', 'organization'):
                         scope = scope and '_by_{}'.format(scope or scope)

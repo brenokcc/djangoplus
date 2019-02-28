@@ -9,7 +9,11 @@ class DateWidget(widgets.DateInput):
 
     class Media:
         css = {'all': ('/static/css/daterangepicker-2.1.24.css',)}
-        js = ('/static/js/moment.min.js', '/static/js/daterangepicker-2.1.24.js', '/static/js/jquery.mask.min-1.7.7.js')
+        js = (
+            '/static/js/moment.min.js',
+            '/static/js/daterangepicker-2.1.24.js',
+            '/static/js/jquery.mask.min-1.7.7.js'
+        )
 
     def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
@@ -28,7 +32,12 @@ class DateWidget(widgets.DateInput):
               }});
             $("#id_{}").mask("00/00/0000", {{clearIfNotMatch: true}});
         '''.format(name, name, name)
-        html = '<div class="input-group">{}<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div><script>{}</script>'.format(html, script)
+        html = '''
+            <div class="input-group">{}
+            <span class="input-group-addon">
+                <i class="fa fa-calendar"></i>
+            </span></div>
+            <script>{}</script>'''.format(html, script)
         return mark_safe(html)
 
     def _format_value(self, value):
@@ -51,13 +60,19 @@ class DateTimeWidget(widgets.DateTimeInput):
 
     class Media:
         css = {'all': ('/static/css/daterangepicker-2.1.24.css', )}
-        js = ('/static/js/moment.min.js', '/static/js/daterangepicker-2.1.24.js', '/static/js/jquery.mask.min-1.7.7.js')
+        js = (
+            '/static/js/moment.min.js',
+            '/static/js/daterangepicker-2.1.24.js',
+            '/static/js/jquery.mask.min-1.7.7.js'
+        )
 
     def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
         html = super(DateTimeWidget, self).render(name, value, attrs)
         if type(value) not in [str, str]:
-            js_value = value and 'new Date{}'.format((value.year, value.month-1, value.day, value.hour, value.minute),) or 'new Date()'
+            js_value = value and 'new Date{}'.format(
+                (value.year, value.month-1, value.day, value.hour, value.minute),
+            ) or 'new Date()'
         else:
             js_value = "'{}'".format(value)
         script = '''
@@ -80,8 +95,13 @@ class DateTimeWidget(widgets.DateTimeInput):
                         }});
                         $("#id_{}").mask("00/00/0000 00:00", {{clearIfNotMatch: true}});
                 '''.format(name, js_value, name, name)
-        html = '<div class="input-group">{}<span class="input-group-addon"><i class="fa fa-calendar"></i></span></div><script>{}</script>'.format(
-        html, script)
+        html = '''
+            <div class="input-group">{}
+                <span class="input-group-addon">
+                    <i class="fa fa-calendar"></i>
+                </span>
+            </div>
+            <script>{}</script>'''.format(html, script)
         return mark_safe(html)
 
     def _format_value(self, value):
@@ -92,8 +112,12 @@ class DateTimeWidget(widgets.DateTimeInput):
 
 
 class DateRangeWidget(widgets.MultiWidget):
-    def __init__(self, widgets=[DateWidget, DateWidget], attrs={}):
-        super(DateRangeWidget, self).__init__(widgets, attrs)
+    def __init__(self, widget_list=None, attrs=None):
+        if widget_list is None:
+            widget_list = [DateWidget, DateWidget]
+        if attrs is None:
+            attrs = {}
+        super(DateRangeWidget, self).__init__(widget_list, attrs)
 
     def decompress(self, value):
         if not value:
@@ -125,7 +149,11 @@ class DateFilterWidget(DateRangeWidget):
 
     class Media:
         css = {'all': ('/static/css/daterangepicker-2.1.24.css',)}
-        js = ('/static/js/moment.min.js', '/static/js/daterangepicker-2.1.24.js', '/static/js/jquery.mask.min-1.7.7.js')
+        js = (
+            '/static/js/moment.min.js',
+            '/static/js/daterangepicker-2.1.24.js',
+            '/static/js/jquery.mask.min-1.7.7.js'
+        )
 
     def __init__(self, widgets=(HiddenDateWidget, HiddenDateWidget), attrs={}):
         super(DateRangeWidget, self).__init__(widgets, attrs)
@@ -206,14 +234,19 @@ class DateFilterWidget(DateRangeWidget):
                        'Últimos 7 dias': [moment().subtract(6, 'days'), moment()],
                        'Últimos 30 dias': [moment().subtract(29, 'days'), moment()],
                        'Este mês': [moment().startOf('month'), moment().endOf('month')],
-                       'Mês passado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                       'Mês passado': [
+                            moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')
+                        ]
                     }}
                 }}, cb{});
 
                 cb{}(start, end, true);
 
             </script>
-        '''.format(start_js, end_js, function_name, self.label, id_, id_, name, name, name, name, name, function_name, function_name)
+        '''.format(
+            start_js, end_js, function_name, self.label, id_, id_,
+            name, name, name, name, name, function_name, function_name
+        )
         output.append('''
             <div class="form-control" style="cursor:pointer; width:auto;">
                 <span id="reportrange{}">
@@ -226,4 +259,3 @@ class DateFilterWidget(DateRangeWidget):
 
         s = mark_safe(''.join(output))
         return s
-

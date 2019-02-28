@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
+
 import json
 import datetime
 from django.http.response import HttpResponse
 from django.utils.translation import ugettext as _
-from djangoplus.ui.components.paginator.templatetags import obj_icons
-from djangoplus.ui.components.navigation.dropdown import ModelDropDown
 from django.views.decorators.csrf import csrf_exempt
 from djangoplus.utils.serialization import loads_qs_query
+from djangoplus.ui.components.paginator.templatetags import obj_icons
+from djangoplus.ui.components.navigation.dropdown import ModelDropDown
 
 
 @csrf_exempt
@@ -36,7 +37,9 @@ def populate(request):
         if end:
             end = end + datetime.timedelta(days=1)
         icons = obj_icons(request, obj, css='popup')
-        drop_down = ModelDropDown(request, obj.__class__, action_names=action_names)
+        drop_down = ModelDropDown(
+            request, obj.__class__, action_names=action_names
+        )
         drop_down.add_actions(obj, inline=True)
         html_id = hash(obj)
         html = list()
@@ -55,7 +58,11 @@ def populate(request):
         html.append(str(drop_down))
         html.append('</div>')
         html.append('<script>initialize("{}");</script>'.format(html_id))
-        item = dict(id=html_id, title=title, start=str(start), end=end and str(end) or None, allDay=False, url='javascript:', html=''.join(html))
+        item = dict(
+            id=html_id, title=title, start=str(start),
+            end=end and str(end) or None, allDay=False,
+            url='javascript:', html=''.join(html)
+        )
         items.append(item)
 
     return HttpResponse(json.dumps(items))

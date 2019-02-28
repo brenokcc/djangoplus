@@ -1,12 +1,30 @@
 # -*- coding: utf-8 -*-
 
 from django.forms import widgets
-from django.db.models.fields.files import FieldFile, ImageFieldFile
-from djangoplus.ui.components.calendar.widgets import *
-from djangoplus.ui.components.editor.widgets import *
-from djangoplus.ui.components.select.widgets import *
+from django.utils.safestring import mark_safe
+from django.db.models.fields.files import FieldFile
+from django.template.loader import render_to_string
+from djangoplus.ui.components.select import widgets as select_widgets
+from djangoplus.ui.components.editor import widgets as editor_widgets
+from djangoplus.ui.components.calendar import widgets as calendar_widgets
+
+# Date Widgets
+DateFilterWidget = calendar_widgets.DateFilterWidget
+DateTimeWidget = calendar_widgets.DateTimeWidget
+DateRangeWidget = calendar_widgets.DateRangeWidget
+DateWidget = calendar_widgets.DateWidget
+HiddenDateWidget = calendar_widgets.HiddenDateWidget
+
+# Richtext Widget
+FormattedTextarea = editor_widgets.FormattedTextarea
+
+# Select Widgets
+SelectWidget = select_widgets.SelectWidget
+SelectMultipleWidget = select_widgets.SelectMultipleWidget
+NullBooleanSelect = select_widgets.NullBooleanSelect
 
 # Base Widgets #
+from djangoplus.utils import format_value
 
 
 class TextInput(widgets.TextInput):
@@ -93,18 +111,21 @@ class DisplayInput(widgets.TextInput):
                 return mark_safe('<embed src="{}" width="100%" height="{}">'.format(url, height))
             return '<br>{}'.format(format_value(value))
         elif self.obj and hasattr(self.obj, 'pk'):
-                return '<input class="form-control" type="text" value="{}" disabled /><input type="hidden" id="id_{}" name="{}" value="{}"/>'.format(self.obj, name, name, self.obj.pk)
+                return '''
+                    <input class="form-control" type="text" value="{}" disabled />
+                    <input type="hidden" id="id_{}" name="{}" value="{}"/>
+                '''.format(self.obj, name, name, self.obj.pk)
         else:
             return ''
+
 
 class Textarea(widgets.Textarea):
     def render(self, name, value, attrs=None, renderer=None):
         attrs['class'] = 'form-control'
-        if 'rows' not in attrs: # and 'rows' not in self.attrs
+        if 'rows' not in attrs:
             attrs['rows'] = 3
         html = super(Textarea, self).render(name, value, attrs)
         return mark_safe(html)
-
 
 
 class NumberInput(widgets.NumberInput):
@@ -112,8 +133,7 @@ class NumberInput(widgets.NumberInput):
         attrs['class'] = 'form-control'
         html = super(NumberInput, self).render(name, value, attrs)
         if self.max_value is not None and self.min_value is not None:
-            html = html # TODO range widget
-
+            html = html  # TODO range widget
         return mark_safe(html)
 
 
@@ -179,7 +199,9 @@ class PickWidget(widgets.Select):
         widget_cls = self.allow_multiple_selected and CheckboxInput or RadioSelect
         i = 0
         grouped_objects = []
-        onclick = "var is=this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input');for(var i=0; i<is.length; i++) is[i].checked = {}".format(self.allow_multiple_selected and 'this.checked' or 'false')
+        onclick = "var is=this.parentNode.parentNode.parentNode.parentNode.parentNode.getElementsByTagName('input');" \
+            "for(var i=0; i<is.length; i++) is[i].checked = {}".format(
+                self.allow_multiple_selected and 'this.checked' or 'false')
         widget = widget_cls({'onclick': onclick}, check_test=lambda v: False).render(None, '')
 
         if self.choices:
@@ -199,12 +221,18 @@ class PickWidget(widgets.Select):
                     if has_id:
                         final_attrs = dict(final_attrs, id='{}_{}'.format(attrs['id'], i))
                     final_attrs['class'] = self.allow_multiple_selected and 'custom-checkbox' or 'custom-radio'
-                    obj.widget = widget_cls(final_attrs, check_test=lambda v: int(v) in values).render(name, str(option_value))
+                    obj.widget = widget_cls(final_attrs, check_test=lambda v: int(v) in values).render(
+                        name, str(option_value)
+                    )
                     i += 1
                     objects.append(obj)
                 grouped_objects.append((grouper, objects))
 
-        return mark_safe(render_to_string(self.template_name, dict(grouped_objects=grouped_objects, widget=widget, name=name.replace('-', '_'))))
+        return mark_safe(
+            render_to_string(
+                self.template_name, dict(grouped_objects=grouped_objects, widget=widget, name=name.replace('-', '_'))
+            )
+        )
 
 
 # File Widgets #

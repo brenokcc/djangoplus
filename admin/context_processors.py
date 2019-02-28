@@ -35,7 +35,7 @@ def context_processor(request):
                     count = qs.count()
                     if count:
                         url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                        description = item['title'].replace(title, '')
+                        description = item['verbose_name'].replace(title, '')
                         item = dict(title=title, description=description, count=count, url=url, icon=icon)
                         alerts.append(item)
 

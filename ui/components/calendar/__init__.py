@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import datetime
-
-from djangoplus.utils.permissions import has_add_permission
-
 from djangoplus.ui import RequestComponent
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.utils.serialization import dumps_qs_query
+from djangoplus.utils.permissions import has_add_permission
 
 
 class Calendar(RequestComponent):
@@ -38,8 +38,13 @@ class ModelCalendar(Calendar):
         self.editable = editable
         self.display_time = display_time
 
-    def add(self, queryset, start_field, end_field=None, color='#ccc', action_names=[], as_initial_date=False):
-        item = dict(queryset=dumps_qs_query(queryset), start_field=start_field, end_field=end_field, color=color, action_names=','.join(action_names))
+    def add(self, queryset, start_field, end_field=None, color='#ccc', action_names=None, as_initial_date=False):
+        if action_names is None:
+            action_names = []
+        item = dict(
+            queryset=dumps_qs_query(queryset), start_field=start_field,
+            end_field=end_field, color=color, action_names=','.join(action_names)
+        )
         self.items.append(item)
         if as_initial_date:
             qs_initial_date = queryset.order_by(start_field).values_list(start_field, flat=True)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from djangoplus.ui.components.select.widgets import *
+from django.forms import widgets
+from django.utils.safestring import mark_safe
 
 
 class FormattedTextarea(widgets.Textarea):
@@ -9,6 +10,11 @@ class FormattedTextarea(widgets.Textarea):
         js = ('/static/js/tinymce.min.js',)
 
     def render(self, name, value, attrs=None, renderer=None):
+        tools = [
+            'insert', 'undo redo', 'formatselect', 'bold italic backcolor forecolor',
+            'alignleft aligncenter alignright alignjustify',
+            'bullist numlist outdent indent', 'removeformat', 'table'
+        ]
         attrs['class'] = 'form-control'
         html = super(FormattedTextarea, self).render(name, value, attrs)
         js = '''
@@ -21,10 +27,9 @@ class FormattedTextarea(widgets.Textarea):
                 plugins: [
                     'advlist autolink lists link image table textcolor',
                   ],
-              toolbar: 'insert | undo redo |  formatselect | bold italic backcolor forecolor  | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table',
+              toolbar: '{}',
                   content_css: []
             }});
             </script>
-        '''.format(name)
+        '''.format(name, ' | '.join(tools))
         return mark_safe('{}{}'.format(html, js))
-

@@ -14,6 +14,7 @@ settings_instance = None
 views = []
 widgets = []
 subset_widgets = []
+model_widgets = {}
 card_panel_models = []
 icon_panel_models = []
 list_dashboard = []
@@ -120,33 +121,35 @@ if not initialized:
             else:
                 description, icon = menu, get_metadata(model, 'icon')
             permission = '{}.list_{}'.format(app_label, model_name)
-            item = dict(url=url, can_view=permission, menu=description, icon=icon, add_shortcut=False, groups=menu_groups)
+            item = dict(
+                url=url, can_view=permission, menu=description, icon=icon, add_shortcut=False, groups=menu_groups
+            )
             views.append(item)
 
-        # indexing the subsets defined in the manager classes
+        # indexing the @subset and @meta methods defined in the manager classes
 
         for attr_name in dir(model.objects.get_queryset()):
             attr = getattr(model.objects.get_queryset(), attr_name)
             if hasattr(attr, '_metadata'):
-                metadata_type = attr._metadata['{}:type'.format(attr_name)]
+                metadata_type = get_metadata(attr, 'type')
                 if metadata_type == 'subset':
-                    subset_title = attr._metadata['{}:title'.format(attr_name)]
-                    subset_name = attr._metadata['{}:name'.format(attr_name)]
-                    subset_help_text = attr._metadata['{}:help_text'.format(attr_name)]
-                    subset_alert = attr._metadata['{}:alert'.format(attr_name)]
-                    subset_notify = attr._metadata['{}:notify'.format(attr_name)]
-                    subset_can_view = attr._metadata['{}:can_view'.format(attr_name)]
-                    subset_order = attr._metadata['{}:order'.format(attr_name)]
-                    subset_menu = attr._metadata['{}:menu'.format(attr_name)]
-                    subset_dashboard = attr._metadata['{}:dashboard'.format(attr_name)]
-                    subset_list_display = attr._metadata['{}:list_display'.format(attr_name)]
-                    subset_list_filter = attr._metadata['{}:list_filter'.format(attr_name)]
-                    subset_search_fields = attr._metadata['{}:search_fields'.format(attr_name)]
-                    subset_workflow = attr._metadata['{}:usecase'.format(attr_name)]
+                    subset_title = get_metadata(attr, 'verbose_name')
+                    subset_name = get_metadata(attr, 'name')
+                    subset_help_text = get_metadata(attr, 'help_text')
+                    subset_alert = get_metadata(attr, 'alert')
+                    subset_notify = get_metadata(attr, 'notify')
+                    subset_can_view = get_metadata(attr, 'can_view')
+                    subset_order = get_metadata(attr, 'order')
+                    subset_menu = get_metadata(attr, 'menu')
+                    subset_dashboard = get_metadata(attr, 'dashboard')
+                    subset_list_display = get_metadata(attr, 'list_display')
+                    subset_list_filter = get_metadata(attr, 'list_filter')
+                    subset_search_fields = get_metadata(attr, 'search_fields')
+                    subset_workflow = get_metadata(attr, 'usecase')
                     subset_url = '{}{}/'.format(url, attr.__func__.__name__)
 
                     item = dict(
-                        title=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
+                        verbose_name=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
                         menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify,
                         order=subset_order, help_text=subset_help_text, list_display=subset_list_display,
                         list_filter=subset_list_filter, search_fields=subset_search_fields
@@ -154,7 +157,11 @@ if not initialized:
                     subsets[model].append(item)
 
                     if subset_dashboard:
-                        widget = dict(title=subset_title, model=model, function=attr_name, can_view=subset_can_view, dashboard=subset_dashboard, formatter=None, link=True, list_display=subset_list_display, list_filter=subset_list_filter, search_fields=subset_search_fields)
+                        widget = dict(
+                            verbose_name=subset_title, model=model, function=attr_name, can_view=subset_can_view,
+                            dashboard=subset_dashboard, formatter=None, link=True, list_display=subset_list_display,
+                            list_filter=subset_list_filter, search_fields=subset_search_fields
+                        )
                         subset_widgets.append(widget)
 
                     if subset_workflow:
@@ -166,11 +173,14 @@ if not initialized:
                         workflows[subset_workflow] = dict(activity=activity_description, role=role, model=None)
 
                 else:
-                    widget_title = attr._metadata['{}:verbose_name'.format(attr_name)]
-                    widget_can_view = attr._metadata['{}:can_view'.format(attr_name)]
-                    widget_dashboard = attr._metadata['{}:dashboard'.format(attr_name)]
-                    widget_formatter = attr._metadata['{}:formatter'.format(attr_name)]
-                    widget = dict(title=widget_title, model=model, function=attr_name, can_view=widget_can_view, dashboard=widget_dashboard, formatter=widget_formatter, link=False)
+                    widget_verbose_name = get_metadata(attr, 'verbose_name')
+                    widget_can_view = get_metadata(attr, 'can_view')
+                    widget_dashboard = get_metadata(attr, 'dashboard')
+                    widget_formatter = get_metadata(attr, 'formatter')
+                    widget = dict(
+                        verbose_name=widget_verbose_name, model=model, function=attr_name, can_view=widget_can_view,
+                        dashboard=widget_dashboard, formatter=widget_formatter, link=False
+                    )
                     subset_widgets.append(widget)
 
         # indexing the actions refered in fieldsets
@@ -182,15 +192,16 @@ if not initialized:
                     fieldset_actions[model][title].append(action_name)
 
         # indexing the actions defined in models
-        for attr in dir(model):
-            if attr[0] != '_' and attr not in field_names:
-                func = getattr(model, attr)
+        for attr_name in dir(model):
+            if attr_name[0] != '_' and attr_name not in field_names:
+                func = getattr(model, attr_name)
+
                 if hasattr(func, '_action'):
                     action = getattr(func, '_action')
                     action_group = action['group']
 
                     action_can_execute = get_can_execute(action)
-                    action_title = action['title']
+                    action_verbose_name = action['verbose_name']
                     action_workflow = action['usecase']
                     action_menu = action['menu']
                     view_name = action['view_name']
@@ -199,14 +210,29 @@ if not initialized:
                     instance_actions[model][action_group][view_name] = action
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
-                        workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
+                        workflows[action_workflow] = dict(activity=action_verbose_name, role=role, model=verbose_name)
                     if action_menu:
-                        url = '/action/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), attr)
+                        url = '/action/{}/{}/{}/'.format(
+                            get_metadata(model, 'app_label'), model.__name__.lower(), attr_name
+                        )
                         action_view = dict(
-                            title=action_title, function=None, url=url, can_view=action_can_execute, menu=action_menu,
+                            verbose_name=action_verbose_name, function=None, url=url, can_view=action_can_execute, menu=action_menu,
                             icon=None, style='ajax', add_shortcut=False, doc=func.__doc__, usecase=None
                         )
                         views.append(action_view)
+
+                if hasattr(func, '_metadata'):
+                    widget_verbose_name = get_metadata(func, 'verbose_name')
+                    widget_can_view = get_metadata(func, 'can_view')
+                    widget_dashboard = get_metadata(func, 'dashboard')
+                    widget_formatter = get_metadata(func, 'formatter')
+                    widget = dict(
+                        verbose_name=widget_verbose_name, model=model, function=attr_name, can_view=widget_can_view,
+                        dashboard=widget_dashboard, formatter=widget_formatter, link=False
+                    )
+                    if model not in model_widgets:
+                        model_widgets[model] = []
+                    model_widgets[model].append(widget)
 
         # indexing the actions related to relations whose model has the add_inline meta-attribute
         inlines = []
@@ -228,10 +254,10 @@ if not initialized:
                             add_inline = get_metadata(tmp.rel.related_model, 'add_inline')
                             if add_inline:
                                 action_model_verbose_name = get_metadata(tmp.rel.related_model, 'verbose_name')
-                                action_title = get_metadata(tmp.rel.related_model, 'add_label', 'Adicionar {}'.format(action_model_verbose_name))
+                                action_verbose_name = get_metadata(tmp.rel.related_model, 'add_label', 'Adicionar {}'.format(action_model_verbose_name))
                                 action_can_execute = get_metadata(tmp.rel.related_model, 'can_add')
                                 url = '/add/{}/{}/{{}}/{}/'.format(app_label, model_name, tmp.rel.name)
-                                add_inline_action = dict(title=action_title, url=url, can_execute=action_can_execute, style='popup')
+                                add_inline_action = dict(verbose_name=action_verbose_name, url=url, can_execute=action_can_execute, style='popup')
                                 if model not in add_inline_actions:
                                     add_inline_actions[model] = []
                                 action_subset = add_inline is not True and add_inline or None
@@ -245,7 +271,7 @@ if not initialized:
                 attr = getattr(qs_manager_class, attr_name)
                 if hasattr(attr, '_action'):
                     action = getattr(attr, '_action')
-                    action_title = action['title']
+                    action_verbose_name = action['verbose_name']
                     action_can_execute = get_can_execute(action)
                     action_group = action['group']
                     action_name = action['view_name']
@@ -265,7 +291,7 @@ if not initialized:
 
                     if action_workflow:
                         role = action_can_execute and action_can_execute[0] or 'Superusuário'
-                        workflows[action_workflow] = dict(activity=action_title, role=role, model=verbose_name)
+                        workflows[action_workflow] = dict(activity=action_verbose_name, role=role, model=verbose_name)
 
     # indexing the actions, views and widgets in views module
     for app_label in settings.INSTALLED_APPS:
@@ -289,7 +315,7 @@ if not initialized:
                         action_model = action['model']
                         action_function = action['function']
                         action_name = action['view_name']
-                        action_title = action['title']
+                        action_verbose_name = action['verbose_name']
                         action_workflow = action['usecase']
                         action_can_execute = get_can_execute(action)
                         action_subsets = action['subsets']
@@ -298,7 +324,7 @@ if not initialized:
                         if action_workflow:
                             role = action_can_execute and action_can_execute[0] or 'Superusuário'
                             action_model_verbose_name = get_metadata(action_model, 'verbose_name')
-                            workflows[action_workflow] = dict(activity=action_title, role=role, model=action_model_verbose_name)
+                            workflows[action_workflow] = dict(activity=action_verbose_name, role=role, model=action_model_verbose_name)
                         # instance action
                         if count_parameters_names(action_function) > 1:
                             if action_group not in instance_actions[action_model]:
@@ -317,7 +343,7 @@ if not initialized:
                     elif hasattr(func, '_view'):
                         action = getattr(func, '_view')
                         views.append(action)
-                        view_title = action['title']
+                        view_title = action['verbose_name']
                         view_workflow = action['usecase']
                         view_can_view = action['can_view']
                         if view_workflow:
@@ -403,7 +429,7 @@ if not initialized:
         for actions_dict in (instance_actions, queryset_actions):
             for category in actions_dict[model]:
                 for key in list(actions_dict[model][category].keys()):
-                    name = actions_dict[model][category][key]['title']
+                    name = actions_dict[model][category][key]['verbose_name']
                     view_name = actions_dict[model][category][key]['view_name']
                     can_execute = []
                     for scope in ('', 'role', 'unit', 'organization'):

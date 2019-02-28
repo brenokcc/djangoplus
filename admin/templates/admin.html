@@ -74,6 +74,19 @@
         <ul class="nav navbar-nav navbar-left navbar-top-links">
             <li><a class="ajax" href="/admin/" title="{% trans "Main" %}"><i class="fa fa-home fa-fw"></i></a></li>
             <li><a class="ajax referrer-link" href="javascript:" title="{% trans "Back" %}"><i class="fa fa-arrow-left fa-fw"></i></a>
+            {% if debug %}
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="fa fa-wrench fa-fw"></i> <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu dropdown-alerts">
+                    <li><a target="_blank" href="/admin/icons/" title="{% trans "Icons" %}"><i class="fa fa-wrench fa-fw"></i> {% trans "Icons" %}</a>
+                    <li><a target="_blank" href="/docs/doc/" title="{% trans "Documentation" %}"><i class="fa fa-copy fa-fw"></i> {% trans "Documentation" %}</a>
+                    <li><a target="_blank" href="/docs/tutorial/" title="{% trans "Videos" %}"><i class="fa fa-desktop fa-fw"></i> {% trans "Videos" %}</a>
+                    <li><a target="_blank" href="/docs/homologate/" title="{% trans "Homologate" %}"><i class="fa fa-thumbs-o-up fa-fw"></i> {% trans "Homologate" %}</a>
+                </ul>
+            </li>
+            {% endif %}
         </ul>
         {% endif %}
 

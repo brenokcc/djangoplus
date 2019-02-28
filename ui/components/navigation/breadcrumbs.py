@@ -72,4 +72,3 @@ def httprr(request, url, message='', error=False):
         return HttpResponse(url)
     else:
         return HttpResponseRedirect(url)
-
