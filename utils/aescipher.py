@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import base64
 from django.conf import settings
 

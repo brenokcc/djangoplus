@@ -4,7 +4,11 @@ from djangoplus.ui.components.utils import Timeline, QrCode, ProgressBar
 
 
 def timeline(value, **kwargs):
-    return Timeline(kwargs.get('request'),  kwargs.get('verbose_name'), value)
+    return Timeline(
+        kwargs.get('request'),
+        kwargs.get('verbose_name'),
+        value
+    )
 
 
 def statistics(value, **kwargs):
@@ -61,4 +65,3 @@ def qrcode(value, **kwargs):
 def progress(percentual, **kwargs):
     request = kwargs.get('request', None)
     return ProgressBar(request, percentual)
-

@@ -1,32 +1,30 @@
 # -*- coding: utf-8 -*-
 
-import json
 import six
-import sys
-from django.core.exceptions import ValidationError
+import operator
 from django.db.models import base
 from django.db.models import Q
-from django.conf import settings
 from django.db.models import query
-from operator import __or__ as OR
 from djangoplus.db.models.fields import *
 import django.db.models.options as options
 from django.db.models.aggregates import Sum, Avg
 from django.db.models.deletion import Collector
-from djangoplus.utils.metadata import get_metadata, getattr2, find_model, get_field, check_role
+from djangoplus.utils.metadata import get_metadata, find_model, get_field, check_role
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
 from functools import reduce
 
 setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'icon', 'verbose_female', 'order_by', 'pdf', 'menu',
-    'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut', 'list_csv', 'list_xls', 'list_menu', 'list_lookups', 'list_pdf',
-    'add_label', 'add_form', 'add_inline', 'add_message', 'add_shortcut', 'select_template', 'select_display', 'select_related',
-    'log', 'logging',
+    'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut',
+    'list_csv', 'list_xls', 'list_menu', 'list_lookups', 'list_pdf',
+    'add_label', 'add_form', 'add_message', 'add_shortcut',
+    'select_template', 'select_display', 'select_related', 'log', 'logging',
     'can_add', 'can_edit', 'can_delete', 'can_list', 'can_view', 'can_admin',
     'can_list_by_role', 'can_view_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
     'can_list_by_unit', 'can_view_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
-    'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization', 'can_edit_by_organization', 'can_admin_by_organization',
+    'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization',
+    'can_edit_by_organization', 'can_admin_by_organization',
     'usecase', 'class_diagram', 'dashboard'
 ))
 
@@ -154,8 +152,12 @@ class QuerySet(query.QuerySet):
         queryset = self._clone()
         queryset._user = user
         if user:
-            self_permission = '{}.view_{}'.format(app_label, self.model.__name__.lower())
-            obj_permission = obj and '{}.view_{}'.format(get_metadata(type(obj), 'app_label'), type(obj).__name__.lower())
+            self_permission = '{}.view_{}'.format(
+                app_label, self.model.__name__.lower()
+            )
+            obj_permission = obj and '{}.view_{}'.format(
+                get_metadata(type(obj), 'app_label'), type(obj).__name__.lower()
+            )
             has_perm = obj_permission and user.has_perm(obj_permission) or user.has_perm(self_permission)
         else:
             has_perm = True
@@ -163,10 +165,10 @@ class QuerySet(query.QuerySet):
             if user and not user.is_superuser:
                 permission_mapping = user.get_permission_mapping(self.model, obj)
                 if 'list_lookups' in permission_mapping and permission_mapping['list_lookups']:
-                    l = []
+                    lookups = []
                     for lookup, value in permission_mapping['list_lookups']:
-                        l.append(Q(**{'{}__in'.format(lookup): value}))
-                    return queryset.filter(reduce(OR, l))
+                        lookups.append(Q(**{'{}__in'.format(lookup): value}))
+                    return queryset.filter(reduce(operator.__or__, lookups))
             return queryset
         return self.none()
      
@@ -191,7 +193,8 @@ class QuerySet(query.QuerySet):
 
             if horizontal_key:
                 iterator_model = get_field(self.model, horizontal_key).remote_field.model
-                iterators = iterator_model.objects.filter(pk__in=self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct())
+                iterators = iterator_model.objects.filter(pk__in=self.values_list(
+                    horizontal_key, flat=True).order_by(horizontal_key).distinct())
                 horizontal_field = get_field(self.model, horizontal_key)
                 title = '{} anual por {}'.format(verbose_name, horizontal_field.verbose_name)
                 statistics = QueryStatistics(title)
@@ -199,7 +202,9 @@ class QuerySet(query.QuerySet):
                     group = str(iterator)
                     for i, month in enumerate(months):
                         label = month
-                        qs = self.filter(**{'{}__month'.format(vertical_key): i+1, horizontal_key: iterator.pk})
+                        qs = self.filter(
+                            **{'{}__month'.format(vertical_key): i+1, horizontal_key: iterator.pk}
+                        )
                         statistics.add(label, qs, qs.count(), group)
                 return statistics
             else:
@@ -237,11 +242,15 @@ class QuerySet(query.QuerySet):
                 vertical_choices = [(True, 'Sim'), (False, 'Não')]
             else:
                 vertical_model = find_model(self.model, vertical_key)
-                vertical_choices = [(o.pk, str(o)) for o in vertical_model.objects.filter(id__in=self.values_list(vertical_key, flat=True))]
+                vertical_choices = [(o.pk, str(o)) for o in vertical_model.objects.filter(
+                    id__in=self.values_list(vertical_key, flat=True))]
             if horizontal_key:
+                horizontal_choices = []
                 horizontal_field = get_field(self.model, horizontal_key)
                 if horizontal_field.choices:
-                    used_choices = self.values_list(horizontal_key, flat=True).order_by(horizontal_key).distinct()
+                    used_choices = self.values_list(
+                        horizontal_key, flat=True
+                    ).order_by(horizontal_key).distinct()
                     horizontal_choices = []
                     for choice in horizontal_field.choices:
                         if choice[0] in used_choices:
@@ -250,9 +259,12 @@ class QuerySet(query.QuerySet):
                     vertical_choices = [(True, 'Sim'), (False, 'Não')]
                 else:
                     horizontal_model = find_model(self.model, horizontal_key)
-                    horizontal_choices = [(o.pk, str(o)) for o in horizontal_model.objects.filter(id__in=self.values_list(horizontal_key, flat=True))]
+                    horizontal_choices = [(o.pk, str(o)) for o in horizontal_model.objects.filter(
+                        id__in=self.values_list(horizontal_key, flat=True))]
 
-                title = '{} por {} e {}'.format(verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name)
+                title = '{} por {} e {}'.format(
+                    verbose_name, vertical_field.verbose_name.lower(), horizontal_field.verbose_name
+                )
                 statistics = QueryStatistics(title)
                 for vertical_choice in vertical_choices:
                     group = vertical_choice[1]
@@ -260,7 +272,10 @@ class QuerySet(query.QuerySet):
                     for horizontal_choice in horizontal_choices:
                         label = horizontal_choice[1]
                         value = 0
-                        lookup = {vertical_key: vertical_choice[0] or None, horizontal_key: horizontal_choice[0] or None}
+                        lookup = {
+                            vertical_key: vertical_choice[0] or None,
+                            horizontal_key: horizontal_choice[0] or None
+                        }
                         qs = self.filter(**lookup).distinct()
                         if aggregate:
                             mode, attr = aggregate
@@ -353,7 +368,8 @@ class Manager(models.Manager):
 class ModelBase(base.ModelBase):
     def __new__(mcs, name, bases, attrs):
         meta_new = super(ModelBase, mcs).__new__
-        module = __import__(attrs['__module__'], fromlist=list(map(str, attrs['__module__'].split('.'))))
+        fromlist = list(map(str, attrs['__module__'].split('.')))
+        module = __import__(attrs['__module__'], fromlist=fromlist)
         if hasattr(module, '{}Manager'.format(name)):
             queryset_class = getattr(module, '{}Manager'.format(name))
             if issubclass(queryset_class, QuerySet):
@@ -383,6 +399,7 @@ class ModelBase(base.ModelBase):
 
         return cls
 
+
 DefaultManager = QuerySet
 
 
@@ -404,7 +421,9 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                 subinstance = getattr(self, subclass.__name__.lower())
                 if hasattr(subinstance, '__str__'):
                     return subinstance.__str__()
-        return '{}{}'.format(get_metadata(self.__class__, 'verbose_name'), self.pk and ' #{}'.format(self.pk or ''))
+        return '{}{}'.format(
+            get_metadata(self.__class__, 'verbose_name'), self.pk and ' #{}'.format(self.pk or '')
+        )
 
     @classmethod
     def update_metadata(cls, **kwargs):
@@ -438,7 +457,9 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
 
     def get_children(self):
         tree_index = getattr(self, self.get_tree_index_field().name)
-        return type(self).objects.filter(**{'{}__startswith'.format(tree_index):tree_index}).exclude(pk=self.pk)
+        return type(self).objects.filter(
+            **{'{}__startswith'.format(tree_index): tree_index}
+        ).exclude(pk=self.pk)
 
     def save(self, *args, **kwargs):
         log_data = get_metadata(self.__class__, 'log', False)
@@ -586,7 +607,8 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     permission_mapping = self._user.get_permission_mapping(model)
                     if 'edit_lookups' in permission_mapping and permission_mapping['edit_lookups']:
                         for lookup, values in permission_mapping['edit_lookups']:
-                            for value in model.objects.filter(pk=self.pk).values_list(lookup, flat=True).distinct():
+                            qs = model.objects.filter(pk=self.pk)
+                            for value in qs.values_list(lookup, flat=True).distinct():
                                 if value in values:
                                     return True
                         return False
@@ -604,7 +626,8 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     permission_mapping = self._user.get_permission_mapping(model)
                     if 'delete_lookups' in permission_mapping and permission_mapping['delete_lookups']:
                         for lookup, values in permission_mapping['delete_lookups']:
-                            for value in model.objects.filter(pk=self.pk).values_list(lookup, flat=True).distinct():
+                            qs = model.objects.filter(pk=self.pk)
+                            for value in qs.values_list(lookup, flat=True).distinct():
                                 if value in values:
                                     return True
                         return False

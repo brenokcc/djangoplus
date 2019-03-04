@@ -127,18 +127,22 @@ class Browser(webdriver.Firefox):
                 exception_message = 'The following messages were found on the page: {}'.format(';'.join(messages))
                 raise testcase.failureException(exception_message)
 
-    def look_for(self, text, count=2):
-        self.print('Looking for "{}"'.format(text))
-        try:
-            assert text in self.find_element_by_tag_name('body').text
-        except WebDriverException as e:
-            if count:
-                self.wait()
-                self.look_for(text, count-1)
-            else:
-                self.watch(e)
-        if self.slowly:
-            self.wait(2)
+    def see(self, text, flag=True, count=2):
+        if flag:
+            self.print('See "{}"'.format(text))
+            try:
+                assert text in self.find_element_by_tag_name('body').text
+            except WebDriverException as e:
+                if count:
+                    self.wait()
+                    self.see(text, flag, count-1)
+                else:
+                    self.watch(e)
+            if self.slowly:
+                self.wait(2)
+        else:
+            self.print('Can\'t see "{}"'.format(text))
+            assert text not in self.find_element_by_tag_name('body').text
 
     def look_at_popup_window(self, count=2):
         self.print('Looking at popup window')
@@ -179,10 +183,13 @@ class Browser(webdriver.Firefox):
         if self.slowly:
             self.wait(2)
 
-    def check(self, text):
+    def check(self, text=None):
         self.print('Checking "{}"'.format(text))
         try:
-            self.execute_script("pick('{}')".format(text))
+            if text:
+                self.execute_script("check('{}')".format(text))
+            else:
+                self.execute_script("check()")
         except WebDriverException as e:
             self.watch(e)
         self.wait()

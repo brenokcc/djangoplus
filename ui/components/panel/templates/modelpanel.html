@@ -45,13 +45,17 @@
     </div>
     {% endif %}
     {% for fieldset in self.get_active_fieldsets %}
+
+
         {% if self.tabs and forloop.counter0 == self.fieldsets_without_tab_name|length %}
-            <ul class="nav nav-tabs">
-            {% for tab_name, url in self.tabs %}
-              <li class="{% if self.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax dontScrool" href="{{ url }}">{{ tab_name }}</a></li>
-            {% endfor %}
-            </ul>
+            <div id="tab-{{ self.obj.id }}">
+                <ul class="nav nav-tabs">
+                {% for tab_name, url in self.tabs %}
+                  <li class="{% if self.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax dontScrool" data-context="#tab-{{ self.obj.id }}" href="{{ url }}">{{ tab_name }}</a></li>
+                {% endfor %}
+                </ul>
         {% endif %}
+
         {% if fieldset.drop_down.has_items %}
             <div id="panel-{{ fieldset.title|slugify }}">
                 {% if not self.request.GET.popup %}
@@ -68,35 +72,31 @@
                 </div>
                 <div class="panel-body">
 
-                    {% if fieldset.image or fieldset.extra  %}
-                        {% if fieldset.image %}
-                        <div style="float: left; margin-right: 10px">
-                            {{ self.obj|getattr:fieldset.image|zoom_image }}
-                        </div>
-                        {% else %}
-                            <div style="float: right; margin-left: 10px">
-                            {% for info in fieldset.extra %}
-                                {{ self.obj|getattr:info }}
-                            {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div style="float: left; max-width: 580px">
+                    {% if fieldset.extra  %}
+                        {% for info in fieldset.extra %}
+                            {{ self.obj|getattr:info }}
+                        {% endfor %}
                     {% endif %}
 
-                    {% for fields in fieldset.fields %}
-                        <div  class="info-group n{{ fields|length }}">
-                            {% for field in fields %}
-                                <div>
-                                    <label>{{ field.verbose_name }}</label>
-                                    <div>{{ self.obj|getattr:field.name|format:self.request|safe }}</div>
+                    <div class="responsive-container">
+                        {% if fieldset.image %}
+                            <div class="model-panel-image">
+                                {{ self.obj|getattr:fieldset.image|zoom_image:"width=100%" }}
+                            </div>
+                        {% endif %}
+                        <div class="model-panel-fields">
+                            {% for fields in fieldset.fields %}
+                                <div  class="info-group n{{ fields|length }}">
+                                    {% for field in fields %}
+                                        <div>
+                                            <label>{{ field.verbose_name }}</label>
+                                            <div>{{ self.obj|getattr:field.name|format:self.request|safe }}</div>
+                                        </div>
+                                    {% endfor %}
                                 </div>
                             {% endfor %}
                         </div>
-                    {% endfor %}
-
-                    {% if fieldset.image  %}
-                        </div>
-                    {% endif %}
+                    </div>
 
                 </div>
             </div>
@@ -112,6 +112,10 @@
             {% for paginator in fieldset.paginators %}
                 {{ paginator }}
             {% endfor %}
+        {% endif %}
+
+        {% if self.tabs and forloop.last %}
+            </div>
         {% endif %}
 
     {% endfor %}

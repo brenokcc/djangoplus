@@ -1,19 +1,20 @@
-<div class="paginator-cards">
+<div class="paginator-cards responsive-container">
     {% for obj in self.get_queryset %}
-        <div class="col-lg-3 col-md-4 col-sm-6 cards-row" align="center">
+        <div class="l3 m2 s1">
+        <div class="cards-row" align="center">
             <div style="border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px;overflow: hidden; height:280px">
                 <div>
-                    {% for list_display in self.list_display %}
+                     {% for verbose_name, lookup, sortable, to in self.column_names %}
                         {% if forloop.first %}
                         <div>
                             {% paginator_checkboxes self obj False %}
-                            <p class="cards-title">{{ obj|getattr:list_display|format }}</p>
+                            <p class="cards-title">{{ obj|getattr:lookup|format }}</p>
                         </div>
                         {% else %}
-                            <div>{{ obj|getattr:list_display|format }}</div>
+                            <p>{% if forloop.counter > 2 %}<strong>{{ verbose_name }}</strong>:{% endif %} {{ obj|getattr:lookup|format }}</p>
                             {% if forloop.last %}
                                 <div class="cards-action paginator-actions">
-                                    {% paginator_icons self obj %}
+                                    {% paginator_icons self obj True %}
                                     {% add_grouped_actions self obj %}
                                     {{ self.drop_down }}
                                 </div>
@@ -23,14 +24,17 @@
                 </div>
             </div>
         </div>
+        </div>
     {% endfor %}
 </div>
 <style>
     .cards-row{
-        padding-left:0
+        padding-left:0;
+        margin-right: 5px;
     }
     .cards-title{
-        font-size: 110%; font-weight: bold
+        font-size: 200%;
+        font-weight: bold;
     }
     .cards-action a{
         margin-top: 10px;

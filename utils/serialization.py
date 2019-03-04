@@ -2,18 +2,23 @@
 
 import zlib
 import base64
-import pickle
+import _pickle as cpickle
 from django.apps import apps
+from django.core import signing
 
 
 def dumps_qs_query(qs):
-    query = base64.b64encode(zlib.compress(pickle.dumps(qs.query)))[::-1].decode('utf-8')
-    return '{}:::{}:::{}'.format(qs.model._meta.app_label, qs.model.__name__, query)
+    serialized_str = base64.b64encode(zlib.compress(cpickle.dumps(qs.query))).decode()
+    payload = {
+        'model_label': getattr(qs.model, '_meta').label,
+        'query': serialized_str,
+    }
+    return signing.dumps(payload)
 
 
-def loads_qs_query(s):
-    app_label, model_name, query = s.split(':::')
-    query = pickle.loads(zlib.decompress(base64.b64decode(query[::-1])))
-    qs = apps.get_model(app_label, model_name).objects.all()
-    qs.query = query
-    return qs
+def loads_qs_query(data):
+    payload = signing.loads(data)
+    model = apps.get_model(payload['model_label'])
+    queryset = model.objects.none()
+    queryset.query = cpickle.loads(zlib.decompress(base64.b64decode(payload['query'])))
+    return queryset

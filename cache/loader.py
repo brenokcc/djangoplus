@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
-import shutil
-import djangoplus
+
 from django.apps import apps
 from threading import Thread
 from django.conf import settings
@@ -19,6 +17,7 @@ card_panel_models = []
 icon_panel_models = []
 list_dashboard = []
 subsets = dict()
+simple_models = []
 
 # roles
 role_models = dict()
@@ -31,7 +30,6 @@ queryset_actions = dict()
 class_actions = dict()
 class_view_actions = dict()
 fieldset_actions = dict()
-add_inline_actions = dict()
 
 # documentation
 workflows = dict()
@@ -60,6 +58,7 @@ if not initialized:
         app_label = get_metadata(model, 'app_label')
         add_shortcut = get_metadata(model, 'add_shortcut')
         list_shortcut = get_metadata(model, 'list_shortcut')
+        list_diplay = get_metadata(model, 'list_display')
         verbose_name = get_metadata(model, 'verbose_name')
         verbose_name_plural = get_metadata(model, 'verbose_name_plural')
         menu = get_metadata(model, 'menu')
@@ -190,6 +189,8 @@ if not initialized:
                     fieldset_actions[model][title] = []
                 for action_name in info.get('actions', []):
                     fieldset_actions[model][title].append(action_name)
+        else:
+            simple_models.append(model)
 
         # indexing the actions defined in models
         for attr_name in dir(model):
@@ -249,20 +250,6 @@ if not initialized:
                         else:
                             # 'relation_name'
                             relation_name = item
-                        tmp = getattr(model, relation_name)
-                        if hasattr(tmp, 'rel'):
-                            add_inline = get_metadata(tmp.rel.related_model, 'add_inline')
-                            if add_inline:
-                                action_model_verbose_name = get_metadata(tmp.rel.related_model, 'verbose_name')
-                                action_verbose_name = get_metadata(tmp.rel.related_model, 'add_label', 'Adicionar {}'.format(action_model_verbose_name))
-                                action_can_execute = get_metadata(tmp.rel.related_model, 'can_add')
-                                url = '/add/{}/{}/{{}}/{}/'.format(app_label, model_name, tmp.rel.name)
-                                add_inline_action = dict(verbose_name=action_verbose_name, url=url, can_execute=action_can_execute, style='popup')
-                                if model not in add_inline_actions:
-                                    add_inline_actions[model] = []
-                                action_subset = add_inline is not True and add_inline or None
-                                add_inline_action['subset'] = action_subset
-                                add_inline_actions[model].append(add_inline_action)
 
         # indexing the actions defined in managers
         qs_manager_class = type(model.objects.get_queryset())

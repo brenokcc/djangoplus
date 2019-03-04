@@ -390,7 +390,7 @@ class UseCase(object):
                             relation_name = item
 
         # if the relation was defined in a fieldset
-        if relation_name :
+        if relation_name:
             add_inline = relation_name in inlines
             add_label = get_metadata(related_model, 'add_label')
             button_label = add_label or 'Adicionar'

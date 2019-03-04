@@ -211,14 +211,24 @@ function enter(name, value, submit){
     }
 }
 
-function pick(value){
-    var checkbox = $(cursor).find("tr:contains('"+value+"')" ).parent().find('input[type=checkbox]');
-    if(checkbox.length==0) checkbox = $('.panel-heading:contains('+value+')').find('input[type=checkbox]');
-    if(checkbox.length>0){
-        function callback(){
-            checkbox.trigger('click');
+function check(value){
+    if(value==null){
+        var element = $(cursor).find('input[type=checkbox]');
+        if(recursively(element)){
+            return check();
+        } else {
+            element.trigger('click');
         }
-        return scroolToElement(checkbox, callback);
+    } else {
+        var checkbox = $(cursor).find("tr:contains('" + value + "')").parent().find('input[type=checkbox]');
+        if (checkbox.length == 0) checkbox = $('.panel-heading:contains(' + value + ')').find('input[type=checkbox]');
+        if (checkbox.length > 0) {
+            function callback() {
+                checkbox.trigger('click');
+            }
+
+            return scroolToElement(checkbox, callback);
+        }
     }
 }
 

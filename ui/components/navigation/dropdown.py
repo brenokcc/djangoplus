@@ -38,32 +38,30 @@ class GroupDropDown(RequestComponent):
 
 class ModelDropDown(GroupDropDown):
     def __init__(self, request, model, action_names=()):
-        from djangoplus.cache import loader
+
         self.model = model
         self.action_names = action_names
         self.actions_cache = None
         self.hash = abs(datetime.now().__hash__())
         self.obj = None
-
         self.has_inline_action = False
-        if action_names and len(action_names) > 0:
-            self.has_inline_action = True
-        else:
-
-            for category in loader.instance_actions[self.model]:
-                for view_name in loader.instance_actions[self.model][category]:
-                    form_action = loader.instance_actions[self.model][category][view_name]
-                    if not self.has_inline_action:
-                        self.has_inline_action = form_action.get('inline') or form_action.get('subsets')
-
-            if not self.has_inline_action:
-                self.has_inline_action = self.model in loader.add_inline_actions
 
         super(ModelDropDown, self).__init__(request)
-        # adding the actions defined in the model class
+
+        self.load_actions()
+
+    def load_actions(self):
+        from djangoplus.cache import loader
+        if self.action_names and len(self.action_names) > 0:
+            self.has_inline_action = True
+
         for category in loader.instance_actions[self.model]:
             if category not in self.actions:
                 self.actions[category] = []
+            for view_name in loader.instance_actions[self.model][category]:
+                form_action = loader.instance_actions[self.model][category][view_name]
+                if not self.has_inline_action:
+                    self.has_inline_action = form_action.get('inline') or form_action.get('subsets')
 
     def add_action(self, label, url, css='popup', icon=None, category=None):
         if category is None:
@@ -77,7 +75,7 @@ class ModelDropDown(GroupDropDown):
                 url = '{}{}/'.format(url, self.obj.pk)
         super(ModelDropDown, self).add_action(label, url, css, icon, category)
 
-    def add_actions(self, obj, inline=False, fieldset=None, subset_name=None, category=None, action_names=None):
+    def add_actions(self, obj, fieldset=None, subset_name=None, category=None, action_names=None):
         from djangoplus.cache import loader
         obj.request = self.request
         if not self.actions_cache:
@@ -87,15 +85,6 @@ class ModelDropDown(GroupDropDown):
         self.hash = abs(datetime.now().__hash__())
         self.actions = copy.deepcopy(self.actions_cache)
         self.obj = obj
-
-        if inline:
-            if self.model in loader.add_inline_actions:
-                for add_inline_action in loader.add_inline_actions[self.model]:
-                    if add_inline_action['subset'] is True or add_inline_action['subset'] == subset_name:
-                        if permissions.check_group_or_permission(self.request, add_inline_action['can_execute']):
-                            self.add_action(
-                                add_inline_action['verbose_name'], add_inline_action['url'], 'popup', 'fa fa-plus'
-                            )
 
         for action_category in loader.instance_actions[self.model]:
 
@@ -117,8 +106,8 @@ class ModelDropDown(GroupDropDown):
 
                 if action_name and action_style == 'popup' and not is_action_view:
                     func = getattr(self.model, action_name)
-                    action_style = (count_parameters_names(func) > 1 or action_input or action_display) and \
-                                   action_style or 'ajax'
+                    if not (count_parameters_names(func) > 1 or action_input or action_display):
+                        action_style = 'ajax'
 
                 # it is a dropdown in a model panel
                 if fieldset is not None:
@@ -126,7 +115,8 @@ class ModelDropDown(GroupDropDown):
                         if action_name not in loader.fieldset_actions[self.model][fieldset]:
                             continue
                     else:
-                        # if the action was included in any fieldset it can not be displayed in page's action panel
+                        # if the action was included in any fieldset,
+                        # it can not be displayed in page's action panel
                         add_action = True
                         for title, action_names in list(loader.fieldset_actions[self.model].items()):
                             if action_name in action_names:
@@ -166,6 +156,9 @@ class ModelDropDown(GroupDropDown):
                 if is_action_view:
                     action_url = '/{}/{}/'.format(get_metadata(self.model, 'app_label'), action_name)
                 else:
-                    action_url = '/action/{}/{}/{}/'.format(get_metadata(self.model, 'app_label'), self.model.__name__.lower(), view_name)
+                    action_url = '/action/{}/{}/{}/'.format(
+                        get_metadata(self.model, 'app_label'), self.model.__name__.lower(), view_name
+                    )
 
-                self.add_action(action_verbose_name, action_url, action_style, action_icon, category or action_category)
+                action_category = category or action_category
+                self.add_action(action_verbose_name, action_url, action_style, action_icon, action_category)

@@ -4,8 +4,9 @@ import re
 import datetime
 import unicodedata
 from decimal import Decimal
+from django.conf import settings
+from collections import Iterable
 from django.utils.safestring import mark_safe
-from django.db.models.fields.files import FieldFile, ImageFieldFile as DjangoImageFieldFile
 
 
 def normalyze(nome):
@@ -49,93 +50,73 @@ def format_bool(value):
 
 def format_value(value, html=True):
     from djangoplus.db.models.fields import ImageFieldFile
-    if value is None or value == '' or value == ():
+    from django.db.models.fields.files import FieldFile, ImageFieldFile as DjangoImageFieldFile
+    if value in (None, '', ()):
         return '-'
-    elif type(value) == str:
+    elif isinstance(value, str):
         return value
+    elif isinstance(value, bool):
+        return value and 'Sim' or 'Não'
+    elif isinstance(value, datetime.datetime):
+        return value.strftime('%d/%m/%Y %H:%M')
+    elif isinstance(value, datetime.date):
+        return value.strftime('%d/%m/%Y')
+    elif isinstance(value, tuple):
+        return '{} {}'.format(value[0], value[1])
     elif isinstance(value, Decimal):
         if hasattr(value, 'decimal3'):
             return format_decimal3(value)
-        return format_decimal(value)
+        else:
+            return format_decimal(value)
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
-        return html and mark_safe('<img width="75" class="materialboxed" src="{}"/>'.format(value.url)) or value
+        if html:
+            return mark_safe(
+                '<img width="75" class="materialboxed" src="{}"/>'.format(value.url)
+            )
+        else:
+            return value
     elif isinstance(value, FieldFile):
         file_name = value.name.split('/')[-1]
         if value.url.lower().endswith('.pdf'):
-            return html and mark_safe('<a class="ajax pdf" href="{}">{}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{}"><i class="mdi-file-file-download"></i></a>'.format(value.url, file_name, value.url)) or file_name
+            if html:
+                return mark_safe('''
+                    <a class="ajax pdf" href="{}">{}</a>{}
+                    <a href="{}"><i class="mdi-file-file-download"></i></a>
+                '''.format(value.url, file_name, '&nbsp;'*6, value.url))
+            else:
+                return file_name
         else:
-            return html and mark_safe('<a target="_blank" href="{}">{}</a>'.format(value.url, file_name)) or value.url
-    elif isinstance(value, bool):
-        return value and 'Sim' or 'Não'
-    elif value.__class__ == datetime.date:
-        return value.strftime('%d/%m/%Y')
-    elif value.__class__ == datetime.datetime:
-        return value.strftime('%d/%m/%Y %H:%M')
-    elif type(value).__name__=='QuerySet' or type(value).__name__.endswith('Manager') or type(value) == list:
+            if html:
+                return mark_safe('<a target="_blank" href="{}">{}</a>'.format(value.url, file_name))
+            else:
+                return value.url
+    elif isinstance(value, Iterable):
         if html:
-            l = ['<ul style="display: inline-block; padding-left:20px">']
+            ul = ['<ul style="display: inline-block; padding-left:20px">']
             for obj in value:
-                l.append('<li style="list-style-type:square">{}</li>'.format(obj))
-            l.append('</ul>')
-            return mark_safe(''.join(l))
+                ul.append('<li style="list-style-type:square">{}</li>'.format(obj))
+            ul.append('</ul>')
+            return mark_safe(''.join(ul))
         else:
-            l = []
+            items = []
             for obj in value:
-                l.append(str(obj))
-            return ', '.join(l)
-    elif isinstance(value, tuple):
-        return '{} {}'.format(value[0], value[1])
+                items.append(str(obj))
+            return ', '.join(items)
     else:
         return str(value)
 
 
-def split_thousands(value, sep='.'):
-    if not isinstance(value, str):
-        value = str(value)
-    negativo = False
-    if '-' in value:
-        value = value.replace('-', '')
-        negativo = True
-    if len(value) <= 3:
-        if negativo:
-            return '- ' + value
-        else:
-            return value
-    if negativo:
-        return '- ' + split_thousands(value[:-3], sep) + sep + value[-3:]
-    else:
-        return split_thousands(value[:-3], sep) + sep + value[-3:]
-
-
-def format_decimal(value):
-    value = str(value)
-    if '.' in value:
-        reais, centavos = value.split('.')
-        if len(centavos) == 1:
-            centavos = '{}0'.format(centavos)
-        elif len(centavos) > 2:
-            centavos = centavos[0:2]
-    else:
-        reais = value
-        centavos = '00'
-    reais = split_thousands(reais)
-    return reais + ',' + centavos
+def format_decimal(value, decimal_places=2):
+    str_format = '{{:.{}f}}'.format(decimal_places)
+    if value is not None:
+        value = str_format.format(Decimal(value))
+        if settings.LANGUAGE_CODE == 'pt-br':
+            value = value.replace('.', ',')
+    return value
 
 
 def format_decimal3(value):
-    value = str(value)
-    if '.' in value:
-        reais, centavos = value.split('.')
-        centavos = '{}000'.format(centavos)
-        if len(centavos) == 1:
-            centavos = '{}0'.format(centavos)
-        elif len(centavos) > 3:
-            centavos = centavos[0:3]
-    else:
-        reais = value
-        centavos = '000'
-    reais = split_thousands(reais)
-    return reais + ',' + centavos
+    return format_decimal(value, 3)
 
 
 def to_ascii(txt, codif='utf-8'):
@@ -143,4 +124,6 @@ def to_ascii(txt, codif='utf-8'):
         txt = str(txt)
     if isinstance(txt, str):
         txt = txt.encode('utf-8')
-    return unicodedata.normalize('NFKD', txt.decode(codif)).encode('ASCII', 'ignore').decode('utf-8')
+    return unicodedata.normalize(
+        'NFKD', txt.decode(codif)
+    ).encode('ASCII', 'ignore').decode('utf-8')

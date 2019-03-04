@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from decimal import Decimal
 from djangoplus.ui import RequestComponent
 from django.utils.text import slugify
@@ -7,8 +8,7 @@ from django.template.loader import render_to_string
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.metadata import get_metadata, get_fieldsets, find_field_by_name, get_fiendly_name, \
-    check_condition, is_one_to_one, is_many_to_one, should_filter_or_display, count_parameters_names, \
-    get_role_values_for_condition
+    check_condition, is_one_to_one, is_many_to_one, should_filter_or_display
 
 
 class Panel(RequestComponent):
@@ -22,7 +22,8 @@ class Panel(RequestComponent):
 
 
 class ModelPanel(RequestComponent):
-    def __init__(self, request, obj, current_tab=None, parent=None, fieldsets=None, complete=True, readonly=False, printable=True):
+    def __init__(self, request, obj, current_tab=None, parent=None,
+                 fieldsets=None, complete=True, readonly=False, printable=True):
 
         super(ModelPanel, self).__init__(obj.pk, request)
 
@@ -44,7 +45,10 @@ class ModelPanel(RequestComponent):
             self.drop_down = ModelDropDown(self.request, type(self.obj))
             self.drop_down.add_actions(self.obj, fieldset='')
             if self.printable:
-                self.drop_down.add_action('Imprimir', url='?pdf={}&pk='.format(self.id), css='ajax', icon='fa-print', category='Imprimir')
+                print_url = '?pdf={}&pk='.format(self.id)
+                self.drop_down.add_action(
+                    'Imprimir', url=print_url, css='ajax', icon='fa-print', category='Imprimir'
+                )
         else:
             self.drop_down = GroupDropDown(self.request)
 
@@ -73,7 +77,9 @@ class ModelPanel(RequestComponent):
 
             if '::' in title:
                 tab_name, title = title.split('::')
-                url = '/view/{}/{}/{}/{}/'.format(get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, slugify(tab_name))
+                url = '/view/{}/{}/{}/{}/'.format(
+                    get_metadata(model, 'app_label'), model.__name__.lower(), self.obj.pk, slugify(tab_name)
+                )
                 tab = (tab_name, url)
                 if not self.tabs and not self.current_tab:
                     self.current_tab = slugify(tab_name)
@@ -81,8 +87,10 @@ class ModelPanel(RequestComponent):
                     self.tabs.append(tab)
 
             if not tab_name or slugify(tab_name) == self.current_tab or self.as_pdf:
-
-                fieldset_dict = dict(title=title or 'Dados Gerais', tab_name=tab_name, fields=[], paginators=[], drop_down=drop_down, image=None)
+                fieldset_dict = dict(
+                    title=title or 'Dados Gerais', tab_name=tab_name, fields=[],
+                    paginators=[], drop_down=drop_down, image=None
+                )
                 relations = list(fieldset[1].get('relations', []))
                 inlines = list(fieldset[1].get('inlines', []))
 
@@ -115,7 +123,9 @@ class ModelPanel(RequestComponent):
                                 elif hasattr(attr, 'field'):
                                     field = attr.field
                                 if not field or not hasattr(field, 'display') or field.display:
-                                    verbose_name, lookup, sortable, to = get_fiendly_name(model, attr_name, as_tuple=True)
+                                    verbose_name, lookup, sortable, to = get_fiendly_name(
+                                        model, attr_name, as_tuple=True
+                                    )
                                     if to and not should_filter_or_display(self.request, model, to):
                                         continue
                                     attr_names.append(dict(verbose_name=verbose_name, name=attr_name))
@@ -181,7 +191,9 @@ class ShortcutPanel(RequestComponent):
         for item in loader.views:
             if item['add_shortcut']:
                 if permissions.check_group_or_permission(request, item['can_view']):
-                    self.add(item['icon'], item['verbose_name'], None, item['url'], item['can_view'], item['style'])
+                    self.add(
+                        item['icon'], item['verbose_name'], None, item['url'], item['can_view'], item['style']
+                    )
 
     def add(self, icon, description, count=None, url=None, perm_or_group=None, style='ajax'):
         if permissions.check_group_or_permission(self.request, perm_or_group):
@@ -203,10 +215,6 @@ class ShortcutPanel(RequestComponent):
 
 
 class CardPanel(RequestComponent):
-
-    class Media:
-        pass
-        # css = {'all': ('/static/css/cardpanel.css',)}
 
     def __init__(self, request):
         super(CardPanel, self).__init__('cardpanel', request)
@@ -243,11 +251,6 @@ class CardPanel(RequestComponent):
                             if count:
                                 url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
                                 self.add(icon, title, count, url, '', None, item['verbose_name'])
-
-        for item in loader.views:
-            if False:  # TODO False
-                if permissions.check_group_or_permission(request, item['can_view']):
-                    self.add(item['icon'], item['menu'], None, item['url'], '', item['can_view'], item['style'])
 
     def add(self, icon, title, count=None, url=None, css='', perm_or_group=None, description=''):
         if permissions.check_group_or_permission(self.request, perm_or_group):
@@ -330,7 +333,7 @@ class DashboardPanel(RequestComponent):
                         paginator = Paginator(self.request, f_return, title, readonly=compact,
                                               list_display=list_display, list_filter=(), search_fields=(),
                                               list_subsets=[func_name], url=link and url or None)
-                        if compact:
+                        if compact and not paginator.template:
                             paginator.column_names = paginator.column_names[0:1]
                         html = str(paginator)
                     else:
@@ -368,7 +371,9 @@ class AppDashboard(DashboardPanel):
                     count = qs.count()
                     if count:
                         url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                        notification_panel = NotificationPanel(self.request, title, count, url, description, icon)
+                        notification_panel = NotificationPanel(
+                            self.request, title, count, url, description, icon
+                        )
                         self.right.append(notification_panel)
         for model in loader.list_dashboard:
             title = get_metadata(model, 'verbose_name_plural')
@@ -390,7 +395,9 @@ class AppDashboard(DashboardPanel):
                 func = item['function']
                 position = item['position']
                 f_return = func(self.request)
-                html = render_to_string(['{}.html'.format(func.__name__), 'dashboard.html'], f_return, self.request)
+                html = render_to_string(
+                    ['{}.html'.format(func.__name__), 'dashboard.html'], f_return, self.request
+                )
                 self.add(html, position)
 
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import tempfile
 import qrcode
 import base64
@@ -17,14 +18,14 @@ REAIS_SYMBOL = 'R$'
 
 
 class Chart(RequestComponent):
-    def __init__(self, request, labels, series, groups=[], symbol=None, title=None):
+    def __init__(self, request, labels, series, groups=None, symbol=None, title=None):
 
         super(Chart, self).__init__(None, request)
 
         self.type = 'bar'
         self.labels = labels
         self.series = series
-        self.groups = groups
+        self.groups = groups or []
         self.symbol = symbol or ''
         self.title = title
         self.color_index = 0
@@ -141,9 +142,9 @@ class Timeline(RequestComponent):
     class Media:
         css = {'all': ('/static/css/timeline.css',)}
 
-    def __init__(self, request, description, items=[]):
+    def __init__(self, request, description, items=None):
         super(Timeline, self).__init__(description, request)
-        self.items = items
+        self.items = items or []
         self.description = description
         self.width = 0
 
@@ -191,6 +192,7 @@ class QrCode(RequestComponent):
         super(QrCode, self).__init__(text, request)
         self.text = text
         self.width = width
+        self.height = height
         self.base64 = None
 
     def __str__(self):
@@ -212,12 +214,12 @@ class ProgressBar(RequestComponent):
 
 
 class Table(RequestComponent):
-    def __init__(self, request, title, header=list(), rows=list(), footer=list(), enumerable=True, note=None):
+    def __init__(self, request, title, header=None, rows=None, footer=None, enumerable=True, note=None):
         super(Table, self).__init__(title, request)
         self.title = title
-        self.header = header
-        self.rows = rows
-        self.footer = footer
+        self.header = header or []
+        self.rows = rows or []
+        self.footer = footer or []
         self.enumerable = enumerable
         self.note = note
 
@@ -295,9 +297,17 @@ class ModelReport(RequestComponent):
             for field_name in list_filter:
                 field = get_field(qs.model, field_name)
                 if hasattr(field, 'choices') and field.choices:
-                    form.fields[field_name] = forms.ChoiceField(choices=[['', '']]+field.choices, label=field.verbose_name, required=False)
+                    form.fields[field_name] = forms.ChoiceField(
+                        choices=[['', '']]+field.choices,
+                        label=field.verbose_name,
+                        required=False
+                    )
                 else:
-                    form.fields[field_name] = forms.ModelChoiceField(field.remote_field.model.objects.all(), label=field.verbose_name, required=False)
+                    form.fields[field_name] = forms.ModelChoiceField(
+                        field.remote_field.model.objects.all(),
+                        label=field.verbose_name,
+                        required=False
+                    )
             if form.is_valid():
                 for field_name in list_filter:
                     value = form.cleaned_data[field_name]

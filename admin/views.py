@@ -111,7 +111,7 @@ def register(request, token=None, userid=None):
             auth.login(request, user)
             return httprr(request, '/admin/', _('You have successfully logged in.'))
         else:
-            initial = {name_field: data['name'], username_field: data['email'], email_field: data['email']}
+            initial = {name_field: data.get('name'), username_field: data['email'], email_field: data['email']}
 
     class RegisterForm(forms.ModelForm):
         class Meta:

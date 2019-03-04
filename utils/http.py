@@ -91,9 +91,11 @@ class ReportResponse(PdfResponse):
         project_name = app_settings.initials
         project_description = app_settings.name
         unit_or_organization = request.session.get('scope')
-        context = dict(objects=objects, title=title, today=datetime.date.today(), logo=logo,
-                       project_name=project_name, project_description=project_description,
-                       unit_or_organization=unit_or_organization)
+        context = dict(
+            objects=objects, title=title, today=datetime.date.today(), logo=logo,
+            project_name=project_name, project_description=project_description,
+            unit_or_organization=unit_or_organization
+        )
         html = render_to_string([template], context, request=request)
         super(ReportResponse, self).__init__(html, landscape)
 

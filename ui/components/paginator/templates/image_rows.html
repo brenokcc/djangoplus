@@ -1,11 +1,12 @@
-<div class="paginator-image-rows">
+<div class="paginator-image-rows responsive-container">
+<div>
     {% for obj in self.get_queryset %}
-        <div class="col-lg-12 image-rows-row">
+        <div class="image-rows-row">
             <div class="image-rows-container">
                 {% for verbose_name, lookup, sortable, to in self.column_names %}
                     {% if forloop.first %}
                         <div class="image-rows-image-container">
-                            {{ obj|getattr:lookup|zoom_image:"width='150px'" }}
+                            {{ obj|getattr:lookup|zoom_image:"width='100%'" }}
                         </div>
                     {% else %}
                     <div>
@@ -15,7 +16,7 @@
                                 {{ obj|getattr:lookup|format|format }}
                             </p>
                         {% else %}
-                            <p>{{ verbose_name }} : {{ obj|getattr:lookup|format|format }}</p>
+                            <p><strong>{{ verbose_name }}</strong>: {{ obj|getattr:lookup|format }}</p>
                         {% endif %}
                         {% if forloop.last %}
                             <div class="pull-right paginator-actions">
@@ -31,9 +32,25 @@
         </div>
     {% endfor %}
 </div>
+</div>
 <style>
+    .paginator-image-rows > div{
+        width: 100%;
+    }
+    .paginator-image-rows > div.s .image-rows-image-container img{
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .paginator-image-rows > div.m .image-rows-image-container img,
+    .paginator-image-rows > div.l .image-rows-image-container img{
+        width: 130px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
     .image-rows-row{
-        padding-left:0; min-height: 100px
+        padding-left:0; min-height: 100px;
+
     }
     .image-rows-container{
         border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px; overflow: auto; vertical-align: top;
@@ -43,6 +60,5 @@
     }
     .image-rows-image-container{
         float:left;
-        margin-right: 20px;
     }
 </style>

@@ -169,23 +169,31 @@ class Form(django_forms.Form):
         for title, fieldset in self.fieldsets:
             field_names = fieldset.get('fields', ())
             relation_names = fieldset.get('relations', ())
-            for name_or_tuple in tuple(field_names) + tuple(relation_names):
+            image_field_name = fieldset.get('image')
+            image_field_names = ()
+            if image_field_name:
+                image_field_names = image_field_name,
+            for name_or_tuple in tuple(field_names) + tuple(relation_names) + image_field_names:
                 for name in iterable(name_or_tuple):
                     fieldset_field_names.append(name)
         for field_name in list(self.fields.keys()):
             if field_name not in fieldset_field_names:
                 extra_fieldset_field_names.append(field_name)
         if extra_fieldset_field_names:
-            self.fieldsets += ('Outros', {'fields': extra_fieldset_field_names, }),
+            self.fieldsets += ('Outros Dados', {'fields': extra_fieldset_field_names, }),
 
         for title, fieldset in self.fieldsets:
             title = '::' in title and title.split('::')[1] or title.split('::')[0]
             field_names = fieldset.get('fields', ())
             relation_names = fieldset.get('relations', ())
+            image_field_name = fieldset.get('image')
+            image_field_names = ()
+            if image_field_name:
+                image_field_names = image_field_name,
 
             configured_fieldset = dict(title=title, tuples=[], one_to_one=[], one_to_many=[])
 
-            for name_or_tuple in tuple(field_names) + tuple(relation_names):
+            for name_or_tuple in tuple(field_names) + tuple(relation_names) + image_field_names:
                 fields = []
                 for name in iterable(name_or_tuple):
                     if name in self.fields:

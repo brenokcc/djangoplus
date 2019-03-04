@@ -1,6 +1,7 @@
-<div class="image-cards">
+<div class="image-cards responsive-container">
     {% for obj in self.get_queryset %}
-        <div class="col-lg-3 col-md-4 col-sm-6 image-cards-row" align="center">
+        <div class="l3 m2 s1">
+        <div class="image-cards-row" align="center">
             <div class="image-cards-container">
                 <div>
                     {% for list_display in self.list_display %}
@@ -15,7 +16,6 @@
                                         {% paginator_checkboxes self obj False %}
                                         {{ obj|getattr:list_display|format }}
                                     </p>
-                                    {% paginator_icons self obj %}
                                 </div>
                             {% else %}
                                 <div><p>{{ obj|getattr:list_display|format }}</p></div>
@@ -23,6 +23,7 @@
 
                             {% if forloop.last %}
                                 <div class="paginator-actions">
+                                    {% paginator_icons self obj True %}
                                     {% add_grouped_actions self obj %}
                                     {{ self.drop_down }}
                                 </div>
@@ -32,11 +33,13 @@
                 </div>
             </div>
         </div>
+        </div>
     {% endfor %}
 </div>
 <style>
     .image-cards-row{
-        padding-left:0
+        padding-left:0;
+        margin-right: 5px;
     }
     .image-cards-container{
         border: 1px solid #ddd; border-radius: 0; margin-bottom: 10px;overflow: hidden; height:350px;

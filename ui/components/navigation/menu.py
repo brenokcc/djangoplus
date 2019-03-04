@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+
 from django.conf import settings
-from djangoplus.ui import RequestComponent
 from djangoplus.utils import permissions
+from djangoplus.ui import RequestComponent
 from django.utils.safestring import mark_safe
 
 
@@ -26,36 +27,41 @@ class Menu(RequestComponent):
         if len(levels) == 1:
             self.subitems[levels[0]]['urls'].append((url, style))
         else:
-            if levels[1] not in self.subitems[levels[0]]['subitems']:
-                self.subitems[levels[0]]['subitems'][levels[1]] = dict(urls=[], subitems=dict())
+            subitems = self.subitems[levels[0]]['subitems']
+            if levels[1] not in subitems:
+                item = dict(urls=[], subitems=dict())
+                subitems[levels[1]] = item
             if len(levels) == 2:
-                self.subitems[levels[0]]['subitems'][levels[1]]['urls'].append((url, style))
+                subitems[levels[1]]['urls'].append((url, style))
             else:
-                if levels[2] not in self.subitems[levels[0]]['subitems'][levels[1]]['subitems']:
-                    self.subitems[levels[0]]['subitems'][levels[1]]['subitems'][levels[2]] = dict(urls=[], subitems=dict())
+                subitems = subitems[levels[1]]['subitems']
+                if levels[2] not in subitems:
+                    item = dict(urls=[], subitems=dict())
+                    subitems[levels[2]] = item
                 if len(levels) == 3:
-                    self.subitems[levels[0]]['subitems'][levels[1]]['subitems'][levels[2]]['urls'].append((url, style))
+                    subitems[levels[2]]['urls'].append((url, style))
                 else:
-                    if levels[3] not in self.subitems[levels[0]]['subitems'][levels[1]]['subitems'][levels[2]]['subitems']:
-                        self.subitems[levels[0]]['subitems'][levels[1]]['subitems'][levels[2]]['subitems'][levels[3]] = dict(urls=[])
-                    self.subitems[levels[0]]['subitems'][levels[1]]['subitems'][levels[2]]['subitems'][levels[3]]['urls'].append((url, style))
+                    subitems = subitems[levels[2]]['subitems']
+                    if levels[3] not in subitems:
+                        subitems[levels[3]] = dict(urls=[])
+                    subitems[levels[3]]['urls'].append((url, style))
 
     def _load(self):
         if settings.DEBUG or 'side_menu' not in self.request.session:
             from djangoplus.cache import loader
             for item in loader.views:
                 if item['menu']:
-                    can_view = permissions.check_group_or_permission(self.request, item['can_view'])
+                    can_view = permissions.check_group_or_permission(
+                        self.request, item['can_view']
+                    )
                     if can_view and 'groups' in item:
-                        can_view = permissions.check_group_or_permission(self.request, item['groups'])
+                        can_view = permissions.check_group_or_permission(
+                            self.request, item['groups']
+                        )
                     if can_view:
-                        self._add(item['menu'], item['url'], item['icon'], item.get('style', 'ajax'))
-
-            for cls, itens in list(loader.subsets.items()):
-                for item in itens:
-                    if permissions.check_group_or_permission(self.request, item['can_view']):
-                        if False:  # TODO False
-                            self._add(item['menu'], item['url'], item['icon'], 'ajax')
+                        self._add(
+                            item['menu'], item['url'], item['icon'], item.get('style', 'ajax')
+                        )
 
             self.request.session['side_menu'] = super(Menu, self).__str__()
             self.request.session['side_menu_size'] = len(list(self.subitems.keys()))

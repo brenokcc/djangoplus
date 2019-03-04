@@ -10,7 +10,7 @@
                                 {{ obj|getattr:lookup|format }}
                             </p>
                         {% else %}
-                            <p>{{ verbose_name }} : {{ obj|getattr:lookup|format }}</p>
+                            <p>{{ verbose_name }}: {{ obj|getattr:lookup|format }}</p>
                         {% endif %}
 
                         {% if forloop.last %}

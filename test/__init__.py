@@ -50,7 +50,7 @@ class TestCase(LiveServerTestCase):
         cls.subtitle = Subtitle()
         cls.recorder = VideoRecorder()
         cls.terminal = Terminal()
-        if not CACHE['HEADLESS']:
+        if CACHE['RECORD'] and not CACHE['HEADLESS']:
             cls.terminal.hide()
         if CACHE['RECORD']:
             cls.browser.slowly = True
@@ -82,14 +82,14 @@ class TestCase(LiveServerTestCase):
     def choose(self, name, value, count=2):
         self.browser.choose(name, value, count)
 
-    def check(self, name, count=2):
-        self.browser.check(name, count)
+    def check(self, name=None):
+        self.browser.check(name)
 
     def dont_see_error_message(self):
         self.browser.dont_see_error_message(self)
 
-    def look_for(self, text, count=2):
-        self.browser.look_for(text, count)
+    def see(self, text, flag=True, count=2):
+        self.browser.see(text, flag, count)
 
     def look_at_popup_window(self, count=2):
         self.browser.look_at_popup_window(count)
@@ -99,9 +99,6 @@ class TestCase(LiveServerTestCase):
 
     def look_at_panel(self, text, count=2):
         self.browser.look_at_panel(text, count)
-
-    def check(self, text):
-        self.browser.check(text)
 
     def click_menu(self, *texts):
         self.browser.click_menu(*texts)
@@ -133,7 +130,7 @@ class TestCase(LiveServerTestCase):
     @classmethod
     def tearDownClass(cls):
         super(TestCase, cls).tearDownClass()
-        if not CACHE['HEADLESS']:
+        if CACHE['RECORD'] and not CACHE['HEADLESS']:
             cls.terminal.show()
         cls.browser.close()
         cls.browser.service.stop()

@@ -40,7 +40,7 @@ def populate(request):
         drop_down = ModelDropDown(
             request, obj.__class__, action_names=action_names
         )
-        drop_down.add_actions(obj, inline=True)
+        drop_down.add_actions(obj)
         html_id = hash(obj)
         html = list()
         html.append('<div id="{}">'.format(html_id))

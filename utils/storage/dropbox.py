@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import six
 import time
 import hashlib
@@ -18,7 +19,10 @@ from dropbox.files import FolderMetadata, FileMetadata
 
 """
 Usage:
-    document = models.FileField(verbose_name='Document', upload_to='dropbox:documents')
+    document = models.FileField(
+        verbose_name='Document',
+        upload_to='dropbox:documents'
+    )
 """
 
 
@@ -160,10 +164,10 @@ class DropboxStorage(Storage):
             name = os.path.join(dir_name, "%s_%s%s" % (file_root, next(count), file_ext))
         return name
 
-    def sync(self, verbose=False, delete=False):
+    def sync(self):
         self._log('Starting sync on dir {}...'.format(self.tmp_dir))
         while True:
-            for file_path in [os.path.join(dp, f) for dp, dn, filenames in os.walk(self.tmp_dir) for f in filenames]:
+            for file_path in [os.path.join(dp, f) for dp, dn, names in os.walk(self.tmp_dir) for f in names]:
                 local_hash = DropboxContentHasher.calculate(file_path)
                 remote_path = file_path[len(self.tmp_dir):]
                 if not self.exists(remote_path):
@@ -172,12 +176,16 @@ class DropboxStorage(Storage):
                         self._get_client().files_create_folder_v2(directory)
                     with open(file_path, 'rb') as f:
                         file_size = os.path.getsize(file_path)
-                        self._log('Uploading {} [{} bytes] ({}) to {}...'.format(file_size, file_path, local_hash, remote_path))
+                        self._log('Uploading {} [{} bytes] ({}) to {}...'.format(
+                            file_size, file_path, local_hash, remote_path)
+                        )
                         if file_size <= self.CHUNK_SIZE:
                             self._get_client().files_upload(f.read(), remote_path)
                         else:
                             self._log('Starting session...')
-                            upload_session_start_result = self._get_client().files_upload_session_start(f.read(self.CHUNK_SIZE))
+                            upload_session_start_result = self._get_client().files_upload_session_start(
+                                f.read(self.CHUNK_SIZE)
+                            )
                             cursor = files.UploadSessionCursor(
                                 session_id=upload_session_start_result.session_id,
                                 offset=f.tell()
@@ -186,11 +194,15 @@ class DropboxStorage(Storage):
                             while f.tell() < file_size:
                                 self._print_progress(f.tell(), file_size)
                                 if file_size - f.tell() <= self.CHUNK_SIZE:
-                                    self._get_client().files_upload_session_finish(f.read(self.CHUNK_SIZE), cursor, commit)
+                                    self._get_client().files_upload_session_finish(
+                                        f.read(self.CHUNK_SIZE), cursor, commit
+                                    )
                                     self._print_progress(file_size, file_size)
                                     self._log('Session closed!')
                                 else:
-                                    self._get_client().files_upload_session_append_v2(f.read(self.CHUNK_SIZE), cursor)
+                                    self._get_client().files_upload_session_append_v2(
+                                        f.read(self.CHUNK_SIZE), cursor
+                                    )
                                     cursor.offset = f.tell()
                         self._log('Upload completed!')
                         local_hash = DropboxContentHasher.calculate(file_path)
@@ -206,6 +218,7 @@ class DropboxStorage(Storage):
 
 
 class DropboxFile(File):
+
     def __init__(self, name, storage, mode):
         self._storage = storage
         self._mode = mode
@@ -246,7 +259,6 @@ class DropboxContentHasher(object):
         self._block_pos = 0
 
         self.digest_size = self._overall_hasher.digest_size
-        # hashlib classes also define 'block_size', but I don't know how people use that value
 
     def update(self, new_data):
         if self._overall_hasher is None:
@@ -279,7 +291,7 @@ class DropboxContentHasher(object):
             self._overall_hasher.update(self._block_hasher.digest())
             self._block_hasher = None
         h = self._overall_hasher
-        self._overall_hasher = None  # Make sure we can't use this object anymore.
+        self._overall_hasher = None
         return h
 
     def digest(self):
@@ -345,6 +357,7 @@ class StreamHasher(object):
         return b
 
     def readlines(self, *args):
+        b = None
         bs = self._f.readlines(*args)
         for b in bs:
             self._hasher.update(b)
