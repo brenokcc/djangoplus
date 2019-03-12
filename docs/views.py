@@ -5,7 +5,7 @@ from os import path, listdir
 from django.conf import settings
 from djangoplus.cache import loader
 from djangoplus.admin.models import Group
-from djangoplus.docs import Documentation
+from djangoplus.docs import Documentation, ApiDocumentation
 from djangoplus.decorators.views import view, action
 from djangoplus.admin.models import User, Organization
 from djangoplus.tools.video import VideoUploader
@@ -82,6 +82,25 @@ def doc(request):
 def tutorial(request):
     youtube = VideoUploader()
     videos = youtube.list_videos()
+    return locals()
+
+
+@view('API')
+def api(request, app_label=None, model_name=None, endpoint_name=None):
+    documentation = ApiDocumentation()
+    endpoint = None
+    if app_label and model_name:
+        endpoint = documentation.load_model(app_label, model_name, endpoint_name)
+    else:
+        documentation.load_models()
+    token = request.user.get_token()
+
+    if endpoint:
+        form_cls = documentation.form_cls(endpoint, token)
+        form = form_cls(request)
+        if form.is_valid():
+            cmd, result = form.process()
+            result = result.replace('\n', '<br>').replace(' ', '&nbsp')
     return locals()
 
 

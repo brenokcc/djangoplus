@@ -26,6 +26,10 @@ urlpatterns = [
     url(r'^log/(?P<app>\w+)/(?P<cls>\w+)/(?P<pk>\d+)/$', views.log),
     url(r'^log/(?P<app>\w+)/(?P<cls>\w+)/$', views.log),
 
+    url(r'^api/(?P<app_label>\w+)/(?P<model_name>\w+)/(?P<arg1>\w+)/(?P<arg2>\w+)/$', views.api),
+    url(r'^api/(?P<app_label>\w+)/(?P<model_name>\w+)/(?P<arg1>\w+)/$', views.api),
+    url(r'^api/(?P<app_label>\w+)/(?P<model_name>\w+)/$', views.api),
+
     url(r'^(?P<app>\w+)/(?P<view_name>\w+)/(?P<params>.*)$', views.dispatcher),
 
 ]

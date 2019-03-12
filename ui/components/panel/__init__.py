@@ -155,6 +155,9 @@ class ModelPanel(RequestComponent):
     def get_active_fieldsets(self):
         return self.fieldsets_without_tab_name + self.fieldsets_with_tab_name
 
+    def add_action(self, label, url, css, icon=None, category=None):
+        self.dropdown.add_action(label, url, 'class-action {}'.format(css), icon, category)
+
 
 class IconPanel(RequestComponent):
 
@@ -269,6 +272,21 @@ class CardPanel(RequestComponent):
             url = '/list/{}/{}/'.format(app_label, model_name)
             permission = '{}.list_{}'.format(app_label, model_name)
             self.add(icon, title, None, url, '', permission)
+
+
+class RelationModelPanel(RequestComponent):
+    def __init__(self, request, qs, title, relation_name):
+        from djangoplus.utils.relations import Relation
+        super(RelationModelPanel, self).__init__('qmp', request)
+        self.title = title
+        self.items = []
+        self.drop_down = GroupDropDown(request)
+        for obj in qs:
+            paginator = Relation(obj, relation_name).get_component(self.request, self.as_pdf)
+            self.items.append((obj, paginator))
+
+    def add_action(self, label, url, css, icon=None, category=None):
+        self.drop_down.add_action(label, url, 'class-action {}'.format(css), icon, category)
 
 
 class DashboardPanel(RequestComponent):

@@ -9,7 +9,7 @@ from djangoplus.utils.formatter import normalyze
 from djangoplus.ui.components.forms import factory
 from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
-from djangoplus.utils import permissions, should_add_action
+from djangoplus.utils import permissions, should_add_action, get_role_values_for_condition
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.ui import RequestComponent, ComponentHasResponseException
 from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, mobile, return_response
@@ -506,7 +506,9 @@ class Paginator(RequestComponent):
             tab_search_fields = subset['search_fields']
             tab_active = False
             if permissions.check_group_or_permission(self.request, tab_can_view):
-                tab_qs = getattr(self.qs, tab_function.__func__.__name__)()
+                func = getattr(self.qs, tab_function.__func__.__name__)
+                params = get_role_values_for_condition(func, self.request.user)
+                tab_qs = func(*params)
                 tab_active = self.current_tab == tab_name
                 self.tabs.append([tab_name, tab_title, tab_qs, tab_active, tab_order, tab_help_text])
                 if (tab_active or len(subsets) == 1) and tab_help_text:

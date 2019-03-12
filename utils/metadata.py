@@ -3,6 +3,7 @@
 # DJANGO FIELDS
 import sys
 import inspect
+from django.apps import apps
 from django.utils.text import camel_case_to_spaces
 from django.utils.safestring import mark_safe
 
@@ -350,12 +351,17 @@ def getattr_rec(obj, args):
             model = type(obj)
             attr_name = args[0]
             attr = getattr(model, attr_name)
-            value = getattr(obj, attr_name)
+            value = None
             field = None
             if hasattr(attr, 'field_name'):
                 field = getattr(model, '_meta').get_field(attr.field_name)
             elif hasattr(attr, 'field'):
                 field = attr.field
+                if not obj.pk and is_many_to_many(model, attr_name):
+                    value = field.related_model.objects.none()
+
+            if value is None:
+                value = getattr(obj, attr_name)
 
             if field:
                 if hasattr(field, 'formatter') and field.formatter:
@@ -571,10 +577,11 @@ def count_parameters_names(func):
 def get_role_values_for_condition(func, user):
     parameters_values = []
     for name, parameter in inspect.signature(func).parameters.items():
-        role_username = get_metadata(parameter.annotation, 'role_username')
-        lookup = {role_username: user.username}
-        role = parameter.annotation.objects.filter(**lookup).first()
-        parameters_values.append(role)
+        if parameter.annotation is not inspect.Parameter.empty:
+            role_username = get_metadata(parameter.annotation, 'role_username')
+            lookup = {role_username: user.username}
+            role = parameter.annotation.objects.filter(**lookup).first()
+            parameters_values.append(role)
     return parameters_values
 
 
@@ -605,3 +612,31 @@ def execute_and_format(request, func):
         else:
             return func(f_return, request=request, verbose_name=verbose_name)
     return f_return
+
+
+def get_parameters_details(model, func, input_name):
+    input_params = []
+    param_provider = model
+    if input_name:
+        if '.' in input_name:
+            param_provider = apps.get_model(input_name)
+        else:
+            module_name = model.__module__.replace('models', 'forms')
+            forms_module = __import__(module_name, fromlist=module_name.split('.'))
+            param_provider = getattr(forms_module, input_name)
+    for param_name in get_parameters_names(func, include_annotated=True):
+        if hasattr(param_provider, 'pk'):
+            field = get_field(model, param_name)
+            verbose_name = field.verbose_name
+            param_type = type(field)
+            required = not field.blank
+        else:
+            field = param_provider.base_fields[param_name]
+            verbose_name = field.label
+            param_type = type(field)
+            required = field.required
+        help_text = field.help_text
+        param_type = param_type.__name__.replace('Field', '')
+        param = dict(verbose_name=verbose_name, name=param_name, type=param_type, required=required, help_text=help_text)
+        input_params.append(param)
+    return input_params

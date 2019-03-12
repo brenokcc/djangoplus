@@ -6,6 +6,7 @@ from django.contrib import auth
 from django.conf import settings
 from djangoplus.mail import utils
 from djangoplus.cache import loader
+from djangoplus.utils.icons import ICONS
 from djangoplus.admin.models import Settings
 from django.http.response import HttpResponse
 from djangoplus.utils.aescipher import decrypt
@@ -198,5 +199,8 @@ def emails(request):
 
 @view(_('Icons'), login_required=False)
 def icons(request):
+    icon_names = ICONS
     return locals()
+
+
 

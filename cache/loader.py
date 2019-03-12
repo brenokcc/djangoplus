@@ -50,6 +50,10 @@ formatters = dict()
 last_authenticated_role = None
 last_authenticated_username = None
 
+# api
+
+api_models = []
+
 if not initialized:
     initialized = True
 
@@ -64,6 +68,7 @@ if not initialized:
         menu = get_metadata(model, 'menu')
         list_menu = get_metadata(model, 'list_menu')
         dashboard = get_metadata(model, 'dashboard')
+        expose = get_metadata(model, 'expose')
         role_signup = get_metadata(model, 'role_signup', False)
 
         field_names = []
@@ -97,6 +102,9 @@ if not initialized:
         # indexing unit model
         if hasattr(model, 'unit_ptr_id'):
             unit_model = model
+
+        if expose:
+            api_models.append(model)
 
         # indexing shortcuts
         if add_shortcut:

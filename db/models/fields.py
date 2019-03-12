@@ -277,6 +277,7 @@ class ManyToManyField(models.ManyToManyField, FieldPlus):
             field.queryset = field.queryset.filter(**self.queryset_filter)
         return field
 
+
 MultipleModelChoiceField = ManyToManyField
 
 
@@ -293,6 +294,15 @@ class OneToManyField(ManyToManyField):
         form_field.one_to_many_count = self.one_to_many_count
         form_field.one_to_many_max = self.one_to_many_max
         return form_field
+
+# Icon Field #
+
+
+class IconField(CharField):
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.IconChoiceField)
+        return super(IconField, self).formfield(**kwargs)
+
 
 # File Fields #
 

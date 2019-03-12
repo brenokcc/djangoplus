@@ -116,6 +116,7 @@ class SelectWidget(widgets.Select):
         self.lazy = False
         self.form_filters = []
         self.minimum_input_length = 3
+        self.select_template = None
 
     def render(self, name, value, attrs=None, renderer=None):
 
@@ -159,6 +160,14 @@ class SelectWidget(widgets.Select):
                     perm = '{}.add_{}'.format(app_label, class_name)
                     if self.user.has_perm(perm):
                         links.append(ADD_LINK.format(name, app_label, class_name, name, 'relation_name', 'relation_pk', get_metadata(tmp, 'verbose_name')))
+        else:
+            if self.select_template:
+                templates_var_name = name.replace('-', '_')
+                templates.append('templateResult: function (item) {{{}_templates = Array();'.format(templates_var_name))
+                for key, value in self.choices:
+                    choice_html = render_to_string(self.select_template, dict(key=key, value=value))
+                    templates.append('{}_templates[\'{}\'] = \'{}\';'.format(templates_var_name, key, choice_html))
+                templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
 
         html = super(SelectWidget, self).render(name, value, attrs)
         html = html.replace('---------', '')

@@ -193,8 +193,8 @@
     <div class="seperator"></div>
     {% if not self.request.GET.popup %}
         <div class="pull-right">
-            {%  if not self.inline %}
-            <button class="btn btn-default btn-sm" type="reset" name="action"
+            {%  if not self.inline and self.cancel_button %}
+            <button class="btn btn-{{ self.cancel_style|default:"default" }} btn-sm" type="reset" name="action"
                     onclick="loadUrl('{{ request.REFERRER }}');">
                 {% trans "Cancel" %}
             </button>

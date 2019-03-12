@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import traceback
 from django.apps import apps
 from django.conf import settings
@@ -8,7 +9,6 @@ from django.http import HttpResponse
 from django.views.static import serve
 from djangoplus.utils import permissions
 from django.http import HttpResponseRedirect
-
 from djangoplus.utils.http import return_response
 from djangoplus.utils.storage import dropbox
 from django.template import Template, Context
@@ -16,6 +16,7 @@ from django.views.defaults import page_not_found
 from django.utils.translation import ugettext as _
 from django.core.exceptions import ValidationError
 from djangoplus.ui.components.forms import factory
+from django.views.decorators.csrf import csrf_exempt
 from djangoplus.ui.components.panel import ModelDashboard
 from django.http.response import HttpResponseForbidden
 from djangoplus.ui import ComponentHasResponseException
@@ -377,3 +378,118 @@ def cloud(request, path, document_root=None, show_indexes=False):
         return serve(request, path, document_root=document_root, show_indexes=show_indexes)
     else:
         return HttpResponseRedirect(storage.remote_url('/{}'.format(path)))
+
+
+@csrf_exempt
+def api(request, app_label, model_name, arg1=None, arg2=None):
+    from djangoplus.db.models import QuerySet, Model
+    from djangoplus.admin.models import User
+
+    obj = None
+    form = None
+    result = None
+    func_name = None
+    args = dict()
+
+    def serialize(value):
+        if isinstance(value, QuerySet):
+            value = dict(result=value.as_serializable())
+        elif isinstance(value, Model):
+            value = dict(result=value.as_serializable())
+        else:
+            value = dict(result=value)
+        return json.dumps(value, indent=4, sort_keys=True)
+
+    if app_label and model_name:
+        model = apps.get_model(app_label, model_name)
+
+        # model @action or @meta | manager @subset [@action or @meta]
+        if arg1 and arg2:
+            # model
+            if arg1.isdigit():
+                obj = model.objects.get(pk=arg1)
+                if arg2:
+                    # @action
+                    group = None
+                    for group in loader.instance_actions[model]:
+                        if arg2 in loader.instance_actions[model][group]:
+                            func_name = arg2
+                            break
+                    if func_name:
+                        func = getattr(obj, func_name)
+                        form_action = loader.instance_actions[model][group][arg2]
+                        # with input
+                        if count_parameters_names(func) > 0:
+                            form = factory.get_action_form(request, obj, form_action)
+                    # @meta
+                    else:
+                        pass
+            # manager @subset
+            else:
+                obj = model.objects.all()
+                group = None
+                # @action
+                for group in loader.queryset_actions[model]:
+                    if arg2 in loader.queryset_actions[model][group]:
+                        func_name = arg2
+                        break
+                if func_name:
+                    func = getattr(obj, func_name)
+                    form_action = loader.queryset_actions[model][group][arg2]
+                    # with input
+                    if count_parameters_names(func) > 0:
+                        form = factory.get_class_action_form(request, obj.model, form_action, func)
+                # @meta
+                else:
+                    pass
+        # model | manager @action or @meta
+        elif arg1:
+            if arg1.isdigit():
+                # model
+                result = model.objects.get(pk=arg1)
+            else:
+                # manager @action or @meta
+                obj = model.objects.all()
+                group = None
+                # @action
+                for group in loader.queryset_actions[model]:
+                    if arg1 in loader.queryset_actions[model][group]:
+                        func_name = arg1
+                        break
+                if func_name:
+                    func = getattr(obj, func_name)
+                    form_action = loader.queryset_actions[model][group][arg1]
+                    # with input
+                    if count_parameters_names(func) > 0:
+                        form = factory.get_class_action_form(request, obj.model, form_action, func)
+        # manager
+        else:
+            obj = model.objects.all()
+            func_name = 'all'
+
+    http_authorization = request.META.get('HTTP_AUTHORIZATION')
+    if http_authorization and 'Token' in http_authorization:
+        token = http_authorization[5:].strip()
+        user = User.objects.get_by_token(token)
+        if form:
+            if form.is_valid():
+                params = []
+                func = getattr(obj, func_name)
+                for param in get_parameters_names(func, include_annotated=True):
+                    if param in form.cleaned_data:
+                        params.append(form.cleaned_data[param])
+                    else:
+                        params.append(get_role_value_for_action(func, request.user, param))
+                try:
+                    result = func(*params)
+                except ValidationError as e:
+                    form.add_error(None, str(e.message))
+            else:
+                return HttpResponse(form.errors.as_json())
+        elif obj:
+            result = getattr(obj, func_name)(**args)
+        return HttpResponse(serialize(result))
+    else:
+        return HttpResponseForbidden()
+
+

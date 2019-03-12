@@ -1,0 +1,122 @@
+{% extends "admin.html" %}
+
+{% block content %}
+
+    <div class="padding-md">
+        <h1>API</h1>
+    </div>
+
+    <div class="dashboard-wrapper">
+        <div class="dashboard-main">
+
+            <div class="panel panel-default">
+                <div class="panel-heading clearfix">
+            <span class="pull-left">
+                Access Token
+            </span>
+                </div>
+                <div class="panel-body no-padding">
+                    <div class="input-group">
+                        <input type="text" readonly name="token" maxlength="255" id="token" value="{{ token }}"
+                               class="form-control ">
+                        <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                    </div>
+                </div>
+            </div>
+
+            {% if endpoint %}
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix">
+            <span class="pull-left">
+                {{ endpoint.name }}
+            </span>
+                    </div>
+                    <div class="panel-body no-padding">
+                        <div class="padding-md">
+
+
+                            <h4>Method</h4>
+                            {{ endpoint.method }}
+                            <h4>URL</h4>
+                            <code>
+                                {{ endpoint.url }}
+                            </code>
+
+                            <h4>Input</h4>
+
+                            {% if endpoint.query_params or endpoint.input_params %}
+                            <table class="table table-striped table-bordered table-hover" id="dataTable">
+                                <thead>
+                                <tr>
+                                    <th>Verbose Name</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Required</th>
+                                    <th>Detail</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for param in endpoint.query_params %}
+                                    <tr>
+                                        <td>{{ param.verbose_name }}</td>
+                                        <td>{{ param.name }}</td>
+                                        <td>{{ param.type }}</td>
+                                        <td>{{ param.required|format }}</td>
+                                        <td>{{ param.detail|format }}</td>
+                                    </tr>
+                                {% endfor %}
+                                {% for param in endpoint.input_params %}
+                                    <tr>
+                                        <td>{{ param.verbose_name }}</td>
+                                        <td>{{ param.name }}</td>
+                                        <td>{{ param.type }}</td>
+                                        <td>{{ param.required|format }}</td>
+                                        <td>{{ param.detail|format }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            {% endif %}
+
+                            {{ form }}
+
+                            {% if result %}
+                                <h5>Command</h5>
+                                <strong>{{ cmd }}</strong>
+                                <h5>Output</h5>
+                                <code>
+                                    {{ result|safe }}
+                                </code>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+
+        <div class="dashboard-aside dashboard-aside-2">
+            <div class="panel panel-default">
+                <div class="panel-heading clearfix">
+            <span class="pull-left">
+                {{ documentation.title }}
+            </span>
+                </div>
+                <div class="panel-body no-padding">
+                    <div class="padding-md">
+                        {% for verbose_name, url in documentation.index %}
+                            <h4>{{ verbose_name }}</h4>
+                            <a href="{{ url }}">{{ url }}</a>
+                        {% endfor %}
+                        {% for endpoint in documentation.endpoints %}
+                            <h4>{{ endpoint.name }}</h4>
+                            <a href="{{ endpoint.doc_url }}">{{ endpoint.url }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

@@ -174,7 +174,7 @@ class UseCase(object):
                     if hasattr(parent_model, 'fieldsets'):
                         for fieldset in parent_model.fieldsets:
                             for item in fieldset[1].get('relations', ()) + fieldset[1].get('inlines', ()):
-                                relation = getattr(parent_model, item.split(':')[0])
+                                relation = getattr(parent_model, item.split(':')[0].split('__')[0])
                                 if hasattr(relation, 'field') and relation.field.remote_field.related_model == model:
                                     panel_title = fieldset[0]
                                     break
@@ -196,11 +196,13 @@ class UseCase(object):
                         self._test_function_code.append("        self.click_icon('{}')".format('Visualizar'))  # _('Visualize')
 
         if not accessible:
-            raise ValueError('There is no way to access the model "{}", please do one of the following things:\n '
-                             'i) Add the "list_menu" meta-attribute to the model\n '
-                             'ii) Add the "list_shortcut" meta-attribute to the model\n '
-                             'iii) Add the "composition" field attribute to one of foreignkey fields of the model if '
-                             'it exists and the the relation on the foreignkey model'.format(verbose_name))
+            raise ValueError(
+                'There is no way to access the model "{}" from "", please do one of the following things:\n '
+                'i) Add the "list_menu" meta-attribute to the model\n '
+                'ii) Add the "list_shortcut" meta-attribute to the model\n '
+                'iii) Add the "composition" field attribute to one of foreignkey fields of the model if '
+                'it exists and the the relation on the foreignkey model'.format(verbose_name)
+            )
 
     def _list(self, action):
         verbose_name_plural = action.replace(_('List'), '').strip()
@@ -379,7 +381,7 @@ class UseCase(object):
             for fieldset in fieldsets:
                 if 'relations' in fieldset[1]:
                     for item in fieldset[1]['relations']:
-                        tmp = getattr(model, item.split(':')[0])
+                        tmp = getattr(model, item.split(':')[0].split('__')[0])
                         if hasattr(tmp, 'field') and tmp.field.remote_field.model == model:
                             relation_name = item
                 if 'inlines' in fieldset[1]:

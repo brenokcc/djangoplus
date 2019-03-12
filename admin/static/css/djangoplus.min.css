@@ -611,18 +611,18 @@ li {
 
 .model-panel .model-panel-image{
     padding-right: 10px;
-    width: 25%;
+    width: 15%;
     float:left;
 }
 .model-panel .model-panel-fields{
-     width: 75%;
+     width: 85%;
     float:left;
 }
 .model-panel .model-panel-image.s{
-    width: 50%;
+    width: 40%;
 }
 .model-panel .model-panel-fields.s{
-    width: 50%;
+    width: 60%;
 }
 .model-panel .model-panel-fields.s label{
     width: inherit;
@@ -722,6 +722,14 @@ li {
 
 .paginator .filter-container select, .form-group select{
     visibility: hidden;
+}
+
+/* Relation model panel */
+h4 i{
+    font-size: 0.888em !important;
+}
+h4 a{
+    margin-right: 3px !important;
 }
 
 /* placeholders */

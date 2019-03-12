@@ -5,7 +5,7 @@ import uuid
 from djangoplus.db import models
 from django.conf import settings
 from djangoplus.mail import send_mail
-from djangoplus.utils.aescipher import encrypt
+from djangoplus.utils.aescipher import encrypt, decrypt
 from django.utils.translation import ugettext as _
 from djangoplus.decorators import action, meta, subset
 from django.contrib.contenttypes.models import ContentType
@@ -153,13 +153,7 @@ class Unit(Scope):
         return None
 
 
-class UserManager(DjangoUserManager):
-
-    def all(self, *args, **kwargs):
-        return super(UserManager, self).all()
-
-    def get_queryset(self):
-        return models.QuerySet(self.model, using=self._db)
+class UserQuerySet(models.QuerySet):
 
     @subset('Ativos')
     def active(self):
@@ -168,6 +162,20 @@ class UserManager(DjangoUserManager):
     @subset('Inativos')
     def inactive(self):
         return self.filter(active=False)
+
+    @action('Token', input='LoginForm')
+    def get_token(self, username):
+        user = self.get(username=username)
+        return encrypt(user.pk)
+
+
+class UserManager(DjangoUserManager):
+
+    def all(self, *args, **kwargs):
+        return super(UserManager, self).all()
+
+    def get_queryset(self):
+        return UserQuerySet(self.model, using=self._db)
 
     def create_user(self, username, email, password=None, is_superuser=False):
         if not username:
@@ -181,6 +189,9 @@ class UserManager(DjangoUserManager):
 
     def create_superuser(self, username, email, password):
         return self.create_user(username, email, password, True)
+
+    def get_by_token(self, token):
+        return self.get(pk=decrypt(token))
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -211,10 +222,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         add_form = 'UserForm'
         can_admin = _('User Manager')
         icon = 'fa-users'
+        expose = True
         # list_template = 'image_cards.html'
 
     def __init__(self, *args, **kwargs):
         super(User, self).__init__(*args, **kwargs)
+
+    def get_token(self):
+        return encrypt(self.pk)
 
     def save(self, *args, **kwargs):
         if not self.password:

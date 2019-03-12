@@ -8,6 +8,7 @@ from django import forms
 from decimal import Decimal
 from django.apps import apps
 from django.core import validators
+from djangoplus.utils.icons import ICON_CHOICES
 from djangoplus.ui.components.forms import widgets
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -144,6 +145,20 @@ class NullBooleanField(forms.fields.NullBooleanField):
 
 class ChoiceField(forms.fields.ChoiceField):
     widget = widgets.SelectWidget
+
+    def __init__(self, *args, **kwargs):
+        select_template = kwargs.pop('select_template', None)
+        super(ChoiceField, self).__init__(*args, **kwargs)
+        self.widget.select_template = select_template
+
+
+class IconChoiceField(CharField):
+    widget = widgets.SelectWidget
+
+    def __init__(self, *args, **kwargs):
+        super(IconChoiceField, self).__init__(*args, **kwargs)
+        self.widget.select_template = 'icon_select_template.html'
+        self.widget.choices = ICON_CHOICES
 
 
 class ModelChoiceField(forms.models.ModelChoiceField):

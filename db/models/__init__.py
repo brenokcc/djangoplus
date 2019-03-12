@@ -25,7 +25,7 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'can_list_by_unit', 'can_view_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
     'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization',
     'can_edit_by_organization', 'can_admin_by_organization',
-    'usecase', 'class_diagram', 'dashboard'
+    'usecase', 'class_diagram', 'dashboard', 'expose'
 ))
 
 
@@ -326,6 +326,17 @@ class QuerySet(query.QuerySet):
 
     def avg(self, attr, vertical_key=None, horizontal_key=None):
         return self._calculate(vertical_key, horizontal_key, aggregate=('avg', attr))
+
+    def as_serializable(self):
+        list_display = list(get_metadata(self.model, 'list_display'))
+        list_display.insert(0, 'id')
+        items = []
+        for item in self.values(*list_display):
+            obj = dict()
+            for key, value in item.items():
+                obj[key] = value
+            items.append(obj)
+        return items
     
     @classmethod
     def as_manager(cls):
@@ -556,6 +567,14 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
         if role_username:
             return get_user_model().objects.get(username=getattr(self, role_username))
         return None
+
+    def as_serializable(self):
+        list_display = list(get_metadata(self, 'list_display'))
+        list_display.insert(0, 'id')
+        data = dict()
+        for attr in list_display:
+            data[attr] = getattr2(self, attr)
+        return data
 
     def delete(self, *args, **kwargs):
         log_data = get_metadata(self.__class__, 'log', False)

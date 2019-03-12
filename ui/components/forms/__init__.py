@@ -19,7 +19,6 @@ from djangoplus.utils.metadata import get_metadata, iterable
 ValidationError = django_forms.ValidationError
 
 
-
 class Form(django_forms.Form):
 
     fieldsets = None
@@ -74,6 +73,8 @@ class Form(django_forms.Form):
                 self.submit_label = _('Save')
 
             self.submit_style = hasattr(metaclass, 'submit_style') and metaclass.submit_style or 'default'
+            self.cancel_style = hasattr(metaclass, 'cancel_style') and metaclass.cancel_style or 'default'
+            self.cancel_button = not hasattr(metaclass, 'cancel_button') and True or metaclass.cancel_button
             self.method = hasattr(metaclass, 'method') and metaclass.method or 'post'
 
         for field_name in self.fields:
@@ -112,7 +113,7 @@ class Form(django_forms.Form):
                             # field.widget = widgets.DisplayInput(obj)
                             continue
 
-                ignore_lookup = hasattr(field, 'ignore_lookup') or not field.ignore_lookup
+                ignore_lookup = hasattr(field, 'ignore_lookup') and field.ignore_lookup or False
                 if self.request.user.is_authenticated and not ignore_lookup:
                     if not self.is_inner:
                         field.queryset = field.queryset.contextualize(
@@ -132,7 +133,8 @@ class Form(django_forms.Form):
                     if issubclass(field.queryset.model, Unit):
                         if not isinstance(field, MultipleModelChoiceField) and field.queryset.count() == 1:
                             obj = field.queryset[0]
-                            field.widget = widgets.DisplayInput(obj)
+                            field.widget = widgets.HiddenInput(attrs={'value': obj.pk})
+                            # field.widget = widgets.DisplayInput(obj)
 
                 if hasattr(field.widget, 'lazy') and mobile(self.request):
                     field.widget.lazy = False

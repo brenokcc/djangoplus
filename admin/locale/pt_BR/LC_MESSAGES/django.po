@@ -22,7 +22,7 @@ msgstr ""
 #: djangoplus/admin/models.py:38 djangoplus/admin/models.py:208
 #: djangoplus/admin/models.py:230 djangoplus/admin/models.py:542
 msgid "User"
-msgstr "Login"
+msgstr "Usuário"
 
 #: djangoplus/admin/forms.py:22 djangoplus/admin/forms.py:108
 #: djangoplus/admin/forms.py:141 djangoplus/admin/forms.py:142

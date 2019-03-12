@@ -4,6 +4,7 @@ import sys
 import datetime
 from django.contrib import auth
 from django.conf import settings
+from django.utils.text import slugify
 from djangoplus.cache import loader
 from djangoplus.ui.components import forms
 from djangoplus.utils.aescipher import encrypt

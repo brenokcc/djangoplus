@@ -1,0 +1,48 @@
+{% load i18n %}
+{% if self.as_pdf %}
+
+{% else %}
+    <div class="panel panel-default">
+
+        <div class="panel-heading clearfix">
+            <span class="pull-left">
+                {{ self.title }}
+            </span>
+        </div>
+
+        <div class="panel-body no-padding">
+            {% if not self.request.GET.popup %}
+                <div class="action-bar">
+                    <div class="pull-right">
+                        {{ self.drop_down }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if self.items %}
+
+                {% for obj, paginator in self.items %}
+                    <div id="{% uuid %}" class="action-bar">
+                        <div class="pull-left">
+                            <h4>{% obj_icons self.request obj %} {{ obj }}</h4>
+                        </div>
+                    </div>
+
+                    <div class="panel-body">
+                        {{ paginator }}
+                    </div>
+
+                    <br>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-warning">
+                    {% trans "No records found" %}
+                </div>
+            {% endif %}
+        </div>
+
+
+
+    </div>
+
+{% endif %}

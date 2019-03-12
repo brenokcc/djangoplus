@@ -2,7 +2,7 @@
 
 from django.utils.text import slugify
 from djangoplus.utils import permissions
-from djangoplus.ui.components.panel import ModelPanel
+from djangoplus.ui.components.panel import ModelPanel, RelationModelPanel
 from djangoplus.ui.components.paginator import Paginator
 from djangoplus.utils.metadata import get_fieldsets, get_metadata
 from djangoplus.ui.components.forms import ModelForm, ValidationError
@@ -35,6 +35,11 @@ class Relation(object):
         self.is_one_to_many = False
         self.is_one_to_many_reverse = False
         self.is_many_to_many = False
+
+        self.children_info = None
+
+        if '__' in relation_info:
+            relation_info, self.children_info = relation_info.split('__')
 
         if ':' in relation_info:
             # 'relation_name:all[action_a,action_b],subset[action_c]'
@@ -245,13 +250,16 @@ class Relation(object):
             else:
                 has_add_permission = permissions.has_add_permission(request, self.relation_model)
 
-            list_subsets = list(self.subsets.keys())
-            component = Paginator(
-                request, self.relation_value.all(request.user), title, relation=self,
-                list_subsets=list_subsets, readonly=not has_add_permission, uid=slugify(self.relation_name)
-            )
-            action_names = self.subsets.get(component.current_tab or 'all', [])
-            component.load_actions(action_names)
+            if self.children_info:
+                component = RelationModelPanel(request, self.relation_value, title, self.children_info)
+            else:
+                list_subsets = list(self.subsets.keys())
+                component = Paginator(
+                    request, self.relation_value.all(request.user), title, relation=self,
+                    list_subsets=list_subsets, readonly=not has_add_permission, uid=slugify(self.relation_name)
+                )
+                action_names = self.subsets.get(component.current_tab or 'all', [])
+                component.load_actions(action_names)
             instance = self.relation_model()
             if self.hidden_field_name:
                 setattr(instance, self.hidden_field_name, self.instance)
