@@ -535,6 +535,8 @@ def find_model_recursively(cls, tokens):
         return cls
 
 
+# function utilities
+
 def check_condition(user, condition, obj):
     satisfied = True
     if obj.pk and condition:
@@ -595,7 +597,6 @@ def get_role_value_for_action(func, user, param_name):
 
 
 def execute_and_format(request, func):
-    metadata = getattr(func, '_metadata')
     verbose_name = get_metadata(func, 'verbose_name')
     formatter = get_metadata(func, 'formatter')
     params = get_role_values_for_condition(func, request.user)
@@ -616,27 +617,42 @@ def execute_and_format(request, func):
 
 def get_parameters_details(model, func, input_name):
     input_params = []
-    param_provider = model
-    if input_name:
-        if '.' in input_name:
-            param_provider = apps.get_model(input_name)
-        else:
-            module_name = model.__module__.replace('models', 'forms')
-            forms_module = __import__(module_name, fromlist=module_name.split('.'))
-            param_provider = getattr(forms_module, input_name)
-    for param_name in get_parameters_names(func, include_annotated=True):
-        if hasattr(param_provider, 'pk'):
-            field = get_field(model, param_name)
-            verbose_name = field.verbose_name
-            param_type = type(field)
-            required = not field.blank
-        else:
-            field = param_provider.base_fields[param_name]
-            verbose_name = field.label
-            param_type = type(field)
-            required = field.required
-        help_text = field.help_text
-        param_type = param_type.__name__.replace('Field', '')
-        param = dict(verbose_name=verbose_name, name=param_name, type=param_type, required=required, help_text=help_text)
-        input_params.append(param)
+    if func:
+        param_provider = model
+        if input_name:
+            if '.' in input_name:
+                param_provider = apps.get_model(input_name)
+            else:
+                module_name = model.__module__.replace('models', 'forms')
+                forms_module = __import__(module_name, fromlist=module_name.split('.'))
+                param_provider = getattr(forms_module, input_name)
+        for param_name in get_parameters_names(func, include_annotated=True):
+            if hasattr(param_provider, 'pk'):
+                field = get_field(model, param_name)
+                verbose_name = field.verbose_name
+                param_type = type(field)
+                required = not field.blank
+            else:
+                field = param_provider.base_fields[param_name]
+                verbose_name = field.label
+                param_type = type(field)
+                required = field.required
+            help_text = field.help_text
+            param_type = param_type.__name__.replace('Field', '')
+            param = dict(verbose_name=verbose_name, name=param_name, type=param_type, required=required, help_text=help_text)
+            input_params.append(param)
+    return input_params
+
+
+def get_register_parameters_details(model):
+    input_params = []
+    for field in get_metadata(model, 'fields'):
+        if 'ptr' not in field.name and field.name != 'id':
+            if not hasattr(field, 'exclude') or not field.exclude:
+                param = dict(
+                    verbose_name=field.verbose_name, name=field.name,
+                    type=type(field).__name__.replace('Field', ''),
+                    required=not field.blank, help_text=field.help_text
+                )
+                input_params.append(param)
     return input_params

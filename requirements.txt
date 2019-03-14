@@ -14,3 +14,4 @@ gunicorn==19.9.0
 google-auth-oauthlib
 google-api-python-client
 oauth2client
+requests

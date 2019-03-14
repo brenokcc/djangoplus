@@ -163,9 +163,10 @@ class UserQuerySet(models.QuerySet):
     def inactive(self):
         return self.filter(active=False)
 
+    @classmethod
     @action('Token', input='LoginForm')
-    def get_token(self, username):
-        user = self.get(username=username)
+    def get_token(cls, username, password):
+        user = User.objects.get(username=username)
         return encrypt(user.pk)
 
 

@@ -53,7 +53,7 @@ def format_value(value, html=True):
     from django.db.models.fields.files import FieldFile, ImageFieldFile as DjangoImageFieldFile
     if value in (None, '', ()):
         return '-'
-    elif isinstance(value, str):
+    elif isinstance(value, str) or type(value).__name__ == '__proxy__':  # lazy i18n
         return value
     elif isinstance(value, bool):
         return value and 'Sim' or 'Não'
@@ -74,7 +74,7 @@ def format_value(value, html=True):
                 '<img width="75" class="materialboxed" src="{}"/>'.format(value.url)
             )
         else:
-            return value
+            return value.url
     elif isinstance(value, FieldFile):
         file_name = value.name.split('/')[-1]
         if value.url.lower().endswith('.pdf'):
@@ -84,7 +84,7 @@ def format_value(value, html=True):
                     <a href="{}"><i class="mdi-file-file-download"></i></a>
                 '''.format(value.url, file_name, '&nbsp;'*6, value.url))
             else:
-                return file_name
+                return value.url
         else:
             if html:
                 return mark_safe('<a target="_blank" href="{}">{}</a>'.format(value.url, file_name))

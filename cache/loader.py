@@ -17,6 +17,8 @@ card_panel_models = []
 icon_panel_models = []
 list_dashboard = []
 subsets = dict()
+manager_methods = dict()
+instance_methods = dict()
 simple_models = []
 
 # roles
@@ -189,6 +191,9 @@ if not initialized:
                         dashboard=widget_dashboard, formatter=widget_formatter, link=False
                     )
                     subset_widgets.append(widget)
+                    if model not in manager_methods:
+                        manager_methods[model] = list()
+                        manager_methods[model].append(widget)
 
         # indexing the actions refered in fieldsets
         if hasattr(model, 'fieldsets'):
@@ -242,6 +247,9 @@ if not initialized:
                     if model not in model_widgets:
                         model_widgets[model] = []
                     model_widgets[model].append(widget)
+                    if model not in instance_methods:
+                        instance_methods[model] = list()
+                        instance_methods[model].append(widget)
 
         # indexing the actions related to relations whose model has the add_inline meta-attribute
         inlines = []

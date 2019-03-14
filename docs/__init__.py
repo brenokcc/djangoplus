@@ -7,7 +7,7 @@ from django.conf import settings
 from djangoplus.docs import utils
 from django.utils import translation
 from django.utils.translation import ugettext as _
-from djangoplus.utils import get_metadata, get_parameters_names, get_field, get_parameters_details
+from djangoplus.utils import get_metadata, get_register_parameters_details, get_parameters_details
 from djangoplus.ui.components import forms
 
 
@@ -69,6 +69,7 @@ class ApiDocumentation(object):
         self.title = 'Index'
         self.index = []
         self.endpoints = []
+        self.model = None
 
     def load_models(self):
         from djangoplus.cache import loader
@@ -82,7 +83,23 @@ class ApiDocumentation(object):
     def load_model(self, app_label, model_name, endpoint_name):
         from djangoplus.cache import loader
         model = apps.get_model(app_label, model_name)
+        self.model = model
         self.title = get_metadata(model, 'verbose_name')
+
+        name = 'add'
+        url = '/api/{}/{}/'.format(app_label, model_name)
+        doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
+        self.add_endpoint(name, url, 'post', doc_url, [], get_register_parameters_details(model))
+
+        name = 'edit'
+        url = '/api/{}/{}/{{}}/'.format(app_label, model_name)
+        doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
+        self.add_endpoint(name, url, 'post', doc_url, [], get_register_parameters_details(model))
+
+        name = 'delete'
+        url = '/api/{}/{}/{{}}/'.format(app_label, model_name)
+        doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
+        self.add_endpoint(name, url, 'delete', doc_url, [], [])
 
         name = 'list'
         url = '/api/{}/{}/'.format(app_label, model_name)
@@ -92,27 +109,65 @@ class ApiDocumentation(object):
         ]
         self.add_endpoint(name, url, 'get', doc_url, query_params, [])
 
+        for subset in loader.subsets[model]:
+            name = subset['name']
+            url = '/api/{}/{}/{}/'.format(app_label, model_name, name)
+            doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
+            query_params = [
+                dict(verbose_name='Page', name='page', type='Integer', required=False, help_text=None)
+            ]
+            self.add_endpoint(name, url, 'get', doc_url, query_params, [])
+
+        for method in loader.manager_methods.get(model, []):
+            name = method['function']
+            url = '/api/{}/{}/{}/'.format(app_label, model_name, name)
+            doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
+            self.add_endpoint(name, url, 'get', doc_url, [], [])
+
         name = 'get'
         url = '/api/{}/{}/{{}}/'.format(app_label, model_name)
         doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
         self.add_endpoint(name, url, 'get', doc_url, [], [])
 
+        for method in loader.instance_methods.get(model, []):
+            name = method['function']
+            url = '/api/{}/{}/{{}}/{}/'.format(app_label, model_name, name)
+            doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
+            self.add_endpoint(name, url, 'get', doc_url, [], [])
+
         for group in loader.instance_actions[model]:
             for func_name in loader.instance_actions[model][group]:
                 action = loader.instance_actions[model][group][func_name]
-                url = '/api/{}/{}/{{}}/{}/'.format(app_label, model_name, func_name)
-                doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
-                func = getattr(model(), func_name)
-                input_params = get_parameters_details(model, func, action['input'])
-                self.add_endpoint(func_name, url, 'post', doc_url, [], input_params)
+                if action['source'] == 'model':
+                    url = '/api/{}/{}/{{}}/{}/'.format(app_label, model_name, func_name)
+                    doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
+                    func = getattr(model(), func_name)
+                    input_params = get_parameters_details(model, func, action['input'])
+                    self.add_endpoint(func_name, url, 'post', doc_url, [], input_params)
+
         for group in loader.queryset_actions[model]:
             for func_name in loader.queryset_actions[model][group]:
                 action = loader.queryset_actions[model][group][func_name]
-                url = '/api/{}/{}/{}/'.format(app_label, model_name, func_name)
-                doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
-                func = getattr(model.objects.all(), func_name)
-                input_params = get_parameters_details(model, func, action['input'])
-                self.add_endpoint(func_name, url, 'post', doc_url, [], input_params)
+                if action['source'] == 'model':
+                    url = '/api/{}/{}/{}/'.format(app_label, model_name, func_name)
+                    doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
+                    func = getattr(model.objects.all(), func_name)
+                    query_params = [
+                        dict(verbose_name='Ids', name='ids', type='Integer', required=True,
+                             help_text='Integer or list of integers separanted by ",". Ex: 1 or 1,2')
+                    ]
+                    input_params = get_parameters_details(model, func, action['input'])
+                    self.add_endpoint(func_name, url, 'post', doc_url, query_params, input_params)
+
+        for group in loader.class_actions[model]:
+            for func_name in loader.class_actions[model][group]:
+                action = loader.class_actions[model][group][func_name]
+                if action['source'] == 'model':
+                    url = '/api/{}/{}/{}/'.format(app_label, model_name, func_name)
+                    doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
+                    func = getattr(model.objects.all(), func_name)
+                    input_params = get_parameters_details(model, func, action['input'])
+                    self.add_endpoint(func_name, url, 'post', doc_url, [], input_params)
 
         for endpoint in self.endpoints:
             if endpoint['name'] == endpoint_name:
@@ -174,10 +229,17 @@ class ApiDocumentation(object):
                     url = '{}?{}'.format(url, '&'.join(query_params))
                 url = 'http://localhost:8000{}'.format(url)
                 headers = {'Authorization': 'Token {}'.format(token)}
-                call_func = endpoint['method'] == 'get' and requests.get or requests.post
+                if endpoint['method'] == 'post':
+                    call_func = requests.post
+                elif endpoint['method'] == 'delete':
+                    call_func = requests.delete
+                elif endpoint['method'] == 'put':
+                    call_func = requests.put
+                else:
+                    call_func = requests.get
                 response = call_func(url, data=self.cleaned_data, headers=headers)
                 extra = input_params and '-d "{}"'.format('&'.join(input_params)) or ''
-                cmd = 'curl -X post -H "Authorization: Token {}" {} {}'.format(token, extra, url)
+                cmd = 'curl -X {} -H "Authorization: Token {}" {} {}'.format(endpoint['method'], token, extra, url)
                 return cmd, response.content.decode()
 
         return ApiForm

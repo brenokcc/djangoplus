@@ -3,33 +3,36 @@
 {% block content %}
 
     <div class="padding-md">
-        <h1>API</h1>
+        <h1>
+            <i class="fa fa-gears"></i>
+            <a href="/docs/api/">API</a>
+        </h1>
     </div>
 
     <div class="dashboard-wrapper">
         <div class="dashboard-main">
 
-            <div class="panel panel-default">
-                <div class="panel-heading clearfix">
-            <span class="pull-left">
-                Access Token
-            </span>
-                </div>
-                <div class="panel-body no-padding">
-                    <div class="input-group">
-                        <input type="text" readonly name="token" maxlength="255" id="token" value="{{ token }}"
-                               class="form-control ">
-                        <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                    </div>
-                </div>
-            </div>
-
             {% if endpoint %}
                 <div class="panel panel-default">
                     <div class="panel-heading clearfix">
-            <span class="pull-left">
-                {{ endpoint.name }}
-            </span>
+                <span class="pull-left">
+                    Access Token
+                </span>
+                    </div>
+                    <div class="panel-body no-padding">
+                        <div class="input-group">
+                            <input type="text" readonly name="token" maxlength="255" id="token" value="{{ token }}"
+                                   class="form-control ">
+                            <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix">
+                        <span class="pull-left">
+                            {{ endpoint.name }}
+                        </span>
                     </div>
                     <div class="panel-body no-padding">
                         <div class="padding-md">
@@ -62,7 +65,7 @@
                                         <td>{{ param.name }}</td>
                                         <td>{{ param.type }}</td>
                                         <td>{{ param.required|format }}</td>
-                                        <td>{{ param.detail|format }}</td>
+                                        <td>{{ param.help_text|format }}</td>
                                     </tr>
                                 {% endfor %}
                                 {% for param in endpoint.input_params %}
@@ -71,7 +74,7 @@
                                         <td>{{ param.name }}</td>
                                         <td>{{ param.type }}</td>
                                         <td>{{ param.required|format }}</td>
-                                        <td>{{ param.detail|format }}</td>
+                                        <td>{{ param.help_text|format }}</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -80,7 +83,7 @@
 
                             {{ form }}
 
-                            {% if result %}
+                            {% if result is not None %}
                                 <h5>Command</h5>
                                 <strong>{{ cmd }}</strong>
                                 <h5>Output</h5>
@@ -92,26 +95,48 @@
                         </div>
                     </div>
                 </div>
+            {% else %}
+                <div class="panel panel-default">
+                    <div class="panel-heading clearfix">
+                        <span class="pull-left">
+                            About
+                        </span>
+                    </div>
+                    <div class="panel-body no-padding">
+                        <img width="200px" style="float: left" src="/static/images/api.svg"/>
+                        <p>This page contains the documentation necessery to use the applicaton API. It also
+                        alows the execution of the endpoints inplace and displays the <strong>curl</strong>
+                        comand that can be used to reproduce the execution in the terminal.</p>
+                        <p>In oder to list the available endpoints for a specific model, click on the model
+                        in the panel beside. Click on the endpoint to views its documentation or execute it.</p>
+                        <p>Your token will be displayed on the top of the page and will be used in the executions.
+                        To execute with another user's token, execute the endpoint "get_token" from the model "User".</p>
+                    </div>
+                </div>
             {% endif %}
         </div>
 
-
-        <div class="dashboard-aside dashboard-aside-2">
+        <div class="dashboard-aside dashboard-aside-1">
             <div class="panel panel-default">
                 <div class="panel-heading clearfix">
-            <span class="pull-left">
-                {{ documentation.title }}
-            </span>
+                    <span class="pull-left">
+                        {{ documentation.title }}
+                    </span>
+                    {% if documentation.model %}
+                    <span class="pull-right">
+                        <a class="ajax" href="/docs/api/"><i class="fa fa-reply"></i></a>
+                    </span>
+                    {% endif %}
                 </div>
                 <div class="panel-body no-padding">
                     <div class="padding-md">
                         {% for verbose_name, url in documentation.index %}
                             <h4>{{ verbose_name }}</h4>
-                            <a href="{{ url }}">{{ url }}</a>
+                            <a class="ajax" href="{{ url }}">{{ url }}</a>
                         {% endfor %}
                         {% for endpoint in documentation.endpoints %}
                             <h4>{{ endpoint.name }}</h4>
-                            <a href="{{ endpoint.doc_url }}">{{ endpoint.url }}</a>
+                            <a class="ajax" href="{{ endpoint.doc_url }}">{{ endpoint.url }}</a>
                         {% endfor %}
                     </div>
                 </div>

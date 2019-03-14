@@ -289,7 +289,6 @@ class Form(django_forms.Form):
                     data = dict(secret=captcha_secret, response=captcha_response)
                     response = json.loads(urllib.request.urlopen(
                         captcha_url, urllib.parse.urlencode(data).encode('utf-8')).read().decode('utf-8'))
-                    print(response)
                     if not response.get('success'):
                         raise ValidationError(_('Confirm that you are not a robot.'))
             else:

@@ -5,11 +5,12 @@ from django.apps import apps
 from django.conf import settings
 from django.shortcuts import render
 from djangoplus.cache import loader
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.views.static import serve
-from djangoplus.utils import permissions
+from djangoplus.utils import permissions, format_value
 from django.http import HttpResponseRedirect
 from djangoplus.utils.http import return_response
+from djangoplus.utils.serialization import json_serialize
 from djangoplus.utils.storage import dropbox
 from django.template import Template, Context
 from django.views.defaults import page_not_found
@@ -240,48 +241,29 @@ def action(request, app, cls, action_name, pk=None):
         f_return = None
         func = getattr(_model, action_function.__name__, action_function)
         form = factory.get_action_form(request, obj, form_action)
-        if count_parameters_names(func) > 1 or action_input:
-            if form.is_valid():
-                if 'instance' in form.fields:
-                    obj = form.cleaned_data['instance']
-                func = getattr(obj, action_function.__name__, action_function)
-                params = []
-                for param in get_parameters_names(func, include_annotated=True):
-                    if param in form.cleaned_data:
-                        params.append(form.cleaned_data[param])
-                    else:
-                        params.append(get_role_value_for_action(func, request.user, param))
-                try:
-                    f_return = func(*params)
-                    if not action_redirect:
-                        if count_parameters_names(func) > 0 or action_display:
-                            redirect_to = '..'
-                        else:
-                            redirect_to = '.'
-                    else:
-                        redirect_to = Template(action_redirect).render(Context({'self': obj}))
-                except ValidationError as e:
-                    form.add_error(None, str(e.message))
-        else:
+
+        if form.fields and form.is_valid() or not form.fields:
+            if 'instance' in form.fields:
+                obj = form.cleaned_data['instance']
+            func = getattr(obj, action_function.__name__, action_function)
+            params = []
+            for param in get_parameters_names(func, include_annotated=True):
+                if param in form.cleaned_data:
+                    params.append(form.cleaned_data[param])
+                else:
+                    params.append(get_role_value_for_action(func, request.user, param))
             try:
-                if form.fields and form.is_valid() or not form.fields:
-                    if 'instance' in form.fields:
-                        obj = form.cleaned_data['instance']
-                    func = getattr(obj, action_function.__name__, action_function)
-                    params = []
-                    for param in get_parameters_names(func, include_annotated=True):
-                        params.append(get_role_value_for_action(func, request.user, param))
-                    f_return = func(*params)
-                    if not action_redirect:
-                        if count_parameters_names(func) > 0 or action_display:
-                            redirect_to = '..'
-                        else:
-                            redirect_to = '.'
+                f_return = func(*params)
+                if not action_redirect:
+                    if count_parameters_names(func) > 0 or action_display:
+                        redirect_to = '..'
                     else:
-                        redirect_to = Template(action_redirect).render(Context({'self': obj}))
+                        redirect_to = '.'
+                else:
+                    redirect_to = Template(action_redirect).render(Context({'self': obj}))
             except ValidationError as e:
                 if form.fields:
-                    form.add_error(None, str(e.message))
+                    form.add_error(None, e.message)
                 return httprr(request, '.', e.message, error=True)
 
         if f_return:
@@ -382,114 +364,188 @@ def cloud(request, path, document_root=None, show_indexes=False):
 
 @csrf_exempt
 def api(request, app_label, model_name, arg1=None, arg2=None):
-    from djangoplus.db.models import QuerySet, Model
     from djangoplus.admin.models import User
 
     obj = None
     form = None
     result = None
+    errors = None
     func_name = None
-    args = dict()
-
-    def serialize(value):
-        if isinstance(value, QuerySet):
-            value = dict(result=value.as_serializable())
-        elif isinstance(value, Model):
-            value = dict(result=value.as_serializable())
-        else:
-            value = dict(result=value)
-        return json.dumps(value, indent=4, sort_keys=True)
-
-    if app_label and model_name:
-        model = apps.get_model(app_label, model_name)
-
-        # model @action or @meta | manager @subset [@action or @meta]
-        if arg1 and arg2:
-            # model
-            if arg1.isdigit():
-                obj = model.objects.get(pk=arg1)
-                if arg2:
-                    # @action
-                    group = None
-                    for group in loader.instance_actions[model]:
-                        if arg2 in loader.instance_actions[model][group]:
-                            func_name = arg2
-                            break
-                    if func_name:
-                        func = getattr(obj, func_name)
-                        form_action = loader.instance_actions[model][group][arg2]
-                        # with input
-                        if count_parameters_names(func) > 0:
-                            form = factory.get_action_form(request, obj, form_action)
-                    # @meta
-                    else:
-                        pass
-            # manager @subset
-            else:
-                obj = model.objects.all()
-                group = None
-                # @action
-                for group in loader.queryset_actions[model]:
-                    if arg2 in loader.queryset_actions[model][group]:
-                        func_name = arg2
-                        break
-                if func_name:
-                    func = getattr(obj, func_name)
-                    form_action = loader.queryset_actions[model][group][arg2]
-                    # with input
-                    if count_parameters_names(func) > 0:
-                        form = factory.get_class_action_form(request, obj.model, form_action, func)
-                # @meta
-                else:
-                    pass
-        # model | manager @action or @meta
-        elif arg1:
-            if arg1.isdigit():
-                # model
-                result = model.objects.get(pk=arg1)
-            else:
-                # manager @action or @meta
-                obj = model.objects.all()
-                group = None
-                # @action
-                for group in loader.queryset_actions[model]:
-                    if arg1 in loader.queryset_actions[model][group]:
-                        func_name = arg1
-                        break
-                if func_name:
-                    func = getattr(obj, func_name)
-                    form_action = loader.queryset_actions[model][group][arg1]
-                    # with input
-                    if count_parameters_names(func) > 0:
-                        form = factory.get_class_action_form(request, obj.model, form_action, func)
-        # manager
-        else:
-            obj = model.objects.all()
-            func_name = 'all'
+    message = None
+    args = {}
 
     http_authorization = request.META.get('HTTP_AUTHORIZATION')
     if http_authorization and 'Token' in http_authorization:
-        token = http_authorization[5:].strip()
-        user = User.objects.get_by_token(token)
-        if form:
-            if form.is_valid():
-                params = []
-                func = getattr(obj, func_name)
-                for param in get_parameters_names(func, include_annotated=True):
-                    if param in form.cleaned_data:
-                        params.append(form.cleaned_data[param])
+        try:
+            token = http_authorization[5:].strip()
+            user = User.objects.get_by_token(token)
+            request.user = user
+            if app_label and model_name:
+                model = apps.get_model(app_label, model_name)
+
+                # model @action or @meta | manager @subset [@action or @meta]
+                if arg1 and arg2:
+                    # model
+                    if arg1.isdigit():
+                        obj = model.objects.all(user).get(pk=arg1)
+                        if arg2:
+                            # @action
+                            group = None
+                            for group in loader.instance_actions[model]:
+                                if arg2 in loader.instance_actions[model][group]:
+                                    action_dict = loader.instance_actions[model][group][arg2]
+                                    message = action_dict.get('message')
+                                    func_name = arg2
+                                    break
+                            if func_name:
+                                func = getattr(obj, func_name)
+                                form_action = loader.instance_actions[model][group][arg2]
+                                # with input
+                                if count_parameters_names(func) > 0:
+                                    form = factory.get_action_form(request, obj, form_action)
+                            # it is not @action
+                            else:
+                                # @meta
+                                for method in loader.instance_methods.get(model, []):
+                                    if method['function'] == arg2:
+                                        func_name = arg2
+                                        func = getattr(obj, func_name)
+                                        break
+                    # manager @subset
                     else:
-                        params.append(get_role_value_for_action(func, request.user, param))
-                try:
-                    result = func(*params)
-                except ValidationError as e:
-                    form.add_error(None, str(e.message))
+                        obj = model.objects.all(user)
+                        pks = request.GET.get('ids', [])
+                        if pks:
+                            obj = obj.filter(pk__in=pks)
+                        group = None
+                        # @action
+                        for group in loader.queryset_actions[model]:
+                            if arg2 in loader.queryset_actions[model][group]:
+                                action_dict = loader.queryset_actions[model][group][arg2]
+                                message = action_dict.get('message')
+                                func_name = arg2
+                                break
+                        if func_name:
+                            func = getattr(obj, func_name)
+                            form_action = loader.queryset_actions[model][group][arg2]
+                            # with input
+                            if count_parameters_names(func) > 0:
+                                form = factory.get_class_action_form(request, obj.model, form_action, func)
+                        # it is not @action
+                        else:
+                            # @meta
+                            for method in loader.manager_methods.get(model, []):
+                                if method['function'] == arg1:
+                                    func_name = arg2
+                                    func = getattr(obj, func_name)
+                                    break
+                # model | manager @subset or @action or @meta
+                elif arg1:
+                    if arg1.isdigit():
+                        # model
+                        obj = model.objects.all(user).get(pk=arg1)
+                        if request.method.lower() == 'get':
+                            result = obj
+                        elif request.method.lower() == 'delete':
+                            result = None
+                            obj.delete()
+                            message = _('Deletion successfully performed.')
+                        else:
+                            form = factory.get_register_form(request, obj)
+                    else:
+                        # manager @subset or @action or @meta
+                        obj = model.objects.all(user)
+                        pks = request.GET.get('ids', [])
+                        if pks:
+                            obj = obj.filter(pk__in=pks)
+                        group = None
+
+                        # @action
+                        func = None
+                        action_dict = None
+                        for group in loader.queryset_actions[model]:
+                            if arg1 in loader.queryset_actions[model][group]:
+                                action_dict = loader.queryset_actions[model][group][arg1]
+                                message = action_dict.get('message')
+                                func = getattr(obj, arg1)
+                                func_name = arg1
+                                break
+                        if not func_name:
+                            for group in loader.class_actions[model]:
+                                if arg1 in loader.class_actions[model][group]:
+                                    action_dict = loader.class_actions[model][group][arg1]
+                                    message = action_dict.get('message')
+                                    func = getattr(obj, arg1)
+                                    func_name = arg1
+                                    break
+                        if func_name:
+                            # with input
+                            if count_parameters_names(func) > 0:
+                                form = factory.get_class_action_form(request, obj.model, action_dict, func)
+                        # it is not @action
+                        else:
+                            # @subset or @meta
+                            for subset in loader.subsets[model]:
+                                if arg1 == subset['name']:
+                                    func_name = arg1
+                                    break
+                            if func_name:
+                                func = getattr(obj, func_name)
+                            # it is not @subset
+                            else:
+                                # @meta
+                                for method in loader.manager_methods.get(model, []):
+                                    if method['function'] == arg1:
+                                        func_name = arg1
+                                        func = getattr(obj, func_name)
+                                        break
+                # list or save
+                else:
+                    if request.method.lower() == 'get':
+                        obj = model.objects.all(user)
+                        func_name = 'all'
+                    else:
+                        form = factory.get_register_form(request, model())
+
+            # list or action
+            if func_name:
+                if form:
+                    if form.is_valid():
+                        params = []
+                        func = getattr(obj, func_name)
+                        for param in get_parameters_names(func, include_annotated=True):
+                            if param in form.cleaned_data:
+                                params.append(form.cleaned_data[param])
+                            else:
+                                params.append(get_role_value_for_action(func, request.user, param))
+                        try:
+                            result = func(*params)
+                        except ValidationError as e:
+                            message = None
+                            form.add_error(None, e.message)
+                    else:
+                        errors = form.errors
+                elif obj:
+                    try:
+                        result = getattr(obj, func_name)(**args)
+                    except ValidationError as e:
+                        errors = {'__all__': e.message}
+                        message = None
+                return HttpResponse(json_serialize(result, errors=errors, message=message, exception=None))
+            # add or edit
+            elif form:
+                if form.is_valid():
+                    result = form.save()
+                    message = _('Action successfully performed.')
+                else:
+                    errors = form.errors
+                return HttpResponse(json_serialize(result, errors=errors, message=message, exception=None))
+            # get or delete
             else:
-                return HttpResponse(form.errors.as_json())
-        elif obj:
-            result = getattr(obj, func_name)(**args)
-        return HttpResponse(serialize(result))
+                return HttpResponse(json_serialize(result, errors=errors, message=message, exception=None))
+        except Exception as e:
+            if settings.DEBUG:
+                traceback.print_exc()
+            return HttpResponse(json_serialize(result, errors=errors, message=message, exception=str(e)))
     else:
         return HttpResponseForbidden()
-
-
