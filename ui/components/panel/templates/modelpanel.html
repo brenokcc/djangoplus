@@ -72,12 +72,6 @@
                 </div>
                 <div class="panel-body">
 
-                    {% if fieldset.extra  %}
-                        {% for info in fieldset.extra %}
-                            {{ self.obj|getattr:info }}
-                        {% endfor %}
-                    {% endif %}
-
                     <div class="responsive-container">
                         {% if fieldset.image %}
                             <div class="model-panel-image">
@@ -98,6 +92,12 @@
                         </div>
                     </div>
 
+                    {% if fieldset.extra  %}
+                        {% for info in fieldset.extra %}
+                            {{ self.obj|getattr:info }}
+                        {% endfor %}
+                    {% endif %}
+
                 </div>
             </div>
         {% else %}
@@ -105,6 +105,9 @@
                 {% for info in fieldset.extra %}
                     {{ self.obj|getattr:info }}
                 {% endfor %}
+                {% if fieldset.snippet %}
+                    {{ self.obj|snippet:fieldset.snippet }}
+                {% endif %}
             {% endif %}
         {% endif %}
 

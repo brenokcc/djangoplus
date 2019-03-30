@@ -264,7 +264,7 @@ def action(request, app, cls, action_name, pk=None):
             except ValidationError as e:
                 if form.fields:
                     form.add_error(None, e.message)
-                return httprr(request, '.', e.message, error=True)
+                redirect_to = None
 
         if f_return:
             template_name = '{}.html'.format(action_function.__name__)
@@ -378,7 +378,7 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
     if http_authorization and 'Token' in http_authorization:
         try:
             token = http_authorization[5:].strip()
-            user = User.objects.get_by_token(token)
+            user = User.objects.get(token=token)
             request.user = user
             if app_label and model_name:
                 model = apps.get_model(app_label, model_name)
@@ -531,7 +531,9 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                     except ValidationError as e:
                         errors = {'__all__': e.message}
                         message = None
-                return HttpResponse(json_serialize(result, errors=errors, message=message, exception=None))
+                return HttpResponse(
+                    json_serialize(result, request.GET, errors=errors, message=message, exception=None)
+                )
             # add or edit
             elif form:
                 if form.is_valid():
@@ -539,13 +541,17 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                     message = _('Action successfully performed.')
                 else:
                     errors = form.errors
-                return HttpResponse(json_serialize(result, errors=errors, message=message, exception=None))
+                return HttpResponse(
+                    json_serialize(result, request.GET, errors=errors, message=message, exception=None)
+                )
             # get or delete
             else:
-                return HttpResponse(json_serialize(result, errors=errors, message=message, exception=None))
+                return HttpResponse(
+                    json_serialize(result, request.GET, errors=errors, message=message, exception=None)
+                )
         except Exception as e:
             if settings.DEBUG:
                 traceback.print_exc()
-            return HttpResponse(json_serialize(result, errors=errors, message=message, exception=str(e)))
+            return HttpResponse(json_serialize(result, request.GET, errors=errors, message=message, exception=str(e)))
     else:
         return HttpResponseForbidden()

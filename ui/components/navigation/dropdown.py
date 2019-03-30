@@ -100,6 +100,7 @@ class ModelDropDown(GroupDropDown):
                 action_subsets = action['subsets']
                 action_icon = action['icon']
                 action_display = action['display']
+                action_expose = action['expose']
 
                 action_name = action_function.__name__
                 is_action_view = not hasattr(self.model, action_name)
@@ -146,6 +147,9 @@ class ModelDropDown(GroupDropDown):
                             break
                     if forbidden:
                         continue
+
+                if True not in action_expose and 'web' not in action_expose:
+                    continue
 
                 if not permissions.check_group_or_permission(self.request, action_can_execute):
                     continue

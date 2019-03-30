@@ -1,0 +1,58 @@
+<div class="panel panel-default">
+    {% if self.title %}
+        <div class="panel-heading clearfix">
+            <span class="pull-left">
+                {% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}
+            </span>
+        </div>
+    {% endif %}
+    <div class="panel-body no-padding">
+        {% if self.mobile %}
+            <div class="alert alert-info">
+                Clique no ícone <i class="fa fa-check"></i> para detalhar a informação.
+            </div>
+        {% endif %}
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th style="height: 40px; border: solid 1px #CCC; background-color: #DDD"></th>
+                    {% for week_day in self.WEEK_DAYS %}
+                        <th style="height: 40px; border: solid 1px #CCC; background-color: #DDD;text-align: center" valign="center">{% if self.mobile %}{{ week_day.0 }}{% else %}{{ week_day }}{% endif %}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in self.rows %}
+                    <tr>
+                        {% for value in row %}
+                            {% if forloop.first %}
+                                <th style="height: 40px; border: solid 1px #CCC; background-color:#EEE;text-align: center" valign="center">{{ value }}</th>
+                            {% else %}
+                                <td style="height: 40px; width: 11%; border: solid 1px #DDD;text-align: center" valign="center">
+                                    {% if self.form_prefix %}
+                                        <input class="schedule-time" type="checkbox" value="{{ forloop.counter0 }}::{{ row.0 }}" {% if value %}checked{% endif %} onclick="checkTimes('{{ self.form_prefix }}')">
+                                        <span class="custom-checkbox"></span>
+                                    {% else %}
+                                        {% for item in value %}
+                                            {% if self.mobile %}<div data-toggle="tooltip" title="{{ item }}"><i class="fa fa-check"></i> </div>{% else %}{{ item|format }}{% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if self.form_prefix %}
+<script>
+    function checkTimes(prefix){
+        var widget = $('#id_'+prefix+'values');
+        widget.val($('.schedule-time:checked').map(function () { return $(this).val(); }).get().join('|'));
+    }
+    checkTimes('{{ self.form_prefix }}');
+</script>
+{% endif %}

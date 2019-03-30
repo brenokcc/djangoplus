@@ -44,12 +44,20 @@
                     {% if self.icon %}<i class="fa {{ self.icon }} fa-lg"></i> {% endif %}
                     {{ self.title }}
                 {% endif %}
-                <a href="javascript:" role="button" class="pull-right fullscreen-action"><i class="fa fa-expand"></i></a>
+                {% if self.mobile %}
+                    <div class="pull-right" style="margin-top:-10px;">
+                    {{ self.queryset_dropdown }}
+                    {{ self.class_dropdown }}
+                    </div>
+                {% else %}
+                 <a href="javascript:" role="button" class="pull-right fullscreen-action"><i class="fa fa-expand"></i></a>
+                {% endif %}
             </div>
             {% endif %}
 
             <div class="panel-body">
 
+                {% if not self.mobile or self.is_list_view %}
                 {% if self.is_list_view or self.queryset_dropdown.has_items or self.class_dropdown.has_items  %}
                 <div class="action-bar">
                     {% if self.is_list_view %}
@@ -64,6 +72,7 @@
                         {% endif %}
                     </div>
                 </div>
+                {% endif %}
                 {% endif %}
 
                 {% if self.tabs|length > 1 %}
@@ -113,7 +122,7 @@
                             <div class="input-group">
                                 <input id="search{{ self.id }}" style="height: 34px;" type="text" class="form-control input-sm" placeholder='{% trans "Keywords" %}...' aria-controls="dataTable" value="{{ self.get_q }}" onkeyup="$('#q{{ self.id }}').val(this.value)">
                                 <span class="input-group-btn">
-                                    <button style="height: 34px;margin-left: -2px;" class="btn btn-default btn-sm" type="button" onclick="$('#page{{ self.id }}').val(1);$('#{{ self.id }}').submit();">
+                                    <button style="height: 34px;margin-left: -2px;margin-" class="btn btn-default btn-sm" type="button" onclick="$('#page{{ self.id }}').val(1);$('#{{ self.id }}').submit();">
                                         <i class="fa fa-search"></i>
                                     </button>
                                 </span>

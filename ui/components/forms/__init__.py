@@ -40,6 +40,7 @@ class Form(django_forms.Form):
         self.title = _('Form')
         self.is_inner = False
         self.captcha = False
+        self.component = kwargs.pop('component', None)
 
         if self.method.lower() == 'post':
             kwargs['data'] = request.POST or None

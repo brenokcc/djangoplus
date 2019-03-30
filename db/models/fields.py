@@ -41,12 +41,17 @@ class CharField(models.CharField, FieldPlus):
     def __init__(self, *args, **kwargs):
         max_length = kwargs.pop('max_length', 255)
         choices = kwargs.get('choices')
+        self.mask = kwargs.pop('mask', None)
         if choices and type(choices[0]) not in (list, tuple):
             kwargs.update(choices=[[choice, choice] for choice in choices])
         super(CharField, self).__init__(*args, max_length=max_length, **kwargs)
 
     def formfield(self, **kwargs):
-        kwargs.setdefault('form_class', form_fields.CharField)
+        if self.mask:
+            kwargs.setdefault('form_class', form_fields.MaskField)
+            kwargs.setdefault('mask', self.mask)
+        else:
+            kwargs.setdefault('form_class', form_fields.CharField)
         kwargs.setdefault('choices_form_class', form_fields.TypedChoiceField)
         field = super(CharField, self).formfield(**kwargs)
         return field
@@ -548,6 +553,12 @@ class Decimal3(Decimal):
         return Decimal.__new__(cls, value=value or "0", context=context)
 
 
+class Decimal1(Decimal):
+    def __new__(cls, value="0", context=None):
+        cls.decimal1 = True
+        return Decimal.__new__(cls, value=value or "0", context=context)
+
+
 class DecimalField3(models.DecimalField, FieldPlus):
     def __init__(self, *args, **kwargs):
         decimal_places = kwargs.pop('decimal_places', 3)
@@ -560,6 +571,21 @@ class DecimalField3(models.DecimalField, FieldPlus):
 
     def from_db_value(self, value, expression, connection, context):
         value = Decimal3(value)
+        return value
+
+
+class DecimalField1(models.DecimalField, FieldPlus):
+    def __init__(self, *args, **kwargs):
+        decimal_places = kwargs.pop('decimal_places', 1)
+        max_digits = kwargs.pop('max_digits', 9)
+        super(DecimalField1, self).__init__(*args, decimal_places=decimal_places, max_digits=max_digits, **kwargs)
+
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.DecimalField1)
+        return super(DecimalField1, self).formfield(**kwargs)
+
+    def from_db_value(self, value, expression, connection, context):
+        value = Decimal1(value)
         return value
 
 
@@ -609,3 +635,13 @@ class TreeIndexField(CharField):
             kwargs.update(display=None)
         kwargs.update(blank=True, exclude=True, null=True)
         super(TreeIndexField, self).__init__(*args, **kwargs)
+
+
+class ColorField(CharField):
+    def __init__(self, *args, **kwargs):
+        super(ColorField, self).__init__(*args, **kwargs)
+        self.formatter = 'color'
+
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.ColorField)
+        return super(ColorField, self).formfield(**kwargs)

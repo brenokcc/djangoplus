@@ -114,7 +114,7 @@ class ApiDocumentation(object):
             url = '/api/{}/{}/{}/'.format(app_label, model_name, name)
             doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
             query_params = [
-                dict(verbose_name='Page', name='page', type='Integer', required=False, help_text=None)
+                dict(verbose_name='Fields', name='fields', type='List[String]', required=False, help_text='Fields to be displayed')
             ]
             self.add_endpoint(name, url, 'get', doc_url, query_params, [])
 
@@ -127,7 +127,10 @@ class ApiDocumentation(object):
         name = 'get'
         url = '/api/{}/{}/{{}}/'.format(app_label, model_name)
         doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
-        self.add_endpoint(name, url, 'get', doc_url, [], [])
+        query_params = [
+            dict(verbose_name='Fields', name='fields', type='List[String]', required=False, help_text='Fields to be displayed')
+        ]
+        self.add_endpoint(name, url, 'get', doc_url, query_params, [])
 
         for method in loader.instance_methods.get(model, []):
             name = method['function']

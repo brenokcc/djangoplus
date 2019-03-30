@@ -390,8 +390,22 @@ class DecimalField3(CharField):
         super(DecimalField3, self).__init__(*args, **kwargs)
 
     def to_python(self, value):
-        if not value in validators.EMPTY_VALUES:
+        if value not in validators.EMPTY_VALUES:
             return Decimal(value.replace('.', '').replace(',', '.'))
+        return None
+
+
+class DecimalField1(CharField):
+    widget = widgets.DecimalInput1
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('max_digits')
+        kwargs.pop('decimal_places')
+        super(DecimalField1, self).__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if value not in validators.EMPTY_VALUES:
+            return round(Decimal(value.replace('.', '').replace(',', '.')), 1)
         return None
 
 
@@ -442,3 +456,16 @@ class CreditCardField(CharField):
 
 class OneDigitValidationField(CharField):
     widget = widgets.OneDigitValidationInput
+
+
+class ColorField(CharField):
+    widget = widgets.ColorInput
+
+
+class MaskField(forms.fields.CharField):
+    widget = widgets.MaskWidget
+
+    def __init__(self, *args, **kwargs):
+        mask = kwargs.pop('mask')
+        super(MaskField, self).__init__(*args, **kwargs)
+        self.widget.mask = mask

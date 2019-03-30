@@ -244,6 +244,8 @@ class ProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProfileForm, self).__init__(*args, **kwargs)
         self.username = self.instance.username
+        if not settings.USERNAME_CHANGE:
+            self.fields['username'].widget.attrs.update(readonly='readonly')
 
     def clean_confirm_password(self):
         if not self.data.get('new_password') == self.data.get('confirm_password'):

@@ -50,7 +50,7 @@ def action(model, verbose_name, help_text=None, condition=None, inline=False, su
             input=None, initial=None, choices=None, inline=inline, subsets=iterable(subset), icon=icon,
             doc=func.__doc__, usecase=usecase, can_execute_by_organization=iterable(can_execute_by_organization),
             can_execute_by_unit=iterable(can_execute_by_unit), can_execute_by_role=iterable(can_execute_by_role),
-            redirect_to=None, menu=menu, display=None, source='view'
+            redirect_to=None, menu=menu, display=None, source='view', expose=('web',)
         )
 
         receive_function_args._action = _action

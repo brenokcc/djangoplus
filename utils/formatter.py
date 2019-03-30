@@ -66,6 +66,8 @@ def format_value(value, html=True):
     elif isinstance(value, Decimal):
         if hasattr(value, 'decimal3'):
             return format_decimal3(value)
+        elif hasattr(value, 'decimal1'):
+            return format_decimal1(value)
         else:
             return format_decimal(value)
     elif isinstance(value, ImageFieldFile) or isinstance(value, DjangoImageFieldFile):
@@ -116,7 +118,15 @@ def format_decimal(value, decimal_places=2):
 
 
 def format_decimal3(value):
+    if value is None:
+        return ''
     return format_decimal(value, 3)
+
+
+def format_decimal1(value):
+    if value is None:
+        return ''
+    return format_decimal(value, 1)
 
 
 def to_ascii(txt, codif='utf-8'):

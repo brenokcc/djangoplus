@@ -29,7 +29,7 @@ from djangoplus.utils import format_value
 
 class TextInput(widgets.TextInput):
     def render(self, name, value, attrs=None, renderer=None):
-        attrs.update(**{'class':'form-control {}'.format(self.attrs.get('class', ''))})
+        attrs.update(**{'class':'form-control {}'.format((attrs or self.attrs).get('class', ''))})
         return super(TextInput, self).render(name, value, attrs, renderer)
 
 
@@ -76,7 +76,7 @@ class MaskWidget(widgets.TextInput):
     class Media:
         js = ('/static/js/jquery.mask.min-1.7.7.js',)
 
-    def __init__(self, mask):
+    def __init__(self, mask=''):
         super(MaskWidget, self).__init__()
         self.mask = mask
 
@@ -169,13 +169,18 @@ class CheckboxInput(widgets.CheckboxInput):
         return mark_safe(html)
 
 
-class RadioSelect(widgets.CheckboxInput):
+class RadioSelect(widgets.RadioSelect):
     input_type = 'radio'
 
     def render(self, *args, **kwargs):
         html = super(RadioSelect, self).render(*args, **kwargs)
-        html = '{}<span class="custom-radio"></span>'.format(html)
-        return mark_safe(html)
+        html = '{}'.format(html)
+        lines = []
+        for line in html.split('\n'):
+            if '<li><label ' in line:
+                line = '{}<span class="custom-radio"></span>'.format(line)
+            lines.append(line)
+        return mark_safe('\n'.join(lines))
 
 
 class PickWidget(widgets.Select):
@@ -352,6 +357,16 @@ class DecimalInput3(DecimalInput):
         return mark_safe('{}\n{}'.format(html, js))
 
 
+class DecimalInput1(DecimalInput):
+
+    def render(self, name, value, attrs=None, renderer=None):
+        attrs['class'] = 'form-control'
+        html = super(DecimalInput, self).render(name, value, attrs)
+        html = html.replace('type="number"', 'type="text"')
+        js = "<script>$('#id_{}').mask('#0,0', {{reverse: true, clearIfNotMatch: true}});</script>".format(name)
+        return mark_safe('{}\n{}'.format(html, js))
+
+
 class OneDigitValidationInput(TextInput):
 
     class Media:
@@ -368,3 +383,30 @@ class OneDigitValidationInput(TextInput):
 class CreditCardWidget(MaskWidget):
     def __init__(self):
         super(CreditCardWidget, self).__init__('9999 9999 9999 9999')
+
+
+class ColorInput(TextInput):
+
+    class Media:
+        js = ('/static/js/colorPick.min.js',)
+        css = {'all': ('/static/css/colorPick.min.css',)}
+
+    def render(self, name, value, attrs=None, renderer=None):
+        attrs['class'] = 'hidden'
+        html = super(ColorInput, self).render(name, value, attrs)
+        cpid = '{}ColorPickSelector'.format(name)
+        js = '''
+            <div id="{}ColorPickSelector" class="colorPickSelector" style="cursor:pointer"></div>
+            <script>
+            $(function(){{
+            $("#{}ColorPickSelector").colorPick({{
+                'initialColor' : '{}',
+                'onColorSelected': function() {{
+                     $("#id_{}").val(this.color);
+                    this.element.css({{'backgroundColor': this.color, 'color': this.color}});
+                }}
+            }});
+            }});
+            </script>
+        '''.format(cpid, cpid, value or '#27ae60', name)
+        return mark_safe('{}\n{}'.format(html, js))

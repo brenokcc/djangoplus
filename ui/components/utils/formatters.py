@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from djangoplus.ui.components.utils import Timeline, QrCode, ProgressBar
+from djangoplus.ui.components.utils import Timeline, QrCode, ProgressBar, ScheduleTable
 
 
 def timeline(value, **kwargs):
@@ -65,3 +65,17 @@ def qrcode(value, **kwargs):
 def progress(percentual, **kwargs):
     request = kwargs.get('request', None)
     return ProgressBar(request, percentual)
+
+
+def color(value):
+    return '<div class="colorPickSelector" style="background-color:{}"></div>'.format(value)
+
+
+def schedule_table(value, **kwargs):
+    st = ScheduleTable(kwargs['request'], kwargs['verbose_name'], kwargs.get('icon'))
+    intervals, scheduled_times = value
+    for interval in intervals:
+        st.add_interval(interval)
+    for scheduled_time in scheduled_times:
+        st.add(*scheduled_time)
+    return st

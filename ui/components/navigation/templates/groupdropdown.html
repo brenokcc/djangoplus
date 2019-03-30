@@ -14,14 +14,14 @@
                     <ul class="dropdown-menu slidedown">
                         {% for item in actions %}
                             <li style="text-align: center">
-                                <a id="{{ url|slugify }}" href="{{ item.url }}" class="{{ item.css }}">{{ item.label }}</a>
+                                <a id="{{ url|slugify }}" href="{{ item.url }}" class="{{ item.css }}  {{ item.label|slugify }}">{{ item.label }}</a>
                             </li>
                         {% endfor %}
                     </ul>
                 </div>
             {% else %}
                 {% with item=actions.0 %}
-                    <a id="{{ url|slugify }}" href="{{ item.url }}" class="btn btn-default {{ item.css }}">{% if item.icon %}<i class="fa {{ item.icon }}"></i>{% endif %} {{ item.label }}</a>
+                    <a id="{{ url|slugify }}" href="{{ item.url }}" class="btn btn-default {{ item.css }} {{ item.label|slugify }}">{% if item.icon %}<i class="fa {{ item.icon }}"></i>{% endif %} {{ item.label }}</a>
                 {% endwith %}
             {% endif %}
         {% else %}

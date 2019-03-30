@@ -17,8 +17,15 @@ class Panel(RequestComponent):
         super(Panel, self).__init__(title, request)
         self.title = title
         self.text = text
-        self.labels = []
         self.icon = icon
+
+
+class ImagePanel(RequestComponent):
+    def __init__(self, request, title=None, images=(), icon=None):
+        super(ImagePanel, self).__init__(title, request)
+        self.title = title
+        self.icon = icon
+        self.images = images
 
 
 class ModelPanel(RequestComponent):
@@ -152,6 +159,9 @@ class ModelPanel(RequestComponent):
                     for info in fieldset[1]['extra']:
                         fieldset_dict['extra'].append(info)
 
+                if 'snippet' in fieldset[1]:
+                    fieldset_dict['snippet'] = fieldset[1]['snippet']
+
     def get_active_fieldsets(self):
         return self.fieldsets_without_tab_name + self.fieldsets_with_tab_name
 
@@ -281,7 +291,7 @@ class RelationModelPanel(RequestComponent):
         self.title = title
         self.items = []
         self.drop_down = GroupDropDown(request)
-        for obj in qs:
+        for obj in qs.order_by('id'):
             paginator = Relation(obj, relation_name).get_component(self.request, self.as_pdf)
             self.items.append((obj, paginator))
 
@@ -333,30 +343,32 @@ class DashboardPanel(RequestComponent):
                 if permissions.check_group_or_permission(self.request, group_names, ignore_superuser=True):
                     func = getattr(obj, func_name)
                     f_return = execute_and_format(self.request, func)
+                    if f_return:
+                        if type(f_return) in (int, Decimal):
+                            verbose_name = get_metadata(model, 'verbose_name_plural')
+                            icon = get_metadata(model, 'icon')
+                            panel = NumberPanel(self.request, verbose_name, f_return, title, icon)
+                            html = str(panel)
 
-                    if type(f_return) in (int, Decimal):
-                        verbose_name = get_metadata(model, 'verbose_name_plural')
-                        icon = get_metadata(model, 'icon')
-                        panel = NumberPanel(self.request, verbose_name, f_return, title, icon)
-                        html = str(panel)
-
-                    elif hasattr(f_return, 'model'):
-                        compact = position in ('left', 'right')
-                        app_label = get_metadata(model, 'app_label')
-                        model_name = model.__name__.lower()
-                        verbose_name_plural = get_metadata(model, 'verbose_name_plural')
-                        if link:
-                            title = '{} {}'.format(verbose_name_plural, title)
-                        url = '/list/{}/{}/{}/'.format(app_label, model_name, func_name)
-                        paginator = Paginator(self.request, f_return, title, readonly=compact,
-                                              list_display=list_display, list_filter=(), search_fields=(),
-                                              list_subsets=[func_name], url=link and url or None)
-                        if compact and not paginator.template:
-                            paginator.column_names = paginator.column_names[0:1]
-                        html = str(paginator)
-                    else:
-                        html = str(f_return)
-                    self.add(html, position)
+                        elif hasattr(f_return, 'model'):
+                            template_name = item.get('template')
+                            compact = position in ('left', 'right')
+                            app_label = get_metadata(model, 'app_label')
+                            model_name = model.__name__.lower()
+                            verbose_name_plural = get_metadata(model, 'verbose_name_plural')
+                            if link and verbose_name_plural not in title:
+                                title = '{} {}'.format(verbose_name_plural, title)
+                            url = '/list/{}/{}/{}/'.format(app_label, model_name, func_name)
+                            paginator = Paginator(self.request, f_return, title, readonly=compact,
+                                                  list_display=list_display, list_filter=(), search_fields=(),
+                                                  list_subsets=[func_name], url=link and url or None,
+                                                  template=template_name)
+                            if compact and not paginator.template:
+                                paginator.column_names = paginator.column_names[0:1]
+                            html = str(paginator)
+                        else:
+                            html = str(f_return)
+                        self.add(html, position)
 
     def process_request(self):
         super(DashboardPanel, self).process_request()

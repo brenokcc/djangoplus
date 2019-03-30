@@ -12,9 +12,10 @@ from djangoplus.utils.formatter import to_ascii
 
 
 def mobile(request):
-    for device in ['iphone', 'android']:
-        if device in request.META.get('HTTP_USER_AGENT', '').lower():
-            return True
+    if request:
+        for device in ['iphone', 'android']:
+            if device in request.META.get('HTTP_USER_AGENT', '').lower():
+                return True
     return False
 
 
@@ -61,24 +62,15 @@ class JsonResponse(HttpResponse):
 class PdfResponse(HttpResponse):
 
     def __init__(self, html, landscape=False):
-        from xhtml2pdf import pisa
-
-        def link_callback(uri, rel):
-            if not uri.startswith('/static'):
-                s = '{}/{}'.format(settings.MEDIA_ROOT, uri.replace('/media', ''))
-            else:
-                s = '{}/{}/{}'.format(settings.BASE_DIR, settings.PROJECT_NAME, uri)
-            return s
-
-        tmp = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
-        file_name = tmp.name
+        import pdfkit
+        file_name = tempfile.mktemp('.pdf')
         if landscape:
-            html = html.replace('a4 portrait', 'a4 landscape')
             html = html.replace('logo_if_portrait', 'logo_if_landscape')
-        out = pisa.CreatePDF(html, tmp, link_callback=link_callback)
-        out.dest.close()
-        tmp = open(file_name, "rb")
-        str_bytes = tmp.read()
+            html = html.replace('content="Portrait"', 'content="Landscape"')
+        html = html.replace('/media', settings.MEDIA_ROOT)
+        html = html.replace('/static', '{}/{}/static'.format(settings.BASE_DIR, settings.PROJECT_NAME))
+        pdfkit.from_string(html, file_name)
+        str_bytes = open(file_name, "rb").read()
         os.unlink(file_name)
         HttpResponse.__init__(self, str_bytes, content_type='application/pdf')
 

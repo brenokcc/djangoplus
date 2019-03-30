@@ -150,6 +150,8 @@ if not initialized:
                     subset_can_view = get_metadata(attr, 'can_view')
                     subset_order = get_metadata(attr, 'order')
                     subset_menu = get_metadata(attr, 'menu')
+                    subset_template = get_metadata(attr, 'template')
+                    subset_expose = get_metadata(attr, 'expose')
                     subset_dashboard = get_metadata(attr, 'dashboard')
                     subset_list_display = get_metadata(attr, 'list_display')
                     subset_list_filter = get_metadata(attr, 'list_filter')
@@ -161,7 +163,8 @@ if not initialized:
                         verbose_name=subset_title, name=attr_name, function=attr, url=subset_url, can_view=subset_can_view,
                         menu=subset_menu, icon=icon, alert=subset_alert, notify=subset_notify,
                         order=subset_order, help_text=subset_help_text, list_display=subset_list_display,
-                        list_filter=subset_list_filter, search_fields=subset_search_fields
+                        list_filter=subset_list_filter, search_fields=subset_search_fields, expose=subset_expose,
+                        template=subset_template
                     )
                     subsets[model].append(item)
 
@@ -169,7 +172,7 @@ if not initialized:
                         widget = dict(
                             verbose_name=subset_title, model=model, function=attr_name, can_view=subset_can_view,
                             dashboard=subset_dashboard, formatter=None, link=True, list_display=subset_list_display,
-                            list_filter=subset_list_filter, search_fields=subset_search_fields
+                            list_filter=subset_list_filter, search_fields=subset_search_fields, template=subset_template
                         )
                         subset_widgets.append(widget)
 
@@ -181,14 +184,16 @@ if not initialized:
                             activity_description = 'Listar {}: {}'.format(verbose_name_plural, subset_title)
                         workflows[subset_workflow] = dict(activity=activity_description, role=role, model=None)
 
+                # @meta
                 else:
                     widget_verbose_name = get_metadata(attr, 'verbose_name')
                     widget_can_view = get_metadata(attr, 'can_view')
                     widget_dashboard = get_metadata(attr, 'dashboard')
                     widget_formatter = get_metadata(attr, 'formatter')
+                    widget_icon = get_metadata(attr, 'icon')
                     widget = dict(
                         verbose_name=widget_verbose_name, model=model, function=attr_name, can_view=widget_can_view,
-                        dashboard=widget_dashboard, formatter=widget_formatter, link=False
+                        dashboard=widget_dashboard, formatter=widget_formatter, link=False, icon=widget_icon
                     )
                     subset_widgets.append(widget)
                     if model not in manager_methods:
@@ -240,9 +245,10 @@ if not initialized:
                     widget_can_view = get_metadata(func, 'can_view')
                     widget_dashboard = get_metadata(func, 'dashboard')
                     widget_formatter = get_metadata(func, 'formatter')
+                    widget_icon = get_metadata(func, 'icon')
                     widget = dict(
                         verbose_name=widget_verbose_name, model=model, function=attr_name, can_view=widget_can_view,
-                        dashboard=widget_dashboard, formatter=widget_formatter, link=False
+                        dashboard=widget_dashboard, formatter=widget_formatter, link=False, icon=widget_icon
                     )
                     if model not in model_widgets:
                         model_widgets[model] = []

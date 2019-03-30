@@ -7,6 +7,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.http import HttpResponse
 from djangoplus.ui.components import forms
+from djangoplus.utils.dateutils import DAY_NAMES
 from djangoplus.utils.http import ComponentResponse
 from djangoplus.ui import RequestComponent, ComponentHasResponseException
 from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
@@ -333,3 +334,29 @@ class ModelReport(RequestComponent):
             self.components.append(statistics.as_table(self.request))
         if add_chart:
             self.components.append(statistics.as_chart(self.request))
+
+
+class ScheduleTable(RequestComponent):
+    WEEK_DAYS = DAY_NAMES
+
+    def __init__(self, request, title, icon=None):
+        super().__init__(title, request)
+        self.title = title
+        self.icon = icon
+        self.rows = []
+        self.form_prefix = None
+
+    def add_interval(self, interval):
+        self.rows.append((str(interval), [], [], [], [], [], [], []))
+
+    def add(self, week_day, interval, value='X', hint=None):
+        week_day_index = None
+        for i, wd in enumerate(ScheduleTable.WEEK_DAYS):
+            if wd == week_day:
+                week_day_index = i + 1
+                break
+        if week_day_index:
+            for row in self.rows:
+                if row[0] == str(interval):
+                    row[week_day_index].append(value)
+                    break

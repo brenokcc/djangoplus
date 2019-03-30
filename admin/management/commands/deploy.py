@@ -20,6 +20,17 @@ remote_project_dir = '/var/opt/{}'.format(project_name)
 env.user = username
 env.connection_attempts = 10
 
+# centos 7 - wkhtmltopdf
+# yum -y install xorg-x11-server-Xvfb xorg-x11-fonts-Type1 xorg-x11-fonts-75dpi
+# curl -O -L https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox-0.12.5-1.centos7.x86_64.rpm
+# yum -y localinstall wkhtmltox-0.12.5-1.centos7.x86_64.rpm
+# export QT_XKB_CONFIG_ROOT=/usr/share/X11/xkb
+# ln -s /usr/local/bin/wkhtmltopdf /bin
+# pip install pdfkit
+# python
+#  import pdfkit
+#  pdfkit.from_string('Hello!', 'out.pdf')
+
 
 class Command(BaseCommand):
     VERBOSE = False
@@ -125,6 +136,8 @@ set -e
 source /var/opt/.virtualenvs/{project_name}/bin/activate
 mkdir -p /var/opt/{project_name}/logs
 cd /var/opt/{project_name}
+export QT_QPA_PLATFORM='offscreen'
+export QT_QPA_FONTDIR='/usr/share/fonts/truetype/dejavu/'
 exec gunicorn {project_name}.wsgi:application -w 1 -b 127.0.0.1:{port} --timeout=600 --user=www-data --group=www-data --log-level=_debug --log-file=/var/opt/{project_name}/logs/gunicorn.log 2>>/var/opt/{project_name}/logs/gunicorn.log
 '''
 LIMITS_FILE_CONTENT = '''
@@ -591,6 +604,7 @@ def _execute_aptget():
             run('apt-get -y install python3 python3-pip build-essential python3-dev git nginx supervisor libncurses5-dev')
             run('apt-get -y install vim')
             run('apt-get -y install libjpeg62-turbo-dev libfreetype6-dev libtiff5-dev liblcms2-dev libwebp-dev tk8.6-dev libjpeg-dev')
+            run('apt-get -y install wkhtmltopdf xvfb')
             run('apt-get -y install htop')
 
             if not contains('/etc/security/limits.conf', '65536'):

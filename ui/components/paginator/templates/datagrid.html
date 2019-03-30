@@ -3,21 +3,18 @@
     <ul class="list-group collapse in" id="feedList">
     {% for obj in self.get_queryset %}
         {% set_request obj self.request %}
-        <li class="list-group-item clearfix">
-            <div class="pull-left m-left-sm">
-                <strong>{{ obj }}</strong>
-                {% for column_name, lookup, sortable, to in self.column_names %}
-                    {% with value=obj|getattr:lookup %}
-                        {% if value|displayable %}
-                            <br>
-                            <small class="text-muted"><i class="fa fa-angle-double-right"></i> <strong>{{ column_name }}</strong>: {{ value|format|safe }}</small>
-                        {% endif %}
-                    {% endwith %}
-                {% endfor %}
-                <br><br>
-                {% paginator_icons self obj %}
-            </div>
-        </li>
+        <div>
+            <h4>{{ obj }}</h4>
+            {% for column_name, lookup, sortable, to in self.column_names %}
+                {% with value=obj|getattr:lookup %}
+                    {% if value|displayable %}
+                        <div class="text-muted"><i class="fa fa-angle-double-right"></i> <strong>{{ column_name }}</strong>: {{ value|format|safe }}</div>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+            <div align="right">{% paginator_icons self obj True %}</div>
+            <hr width="50%">
+        </div>
     {% endfor %}
     </ul>
 {% else %}

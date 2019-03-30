@@ -5,6 +5,7 @@ from django.utils.safestring import mark_safe
 from djangoplus.utils.http import ReportResponse
 from django.utils.deprecation import MiddlewareMixin
 from django.template.loader import render_to_string
+from djangoplus.utils import http
 
 
 class Component(object):
@@ -41,6 +42,7 @@ class RequestComponent(Component):
         self.title = None
         self.request = request
         self.response = None
+        self.mobile = http.mobile(request)
 
         super(RequestComponent, self).__init__(uid)
 

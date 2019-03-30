@@ -3,6 +3,9 @@
 from django.forms import widgets
 from django.utils.safestring import mark_safe
 from djangoplus.utils.formatter import format_value
+from djangoplus.utils.dateutils import DAY_INITIALS, MONTH_NAMES
+
+LOCALE = dict(format='DD/MM/YYYY', applyLabel='Aplicar', cancelLabel='Cancelar', fromLabel='De', toLabel='Até', customRangeLabel='Customizar', weekLabel='S', daysOfWeek=DAY_INITIALS, monthNames=MONTH_NAMES)
 
 
 class DateWidget(widgets.DateInput):
@@ -23,15 +26,13 @@ class DateWidget(widgets.DateInput):
                 singleDatePicker: true,
                 showDropdowns: false,
                 autoUpdateInput: false,
-                locale: {{
-                    format: 'DD/MM/YYYY'
-                }}
+                locale: {}
                 }});
             $("#id_{}").on('apply.daterangepicker', function(ev, picker) {{
                   $(this).val(picker.startDate.format('DD/MM/YYYY'));
               }});
             $("#id_{}").mask("00/00/0000", {{clearIfNotMatch: true}});
-        '''.format(name, name, name)
+        '''.format(name, LOCALE, name, name)
         html = '''
             <div class="input-group">{}
             <span class="input-group-addon">
@@ -84,17 +85,13 @@ class DateTimeWidget(widgets.DateTimeInput):
                         timePicker: true,
                         timePickerIncrement: 5,
                         timePicker24Hour: true,
-                        locale: {{
-                            format: 'DD/MM/YYYY H:mm',
-                            cancelLabel: 'Cancelar',
-                            applyLabel: 'Aplicar',
-                        }}
+                        locale: {}
                         }});
                         $("#id_{}").on('apply.daterangepicker', function(ev, picker) {{
                           $(this).val(picker.startDate.format('DD/MM/YYYY H:mm'));
                         }});
                         $("#id_{}").mask("00/00/0000 00:00", {{clearIfNotMatch: true}});
-                '''.format(name, js_value, name, name)
+                '''.format(name, js_value, LOCALE, name, name)
         html = '''
             <div class="input-group">{}
                 <span class="input-group-addon">
@@ -224,7 +221,7 @@ class DateFilterWidget(DateRangeWidget):
 
                 $('#reportrange{}').daterangepicker({{
                     showCustomRangeLabel: false,
-                    locale: {{format: "DD/MM/YYYY", applyLabel: "Selecionar", cancelLabel: "Cancelar"}},
+                    locale: {},
                     linkedCalendars: false,
                     alwaysShowCalendars: true,
                     opens: "center",
@@ -245,7 +242,7 @@ class DateFilterWidget(DateRangeWidget):
             </script>
         '''.format(
             start_js, end_js, function_name, self.label, id_, id_,
-            name, name, name, name, name, function_name, function_name
+            name, name, name, name, name, LOCALE, function_name, function_name
         )
         output.append('''
             <div class="form-control" style="cursor:pointer; width:auto;">

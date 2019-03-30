@@ -1,0 +1,70 @@
+{% if self.as_pdf %}{% else %}
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+        <span class="pull-left">
+            <i class="fa fa-calendar"></i> {{ self.title }}
+        </span>
+        </div>
+
+        <div class="panel-body no-padding">
+            {% if self.caption.items %}
+            <div>
+                <h5>Legenda</h5>
+                {% for color, description in self.caption.items %}
+                    <div style="display: inline-block;margin-bottom:5px">
+                        <div class="colorPickSelector"
+                             style="background-color:{{ color }};float:left;width:20px;height: 20px; margin-right:5px"></div>
+                        {{ description }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="responsive-container">
+                {% for month, calendar, details, visible in self.calendars %}
+                    <div class="s1 m3 l3 {% if self.compact and not visible %}invisible-month{% endif %}" style="padding:5px;{% if self.compact and not visible %}display:none{% endif %}">
+                        <table width="100%" class="border-table">
+                            <caption style="font-size:150%">{{ month }}</caption>
+                            {% for line in calendar %}
+                                {% if forloop.first %}
+                                    <tr>
+                                        {% for item in line %}
+                                            <th style="background-color:#DDD;height:30px;border:solid 1px #CCC;text-align: center">{{ item }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        {% for item in line %}
+
+                                            <td valign="center" align="center"
+                                                style="background-color:{{ item.1 }};height:30px;color:{{ item.2 }};border:solid 1px
+                                                        {% if item.1 != '#FFF' and item.1 != '#EEE' %}{{ item.1 }}{% else %}#CCC{% endif %}">{{ item.0 }}</td>
+
+                                        {% endfor %}
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                        <div style="height: 45px">
+                            {% for description, days in details.items %}
+                                <div>
+                                    {{ description }}:
+                                    {% for day in days %}
+                                        {% if forloop.first or forloop.last %}
+                                            {% if forloop.last and not forloop.first %} - {% endif %}
+                                            {{ day }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if self.compact  %}
+            <div style="clear: both;padding-top: 20px">
+                <a href="javascript:" onclick="$('.invisible-month').toggle();">Expandir/Retrair</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

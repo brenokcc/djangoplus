@@ -1,0 +1,16 @@
+{% if self.as_pdf %}{% else %}
+<div class="panel panel-default">
+    {% if self.title %}
+        <div class="panel-heading clearfix">
+            <span class="pull-left">
+                {% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}
+            </span>
+        </div>
+    {% endif %}
+    <div class="panel-body no-padding">
+        {% for image in self.images %}
+        <img src="{{ image }}" width="100%">
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

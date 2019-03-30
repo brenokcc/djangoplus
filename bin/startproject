@@ -145,6 +145,7 @@ from djangoplus.admin.views import public, index
 
 urlpatterns = [
     url(r'^$', public),
+    url(r'^admin/(?P<widget>[-\w]+)/$', index),
     url(r'^admin/$', index),
     url(r'', include('djangoplus.admin.urls')),
 ]

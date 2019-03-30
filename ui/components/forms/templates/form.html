@@ -190,6 +190,10 @@
 
     {% captcha self %}
 
+    {% if self.component %}
+        {{ self.component }}
+    {% endif %}
+
     <div class="seperator"></div>
     {% if not self.request.GET.popup %}
         <div class="pull-right">

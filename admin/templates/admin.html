@@ -3,6 +3,9 @@
 {% load i18n %}
 {% if not request.GET.popup %}
 {% block extra_head %}
+    <!-- Fancybox -->
+    <link rel="stylesheet" href="/static/css/jquery.fancybox.min.css" />
+    <script src="/static/js/jquery.fancybox.min.js"></script>
     <!-- Metis Menu -->
     <link href="/static/css/metisMenu.min.css" rel="stylesheet">
     <script src="/static/js/metisMenu.min.js"></script>
@@ -183,10 +186,9 @@
         <div>
 {% endif %}
             <div {% if not request.GET.popup %}id="content"{% endif %}>
+                {% block content %}
 
-            {% block content %}
-
-            {% endblock %}
+                {% endblock %}
             </div>
 {% if not request.GET.popup %}
                 <div align="right" class="copyright">

@@ -4,6 +4,17 @@ import datetime
 import calendar
 
 
+DAY_NAMES = [calendar.day_name[i].capitalize() for i in range(0, 7)]
+DAY_INITIALS = [calendar.day_name[i][0:3].capitalize() for i in range(0, 7)]
+MONTH_NAMES = [calendar.month_name[i].capitalize() for i in range(1, 13)]
+MONTH_INITIALS = [calendar.month_name[i][0:3].capitalize() for i in range(1, 13)]
+
+DAY_NAMES_CHOICES = [[x, x] for x in DAY_NAMES]
+DAY_INITIALS_CHOICES = [[x, x] for x in DAY_INITIALS]
+MONTH_NAMES_CHOICES = [[x, x] for x in MONTH_NAMES]
+MONTH_INITIALS_CHOICES = [[x, x] for x in MONTH_INITIALS]
+
+
 def calculate_age(birthday):
     today = datetime.date.today()
     return today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))

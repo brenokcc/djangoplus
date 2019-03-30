@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 from djangoplus.utils import permissions, should_add_action, get_role_values_for_condition
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.ui import RequestComponent, ComponentHasResponseException
-from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, mobile, return_response
+from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, return_response
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name, should_filter_or_display, getattr2, \
     get_parameters_names, count_parameters_names
@@ -21,7 +21,7 @@ from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name,
 class Paginator(RequestComponent):
     def __init__(self, request, qs, title=None, list_display=None, list_filter=None, search_fields=None,
                  list_per_page=25, list_subsets=None, exclude=None, relation=None, readonly=False, is_list_view=False,
-                 help_text=None, url=None, template='datagrid.html', uid=None):
+                 help_text=None, url=None, template=None, uid=None):
 
         super(Paginator, self).__init__(is_list_view and '_' or abs(hash(title)), request)
         if relation:
@@ -42,7 +42,7 @@ class Paginator(RequestComponent):
         self.icon = get_metadata(qs.model, 'icon', None)
         self.list_total = get_metadata(qs.model, 'list_total', None)
         self.ordering = get_metadata(qs.model, 'ordering', None)
-        self.template = get_metadata(self.qs.model, 'list_template', template)
+        self.template = template or get_metadata(self.qs.model, 'list_template', 'datagrid.html')
         self.help_text = help_text
         self.url = url
         self.display_checkboxes = False
@@ -74,7 +74,6 @@ class Paginator(RequestComponent):
         self.class_dropdown = GroupDropDown(request, style='class-action')
         self.queryset_dropdown = GroupDropDown(request, style='queryset-action disabled')
         self.drop_down = ModelDropDown(request, qs.model)
-        self.mobile = mobile(self.request)
 
         if hasattr(self.qs, 'permission_map'):
             self.permission_map = self.qs.permission_map
@@ -216,11 +215,13 @@ class Paginator(RequestComponent):
                     action_subsets = _action['subsets']
                     action_can_execute = _action['can_execute']
                     action_category = _action['group']
+                    action_expose = _action['expose']
                     action_style = _action['style'] or 'popup'
                     if 'popup' not in action_style:
                         action_style = '{} popup'.format(action_style)
                     if self.is_list_view or view_name in self.action_names:
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
+                        add_action = add_action and (True in action_expose or 'web' in action_expose)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
                             func = getattr(self.qs, view_name)
                             ignore_pdf = False
@@ -245,11 +246,13 @@ class Paginator(RequestComponent):
                     action_condition = _action['condition']
                     action_source = _action['source']
                     action_category = _action['group']
+                    action_expose = _action['expose']
                     action_style = _action['style'] or 'popup'
                     if 'popup' not in action_style:
                         action_style = '{} popup'.format(action_style)
                     if self.is_list_view or view_name in self.action_names:
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
+                        add_action = add_action and (True in action_expose or 'web' in action_expose)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
                             self.display_checkboxes = self.display_checkboxes or not action_source == 'view'
                             func = getattr(self.qs, view_name)
@@ -282,11 +285,13 @@ class Paginator(RequestComponent):
                     action_subsets = _action['subsets']
                     action_can_execute = _action['can_execute']
                     action_category = _action['group']
+                    action_expose = _action['expose']
                     action_style = _action['style'] or 'popup'
                     url = '/{}/{}/'.format(get_metadata(self.qs.model, 'app_label'), view_name)
                     action_style = action_style.replace('popup', '')
                     if self.is_list_view or view_name in self.action_names:
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
+                        add_action = add_action and (True in action_expose or 'web' in action_expose)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
                             self.add_action(action_verbose_name, url, action_style, None, action_category)
 
@@ -505,6 +510,9 @@ class Paginator(RequestComponent):
             tab_list_filter = subset['list_filter']
             tab_search_fields = subset['search_fields']
             tab_active = False
+            tab_expose = subset['expose']
+            if True not in tab_expose and 'web' not in tab_expose:
+                continue
             if permissions.check_group_or_permission(self.request, tab_can_view):
                 func = getattr(self.qs, tab_function.__func__.__name__)
                 params = get_role_values_for_condition(func, self.request.user)

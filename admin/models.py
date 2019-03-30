@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
 import json
 import uuid
+import binascii
 from djangoplus.db import models
 from django.conf import settings
 from djangoplus.mail import send_mail
@@ -167,7 +169,7 @@ class UserQuerySet(models.QuerySet):
     @action('Token', input='LoginForm')
     def get_token(cls, username, password):
         user = User.objects.get(username=username)
-        return encrypt(user.pk)
+        return user.token
 
 
 class UserManager(DjangoUserManager):
@@ -191,20 +193,19 @@ class UserManager(DjangoUserManager):
     def create_superuser(self, username, email, password):
         return self.create_user(username, email, password, True)
 
-    def get_by_token(self, token):
-        return self.get(pk=decrypt(token))
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
-    name = models.CharField(_('Name'), max_length=30, blank=True, search=True)
+    name = models.CharField(_('Name'), max_length=100, blank=True, search=True)
     username = models.CharField(_('Username'), max_length=30, unique=True, search=True)
     email = models.CharField(_('E-mail'), max_length=75, blank=True, default='')
     active = models.BooleanField(verbose_name=_('Active'), default=True, filter=True)
     photo = models.ImageField(upload_to='profiles', null=True, blank=True,
                               default='/static/images/user.png', verbose_name=_('Photo'), exclude=True)
+
+    token = models.CharField(verbose_name='Token', null=True, exclude=True)
 
     permission_mapping = models.JsonField(verbose_name=_('Permissions Mapping'), exclude=True, display=False)
     objects = UserManager()
@@ -229,10 +230,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __init__(self, *args, **kwargs):
         super(User, self).__init__(*args, **kwargs)
 
-    def get_token(self):
-        return encrypt(self.pk)
-
     def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = binascii.hexlify(os.urandom(20)).decode()
         if not self.password:
             if settings.DEBUG or 'test' in sys.argv:
                 password = settings.DEFAULT_PASSWORD

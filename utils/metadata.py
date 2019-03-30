@@ -153,7 +153,7 @@ def get_metadata(model_or_func, attr, default=None, iterable=False):
     
     if hasattr(model_or_func, '_metadata'):
         _metadata = getattr(model_or_func, '_metadata')
-        return _metadata['{}:{}'.format(model_or_func.__name__, attr)]
+        return _metadata.get('{}:{}'.format(model_or_func.__name__, attr))
     else:
         model = model_or_func
     
@@ -323,7 +323,7 @@ def check_role(self, saving=True):
 
 
 def iterable(string_or_iterable):
-    if string_or_iterable and not type(string_or_iterable) in (list, tuple):
+    if string_or_iterable is not None and not type(string_or_iterable) in (list, tuple):
         return string_or_iterable,
     return string_or_iterable
 
@@ -596,9 +596,11 @@ def get_role_value_for_action(func, user, param_name):
     return None
 
 
+# execute method decorated with @meta
 def execute_and_format(request, func):
     verbose_name = get_metadata(func, 'verbose_name')
     formatter = get_metadata(func, 'formatter')
+    icon = get_metadata(func, 'icon')
     params = get_role_values_for_condition(func, request.user)
     f_return = func(*params)
 
@@ -611,7 +613,7 @@ def execute_and_format(request, func):
         if count_parameters_names(func) == 1:
             return func(f_return)
         else:
-            return func(f_return, request=request, verbose_name=verbose_name)
+            return func(f_return, request=request, verbose_name=verbose_name, icon=icon)
     return f_return
 
 

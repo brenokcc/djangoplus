@@ -6,6 +6,7 @@
 <!-- Full Calendar -->
 <link href='/static/css/fullcalendar.min-3.3.1.css' rel='stylesheet'/>
 <div class="panel panel-default">
+    {% if self.title %}
     <div class="panel-heading">
         {% if self.url %}
             <a class="ajax" href="{{ self.url }}">
@@ -17,6 +18,7 @@
             {{ self.title }}
         {% endif %}
     </div>
+    {% endif %}
     <div class="panel-body">
         <div id="{{ self.id }}" class="fc fc-ltr"></div>
     </div>
@@ -26,9 +28,9 @@
 
         var calendar = $('#{{ self.id }}').fullCalendar({
             header : {
-                left : 'prev,next',
-                center : 'title'
-
+                left : '{% if self.title %}prev{% endif %}',
+                center : 'title',
+                right : '{% if self.title %}next{% endif %}'
             },
             defaultDate : '{{ self.initial_date|date:"Y-m-d" }}',
             lang : 'pt',

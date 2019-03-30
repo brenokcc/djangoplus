@@ -93,7 +93,7 @@ def api(request, app_label=None, model_name=None, endpoint_name=None):
         endpoint = documentation.load_model(app_label, model_name, endpoint_name)
     else:
         documentation.load_models()
-    token = request.user.get_token()
+    token = request.user.token
 
     if endpoint:
         form_cls = documentation.form_cls(endpoint, token)

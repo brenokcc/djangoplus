@@ -1,34 +1,19 @@
 {% load i18n %}
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="pt-br" xml:lang="pt-br">
+
+<html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>{{ title }}</title>
     <meta charset="utf-8">
     <meta name="robots" content="NONE,NOARCHIVE">
-    <style type="text/css">
-        @page {
-            {% block page_settings %}
-            margin: 1.0cm;
-            margin-bottom: 2.0cm;
-            size: a4 portrait;
-            @frame footer {
-                -pdf-frame-content: footer;
-                bottom: 0.3cm;
-                left: 0.5cm;
-                height: 1.3cm;
-            }
-            {% endblock %}
-        }
-        * {
-            background: transparent;
-            color: #000;
-            margin: 0;
-            padding: 0;
-        }
+    <meta name="pdfkit-page-size" content="Legal"/>
+    <meta name="pdfkit-orientation" content="Landscape"/>
+    <style>
+
         body {
             font-size: 8pt;
             line-height: 1.4em;
+            font-family: 'Open Sans', sans-serif;
         }
         dd {
             border-bottom: 1px dashed #ccc;
@@ -49,12 +34,14 @@
             font-size: 16pt;
             margin-bottom: 0;
             text-align: center;
+            padding: 5px;
         }
         h2 {
             font-size: 14pt;
             text-align: center;
             text-transform: uppercase;
             vertical-align: bottom;
+            padding: 5px;
         }
         h3 {
             font-size: 13pt;
@@ -181,7 +168,7 @@
 
 {% block footer %}
 <footer class="footer">
-<div id="footer" class="align-center">{% trans "Page" %} <pdf:pagenumber> {% trans "of" %} <pdf:pagecount> </div>
+<div id="footer" class="align-center">{% trans "Page" %} 0 {% trans "of" %} 0 </div>
 </footer>
 {% endblock %}
 

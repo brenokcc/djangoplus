@@ -25,7 +25,8 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'can_list_by_unit', 'can_view_by_unit', 'can_add_by_unit', 'can_edit_by_unit', 'can_admin_by_unit',
     'can_list_by_organization', 'can_view_by_organization', 'can_add_by_organization',
     'can_edit_by_organization', 'can_admin_by_organization',
-    'usecase', 'class_diagram', 'dashboard', 'expose'
+    'usecase', 'class_diagram', 'dashboard',
+    'expose', 'expose_fields'
 ))
 
 
@@ -168,7 +169,7 @@ class QuerySet(query.QuerySet):
                     lookups = []
                     for lookup, value in permission_mapping['list_lookups']:
                         lookups.append(Q(**{'{}__in'.format(lookup): value}))
-                    return queryset.filter(reduce(operator.__or__, lookups))
+                    return queryset.filter(reduce(operator.__or__, lookups)).distinct()
             return queryset
         return self.none()
      

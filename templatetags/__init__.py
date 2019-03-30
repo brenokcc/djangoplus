@@ -9,9 +9,11 @@ import tempfile
 from uuid import uuid4
 from django import template
 from django.conf import settings
+from django.template.loader import render_to_string
+
 from djangoplus.utils import http
 from django.utils.safestring import mark_safe
-from djangoplus.utils.formatter import format_value, normalyze
+from djangoplus.utils import formatter
 from djangoplus.utils.metadata import get_metadata, getattr2
 
 
@@ -56,12 +58,12 @@ def format2(value, request=None):
         cls = value.__class__.__name__.lower()
         if request and request.user.has_perm('{}.{}'.format(app, cls)):
             return link(value)
-    return mark_safe(format_value(value).replace('\n', '<br />'))
+    return mark_safe(formatter.format_value(value).replace('\n', '<br />'))
 
 
 @register.filter
 def print_format(value):
-    return mark_safe(format_value(value).replace('\n', '<br />'))
+    return mark_safe(formatter.format_value(value).replace('\n', '<br />'))
 
 
 @register.filter
@@ -146,7 +148,8 @@ def must_hide_fieldset(tuples):
 
 
 register.filter('getattr', getattr2)
-register.filter('normalyze', normalyze)
+register.filter('normalyze', formatter.normalyze)
+register.filter('decimal1', formatter.format_decimal1)
 
 
 @register.filter
@@ -225,3 +228,8 @@ def captcha(form):
         </div>
         <hr/>
     '''.format(settings.LANGUAGE_CODE, settings.CAPTCHA_KEY)) or ''
+
+
+@register.filter
+def snippet(obj, template_name):
+    return render_to_string('{}.html'.format(template_name), dict(self=obj))

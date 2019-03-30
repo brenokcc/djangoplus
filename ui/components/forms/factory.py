@@ -2,9 +2,18 @@
 from django.apps import apps
 from django.conf import settings
 from djangoplus.ui.components import forms
+from django.contrib.staticfiles import finders
 from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import get_metadata, find_field_by_name, list_related_objects, get_fiendly_name,\
     getattr2, get_parameters_names
+
+
+def get_js(model):
+    model_name = model.__name__.lower()
+    file_path = 'js/{}.js'.format(model_name)
+    if finders.find(file_path):
+        return '/static/js/{}.js'.format(model_name),
+    return ()
 
 
 def get_register_form(request, obj):
@@ -42,6 +51,9 @@ def get_register_form(request, obj):
                 icon = get_metadata(_model, 'icon', None)
                 perm_or_group = '{}.add_{}'.format(app_label, _model.__name__.lower())
 
+            class Media:
+                js = get_js(_model)
+
     form = Form(request, instance=obj, initial=initial)
     form.name = '{}Form'.format(_model.__name__)
     for field_name in choices:
@@ -74,6 +86,9 @@ def get_one_to_many_form(request, obj, related_field_name, **kwargs):
             title = 'Adicionar {}'.format(get_metadata(related_field.remote_field.model, 'verbose_name'))
             icon = get_metadata(related_field.remote_field.model, 'icon', None)
             is_inner = True
+
+        class Media:
+            js = get_js(related_field.remote_field.model)
 
         def save(self, *args, **kwargs):
             super(Form, self).save(*args, **kwargs)
@@ -119,6 +134,9 @@ def get_many_to_one_form(request, obj, related_field_name, related_obj):
                 title = form_title
                 is_inner = True
 
+            class Media:
+                js = get_js(rel.related_model)
+
     initial[related_field_name] = obj.pk
     for key in list(initial.keys()):
         if hasattr(obj, key) and obj.pk and getattr(obj, key):
@@ -153,6 +171,9 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
             icon = get_metadata(related_field.remote_field.model, 'icon', None)
             is_inner = True
 
+        class Media:
+            js = get_js(related_field.remote_field.model)
+
         def save(self, *args, **kwargs):
             super(Form, self).save(*args, **kwargs)
             setattr(obj, related_field_name, self.instance)
@@ -186,6 +207,9 @@ def get_many_to_many_form(request, obj, related_field_name, related_pk):
             icon = get_metadata(related_field_model, 'icon', None)
             # is_inner = True
 
+        class Media:
+            js = get_js(_model)
+
         def save(self, *args, **kwargs):
             for related_object in self.cleaned_data['related_objects']:
                 getattr(self.instance, related_field_name).add(related_object)
@@ -217,6 +241,9 @@ def get_many_to_many_reverse_form(request, obj, related_field_name):
             title = 'Adicionar {}'.format(get_metadata(related_field_model, 'verbose_name'))
             icon = get_metadata(related_field_model, 'icon', None)
             # is_inner = True
+
+        class Media:
+            js = get_js(_model)
 
         def save(self, *args, **kwargs):
             for related_object in self.cleaned_data['related_objects']:

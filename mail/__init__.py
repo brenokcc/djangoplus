@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import sys
 from django.conf import settings
 from django.template import loader
 from django.core.mail import EmailMultiAlternatives
@@ -22,7 +22,7 @@ def send_mail(subject, message, send_to, reply_to=None, actions=()):
     from_email = 'Não-Responder <{}>'.format(settings.SERVER_EMAIL)
     html = loader.render_to_string('mail.html', context)
 
-    if settings.SENDGRID_KEY:
+    if settings.SENDGRID_KEY and 'test' not in sys.argv:
         import sendgrid
         from sendgrid.helpers.mail import Email, Content, Mail
 
@@ -39,5 +39,4 @@ def send_mail(subject, message, send_to, reply_to=None, actions=()):
         body = 'Mensagem em anexo.'
         email = EmailMultiAlternatives(subject, body, from_email, [send_to], reply_to=reply_to)
         email.attach_alternative(html, "text/html")
-
-    return email.send()
+        return email.send()

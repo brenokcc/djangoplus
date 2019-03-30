@@ -3,7 +3,7 @@
 import time
 import datetime
 import traceback
-from djangoplus import test
+import djangoplus
 from selenium import webdriver
 from django.conf import settings
 from django.utils.translation import ugettext as _
@@ -12,7 +12,7 @@ from selenium.common.exceptions import WebDriverException
 
 
 class Browser(webdriver.Firefox):
-    def __init__(self, server_url, options=None, verbose=True, slowly=False, maximize=True):
+    def __init__(self, server_url, options=None, verbose=True, slowly=False, maximize=True, headless=False):
 
         if not options:
             options = Options()
@@ -20,7 +20,7 @@ class Browser(webdriver.Firefox):
             options.add_argument("--start-maximized")
         else:
             options.add_argument("--window-size=720x800")
-        if test.CACHE['HEADLESS']:
+        if headless or djangoplus.test.CACHE['HEADLESS']:
             options.add_argument("--headless")
 
         super(Browser, self).__init__(options=options)
@@ -53,7 +53,7 @@ class Browser(webdriver.Firefox):
             traceback.print_exc()
             self.watched = True
             self.save_screenshot('/tmp/test.png')
-            if not test.CACHE['HEADLESS']:
+            if not djangoplus.test.CACHE['HEADLESS']:
                 input('Type enter to continue...')
 
     def print(self, message):
@@ -105,7 +105,7 @@ class Browser(webdriver.Firefox):
     def choose(self, name, value, count=2):
         self.print('{} "{}" for "{}"'.format('Choosing', value, name))
         try:
-            headless = test.CACHE['HEADLESS'] and 'true' or 'false'
+            headless = djangoplus.test.CACHE['HEADLESS'] and 'true' or 'false'
             self.execute_script("choose('{}', '{}', {})".format(name, value, headless))
             self.wait(2)
         except WebDriverException as e:
@@ -121,7 +121,7 @@ class Browser(webdriver.Firefox):
         elements = self.find_elements_by_class_name('alert-danger')
         if elements:
             messages = [element.text for element in elements]
-            if not test.CACHE['HEADLESS']:
+            if not djangoplus.test.CACHE['HEADLESS']:
                 input('Type enter to continue...')
             elif testcase:
                 exception_message = 'The following messages were found on the page: {}'.format(';'.join(messages))
