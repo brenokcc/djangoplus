@@ -444,7 +444,7 @@ class ImageField(models.ImageField, FieldPlus):
         default = kwargs.pop('default', '/static/images/blank.png')
         if type(default) == bytes:
             default = default.decode()
-        if default.startswith('/static'):
+        if default and default.startswith('/static'):
             image_name = default.split('/')[-1]
             media_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
             if not os.path.exists(media_image_path):
