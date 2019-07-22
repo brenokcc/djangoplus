@@ -246,7 +246,8 @@ class QuerySet(query.QuerySet):
                 if vertical_model == self.model:
                     vertical_choices = [(getattr(o, vertical_key), str(o)) for o in vertical_model.objects.all()]
                 else:
-                    vertical_choices = [(o.pk, str(o)) for o in vertical_model.objects.filter(id__in=self.values_list(vertical_key, flat=True))]
+                    vertical_choices = [(o.pk, str(o)) for o in vertical_model.objects.filter(
+                        id__in=self.values_list(vertical_key, flat=True))]
             if horizontal_key:
                 horizontal_choices = []
                 horizontal_field = get_field(self.model, horizontal_key)
