@@ -2,8 +2,7 @@
 
 import datetime
 from collections import OrderedDict
-from djangoplus.ui import Component
-from djangoplus.ui import RequestComponent
+from djangoplus.ui.components import Component
 from djangoplus.utils import normalyze
 from djangoplus.utils.metadata import get_metadata
 from djangoplus.utils.serialization import dumps_qs_query
@@ -11,7 +10,7 @@ from djangoplus.utils.permissions import has_add_permission
 from djangoplus.utils.dateutils import add_days, DAY_INITIALS
 
 
-class Calendar(RequestComponent):
+class Calendar(Component):
     def __init__(self, request, title, url=None):
         super(Calendar, self).__init__(title, request)
         self.title = title
@@ -34,13 +33,19 @@ class Calendar(RequestComponent):
 
 
 class AnnualCalendar(Component):
-    def __init__(self, title, compact=False):
+
+    formatter_name = 'annual_calendar'
+
+    def __init__(self, data, title=None, compact=False):
         super().__init__()
         self.title = title
         self.compact = compact
         self.calendars = []
         self.items = []
         self.caption = OrderedDict()
+
+        for values in data:
+            self.add(*values)
 
     def add(self, description, start, end=None, color='#FFF', detail=None):
         item = dict(description=description, start=start, end=end, color=color, detail=detail)
@@ -96,6 +101,14 @@ class AnnualCalendar(Component):
             visible = i in (today.month-1, today.month, today.month+1)
             self.calendars.append((normalyze(first_day.strftime('%B')), calendar, details, visible))
         return super().__str__()
+
+
+class AnnualCompactCalendar(AnnualCalendar):
+    template_name = 'annualcalendar.html'
+    formatter_name = 'annual_compact_calendar'
+
+    def __init__(self, items, title=None):
+        super().__init__(items, title=title, compact=True)
 
 
 class ModelCalendar(Calendar):

@@ -1,31 +1,31 @@
-{% if self.as_pdf %}{% else %}
-{% for group in self.actions %}
-    {% with actions=self.actions|get_item:group %}
+{% if component.as_pdf %}{% else %}
+{% for group in component.actions %}
+    {% with actions=component.actions|get_item(group) %}
         {% if actions %}
-            {% if self.mobile or actions|length > 1 %}
+            {% if component.mobile or actions|length > 1 %}
                 <div class="btn-group">
                     <!-- Dropdown Trigger -->
-                    {% if self.mobile %}
-                        <button style="background-color: inherit" class="{% if self.style %}{{ self.style }}{% endif %} btn dropdown-toggle" data-toggle="dropdown"><span class="fa fa-ellipsis-h fa-2x"></span></button>
+                    {% if component.mobile %}
+                        <button style="background-color: inherit" class="{% if component.style %}{{ component.style }}{% endif %} btn dropdown-toggle" data-toggle="dropdown"><span class="fa fa-ellipsis-h fa-2x"></span></button>
                     {% else %}
-                        <button class="{% if self.style %}{{ self.style }}{% endif %} btn btn-default dropdown-toggle" data-toggle="dropdown">{{ group }} <span class="caret"></span></button>
+                        <button class="{% if component.style %}{{ component.style }}{% endif %} btn btn-default dropdown-toggle" data-toggle="dropdown">{{ group }} <span class="caret"></span></button>
                     {% endif %}
                     <!-- Dropdown Structure -->
                     <ul class="dropdown-menu slidedown">
                         {% for item in actions %}
                             <li style="text-align: center">
-                                <a id="{{ url|slugify }}" href="{{ item.url }}" class="{{ item.css }}  {{ item.label|slugify }}">{{ item.label }}</a>
+                                <a id="{{ item.url|slugify }}" href="{{ item.url }}" class="{{ item.css }}  {{ item.label|slugify }}">{{ item.label }}</a>
                             </li>
                         {% endfor %}
                     </ul>
                 </div>
             {% else %}
                 {% with item=actions.0 %}
-                    <a id="{{ url|slugify }}" href="{{ item.url }}" class="btn btn-default {{ item.css }} {{ item.label|slugify }}">{% if item.icon %}<i class="fa {{ item.icon }}"></i>{% endif %} {{ item.label }}</a>
+                    <a id="{{ item.url|slugify }}" href="{{ item.url }}" class="btn btn-default {{ item.css }} {{ item.label|slugify }}">{% if item.icon %}<i class="fa {{ item.icon }}"></i>{% endif %} {{ item.label }}</a>
                 {% endwith %}
             {% endif %}
         {% else %}
-            {% if self.inline and forloop.first %}
+            {% if component.inline and loop.first %}
                 <div class="center"></div>
             {% endif %}
         {% endif %}

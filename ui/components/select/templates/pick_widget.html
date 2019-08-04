@@ -2,12 +2,6 @@
 <div class="filter-container">
 <label>
     <div class="input-group">
-        <input style="height: 34px;" type="text" class="form-control input-sm" placeholder="Palavras-chaves..." aria-controls="dataTable" value="" onkeyup="search_{{ name }}(this.value)">
-        <span class="input-group-btn">
-            <button style="height: 34px;margin-left: -2px;" class="btn btn-default btn-sm" type="button" onclick="">
-                <i class="fa fa-search"></i>
-            </button>
-        </span>
         <script>
             function search_{{ name }}(value){
                 var table = $('#pick-{{ name }}');
@@ -32,8 +26,17 @@
     <thead>
         <tr>
             <th style="text-align: center; width: 15px">{{ widget }}</th>
-			<th>Opções</th>
+			<th>
+                Opções
+            </th>
         </tr>
+        <!--
+        <tr>
+            <th colspan="2">
+                <input style="height: 34px;" type="text" class="form-control input-sm" placeholder="Filtrar por palavras-chaves..." aria-controls="dataTable" value="" onkeyup="search_{{ name }}(this.value)">
+            </th>
+        </tr>
+        -->
     </thead>
     <tbody>
     {% for grouper, objects in grouped_objects %}
@@ -45,7 +48,16 @@
         {% for obj in objects %}
             <tr class="pick-value">
                 <td align="center">{{ obj.widget }}</td>
-                <td align="left">{{ obj|format }} <span style="font-size: 0">{{ grouper }}</span></td>
+                <td align="left">
+                    {% for column_name, lookup in extra_display %}
+                        {% if loop.first %}
+                            {{ obj|getattr(lookup)|format }}
+                        {% else %}
+                            <strong>{{ column_name }}</strong>: {{ obj|getattr(lookup)|format }}<br>
+                        {% endif %}
+                    {% endfor %}
+                    <span style="font-size: 0">{{ grouper }}</span>
+                </td>
             </tr>
         {% endfor %}
     {% endfor %}

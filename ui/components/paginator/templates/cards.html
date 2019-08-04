@@ -1,22 +1,22 @@
 <div class="paginator-cards responsive-container">
-    {% for obj in self.get_queryset %}
+    {% for obj in component.get_queryset() %}
         <div class="l3 m2 s1">
         <div class="cards-row" align="center">
             <div style="border: 1px solid #ddd; border-radius: 0; padding: 10px; margin-bottom: 10px;overflow: hidden; height:280px">
                 <div>
-                     {% for verbose_name, lookup, sortable, to in self.column_names %}
-                        {% if forloop.first %}
+                     {% for verbose_name, lookup, sortable, to in component.column_names %}
+                        {% if loop.first %}
                         <div>
-                            {% paginator_checkboxes self obj False %}
-                            <p class="cards-title">{{ obj|getattr:lookup|format }}</p>
+                            {{ paginator_checkboxes(component, obj, False) }}
+                            <p class="cards-title">{{ obj|getattr(lookup)|format }}</p>
                         </div>
                         {% else %}
-                            <p>{% if forloop.counter > 2 %}<strong>{{ verbose_name }}</strong>:{% endif %} {{ obj|getattr:lookup|format }}</p>
-                            {% if forloop.last %}
+                            <p>{% if loop.index > 2 %}<strong>{{ verbose_name }}</strong>:{% endif %} {{ obj|getattr(lookup)|format }}</p>
+                            {% if loop.last %}
                                 <div class="cards-action paginator-actions">
-                                    {% paginator_icons self obj True %}
-                                    {% add_grouped_actions self obj %}
-                                    {{ self.drop_down }}
+                                    {{ paginator_icons(component, obj, True) }}
+                                    {{ add_grouped_actions(component, obj) }}
+                                    {{ component.drop_down|safe }}
                                 </div>
                             {% endif %}
                         {% endif %}

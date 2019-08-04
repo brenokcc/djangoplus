@@ -1,15 +1,17 @@
-{% if self.as_pdf %}{% else %}
+{% if component.as_pdf %}{% else %}
 <div class="panel panel-default">
-    {% if self.title %}
+    {% if component.title %}
         <div class="panel-heading clearfix">
             <span class="pull-left">
-                {% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}
+                {% if component.icon %}<i class="fa {{ component.icon }}"></i>{% endif %} {{ component.title }}
             </span>
         </div>
     {% endif %}
     <div class="panel-body no-padding">
-        {% for image in self.images %}
-        <img src="{{ image }}" width="100%">
+        {% for src, url in component.images %}
+            {% if url %}<a class="popup" href="{{ url }}">{% endif %}
+            <img src="{{ src }}" width="100%" style="margin-bottom:10px">
+            {% if url %}</a>{% endif %}
         {% endfor %}
     </div>
 </div>

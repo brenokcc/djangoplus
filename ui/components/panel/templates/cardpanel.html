@@ -1,7 +1,7 @@
-{% if self.as_pdf %}{% else %}
-{% if self.items %}
+{% if component.as_pdf %}{% else %}
+{% if component.items %}
     <div class="flex-container p-l-1 cards-container">
-        {% for item in self.items %}
+        {% for item in component.items %}
         <div class="card-panel">
             {% if item.url %}<a class="ajax" href="{{ item.url }}">{% endif %}
             {% if item.icon %}

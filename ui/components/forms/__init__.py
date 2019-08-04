@@ -224,6 +224,8 @@ class Form(django_forms.Form):
 
                     elif name in one_to_one_fields:
                         field = one_to_one_fields[name]
+                        if not hasattr(self.instance, '{}_id'.format(name)):
+                            continue
                         one_to_one_id = getattr(self.instance, '{}_id'.format(name))
                         form = factory.get_one_to_one_form(self.request, self.instance, name, one_to_one_id,
                                                            partial=True, prefix=name)
@@ -317,7 +319,7 @@ class Form(django_forms.Form):
             for field_name in self.fields:
                 self.fields[field_name].widget.attrs['placeholder'] = self.fields[field_name].label
                 self.fields[field_name].widget.attrs['data-placeholder'] = self.fields[field_name].label
-        return loader.render_to_string('form.html', {'self': self}, request=self.request)
+        return loader.render_to_string('form.html', {'component': self}, request=self.request)
 
 
 class ModelForm(Form, django_forms.ModelForm):
@@ -340,6 +342,13 @@ class ModelForm(Form, django_forms.ModelForm):
         if len(self.inner_forms):
             with transaction.atomic():
                 sid = transaction.savepoint()
+
+                # one-to-one field was unchecked
+                for fieldset in self.configured_fieldsets:
+                    for field, form, required, save in fieldset.get('one_to_one', ()):
+                        if not save:
+                            setattr(self.instance, form.prefix, None)
+
                 instance = super(ModelForm, self).save(*args, **kwargs)
                 instance._post_save_form = self
                 try:

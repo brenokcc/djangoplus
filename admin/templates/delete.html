@@ -1,5 +1,5 @@
 {% extends "admin.html" %}
-{% load i18n %}
+
 {% block content %}
 <div class="content">
     <div class="padding-md">
@@ -8,14 +8,14 @@
 
         <div>
             {% if form.related_objects %}
-                    {% trans "Deleting this record will cause the exclusion of the following related items:" %}
+                    {{ _("Deleting this record will cause the exclusion of the following related items:") }}
                 <ul style="margin-left: 40px">
                     {% for related_object in form.related_objects %}
                         <li><strong>{{ related_object.verbose_name }}</strong>: {{ related_object.count }}</li>
                     {% endfor %}
                  </ul>
                  {% else %}
-                    {% trans "Deleting this record will" %} <strong>{% trans "NOT" %}</strong> {% trans "result in the exclusion of any other information in the system." %}.
+                    {{ _("Deleting this record will") }} <strong>{{ _("NOT") }}</strong> {{ _("result in the exclusion of any other information in the system.") }}.
              {% endif %}
 
             {{ form|safe }}

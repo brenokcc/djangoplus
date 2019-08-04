@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from djangoplus import cache
+
 from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import set_metadata, iterable
 
@@ -22,6 +22,7 @@ def meta(verbose_name, help_text=None, formatter=None, dashboard=None, can_view=
 def subset(verbose_name, help_text=None, list_display=(), list_filter=None, search_fields=None, template=None, menu=None,
            dashboard=None, usecase=None, can_view=(), can_alert=(), can_notify=(), expose=True):
     def decorate(func):
+        from djangoplus import next_number
         set_metadata(func, 'type', 'subset')
         set_metadata(func, 'tab', True)
         set_metadata(func, 'verbose_name', verbose_name)
@@ -32,7 +33,7 @@ def subset(verbose_name, help_text=None, list_display=(), list_filter=None, sear
         set_metadata(func, 'usecase', usecase)
         set_metadata(func, 'can_view', iterable(can_view))
         set_metadata(func, 'name', func.__name__)
-        set_metadata(func, 'order', cache.next_number())
+        set_metadata(func, 'order', next_number())
         set_metadata(func, 'dashboard', dashboard)
         set_metadata(func, 'list_display', list_display)
         set_metadata(func, 'list_filter', list_filter)

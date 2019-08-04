@@ -33,7 +33,7 @@ def populate(request):
     for obj in queryset.all():
         title = str(obj)
         start = getattr(obj, start_field)
-        end = end_field and getattr(obj, end_field) or None
+        end = end_field and end_field != 'None' and getattr(obj, end_field) or None
         if end:
             end = end + datetime.timedelta(days=1)
         icons = obj_icons(request, obj, css='popup')

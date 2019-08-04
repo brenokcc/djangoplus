@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-{% if not request.is_ajax and not request.GET.popup %}
+{% if not request.is_ajax() and not request.GET.popup %}
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
@@ -62,7 +62,7 @@
         <!-- Body tag must be placed here in extended pages -->
     {% endblock %}
 
-{% if not request.is_ajax and not request.GET.popup %}
+{% if not request.is_ajax() and not request.GET.popup %}
     <!-- Bootstrap -->
     <script src="/static/js/bootstrap-3.2.0.js"></script>
     <!-- Toast -->

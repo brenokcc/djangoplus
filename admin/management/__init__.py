@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from django.apps import apps
+from djangoplus.cache import CACHE
 from django.contrib.auth.models import Permission, Group, ContentType
 from django.db.models import signals
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth import get_user_model
 from djangoplus.utils.metadata import get_metadata
-from djangoplus.cache import loader
 
 
 def sync_permissions():
-
     default_permissions_names = dict(edit='Editar', add='Cadastrar', delete='Excluir', list='Listar', view='Visualizar')
     get_user_model().objects.update(permission_mapping='{}')
     # Permission.objects.all().delete()
@@ -77,25 +76,31 @@ def sync_permissions():
 
                 if codename in default_permissions_names:
                     if codename == 'list':
-                        permissions.append(Permission.objects.get(codename='view_{}'.format(model)))
-                    permissions.append(Permission.objects.get(codename='{}_{}'.format(codename, model)))
+                        permissions.append(Permission.objects.get(
+                            codename='view_{}'.format(model), content_type__app_label=app_label
+                        ))
+                    permissions.append(Permission.objects.get(
+                        codename='{}_{}'.format(codename, model), content_type__app_label=app_label
+                    ))
                 else:
-                    permissions.append(Permission.objects.get(codename='{}_{}'.format(codename, model)))
+                    permissions.append(Permission.objects.get(
+                        codename='{}_{}'.format(codename, model), content_type__app_label=app_label
+                    ))
 
                 for permission in permissions:
                     for group_name in group_names:
 
                         group_name = hasattr(group_name, '_meta') and group_name._meta.verbose_name or group_name
 
-                        if group_name in loader.abstract_role_model_names:
-                            for concrete_group_name in loader.abstract_role_model_names[group_name]:
+                        if group_name in CACHE['ABSTRACT_ROLE_MODEL_NAMES']:
+                            for concrete_group_name in CACHE['ABSTRACT_ROLE_MODEL_NAMES'][group_name]:
                                 group = Group.objects.get_or_create(name=concrete_group_name.strip())[0]
                                 group.permissions.add(permission)
                         else:
                             group = Group.objects.get_or_create(name=group_name.strip())[0]
                             group.permissions.add(permission)
 
-    for view in loader.views:
+    for view in CACHE['VIEWS']:
         func = view.get('func')
         if func:
             name = view.get('verbose_name')
@@ -111,7 +116,7 @@ def sync_permissions():
                 for group in Group.objects.filter(name__in=can_view):
                     group.permissions.add(permission)
 
-    for actions_dict in (loader.instance_actions, loader.queryset_actions):
+    for actions_dict in (CACHE['INSTANCE_ACTIONS'], CACHE['QUERYSET_ACTIONS']):
         for model in actions_dict:
             app_label = get_metadata(model, 'app_label')
             content_type = ContentType.objects.get(app_label=app_label, model=model.__name__.lower())

@@ -1,11 +1,11 @@
-{% if self.as_pdf %}{% else %}
+{% if component.as_pdf %}{% else %}
 <div class="panel panel-default">
         <div class="panel-heading clearfix">
-            {% if self.icon %}<span><i class="fa {{ self.icon }}"></i></span>{% endif %}
-            <span>{{ self.description }}</span>
+            {% if component.icon %}<span><i class="fa {{ component.icon }}"></i></span>{% endif %}
+            <span>{{ component.description }}</span>
         </div>
     <div class="panel-body" align="center">
-        <p style="font-size: 80px;text-align: center">{{ self.number|format }}</p>
+        <p style="font-size: 80px;text-align: center">{{ component.number|format }}</p>
     </div>
 </div>
 {% endif %}

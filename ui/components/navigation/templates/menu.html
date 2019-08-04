@@ -1,15 +1,15 @@
-{% load i18n %}
-{% if self.as_pdf %}{% else %}
+
+{% if component.as_pdf %}{% else %}
 <aside class="sidebar" role="navigation">
     <div class="sidebar-nav navbar-collapse collapse">
-        {% if self.subitems %}
+        {% if component.subitems %}
         <ul class="nav main-menu" id="side-menu">
             <li class="sidebar-profile">
                 <div>
-                    <img src="{{ self.request.user|photo }}" alt='{% trans "Photo" %} {% trans "of" %} {{ self.request.user.name }}' class="img-circle" width="50" height="50">
+                    <img src="{{ component.request.user|photo }}" alt='{{ _("Photo") }} {{ _("of") }} {{ component.request.user.name }}' class="img-circle" width="50" height="50">
                 </div>
                 <div>
-                    <p>Bem-vindo, <strong>{{ self.request.user.name }}</strong>.</p>
+                    <p>Bem-vindo, <strong>{{ component.request.user.name }}</strong>.</p>
                 </div>
             </li>
             <li class="sidebar-search">
@@ -17,7 +17,7 @@
                     <input type="text" class="form-control" placeholder="Buscar no menu...">
                 </div>
             </li>
-            {% for x1, d1 in self.subitems|sorted_items %}
+            {% for x1, d1 in component.subitems|sorted_items %}
                 {% for url, css in d1.urls %}
                     <li>
                         <a id="{{ url|slugify }}" href="{{ url }}" class="{{ css }}">{% if d1.icon %}<i class="fa {{ d1.icon }} fa-fw"></i>{% endif %} {{ x1 }}</a>

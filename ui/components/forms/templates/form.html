@@ -1,52 +1,52 @@
-{% load i18n %}
-{% if self.as_pdf %}{% else %}
 
-{% if not self.partial %}
-    <form id="{{ self.id }}"
-          class="{% if self.horizontal %}form-horizontal{% endif %} no-margin form-border ajax-form {% if self.request.GET.popup %}popup-form{% endif %}{% if self.inline %}inline-form{% endif %}"
-          method="{{ self.method }}" enctype="multipart/form-data" action="{{ self.request.get_full_path }}" novalidate>
+{% if component.as_pdf %}{% else %}
+
+{% if not component.partial %}
+    <form id="{{ component.id }}"
+          class="{% if component.horizontal %}form-horizontal{% endif %} no-margin form-border ajax-form {% if component.request.GET.popup %}popup-form{% endif %}{% if component.inline %}inline-form{% endif %}"
+          method="{{ component.method }}" enctype="multipart/form-data" action="{{ component.request.get_full_path()}}" novalidate>
     {% csrf_token %}
-    {{ self.str_hidden|safe }}
-    {{ self.media }}
+    {{ component.str_hidden|safe }}
+    {{ component.media|safe }}
 {% endif %}
 
-{% if self.title and not self.inline and not self.partial %}
-    <h2>{% if not self.fields.icon and self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}</h2>
+{% if component.title and not component.inline and not component.partial %}
+    <h2>{% if not component.fields.icon and component.icon %}<i class="fa {{ component.icon }}"></i>{% endif %} {{ component.title }}</h2>
 {% endif %}
 
-{% if self.has_errors %}
-    {% if self.non_field_errors %}
+{% if component.has_errors() %}
+    {% if component.non_field_errors() %}
         <div class="alert alert-danger">
-            {% for non_field_error in self.non_field_errors %}
+            {% for non_field_error in component.non_field_errors() %}
                 {{ non_field_error }}
             {% endfor %}
         </div>
     {% else %}
-        {% if not self.partial %}
+        {% if not component.partial %}
             <div class="alert alert-danger">
-                {% trans "Please correct the errors below" %}.
+                {{ _("Please correct the errors below") }}.
             </div>
         {% endif %}
     {% endif %}
 {% endif %}
 
-{% if self.note %}
+{% if component.note %}
     <div class="alert alert-info">
-        {{ self.note }}
+        {{ component.note }}
     </div>
 {% endif %}
 
-{% for fieldset in self.configured_fieldsets %}
+{% for fieldset in component.configured_fieldsets %}
     {% if not fieldset.tuples|must_hide_fieldset %}
-        {% if not self.inline and not self.partial %}
+        {% if not component.inline and not component.partial %}
             <div class="panel panel-default">
             {% if fieldset.title %}
                 <div class="panel-heading">
-                    {% if fieldset.title or self.title %}
+                    {% if fieldset.title or component.title %}
                         {% if fieldset.icon %}
                             <i class="fa {{ fieldset.icon }}"></i>
                         {% endif %}
-                        {{ fieldset.title|default:"Dados Gerais" }}
+                        {{ fieldset.title|default("Dados Gerais") }}
                     {% endif %}
                 </div>
             {% endif %}
@@ -54,9 +54,9 @@
         {% endif %}
     {% for fields in fieldset.tuples %}
         {% if fields %}
-            <div class="form-group {% if self.inline and self.partial %}inline-form-group {{ self.id }}{% endif %} n{{ fields|length }} {% if self.hidden %}hidden{% endif %}">
+            <div class="form-group {% if component.inline and component.partial %}inline-form-group {{ component.id }}{% endif %} n{{ fields|length }} {% if component.hidden %}hidden{% endif %}">
                 {% for field in fields %}
-                    {% if self.horizontal %}
+                    {% if component.horizontal %}
                         <div>
                             <label class="control-label" id="label-for-{{ field.name }}" for="id-{{ field.name }}">{{ field.label|safe }}</label>
                             <div>
@@ -67,11 +67,11 @@
                             </div>
                         </div>
                     {% else %}
-                        {% if self.partial and self.inline and forloop.first %}
+                        {% if component.partial and component.inline and loop.first %}
                             <div class="inline-checkbox">
                                 <label class="control-label">&nbsp;</label>
                                 <div>
-                                    <input {% if self.instance.pk or self.prefix in self.data %}checked="checked"{% endif %} id="{{ self.prefix }}_id" name="{{ self.prefix }}" type="checkbox" onchange="checkWidgets(this);" data-scope=".form-group" class="one-to-many-checkbox"><span class="custom-checkbox"></span>
+                                    <input {% if component.instance.pk or component.prefix in component.data %}checked="checked"{% endif %} id="{{ component.prefix }}_id" name="{{ component.prefix }}" type="checkbox" onchange="checkWidgets(this);" data-scope=".form-group" class="one-to-many-checkbox"><span class="custom-checkbox"></span>
                                 </div>
                             </div>
                         {% endif %}
@@ -87,13 +87,13 @@
             </div>
         {% endif %}
     {% endfor %}
-        {% if not self.inline and not self.partial %}
+        {% if not component.inline and not component.partial %}
                 </div>
             </div>
         {% endif %}
     {% endif %}
     {% for field, form, required, save in fieldset.one_to_one %}
-        {% if forloop.first %}
+        {% if loop.first %}
             {{ form.media }}
         {% endif %}
         <div class="panel panel-default">
@@ -115,7 +115,7 @@
             <div class="panel-heading">{{ field.label }}</div>
             <div class="panel-body">
                 {% for form in forms %}
-                    {% if forloop.first %}
+                    {% if loop.first %}
                         {{ form.media }}
                     {% endif %}
                     {{ form }}
@@ -186,38 +186,38 @@
     {% endfor %}
 {% endfor %}
 
-{% if not self.partial %}
+{% if not component.partial %}
 
-    {% captcha self %}
+    {{ captcha(component) }}
 
-    {% if self.component %}
-        {{ self.component }}
+    {% if component.component %}
+        {{ component.component|safe }}
     {% endif %}
 
     <div class="seperator"></div>
-    {% if not self.request.GET.popup %}
+    {% if not component.request.GET.popup %}
         <div class="pull-right">
-            {%  if not self.inline and self.cancel_button %}
-            <button class="btn btn-{{ self.cancel_style|default:"default" }} btn-sm" type="reset" name="action"
+            {%  if not component.inline and component.cancel_button %}
+            <button class="btn btn-{{ component.cancel_style|default("default") }} btn-sm" type="reset" name="action"
                     onclick="loadUrl('{{ request.REFERRER }}');">
-                {% trans "Cancel" %}
+                {{ _("Cancel") }}
             </button>
             {% endif %}
-            <button class='btn btn-{{ self.submit_style|default:"default" }}' name="action" type="submit">
-                <i class="fa fa-chevron-right"></i> <span>{{ self.submit_label }}</span>
+            <button class='btn btn-{{ component.submit_style|default("default") }}' name="action" type="submit">
+                <i class="fa fa-chevron-right"></i> <span>{{ component.submit_label }}</span>
             </button>
         </div>
         <div style="clear: both"></div>
     {% endif %}
     </form>
-    {% if not self.inline %}
+    {% if not component.inline %}
     <!-- Used by popup to get the label of submit button -->
-    <input type="hidden" id="form-submit-label" value="{{ self.submit_label }}"/>
-    <input type="hidden" id="form-submit-style" value='btn btn-md btn-{{ self.submit_style|default:"default" }}' />
+    <input type="hidden" id="form-submit-label" value="{{ component.submit_label }}"/>
+    <input type="hidden" id="form-submit-style" value='btn btn-md btn-{{ component.submit_style|default("default") }}' />
     {% endif %}
 
     <script>
-        var func = window['{{ self.name }}'];
+        var func = window['{{ component.name }}'];
         if (func) func();
         function configureInlineAddLink(formId){
             if(formId) {

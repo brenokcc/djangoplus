@@ -2,14 +2,14 @@
 import sys
 import json
 import urllib
+from django.core import signing
 from django.contrib import auth
 from django.conf import settings
 from djangoplus.mail import utils
-from djangoplus.cache import loader
+from djangoplus.cache import CACHE
 from djangoplus.utils.icons import ICONS
 from djangoplus.admin.models import Settings
 from django.http.response import HttpResponse
-from djangoplus.utils.aescipher import decrypt
 from django.utils.translation import ugettext as _
 from djangoplus.decorators.views import view, action
 from djangoplus.ui.components.panel import AppDashboard
@@ -35,7 +35,7 @@ def index(request):
 @view(_('System Access'), login_required=False, template='login/login.html')
 def login(request, scope=None, organization=None, unit=None):
     auth.logout(request)
-    can_register = loader.signup_model is not None
+    can_register = CACHE['SIGNUP_MODEL'] is not None
 
     allow_social_login = 'test' not in sys.argv
     google_auth_key = settings.GOOGLE_AUTH_KEY
@@ -68,11 +68,14 @@ def error(request):
 @view(_('Change Password'), login_required=False, template='login/password.html')
 def password(request, pk, token):
     title = _('Change Password')
-    user = User.objects.get(pk=pk, password=decrypt(token))
-    form = ChangePasswordForm(request, instance=user)
-    if form.is_valid():
-        form.save()
-        return httprr(request, '/admin/', _('Your password has been successfully changed.'))
+    user = User.objects.filter(pk=pk, password=signing.loads(token)).first()
+    if user:
+        form = ChangePasswordForm(request, instance=user)
+        if form.is_valid():
+            form.save()
+            return httprr(request, '/admin/', _('Your password has been successfully changed.'))
+    else:
+        return httprr(request, '/', _('No records found'))
     return locals()
 
 
@@ -92,11 +95,11 @@ def register(request, token=None, userid=None):
     from djangoplus.utils.metadata import get_metadata
 
     initial = {}
-    username_field = get_metadata(loader.signup_model, 'role_username')
-    email_field = get_metadata(loader.signup_model, 'role_email')
-    name_field = get_metadata(loader.signup_model, 'role_name')
+    username_field = get_metadata(CACHE['SIGNUP_MODEL'], 'role_username')
+    email_field = get_metadata(CACHE['SIGNUP_MODEL'], 'role_email')
+    name_field = get_metadata(CACHE['SIGNUP_MODEL'], 'role_name')
 
-    if not loader.signup_model:
+    if not CACHE['SIGNUP_MODEL']:
         return httprr(request, '/admin/login/', _('Sign-up not enabled.'))
 
     if token:
@@ -116,12 +119,12 @@ def register(request, token=None, userid=None):
 
     class RegisterForm(forms.ModelForm):
         class Meta:
-            model = loader.signup_model
-            fields = get_metadata(loader.signup_model, 'form_fields', '__all__')
-            exclude = get_metadata(loader.signup_model, 'exclude_fields', ())
+            model = CACHE['SIGNUP_MODEL']
+            fields = get_metadata(CACHE['SIGNUP_MODEL'], 'form_fields', '__all__')
+            exclude = get_metadata(CACHE['SIGNUP_MODEL'], 'exclude_fields', ())
             submit_label = _('Register')
-            title = '{} {}'.format(_('Register'), get_metadata(loader.signup_model, 'verbose_name'))
-            icon = get_metadata(loader.signup_model, 'icon', None)
+            title = '{} {}'.format(_('Register'), get_metadata(CACHE['SIGNUP_MODEL'], 'verbose_name'))
+            icon = get_metadata(CACHE['SIGNUP_MODEL'], 'icon', None)
             captcha = settings.CAPTCHA_KEY and settings.CAPTCHA_SECRET and 'test' not in sys.argv or False
 
     form = RegisterForm(request, initial=initial)
@@ -132,7 +135,7 @@ def register(request, token=None, userid=None):
         if not initial.get(field_name):
             save_instance = False
     if save_instance:
-        instance = loader.signup_model()
+        instance = CACHE['SIGNUP_MODEL']()
         for field_name in form.fields:
             setattr(instance, field_name, initial[field_name])
         instance.save()

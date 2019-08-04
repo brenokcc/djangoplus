@@ -2,7 +2,7 @@
 
 import json
 from django.conf import settings
-from djangoplus.cache import loader
+from djangoplus.cache import CACHE
 from django.utils import translation
 from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import get_metadata
@@ -17,7 +17,7 @@ class Workflow(object):
         self.actors = []
         self.tasks = []
         tmp = None
-        for task in loader.workflows:
+        for task in CACHE['WORKFLOWS']:
             role = task['role']
             activity = task['activity']
             model = task['model']
@@ -50,12 +50,12 @@ class ClassDiagram(object):
         self.agregations = []
 
         classes = dict()
-        n = len(loader.class_diagrams[class_diagram_name])
+        n = len(CACHE['CLASS_DIAGRAMS'][class_diagram_name])
         associations_count = {}
-        for model in loader.class_diagrams[class_diagram_name]:
+        for model in CACHE['CLASS_DIAGRAMS'][class_diagram_name]:
             associations_count[model] = 0
 
-        for model in loader.class_diagrams[class_diagram_name]:
+        for model in CACHE['CLASS_DIAGRAMS'][class_diagram_name]:
             verbose_name = get_metadata(model, 'verbose_name')
             related_objects = get_metadata(model, 'related_objects')
             classes[model] = dict(name=verbose_name, position='1.1')
@@ -68,9 +68,9 @@ class ClassDiagram(object):
                         associations_count[model] += 1
                         associations_count[related_object.related_model] += 1
                     else:
-                        first_condition = model not in loader.role_models or class_diagram_name == related_verbose_name
+                        first_condition = model not in CACHE['ROLE_MODELS'] or class_diagram_name == related_verbose_name
                         second_condition = class_diagram_name == verbose_name and related_object.related_model not in \
-                            loader.role_models
+                            CACHE['ROLE_MODELS']
                         if first_condition or second_condition:
                             self.agregations.append(
                                 [verbose_name, related_verbose_name, related_object.field.name]

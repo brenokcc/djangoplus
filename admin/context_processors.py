@@ -2,7 +2,7 @@
 import sys
 from djangoplus import test
 from django.conf import settings
-from djangoplus.cache import loader
+from djangoplus.cache import CACHE
 from djangoplus.utils import permissions
 from djangoplus.admin.models import Settings
 from djangoplus.mail.utils import should_display
@@ -20,12 +20,12 @@ def context_processor(request):
     if request.user.is_authenticated:
         menu = Menu(request, app_settings)
 
-        for model in loader.subsets:
+        for model in CACHE['SUBSETS']:
             icon = get_metadata(model, 'icon', 'fa-warning')
             title = get_metadata(model, 'verbose_name_plural')
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
-            for item in loader.subsets[model]:
+            for item in CACHE['SUBSETS'][model]:
                 can_view = item['can_view']
                 alert = item['alert']
                 if alert and permissions.check_group_or_permission(request, can_view):

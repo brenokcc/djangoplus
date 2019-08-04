@@ -2,7 +2,7 @@
 
 from django.conf import settings
 from djangoplus.docs import utils
-from djangoplus.cache import loader
+from djangoplus.cache import CACHE
 from django.http import HttpRequest
 from django.utils import translation
 from djangoplus.admin.models import User
@@ -95,13 +95,13 @@ class UseCase(object):
 
     def _login(self, action):
         verbose_name = action.split(_('as'))[-1].strip()
-        loader.last_authenticated_role = verbose_name
+        CACHE['LAST_AUTHENTICATED_ROLE'] = verbose_name
         model = find_model_by_verbose_name(verbose_name)
         if model:
             role_username = get_metadata(model, 'role_username')
             if role_username:
                 field = get_field(model, role_username)
-                loader.last_authenticated_username = field.example or None
+                CACHE['LAST_AUTHENTICATED_USERNAME'] = field.example or None
         interaction = _('The user access the system as')
         self._interactions.append('{} {}'.format(interaction, verbose_name))
         self._interactions.append(_('The system displays the main page'))
@@ -117,7 +117,7 @@ class UseCase(object):
         menu = get_metadata(model, 'menu')
 
         # list_required_role = [role_name for role_name in (list_shortcut + list_menu) if role_name is not True]
-        # if list_required_role and loader.last_authenticated_role and loader.last_authenticated_role not in list_required_role:
+        # if list_required_role and CACHE['LAST_AUTHENTICATED_ROLE'] and CACHE['LAST_AUTHENTICATED_ROLE'] not in list_required_role:
         #    self._login('{} {} {}'.format(_('Access'), _('as'), list_required_role[0]))
 
         if dashboard and not registering:
@@ -126,7 +126,7 @@ class UseCase(object):
             self._interactions.append('{} "{}"'.format(interaction, panel_title))
             self._test_function_code.append("        self.look_at_panel('{}')".format(panel_title))
             return True
-        elif not loader.last_authenticated_role or True in list_shortcut or loader.last_authenticated_role in list_shortcut:
+        elif not CACHE['LAST_AUTHENTICATED_ROLE'] or True in list_shortcut or CACHE['LAST_AUTHENTICATED_ROLE'] in list_shortcut:
 
             left = _('The user clicks on the shortcut card')
             right = _('in the dashboard at main page')
@@ -167,8 +167,8 @@ class UseCase(object):
             self._test_function_code.append("        self.click_icon('{}')".format('Visualizar'))  # _('Visualize')
         else:
             # the model can be accessed only by a parent model
-            for parent_model in loader.composition_relations:
-                if model in loader.composition_relations[parent_model]:
+            for parent_model in CACHE['COMPOSITION_RELATIONS']:
+                if model in CACHE['COMPOSITION_RELATIONS'][parent_model]:
                     self._view(parent_model, True)
                     panel_title = None
                     if hasattr(parent_model, 'fieldsets'):
@@ -331,8 +331,8 @@ class UseCase(object):
 
         # register the interactions and testing code'
         username_attr = ''
-        if loader.last_authenticated_username:
-            username_attr = ", '{}'".format(loader.last_authenticated_username)
+        if CACHE['LAST_AUTHENTICATED_USERNAME']:
+            username_attr = ", '{}'".format(CACHE['LAST_AUTHENTICATED_USERNAME'])
         func_decorator = '@testcase(\'{}\'{})'.format(self.name, username_attr)
         self._func_signature = '{}(self)'.format(func_name)
 
@@ -398,8 +398,8 @@ class UseCase(object):
             button_label = add_label or 'Adicionar'
             button_label = get_metadata(related_model, 'add_label', button_label)
             username_attr = ''
-            if loader.last_authenticated_username:
-                username_attr = ", '{}'".format(loader.last_authenticated_username)
+            if CACHE['LAST_AUTHENTICATED_USERNAME']:
+                username_attr = ", '{}'".format(CACHE['LAST_AUTHENTICATED_USERNAME'])
             func_decorator = '@testcase(\'{}\'{})'.format(self.name, username_attr)
             self._func_signature = '{}_{}_{}_{}'.format(_('add'), related_model.__name__.lower(), _('in'), model.__name__.lower())
 
@@ -465,15 +465,15 @@ class UseCase(object):
 
                             if scopes:
                                 ignore_field = False
-                                for role_model in loader.role_models:
-                                    if loader.role_models[role_model]['name'] == self.actors[0]:
-                                        if loader.role_models[role_model]['scope'] not in scopes:
+                                for role_model in CACHE['ROLE_MODELS']:
+                                    if CACHE['ROLE_MODELS'][role_model]['name'] == self.actors[0]:
+                                        if CACHE['ROLE_MODELS'][role_model]['scope'] not in scopes:
                                             ignore_field = True
                                             break
                                 if ignore_field:
                                     continue
                             # the field is related to the class associated to the user's role
-                            if get_metadata(form_field.queryset.model, 'verbose_name') == loader.last_authenticated_role:
+                            if get_metadata(form_field.queryset.model, 'verbose_name') == CACHE['LAST_AUTHENTICATED_ROLE']:
                                 continue
 
                         # get the test value in case of model form and if the sample value was defined in the model
@@ -524,8 +524,8 @@ class UseCase(object):
         action_dict = find_action(model, action_name)
         func = action_dict['function']
         username_attr = ''
-        if loader.last_authenticated_username:
-            username_attr = ", '{}'".format(loader.last_authenticated_username)
+        if CACHE['LAST_AUTHENTICATED_USERNAME']:
+            username_attr = ", '{}'".format(CACHE['LAST_AUTHENTICATED_USERNAME'])
         func_decorator = '@testcase(\'{}\'{})'.format(self.name, username_attr)
         self._func_signature = '{}_em_{}(self)'.format(func.__name__.lower(), model.__name__.lower())
 

@@ -1,15 +1,28 @@
-<h4 align="center">Vínculo{% if self.groups|length > 1 %}s{% endif %}</h4>
-{% for group in self.groups %}
+{% with scopes=component.request.user.get_appliable_scopes() %}
+{% if scopes|length > 1 %}
+<h4 align="center">Escopo</h4>
+<select id="scopeSelector" style="width:100%">
+    <option {% if component.request.user.scope_id == None %} selected {% endif %} value=""></option>
+    {% for scope in scopes %}
+    <option {% if component.request.user.scope_id == scope.pk %} selected {% endif %} value="{{ scope.pk }}">{{ scope }}</option>
+    {% endfor %}
+</select>
+{% endif %}
+{% endwith %}
+
+<h4 align="center">Vínculo{% if component.groups|length > 1 %}s{% endif %}</h4>
+
+{% for group in component.groups %}
     <div>
         {% if group.scopes > 1 %}
         <input  id="{{ group }}Checkbox" class="roles" type="checkbox" value="" onclick="configureCheckBoxes(this)"/>
         <span class="custom-checkbox"></span>
         <label style="display: initial">{{ group }}</label><br>
         {% endif %}
-        <div id="{{ group }}Checkboxes" style="{% if self.groups|length > 1 %}padding-left: 10px{% else %}text-align: center{% endif %}">
+        <div id="{{ group }}Checkboxes" style="{% if component.groups|length > 1 %}padding-left: 10px{% else %}text-align: center{% endif %}">
             {% for role in group.roles %}
                 <div style="{% if group.scopes > 1 %}padding-left: 20px{% endif %}">
-                    {% if self.groups|length > 1 %}
+                    {% if component.groups|length > 1 %}
                     <input class="roles" type="checkbox" value="{{ role.pk }}" onchange="configureCheckBox('{{ group }}')" {% if role.active %}checked{% endif %}/>
                     <span class="custom-checkbox"></span>
                     {% endif %}
@@ -25,12 +38,13 @@
         </div>
     </div>
 {% endfor %}
-{% if self.groups|length > 1 %}
+{% if component.groups|length > 1 %}
 <div style="margin: 10px; text-align: center"><button id="reloadScopeButton" class="btn btn-default" onclick="reloadScope()">Aplicar</button></div>
 <script>
     function reloadScope(){
         var data = $('.roles:checked').map(function(){return this.value}).get();
-        $.get(document.location.href, {data: data}, function(){loadUrl('/admin/')});
+        var scope = $('#scopeSelector').val()
+        $.get(document.location.href, {data: data, scope:scope}, function(){loadUrl('/admin/')});
     }
     function configureCheckBox(group){
         $('#'+group+'Checkbox').prop('checked', $('#'+group+'Checkboxes').find('.roles:checked').length>0);
@@ -44,7 +58,10 @@
         if($('.roles:checked').length > 0) $('#reloadScopeButton').removeClass('disabled');
         else $('#reloadScopeButton').addClass('disabled')
     }
-    {% for group in self.groups %}
+    $('#scopeSelector').on('change', function(){
+        reloadScope();
+    });
+    {% for group in component.groups %}
         configureCheckBox('{{ group }}');
     {% endfor %}
 </script>

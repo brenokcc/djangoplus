@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
+import datetime
 import os
 import sys
 import json
 import uuid
 import binascii
+import operator
+from functools import reduce
+from django.db.models import Q
+from django.core import signing
 from djangoplus.db import models
 from django.conf import settings
 from djangoplus.mail import send_mail
-from djangoplus.utils.aescipher import encrypt, decrypt
 from django.utils.translation import ugettext as _
+# from django.utils.translation import gettext_lazy as _
 from djangoplus.decorators import action, meta, subset
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.models import ContentTypeManager
@@ -46,7 +51,7 @@ class Log(models.Model):
     fieldsets = (
         (_('General Data'), {'fields': (
             ('content_type', 'operation'), ('user', 'date'), ('object_id', 'object_description'), 'get_tags')}),
-        (_('Indexes'), {'relations': ('logindex_set',)}),
+        (_('Indexes'), {'relations': ('logindex_set',), 'condition': 'has_index'}),
     )
 
     objects = models.Manager()
@@ -56,6 +61,8 @@ class Log(models.Model):
         verbose_name_plural = _('Logs')
         icon = 'fa-history'
         list_per_page = 25
+        list_display = 'content_type', 'object_id', 'operation', 'user', 'date', 'get_tags'
+        order_by = '-date'
 
     def __str__(self):
         return 'Log #{}'.format(self.pk)
@@ -69,6 +76,9 @@ class Log(models.Model):
     def can_delete(self):
         return False
 
+    def has_index(self):
+        return self.logindex_set.exists()
+
     def get_action_description(self):
         return (_('added'), _('edited'), _('deleted'))[self.operation - 1]
 
@@ -78,9 +88,26 @@ class Log(models.Model):
     def get_icon(self):
         return ('plus', 'pencil', 'trash-o')[self.operation - 1]
 
-    @meta('Tags')
+    @meta('Alterações')
     def get_tags(self):
-        return json.loads(self.content)
+        data = []
+        for attr, old, new in json.loads(self.content):
+            data.append('{} : {} >> {}'.format(attr, old, new))
+
+        for log_index in self.logindex_set.all():
+            date = datetime.datetime(
+                log_index.log.date.year, log_index.log.date.month, log_index.log.date.day,
+                log_index.log.date.hour, log_index.log.date.minute, log_index.log.date.second
+            )
+            qs = Log.objects.filter(
+                content_type=log_index.content_type, user=log_index.log.user, date__startswith=date,
+                object_id=log_index.object_id
+            )
+            for log in qs:
+                for attr, old, new in json.loads(log.content):
+                    data.append('{} : {} >> {}'.format(attr, old, new))
+
+        return ' | '.join(data)
 
     def create_indexes(self, instance):
         for log_index in get_metadata(instance.__class__, 'logging', (), iterable=True):
@@ -98,15 +125,34 @@ class LogIndex(models.Model):
     class Meta:
         verbose_name = _('Index')
         verbose_name_plural = _('Indexes')
+        list_display = 'content_type', 'object_id', 'get_tags'
 
     def __str__(self):
         return 'Index #{}'.format(self.pk)
+
+    @meta('Alterações')
+    def get_tags(self):
+        data = []
+        date = datetime.datetime(self.log.date.year, self.log.date.month, self.log.date.day, self.log.date.hour,
+                                 self.log.date.minute, self.log.date.second)
+        qs = Log.objects.filter(content_type=self.content_type, user=self.log.user, date__startswith=date,
+                                object_id=self.object_id)
+        for log in qs:
+            for attr, old, new in json.loads(log.content):
+                data.append('{} : {} >> {}'.format(attr, old, new))
+        return ' | '.join(data)
 
 
 class Scope(models.AsciiModel):
     class Meta:
         verbose_name = _('Scope')
         verbose_name_plural = _('Scopes')
+
+    def is_organization(self):
+        return Organization.objects.filter(pk=self.pk).exists()
+
+    def is_unit(self):
+        return Unit.objects.filter(pk=self.pk).exists()
 
 
 class Organization(Scope):
@@ -208,6 +254,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     token = models.CharField(verbose_name='Token', null=True, exclude=True)
 
     permission_mapping = models.JsonField(verbose_name=_('Permissions Mapping'), exclude=True, display=False)
+    scope = models.ForeignKey(Scope, verbose_name='Scope', null=True, exclude=True, blank=True)
     objects = UserManager()
 
     fieldsets = (
@@ -262,7 +309,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         project_name = Settings.default().initials
         subject = '{} - "{}"'.format(_('Reset Password'), project_name)
         message = _('Click on the button bellow to (re)define your password.')
-        actions = [(_('Reset Password!'), '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
+        actions = [(_('Reset Password!'), '/admin/password/{}/{}/'.format(self.pk, signing.dumps(self.password)))]
         send_mail(subject, message, self.email, actions=actions)
 
     def send_access_invitation_for_group(self, group):
@@ -276,14 +323,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             '''.format(_('You were registered in the system.'), project_name, _(' as '), group, extra)
             actions = [
                 (_('Access now!'), '/admin/'),
-                (_('Define password!'), '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))
+                (_('Define password!'), '/admin/password/{}/{}/'.format(self.pk, signing.dumps(self.password)))
             ]
         else:
             extra = _('Click on the button bellow to (re)define your password.')
             message = '''{} <b>{}</b>.
                 {}.
             '''.format(_('You were registered in the system'), project_name, extra)
-            actions = [(_('Access now!'), '/admin/password/{}/{}/'.format(self.pk, encrypt(self.password)))]
+            actions = [(_('Access now!'), '/admin/password/{}/{}/'.format(self.pk, signing.dumps(self.password)))]
         send_mail(subject, message, self.email, actions=actions)
 
     def units(self, group_name=None):
@@ -298,16 +345,36 @@ class User(AbstractBaseUser, PermissionsMixin):
     def in_other_group(self, group_name):
         return self.is_superuser or self.role_set.exclude(group__name=group_name).exists()
 
-    def get_permission_mapping(self, model, obj=None):
-        from djangoplus.cache import loader
-        permission_mapping_key = obj and '{}:{}'.format(model.__name__, type(obj).__name__) or model.__name__
-        if not settings.DEBUG and permission_mapping_key in self.permission_mapping:
-            return self.permission_mapping[permission_mapping_key]
+    def get_appliable_scopes(self):
+        scopes = []
+        for scope in Scope.objects.filter(pk__in=self.role_set.values_list('scope', flat=True)):
+            if scope not in scopes:
+                scopes.append(scope)
+                if scope.is_organization():
+                    for unit in scope.organization.get_units():
+                        scopes.append(unit)
+        return scopes
+
+    def apply_current_scope(self, queryset):
+        if self.scope:
+            filters = []
+            organization_lookups, unit_lookups, role_lookups = self.get_lookups(queryset.model)
+            if self.scope.is_organization():
+                lookups = organization_lookups
+            else:
+                lookups = unit_lookups
+            for lookup in lookups:
+                filters.append(Q(**{lookup: self.scope.pk}))
+            if filters:
+                queryset = queryset.filter(reduce(operator.__and__, filters))
+        return queryset
+
+    def get_lookups(self, model):
+        from djangoplus.cache import CACHE
 
         organization_lookups = []
         unit_lookups = []
         role_lookups = dict()
-        lookups = dict(list_lookups=[], edit_lookups=[], delete_lookups=[])
 
         for lookup in get_metadata(model, 'list_lookups', (), iterable=True):
             field = get_field(model, lookup)
@@ -338,20 +405,20 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         for field in get_metadata(model, 'fields') + get_metadata(model, 'many_to_many'):
             if field.remote_field and field.remote_field.model:
-                if field.remote_field.model in loader.role_models:
-                    role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(field.name, loader.role_models[field.remote_field.model]['username_field'])
-                if field.remote_field.model in loader.abstract_role_models:
-                    for to in loader.abstract_role_models[field.remote_field.model]:
+                if field.remote_field.model in CACHE['ROLE_MODELS']:
+                    role_lookups[get_metadata(field.remote_field.model, 'verbose_name')] = '{}__{}'.format(field.name, CACHE['ROLE_MODELS'][field.remote_field.model]['username_field'])
+                if field.remote_field.model in CACHE['ABSTRACT_ROLE_MODELS']:
+                    for to in CACHE['ABSTRACT_ROLE_MODELS'][field.remote_field.model]:
                         role_lookups[get_metadata(to, 'verbose_name')] = '{}__{}__{}'.format(
-                            field.name, to.__name__.lower(), loader.role_models[to])
+                            field.name, to.__name__.lower(), CACHE['ROLE_MODELS'][to])
                 if hasattr(field.remote_field.model, 'unit_ptr_id') and field.name not in unit_lookups:
                     unit_lookups.append(field.name)
                 if hasattr(field.remote_field.model, 'organization_ptr_id') and field.name not in organization_lookups:
                     organization_lookups.append(field.name)
 
         for organization_lookup in organization_lookups:
-            if loader.unit_model:
-                for field in get_metadata(loader.organization_model, 'fields'):
+            if CACHE['UNIT_MODEL']:
+                for field in get_metadata(CACHE['ORGANIZATION_MODEL'], 'fields'):
                     if field.remote_field and hasattr(field.remote_field.model, 'unit_ptr'):
                         if organization_lookup == 'id':
                             unit_lookup = field.name
@@ -362,8 +429,8 @@ class User(AbstractBaseUser, PermissionsMixin):
                         break
 
         for unit_lookup in unit_lookups:
-            if loader.organization_model:
-                for field in get_metadata(loader.unit_model, 'fields'):
+            if CACHE['ORGANIZATION_MODEL']:
+                for field in get_metadata(CACHE['UNIT_MODEL'], 'fields'):
                     if field.remote_field and hasattr(field.remote_field.model, 'organization_ptr'):
                         if unit_lookup == 'id':
                             organization_lookup = field.name
@@ -372,16 +439,28 @@ class User(AbstractBaseUser, PermissionsMixin):
                         if organization_lookup not in organization_lookups and not hasattr(model, 'organization_ptr'):
                             organization_lookups.append(organization_lookup)
 
+        return organization_lookups, unit_lookups, role_lookups
+
+    def get_permission_mapping(self, model, obj=None):
+        from djangoplus.cache import CACHE
+        permission_mapping_key = obj and '{}:{}'.format(model.__name__, type(obj).__name__) or model.__name__
+        if permission_mapping_key in self.permission_mapping:
+            return self.permission_mapping[permission_mapping_key]
+
+        organization_lookups, unit_lookups, role_lookups = self.get_lookups(model)
+        lookups = dict(list_lookups=[], edit_lookups=[], delete_lookups=[])
+
         groups = dict()
         unit_organization_lookup = 'scope__organization'
         unit_organization_field_name = Unit.get_organization_field_name()
-        if loader.unit_model and unit_organization_field_name:
+        if CACHE['UNIT_MODEL'] and unit_organization_field_name:
             unit_organization_lookup = 'scope__unit__{}__{}'.format(
-                loader.unit_model.__name__.lower(), unit_organization_field_name
+                CACHE['UNIT_MODEL'].__name__.lower(), unit_organization_field_name
             )
         scope_queryset = self.role_set.filter(
             active=True).values_list('group__name', 'scope__organization', 'scope__unit', unit_organization_lookup)
         for group_name, organization_id, unit_id, unit_organization_id in scope_queryset:
+
             if group_name not in groups:
                 groups[group_name] = dict(username_lookups=[], organization_ids=[], unit_ids=[])
             if group_name in role_lookups:
@@ -393,7 +472,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                 if unit_organization_id:
                     groups[group_name]['organization_ids'].append(unit_organization_id)
 
-        if model in loader.permissions_by_scope:
+        if model in CACHE['PERMISSIONS_BY_SCOPE']:
             can_view_globally = can_edit_globally = can_delete_globally = False
             for group_name in groups:
 
@@ -405,17 +484,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
                 if obj:
 
-                    if type(obj) in loader.permissions_by_scope:
-                        can_view = group_name in loader.permissions_by_scope[type(obj)].get('add', [])
-                        can_view_by_unit = group_name in loader.permissions_by_scope[type(obj)].get('add_by_unit', [])
-                        can_view_by_organization = group_name in loader.permissions_by_scope[type(obj)].get(
+                    if type(obj) in CACHE['PERMISSIONS_BY_SCOPE']:
+                        can_view = group_name in CACHE['PERMISSIONS_BY_SCOPE'][type(obj)].get('add', [])
+                        can_view_by_unit = group_name in CACHE['PERMISSIONS_BY_SCOPE'][type(obj)].get('add_by_unit', [])
+                        can_view_by_organization = group_name in CACHE['PERMISSIONS_BY_SCOPE'][type(obj)].get(
                             'add_by_organization', [])
 
                 if (can_view or can_view_by_role or can_view_by_unit or can_view_by_organization) is False:
-                    can_view = group_name in loader.permissions_by_scope[model].get('view', [])
-                    can_view_by_role = group_name in loader.permissions_by_scope[model].get('view_by_role', [])
-                    can_view_by_unit = group_name in loader.permissions_by_scope[model].get('view_by_unit', [])
-                    can_view_by_organization = group_name in loader.permissions_by_scope[model].get(
+                    can_view = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('view', [])
+                    can_view_by_role = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('view_by_role', [])
+                    can_view_by_unit = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('view_by_unit', [])
+                    can_view_by_organization = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get(
                         'view_by_organization', [])
 
                 if can_view:
@@ -433,10 +512,10 @@ class User(AbstractBaseUser, PermissionsMixin):
                             for organization_lookup in organization_lookups:
                                 lookups['list_lookups'].append(('{}'.format(organization_lookup), organization_ids))
 
-                can_edit = group_name in loader.permissions_by_scope[model].get('edit', [])
-                can_edit_by_role = group_name in loader.permissions_by_scope[model].get('edit_by_role', [])
-                can_edit_by_unit = group_name in loader.permissions_by_scope[model].get('edit_by_unit', [])
-                can_edit_by_organization = group_name in loader.permissions_by_scope[model].get(
+                can_edit = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('edit', [])
+                can_edit_by_role = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('edit_by_role', [])
+                can_edit_by_unit = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('edit_by_unit', [])
+                can_edit_by_organization = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get(
                     'edit_by_organization', [])
 
                 if can_edit:
@@ -452,10 +531,10 @@ class User(AbstractBaseUser, PermissionsMixin):
                         for organization_lookup in organization_lookups:
                             lookups['edit_lookups'].append((organization_lookup, organization_ids))
 
-                can_delete = group_name in loader.permissions_by_scope[model].get('delete', [])
-                can_delete_by_role = group_name in loader.permissions_by_scope[model].get('delete_by_role', [])
-                can_delete_by_unit = group_name in loader.permissions_by_scope[model].get('delete_by_unit', [])
-                can_delete_by_organization = group_name in loader.permissions_by_scope[model].get(
+                can_delete = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('delete', [])
+                can_delete_by_role = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('delete_by_role', [])
+                can_delete_by_unit = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('delete_by_unit', [])
+                can_delete_by_organization = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get(
                     'delete_by_organization', [])
 
                 if can_delete:
@@ -471,18 +550,18 @@ class User(AbstractBaseUser, PermissionsMixin):
                         for organization_lookup in organization_lookups:
                             lookups['delete_lookups'].append((organization_lookup, organization_ids))
 
-                for actions_dict in (loader.instance_actions, loader.queryset_actions):
+                for actions_dict in (CACHE['INSTANCE_ACTIONS'], CACHE['QUERYSET_ACTIONS']):
                     for category in actions_dict.get(model, ()):
                         for key in list(actions_dict[model][category].keys()):
                             execute_lookups = []
                             view_name = actions_dict[model][category][key]['view_name']
-                            can_execute = group_name in loader.permissions_by_scope[model].get('{}'.format(
+                            can_execute = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get('{}'.format(
                                 view_name), [])
-                            can_execute_by_role = group_name in loader.permissions_by_scope[model].get(
+                            can_execute_by_role = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get(
                                 '{}_by_role'.format(view_name), [])
-                            can_execute_by_unit = group_name in loader.permissions_by_scope[model].get(
+                            can_execute_by_unit = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get(
                                 '{}_by_unit'.format(view_name), [])
-                            can_execute_by_organization = group_name in loader.permissions_by_scope[model].get(
+                            can_execute_by_organization = group_name in CACHE['PERMISSIONS_BY_SCOPE'][model].get(
                                 '{}_by_organization'.format(view_name), [])
                             if can_execute:
                                 execute_lookups = None
@@ -509,14 +588,14 @@ class User(AbstractBaseUser, PermissionsMixin):
                 lookups['delete_lookups'] = []
 
         for codename in ('view', 'list'):
-            if model in loader.permissions_by_scope:
-                if loader.permissions_by_scope[model].get('{}_by_unit'.format(codename)) and not unit_lookups:
+            if model in CACHE['PERMISSIONS_BY_SCOPE']:
+                if CACHE['PERMISSIONS_BY_SCOPE'][model].get('{}_by_unit'.format(codename)) and not unit_lookups:
                     raise Exception('A "lookup" meta-attribute must point to a Unit model in {}'.format(model))
-                if loader.permissions_by_scope[model].get('{}_by_organization'.format(codename)) and (
+                if CACHE['PERMISSIONS_BY_SCOPE'][model].get('{}_by_organization'.format(codename)) and (
                         not organization_lookups and not unit_lookups):
                     raise Exception('A "lookup" meta-attribute must point to a Unit or Organization model in {}'.format(
                         model))
-                if loader.permissions_by_scope[model].get('{}_by_role'.format(codename)) and not role_lookups:
+                if CACHE['PERMISSIONS_BY_SCOPE'][model].get('{}_by_role'.format(codename)) and not role_lookups:
                     raise Exception('A "lookup" meta-attribute must point to a role model in {}'.format(model))
 
         self.permission_mapping[permission_mapping_key] = lookups
@@ -676,10 +755,10 @@ class Settings(models.Model):
 
     @staticmethod
     def default():
-        from djangoplus.cache import loader
-        if not loader.settings_instance:
-            loader.settings_instance = Settings.objects.first()
-        if not loader.settings_instance:
+        from djangoplus.cache import CACHE
+        if not CACHE['SETTINGS_INSTANCE']:
+            CACHE['SETTINGS_INSTANCE'] = Settings.objects.first()
+        if not CACHE['SETTINGS_INSTANCE']:
             s = Settings()
             s.initials = _('System')
             s.name = _('Online, responsive e multiplatform system')
@@ -696,10 +775,10 @@ class Settings(models.Model):
             s.email = ''
             s.version = '1.0'
             s.save()
-            loader.settings_instance = s
-        return loader.settings_instance
+            CACHE['SETTINGS_INSTANCE'] = s
+        return CACHE['SETTINGS_INSTANCE']
 
     def save(self, *args, **kwargs):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         super(Settings, self).save(*args, **kwargs)
-        loader.settings_instance = self
+        CACHE['SETTINGS_INSTANCE'] = self

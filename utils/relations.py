@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
 
 from django.utils.text import slugify
 from djangoplus.utils import permissions
@@ -18,7 +19,7 @@ class Relation(object):
         self.relation_value = None
         self.relation_type = None
         self.hidden_field_name = None
-        self.subsets = {}
+        self.subsets = OrderedDict()
 
         app_label = get_metadata(self.model, 'app_label')
         model_name = self.model.__name__.lower()
@@ -256,7 +257,7 @@ class Relation(object):
                 list_subsets = list(self.subsets.keys())
                 component = Paginator(
                     request, self.relation_value.all(request.user), title, relation=self,
-                    list_subsets=list_subsets, readonly=not has_add_permission, uid=slugify(self.relation_name)
+                    list_subsets=list_subsets, readonly=False, uid=slugify(self.relation_name)
                 )
                 action_names = self.subsets.get(component.current_tab or 'all', [])
                 component.load_actions(action_names)

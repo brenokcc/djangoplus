@@ -1,4 +1,4 @@
-{% load i18n %}
+
 
 <html>
 <head>
@@ -161,15 +161,13 @@
 <section>
     <h1 align="center">{{ title }}</h1>
     {% for obj in objects %}
-        {{ obj }}
+        {{ obj|safe }}
     {% endfor %}
 </section>
 {% endblock %}
 
 {% block footer %}
-<footer class="footer">
-<div id="footer" class="align-center">{% trans "Page" %} 0 {% trans "of" %} 0 </div>
-</footer>
+
 {% endblock %}
 
 </body>

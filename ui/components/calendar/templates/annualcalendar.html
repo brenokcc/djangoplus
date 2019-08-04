@@ -1,16 +1,16 @@
-{% if self.as_pdf %}{% else %}
+{% if component.as_pdf %}{% else %}
     <div class="panel panel-default">
         <div class="panel-heading clearfix">
         <span class="pull-left">
-            <i class="fa fa-calendar"></i> {{ self.title }}
+            <i class="fa fa-calendar"></i> {{ component.title }}
         </span>
         </div>
 
         <div class="panel-body no-padding">
-            {% if self.caption.items %}
+            {% if component.caption.items %}
             <div>
                 <h5>Legenda</h5>
-                {% for color, description in self.caption.items %}
+                {% for color, description in component.caption.items() %}
                     <div style="display: inline-block;margin-bottom:5px">
                         <div class="colorPickSelector"
                              style="background-color:{{ color }};float:left;width:20px;height: 20px; margin-right:5px"></div>
@@ -20,12 +20,12 @@
             </div>
             {% endif %}
             <div class="responsive-container">
-                {% for month, calendar, details, visible in self.calendars %}
-                    <div class="s1 m3 l3 {% if self.compact and not visible %}invisible-month{% endif %}" style="padding:5px;{% if self.compact and not visible %}display:none{% endif %}">
+                {% for month, calendar, details, visible in component.calendars %}
+                    <div class="s1 m3 l3 {% if component.compact and not visible %}invisible-month{% endif %}" style="padding:5px;{% if component.compact and not visible %}display:none{% endif %}">
                         <table width="100%" class="border-table">
                             <caption style="font-size:150%">{{ month }}</caption>
                             {% for line in calendar %}
-                                {% if forloop.first %}
+                                {% if loop.first %}
                                     <tr>
                                         {% for item in line %}
                                             <th style="background-color:#DDD;height:30px;border:solid 1px #CCC;text-align: center">{{ item }}</th>
@@ -45,12 +45,12 @@
                             {% endfor %}
                         </table>
                         <div style="height: 45px">
-                            {% for description, days in details.items %}
+                            {% for description, days in details.items() %}
                                 <div>
                                     {{ description }}:
                                     {% for day in days %}
-                                        {% if forloop.first or forloop.last %}
-                                            {% if forloop.last and not forloop.first %} - {% endif %}
+                                        {% if loop.first or loop.last %}
+                                            {% if loop.last and not loop.first %} - {% endif %}
                                             {{ day }}
                                         {% endif %}
                                     {% endfor %}
@@ -60,7 +60,7 @@
                     </div>
                 {% endfor %}
             </div>
-            {% if self.compact  %}
+            {% if component.compact  %}
             <div style="clear: both;padding-top: 20px">
                 <a href="javascript:" onclick="$('.invisible-month').toggle();">Expandir/Retrair</a>
             </div>

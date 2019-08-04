@@ -2,13 +2,13 @@
 
 {% block content %}
 
-    {{ widget_panel }}
+    {% if widget_panel %}{{ widget_panel|safe }}{% endif %}
 
     {% if form or panel or paginator %}
     <div class="padding-md">
-        {{ form }}
-        {{ panel }}
-        {{ paginator }}
+        {% if form %}{{ form|safe }}{% endif %}
+        {% if panel %}{{ panel|safe }}{% endif %}
+        {% if paginator %}{{ paginator|safe }}{% endif %}
     </div>
     {% endif %}
 

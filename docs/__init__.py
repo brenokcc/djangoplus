@@ -14,7 +14,7 @@ from djangoplus.ui.components import forms
 class Documentation(object):
 
     def __init__(self):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         from djangoplus.docs.usecase import Actor, UseCase
         from djangoplus.docs.diagrams import Workflow, ClassDiagram
 
@@ -32,12 +32,12 @@ class Documentation(object):
                 self.description = app_config.module.__doc__ and app_config.module.__doc__.strip() or None
 
         # load actors
-        self.organization_model = loader.organization_model
-        self.unit_model = loader.unit_model
+        self.organization_model = CACHE['ORGANIZATION_MODEL']
+        self.unit_model = CACHE['UNIT_MODEL']
 
-        for model in loader.role_models:
-            name = loader.role_models[model]['name']
-            scope = loader.role_models[model]['scope']
+        for model in CACHE['ROLE_MODELS']:
+            name = CACHE['ROLE_MODELS'][model]['name']
+            scope = CACHE['ROLE_MODELS'][model]['scope']
             description = utils.extract_documentation(model)
             self.actors.append(Actor(name=name, scope=scope, description=description))
 
@@ -49,7 +49,7 @@ class Documentation(object):
                 self.usecases.append(usecase)
 
         # load class diagrams
-        for class_diagram_name, models in list(loader.class_diagrams.items()):
+        for class_diagram_name, models in list(CACHE['CLASS_DIAGRAMS'].items()):
             class_diagram = ClassDiagram(class_diagram_name, models)
             self.class_diagrams.append(class_diagram)
 
@@ -72,8 +72,8 @@ class ApiDocumentation(object):
         self.model = None
 
     def load_models(self):
-        from djangoplus.cache import loader
-        for model in loader.api_models:
+        from djangoplus.cache import CACHE
+        for model in CACHE['API_MODELS']:
             app_label = get_metadata(model, 'app_label')
             verbose_name_plural = get_metadata(model, 'verbose_name_plural')
             model_name = model.__name__.lower()
@@ -81,7 +81,7 @@ class ApiDocumentation(object):
             self.index.append((verbose_name_plural, url))
 
     def load_model(self, app_label, model_name, endpoint_name):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         model = apps.get_model(app_label, model_name)
         self.model = model
         self.title = get_metadata(model, 'verbose_name')
@@ -109,7 +109,7 @@ class ApiDocumentation(object):
         ]
         self.add_endpoint(name, url, 'get', doc_url, query_params, [])
 
-        for subset in loader.subsets[model]:
+        for subset in CACHE['SUBSETS'][model]:
             name = subset['name']
             url = '/api/{}/{}/{}/'.format(app_label, model_name, name)
             doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
@@ -118,7 +118,7 @@ class ApiDocumentation(object):
             ]
             self.add_endpoint(name, url, 'get', doc_url, query_params, [])
 
-        for method in loader.manager_methods.get(model, []):
+        for method in CACHE['MANAGER_METHODS'].get(model, []):
             name = method['function']
             url = '/api/{}/{}/{}/'.format(app_label, model_name, name)
             doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
@@ -132,15 +132,15 @@ class ApiDocumentation(object):
         ]
         self.add_endpoint(name, url, 'get', doc_url, query_params, [])
 
-        for method in loader.instance_methods.get(model, []):
+        for method in CACHE['INSTANCE_METHODS'].get(model, []):
             name = method['function']
             url = '/api/{}/{}/{{}}/{}/'.format(app_label, model_name, name)
             doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, name)
             self.add_endpoint(name, url, 'get', doc_url, [], [])
 
-        for group in loader.instance_actions[model]:
-            for func_name in loader.instance_actions[model][group]:
-                action = loader.instance_actions[model][group][func_name]
+        for group in CACHE['INSTANCE_ACTIONS'][model]:
+            for func_name in CACHE['INSTANCE_ACTIONS'][model][group]:
+                action = CACHE['INSTANCE_ACTIONS'][model][group][func_name]
                 if action['source'] == 'model':
                     url = '/api/{}/{}/{{}}/{}/'.format(app_label, model_name, func_name)
                     doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
@@ -148,9 +148,9 @@ class ApiDocumentation(object):
                     input_params = get_parameters_details(model, func, action['input'])
                     self.add_endpoint(func_name, url, 'post', doc_url, [], input_params)
 
-        for group in loader.queryset_actions[model]:
-            for func_name in loader.queryset_actions[model][group]:
-                action = loader.queryset_actions[model][group][func_name]
+        for group in CACHE['QUERYSET_ACTIONS'][model]:
+            for func_name in CACHE['QUERYSET_ACTIONS'][model][group]:
+                action = CACHE['QUERYSET_ACTIONS'][model][group][func_name]
                 if action['source'] == 'model':
                     url = '/api/{}/{}/{}/'.format(app_label, model_name, func_name)
                     doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)
@@ -162,9 +162,9 @@ class ApiDocumentation(object):
                     input_params = get_parameters_details(model, func, action['input'])
                     self.add_endpoint(func_name, url, 'post', doc_url, query_params, input_params)
 
-        for group in loader.class_actions[model]:
-            for func_name in loader.class_actions[model][group]:
-                action = loader.class_actions[model][group][func_name]
+        for group in CACHE['CLASS_ACTIONS'][model]:
+            for func_name in CACHE['CLASS_ACTIONS'][model][group]:
+                action = CACHE['CLASS_ACTIONS'][model][group][func_name]
                 if action['source'] == 'model':
                     url = '/api/{}/{}/{}/'.format(app_label, model_name, func_name)
                     doc_url = '/docs/api/{}/{}/{}/'.format(app_label, model_name, func_name)

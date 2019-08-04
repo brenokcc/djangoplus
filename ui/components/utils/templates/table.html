@@ -1,22 +1,22 @@
-{% load i18n %}
-{% if self.as_pdf %}
-    <h3>{{ self.title }}</h3>
+
+{% if component.as_pdf %}
+    <h3>{{ component.title }}</h3>
     <table class="table" repeat="1">
         <thead>
             <tr>
-                {% if self.enumerable %}
+                {% if component.enumerable %}
                     <th width="30px">#</th>
                 {% endif %}
-                {% for value in self.header %}
+                {% for value in component.header %}
                     <th style="vertical-align: middle">{{ value }}</th>
                 {% endfor %}
             </tr>
         </thead>
         <tbody>
-            {% for row in self.rows %}
+            {% for row in component.rows %}
                 <tr>
-                    {% if self.enumerable %}
-                        <td align="center">{{ forloop.counter }}</td>
+                    {% if component.enumerable %}
+                        <td align="center">{{ loop.index }}</td>
                     {% endif %}
                     {% for value in row %}
                         <td align="{{ value|align }}">{{ value|print_format }}</td>
@@ -24,10 +24,10 @@
                 </tr>
             {% endfor %}
         </tbody>
-        {% if self.footer %}
+        {% if component.footer %}
         <tfoot>
             <tr>
-                {% for value in self.footer %}
+                {% for value in component.footer %}
                     <th align="{{ value|align }}">{{ value }}</th>
                 {% endfor %}
             </tr>
@@ -38,32 +38,32 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <i class="fa fa-table fa-fw"></i>
-            {{ self.title }}
+            {{ component.title }}
         </div>
 
-        {% if self.note %}
+        {% if component.note %}
             <div style="padding: 15px">
                 <div class="alert alert-info">
-                    {{ self.note }}
+                    {{ component.note }}
                 </div>
             </div>
         {% endif %}
 
         <div class="panel-body">
-            {% if self.rows %}
-            <div class="table-responsive">
+            {% if component.rows %}
+            <div class="table-responsive2">
                 <table class="table table-bordered">
-                    {% if self.header %}
+                    {% if component.header %}
                     <thead>
                         <tr>
-                        {% for value in self.header %}
+                        {% for value in component.header %}
                             <th style="text-align:center;vertical-align: middle">{{ value }}</th>
                         {% endfor %}
                         </tr>
                     </thead>
                     {% endif %}
                     <tbody>
-                        {% for row in self.rows %}
+                        {% for row in component.rows %}
                             <tr>
                                 {% for value in row %}
                                     <td style="text-align:{{ value|align }}">{{ value|format }}</td>
@@ -71,10 +71,10 @@
                             </tr>
                         {% endfor %}
                     </tbody>
-                    {% if self.footer %}
+                    {% if component.footer %}
                     <tfoot>
                         <tr>
-                            {% for value in self.footer %}
+                            {% for value in component.footer %}
                                 <th style="text-align:{{ value|align }}">{{ value }}</th>
                             {% endfor %}
                         </tr>
@@ -83,7 +83,7 @@
                 </table>
             </div>
             {% else %}
-                <div class="alert alert-warning">{% trans "No records found" %}.</div>
+                <div class="alert alert-warning">{{ _("No records found") }}.</div>
             {% endif %}
         </div>
     </div>

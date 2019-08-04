@@ -1,15 +1,15 @@
-{% if self.as_pdf %}{% else %}
+{% if component.as_pdf %}{% else %}
 <div class="panel panel-default">
-    {% if self.title %}
+    {% if component.title %}
         <div class="panel-heading clearfix">
             <span class="pull-left">
-                {% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}
+                {% if component.icon %}<i class="fa {{ component.icon }}"></i>{% endif %} {{ component.title }}
             </span>
         </div>
     {% endif %}
     <div class="panel-body no-padding">
         <div class="padding-md">
-            {{ self.text|safe }}
+            {{ component.text|safe }}
         </div>
     </div>
 </div>

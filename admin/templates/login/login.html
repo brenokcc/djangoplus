@@ -1,9 +1,8 @@
 {% extends "login/base.html" %}
-{% load i18n %}
 
 {% block form %}
 
-    <form id="login-form" method="POST" action="{{ request.get_full_path  }}" class="ajax-form" novalidate>
+    <form id="login-form" method="POST" action="{{ request.get_full_path()  }}" class="ajax-form" novalidate>
         {% csrf_token %}
 
         {% if can_register %}
@@ -27,12 +26,12 @@
         {% endif %}
 
         <div class="form-group">
-            <label>{% trans "Username" %}</label>
+            <label>{{ _("Username") }}</label>
             {{ form.username }}
             {{ form.username.errors }}
         </div>
         <div class="form-group">
-            <label>{% trans "Password" %}</label>
+            <label>{{ _("Password") }}</label>
             <input type="password" id="id_password" name="password" placeholder="Senha" class="form-control input-sm bounceIn animation-delay4">
             {{ form.username.errors }}
         </div>
@@ -41,21 +40,21 @@
                 <input type="checkbox" class="regular-checkbox chk-delete" />
                 <span class="custom-checkbox info bounceIn animation-delay4"></span>
             </label>
-            {% trans "Remember" %}
+            {{ _("Remember") }}
         </div>
 
         <div class="seperator"></div>
 
-        {% captcha form %}
+        {{ captcha(form) }}
 
-        <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-sign-in"></i> {% trans "Sign-in" %}</button>
+        <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-sign-in"></i> {{ _("Sign-in") }}</button>
         {% if can_register %}
-        <a href="/admin/register/" class="bounceIn animation-delay5 pull-left popup" type="submit" style="margin-right: 10px"> {% trans "Sign-up" %}</a>
+        <a href="/admin/register/" class="bounceIn animation-delay5 pull-left popup" type="submit" style="margin-right: 10px"> {{ _("Sign-up") }}</a>
         {% endif %}
     </form>
 
     <div class="form-group">
-        <a href="/admin/reset/">{% trans "Reset Password" %}</a>
+        <a href="/admin/reset/">{{ _("Reset Password") }}</a>
     </div>
 
 {% endblock %}

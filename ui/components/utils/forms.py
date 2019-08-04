@@ -1,24 +1,17 @@
 # -*- coding: utf-8 -*-
 from djangoplus.ui.components import forms
-from djangoplus.ui.components.utils import ScheduleTable
+from djangoplus.ui.components.utils import MultiScheduleTable, ScheduleTable
 
 
 class ScheduleTableForm(forms.Form):
     values = forms.CharField(label='Values', widget=forms.widgets.HiddenInput())
 
     def __init__(self, *args, **kwargs):
-        intervals = kwargs.get('initial', {}).pop('intervals', [])
-        values = kwargs.get('initial', {}).pop('values', [])
+        schedule = kwargs.get('initial', {}).pop('schedule', [])
         kwargs['initial']['values'] = ''
-
         super().__init__(*args, **kwargs)
-        self.component = ScheduleTable(self.request, 'Horários')
-        self.component.form_prefix = self.prefix and '{}-'.format(self.prefix) or ''
-
-        for interval in intervals:
-            self.component.add_interval(interval)
-        for week_day, interval in values:
-            self.component.add(week_day, interval)
+        form_prefix = self.prefix and '{}-'.format(self.prefix) or None
+        self.component = MultiScheduleTable(schedule, self.request, title='Horários', form_prefix=form_prefix)
 
     def clean_values(self):
         values = self.cleaned_data['values']

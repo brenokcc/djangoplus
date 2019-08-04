@@ -156,7 +156,8 @@ def get_one_to_one_form(request, obj, related_field_name, related_pk, **kwargs):
     _model = type(obj)
 
     related_field = find_field_by_name(_model, related_field_name)
-    related_object = related_pk and related_field.remote_field.model.objects.get(pk=related_pk)
+    related_object = related_pk and related_field.remote_field.model.objects.get(pk=related_pk) or related_field.remote_field.model()
+    related_object._user = request.user
 
     initial = hasattr(related_field.remote_field.model, 'initial') and related_field.remote_field.model.initial() or {}
     choices = hasattr(related_field.remote_field.model, 'choices') and related_field.remote_field.model.choices() or {}

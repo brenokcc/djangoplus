@@ -4,7 +4,7 @@ import datetime
 import calendar
 
 
-DAY_NAMES = [calendar.day_name[i].capitalize() for i in range(0, 7)]
+DAY_NAMES = [calendar.day_name[i].capitalize().split()[0] for i in range(0, 7)]
 DAY_INITIALS = [calendar.day_name[i][0:3].capitalize() for i in range(0, 7)]
 MONTH_NAMES = [calendar.month_name[i].capitalize() for i in range(1, 13)]
 MONTH_INITIALS = [calendar.month_name[i][0:3].capitalize() for i in range(1, 13)]

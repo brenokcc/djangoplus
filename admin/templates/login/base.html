@@ -1,5 +1,5 @@
 {% extends "admin.html" %}
-{% load i18n %}
+
 {% block extra_admin_head %}
     <script src="/static/js/jquery.mask.min-1.7.7.js"></script>
 {% endblock %}
@@ -11,7 +11,7 @@
                     {% if settings.logo %}
                         <img height="70px" id="login-icon" src="/media/{{ settings.logo }}" alt="Logotipo de {{ settings.initials }}" />
                     {% endif %}
-                    <p class="text-shadow-white"><a href="/">{{ settings.initials|truncatechars:23 }}</a></p>
+                    <p class="text-shadow-white"><a href="/">{{ settings.initials|truncatechars(23) }}</a></p>
 
                 </h2>
                 {% if form.scope_display %}
@@ -27,9 +27,9 @@
                     </div>
                     <div class="panel-body">
 
-                        {% if form.non_field_errors %}
+                        {% if form.non_field_errors() %}
                         <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
+                            {{ form.non_field_errors() }}
                         </div>
                         {% endif %}
 

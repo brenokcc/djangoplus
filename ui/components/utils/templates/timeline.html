@@ -1,31 +1,31 @@
-{% load i18n %}
-{% if self.as_pdf %}{% else %}
-{% if self.items %}
+
+{% if component.as_pdf %}{% else %}
+{% if component.items %}
 <div class="panel panel-default">
-    {% if self.description %}
+    {% if component.title %}
     <div class="panel-heading clearfix">
-        {{ self.description }}
+        {{ component.title }}
     </div>
     {% endif %}
     <div class="panel-body no-padding">
         <div class="padding-md">
 
             <ol class="timeline">
-                {% for item in self.items %}
-                <li class="timeline__step {% if  item.1 %}done{% endif %}" style="width:{{ self.width }}%;">
-                    <input class="timeline__step-radio" id="trigger{{ forloop.counter }}{{identifier}}" name="trigger{{identifier}}" type="radio">
+                {% for item in component.items %}
+                <li class="timeline__step {% if  item.1 %}done{% endif %}" style="width:{{ component.width }}%;">
+                    <input class="timeline__step-radio" id="trigger{{ loop.index }}{{identifier}}" name="trigger{{identifier}}" type="radio">
 
-                    <label class="timeline__step-label" for="trigger{{ forloop.counter }}{{identifier}}">
+                    <label class="timeline__step-label" for="trigger{{ loop.index }}{{identifier}}">
                         {% if item.1 %}
                             <span class="timeline__step-content">{{ item.1|format }}</span>
                         {% else %}
-                            <span class="timeline__step-content">{% trans "Not completed" %}</span>
+                            <span class="timeline__step-content">{{ _("Not completed") }}</span>
                         {% endif %}
                     </label>
 
                     <span class="timeline__step-title">{{ item.0 }}</span>
 
-                    <i class="timeline__step-marker">{{ forloop.counter }}</i>
+                    <i class="timeline__step-marker">{{ loop.index }}</i>
                 </li>
                 {% endfor %}
             </ol>

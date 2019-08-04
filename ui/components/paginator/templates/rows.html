@@ -1,23 +1,23 @@
 <div class="paginator-image-rows">
-    {% for obj in self.get_queryset %}
+    {% for obj in component.get_queryset() %}
         <div class="image-rows-row">
             <div class="image-rows-container">
-                {% for verbose_name, lookup, sortable, to in self.column_names %}
+                {% for verbose_name, lookup, sortable, to in component.column_names %}
                     <div>
-                        {% if forloop.first  %}
+                        {% if loop.first  %}
                             <p class="image-rows-title">
-                                {% paginator_checkboxes self obj False %}
-                                {{ obj|getattr:lookup|format }}
+                                {{ paginator_checkboxes(component, obj, False) }}
+                                {{ obj|getattr(lookup)|format }}
                             </p>
                         {% else %}
-                            <p>{{ verbose_name }}: {{ obj|getattr:lookup|format }}</p>
+                            <p>{{ verbose_name }}: {{ obj|getattr(lookup)|format }}</p>
                         {% endif %}
 
-                        {% if forloop.last %}
+                        {% if loop.last %}
                         <div class="pull-right paginator-actions">
-                            {% paginator_icons self obj True %}
-                            {% add_actions self obj %}
-                            {{ self.drop_down }}
+                            {{ paginator_icons(component, obj, True) }}
+                            {{ add_actions(component, obj) }}
+                            {{ component.drop_down|safe }}
                         </div>
                         {% endif %}
                     </div>

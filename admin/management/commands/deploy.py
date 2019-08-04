@@ -81,12 +81,14 @@ class Command(BaseCommand):
                 print('Please, set the DIGITAL_OCEAN_TOKEN variable in settings.py')
 
 
-GIT_INGORE_FILE_CONTENT = '''*.pyc
+GIT_INGORE_FILE_CONTENT = '''*˜
+*.pyc
 .svn
 .DS_Store
 .DS_Store?
 ._*
-.idea/*
+.idea/
+djangoplus/.idea/*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
@@ -95,9 +97,14 @@ Thumbs.db
 .pydevproject
 .settings/*
 sqlite.db
-media/*
 mail/*
-fabfile.pyc
+media/*
+dist/
+djangoplus.egg-info/
+*/dist/
+*/*egg-info/
+geckodriver.log
+videos/*
 '''
 NGINEX_FILE_CONTENT = '''server {{
     client_max_body_size 100M;
@@ -321,7 +328,6 @@ def _setup_remote_project():
             virtual_env_dir = '/var/opt/.virtualenvs'
             with shell_env(WORKON_HOME=virtual_env_dir):
                 _debug('Installing/Updating project requirements...')
-                run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip3 install "djangoplus[production]"'.format(project_name))
                 run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip3 install --upgrade pip'.format(project_name))
                 run('source /usr/local/bin/virtualenvwrapper.sh && workon {} && pip3 install -U -r requirements.txt'.format(project_name))
         _debug('Checking if necessary dirs (logs, media and static) were created...')
@@ -437,7 +443,7 @@ def _setup_gunicorn_file():
 
 
 def _setup_postgres():
-    file_path = '/etc/postgresql/9.4/main/pg_hba.conf '
+    file_path = '/etc/postgresql/9.6/main/pg_hba.conf '
     if not exists(file_path):
         run('apt-get -y install postgresql postgresql-contrib')
         run('cp {} /tmp'.format(file_path))
@@ -536,28 +542,30 @@ def _check_droplet():
     command = '''curl -X GET -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, url)
     _debug('Checking if droplet exists...')
     response = json.loads(local(command, capture=True))
+    if 'droplets' in response:
+        for droplet in response['droplets']:
+            ip_address = droplet['networks']['v4'][0]['ip_address']
+            if droplet['name'] == project_name or ip_address == settings.DIGITAL_OCEAN_SERVER:
+                _debug('Droplet found with IP {}'.format(ip_address))
+                local_home_dir = local('echo $HOME', capture=True)
+                local_known_hosts_path = os.path.join(local_home_dir, '.ssh/known_hosts')
+                _debug('Checking if file {} exists...'.format(local_known_hosts_path))
+                if not os.path.exists(local_known_hosts_path):
+                    _debug('Creating empty file {}...'.format(local_known_hosts_path))
+                    local('touch {}'.format(local_known_hosts_path))
+                local_known_hosts_file_content = open(local_known_hosts_path, 'r').read()
+                if ip_address not in local_known_hosts_file_content:
+                    _debug('Registering {} as known host...'.format(ip_address))
+                    time.sleep(5)
+                    local('ssh-keyscan -T 15 {} >> {}'.format(ip_address, local_known_hosts_path))
+                    if settings.DIGITAL_OCEAN_SERVER not in local_known_hosts_file_content:
+                        _debug('Registering {} as known host...'.format(settings.DIGITAL_OCEAN_SERVER))
+                        local('ssh-keyscan {} >> {}'.format(settings.DIGITAL_OCEAN_SERVER, local_known_hosts_path))
+                return ip_address
 
-    for droplet in response['droplets']:
-        ip_address = droplet['networks']['v4'][0]['ip_address']
-        if droplet['name'] == project_name or ip_address == settings.DIGITAL_OCEAN_SERVER:
-            _debug('Droplet found with IP {}'.format(ip_address))
-            local_home_dir = local('echo $HOME', capture=True)
-            local_known_hosts_path = os.path.join(local_home_dir, '.ssh/known_hosts')
-            _debug('Checking if file {} exists...'.format(local_known_hosts_path))
-            if not os.path.exists(local_known_hosts_path):
-                _debug('Creating empty file {}...'.format(local_known_hosts_path))
-                local('touch {}'.format(local_known_hosts_path))
-            local_known_hosts_file_content = open(local_known_hosts_path, 'r').read()
-            if ip_address not in local_known_hosts_file_content:
-                _debug('Registering {} as known host...'.format(ip_address))
-                time.sleep(5)
-                local('ssh-keyscan -T 15 {} >> {}'.format(ip_address, local_known_hosts_path))
-                if settings.DIGITAL_OCEAN_SERVER not in local_known_hosts_file_content:
-                    _debug('Registering {} as known host...'.format(settings.DIGITAL_OCEAN_SERVER))
-                    local('ssh-keyscan {} >> {}'.format(settings.DIGITAL_OCEAN_SERVER, local_known_hosts_path))
-            return ip_address
-
-    _debug('No droplet cound be found for the project')
+        _debug('No droplet cound be found for the project')
+    else:
+        raise Exception(response)
 
 
 def _create_droplet():
@@ -579,7 +587,7 @@ def _create_droplet():
         response = json.loads(local(command, capture=True))
         droplet_id = response['droplet']['id']
 
-        time.sleep(10)
+        time.sleep(15)
 
         url = 'https://api.digitalocean.com/v2/droplets/{}/'.format(droplet_id)
         command = '''curl -X GET -H 'Content-Type: application/json' -H 'Authorization: Bearer {}' "{}"'''.format(settings.DIGITAL_OCEAN_TOKEN, url)
@@ -655,6 +663,16 @@ def backupdb():
             if exists(file_name):
                 command = 'scp {}@{}:{} {}'.format(username, env.hosts[0], file_name, bakcup_file_name)
                 local(command)
+
+
+def install_docker():
+    run('apt update')
+    run('apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common')
+    run('curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -')
+    run('add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"')
+    run('apt update')
+    run('apt-cache policy docker-ce')
+    run('apt install -y docker-ce')
 
 
 def deploy():

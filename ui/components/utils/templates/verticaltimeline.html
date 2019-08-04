@@ -1,0 +1,55 @@
+<style>
+ul.vertical-timeline {
+    list-style-type: none;
+    position: relative;
+}
+ul.vertical-timeline:before {
+    content: ' ';
+    background: #d4d9df;
+    display: inline-block;
+    position: absolute;
+    left: 29px;
+    width: 2px;
+    height: 100%;
+    z-index: 400;
+}
+ul.vertical-timeline > li {
+    margin: 20px 0;
+    padding-left: 20px;
+}
+ul.vertical-timeline > li:before {
+    content: ' ';
+    background: white;
+    display: inline-block;
+    position: absolute;
+    border-radius: 50%;
+    border: 3px solid #CCC;
+    left: 20px;
+    width: 20px;
+    height: 20px;
+    z-index: 400;
+}
+</style>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        {{ component.title }}
+    </div>
+    <div class="panel-body">
+        {% if component.items %}
+        <ul class="vertical-timeline">
+            {% for title, date, detail, url in component.items %}
+            <li>
+                <a href="#">{{ title }}</a>
+                {% if date %}
+                <p class="pull-right">{{ date|format }}</p>
+                {% endif %}
+                <p>{{ detail|format }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <div class="alert alert-warning">{{ _("No records found") }}.</div>
+        {% endif %}
+    </div>
+</div>

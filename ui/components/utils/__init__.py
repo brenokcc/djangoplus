@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from djangoplus.ui.components import forms
 from djangoplus.utils.dateutils import DAY_NAMES
 from djangoplus.utils.http import ComponentResponse
-from djangoplus.ui import RequestComponent, ComponentHasResponseException
+from djangoplus.ui.components import Component, ComponentHasResponseException
 from djangoplus.utils.metadata import get_fiendly_name, get_field, get_metadata, getattr2
 
 
@@ -18,12 +18,13 @@ DOLLAR_SYMBOL = '$'
 REAIS_SYMBOL = 'R$'
 
 
-class Chart(RequestComponent):
-    def __init__(self, request, labels, series, groups=None, symbol=None, title=None):
+class Chart(Component):
+
+    def __init__(self, request, labels, series, groups=None, symbol=None, title=None, type=None):
 
         super(Chart, self).__init__(None, request)
 
-        self.type = 'bar'
+        self.type = type or 'bar'
         self.labels = labels
         self.series = series
         self.groups = groups or []
@@ -97,7 +98,10 @@ class Chart(RequestComponent):
 
 class QueryStatisticsChart(Chart):
 
-    def __init__(self, request, queryset_statistics):
+    formatter_name = 'chart'
+    template_name = 'chart.html'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None, type=None):
 
         groups = []
         labels = []
@@ -114,11 +118,8 @@ class QueryStatisticsChart(Chart):
 
         for serie in queryset_statistics.series:
             series.append(serie)
-
-        symbol = queryset_statistics.symbol
-        title = queryset_statistics.title
-
-        super(QueryStatisticsChart, self).__init__(request, labels, series, groups, symbol, title)
+    
+        super(QueryStatisticsChart, self).__init__(request, labels, series, groups, symbol, title, type)
 
         self.clickable = self.request is not None
         self.queryset_statistics = queryset_statistics
@@ -138,15 +139,78 @@ class QueryStatisticsChart(Chart):
             raise ComponentHasResponseException(ComponentResponse(component))
 
 
-class Timeline(RequestComponent):
+class QueryStatisticsLineChart(QueryStatisticsChart):
+    formatter_name = 'line_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'line')
+
+
+class QueryStatisticsAreaChart(QueryStatisticsChart):
+    formatter_name = 'area_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'area')
+
+
+class QueryStatisticsStackChart(QueryStatisticsChart):
+    formatter_name = 'stack_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'stack')
+
+
+class QueryStatisticsHorizontalStackChart(QueryStatisticsChart):
+    formatter_name = 'horizontal_stack_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'horizontalstack')
+
+
+class QueryStatisticsHorizontalBarChart(QueryStatisticsChart):
+    formatter_name = 'horizontal_bar_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'horizontalbar')
+
+
+class QueryStatisticsBarChart(QueryStatisticsChart):
+    formatter_name = 'bar_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'bar')
+
+
+class QueryStatisticsBoxChart(QueryStatisticsChart):
+    formatter_name = 'box_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'box')
+
+
+class QueryStatisticsDonutChart(QueryStatisticsChart):
+    formatter_name = 'donut_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None):
+        super().__init__(queryset_statistics, request, title, icon, symbol, 'donut')
+
+
+class QueryStatisticsPieChart(QueryStatisticsChart):
+    formatter_name = 'pie_chart'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None, symbol=None, type='pie'):
+        super().__init__(queryset_statistics, request, title, icon, symbol)
+
+
+class Timeline(Component):
 
     class Media:
         css = {'all': ('/static/css/timeline.css',)}
 
-    def __init__(self, request, description, items=None):
-        super(Timeline, self).__init__(description, request)
+    def __init__(self, items, request=None, title=None):
+        super(Timeline, self).__init__(title, request)
         self.items = items or []
-        self.description = description
+        self.title = title
         self.width = 0
 
     def add(self, status, date):
@@ -156,8 +220,18 @@ class Timeline(RequestComponent):
         self.width = str(100.0/len(self.items))
         return self.render('timeline.html')
 
+class VerticalTimeline(Component):
+    formatter_name = 'vertical_timeline'
 
-class RoleSelector(RequestComponent):
+    def __init__(self, items, request=None, title=None):
+        super().__init__(title, request)
+        self.items = items or []
+        self.title = title
+
+    def add(self, title, date, detail, url):
+        self.items.append((title, date, detail, url))
+
+class RoleSelector(Component):
 
     def __init__(self, request):
         super(RoleSelector, self).__init__('roleselector', request)
@@ -175,6 +249,10 @@ class RoleSelector(RequestComponent):
                 self.groups.append(group)
 
     def process_request(self):
+        if 'scope' in self.request.GET:
+            scope = self.request.GET['scope'] or None
+            self.request.user.scope_id = scope
+            self.request.user.save()
         if 'data[]' in self.request.GET:
             pks = []
             for value in self.request.GET.getlist('data[]'):
@@ -188,8 +266,8 @@ class RoleSelector(RequestComponent):
             raise ComponentHasResponseException(HttpResponse())
 
 
-class QrCode(RequestComponent):
-    def __init__(self, request, text, width=200, height=200):
+class QrCode(Component):
+    def __init__(self, text, request=None, width=200, height=200):
         super(QrCode, self).__init__(text, request)
         self.text = text
         self.width = width
@@ -208,14 +286,14 @@ class QrCode(RequestComponent):
         return super(QrCode, self).__str__()
 
 
-class ProgressBar(RequestComponent):
-    def __init__(self, request, percentual):
+class ProgressBar(Component):
+    def __init__(self, percentual, request=None):
         self.percentual = percentual
-        super(ProgressBar, self).__init__(percentual, request)
+        super(ProgressBar, self).__init__(None, request)
 
 
-class Table(RequestComponent):
-    def __init__(self, request, title, header=None, rows=None, footer=None, enumerable=True, note=None):
+class Table(Component):
+    def __init__(self, request, title, header=None, rows=None, footer=None, enumerable=True, note=None, icon=None):
         super(Table, self).__init__(title, request)
         self.title = title
         self.header = header or []
@@ -223,6 +301,7 @@ class Table(RequestComponent):
         self.footer = footer or []
         self.enumerable = enumerable
         self.note = note
+        self.icon = icon
 
 
 class ModelTable(Table):
@@ -248,7 +327,10 @@ class ModelTable(Table):
 
 
 class QueryStatisticsTable(Table):
-    def __init__(self, request, queryset_statistics):
+
+    formatter_name = 'statistics'
+
+    def __init__(self, queryset_statistics, request=None, title=None, icon=None):
         if queryset_statistics.groups:
             header = []
             rows = []
@@ -276,13 +358,12 @@ class QueryStatisticsTable(Table):
                 if len(queryset_statistics.series[0]) > 1:
                     footer.append('')
                     footer.append(queryset_statistics.total())
-        title = queryset_statistics.title
         super(QueryStatisticsTable, self).__init__(request, title, header, rows, footer, enumerable=False)
         self.queryset_statistics = queryset_statistics
         self.symbol = queryset_statistics.symbol
 
 
-class ModelReport(RequestComponent):
+class ModelReport(Component):
     def __init__(self, request, title, qs, list_display=(), list_filter=(), distinct=False):
         super(ModelReport, self).__init__(title, request)
         self.title = title
@@ -335,16 +416,30 @@ class ModelReport(RequestComponent):
         if add_chart:
             self.components.append(statistics.as_chart(self.request))
 
+class MultiScheduleTable(Component):
+    def __init__(self, data=(), request=None, title=None, icon=None, form_prefix=None):
+        self.schedule_tables = []
+        for shift, shift_data in data:
+            self.schedule_tables.append(ScheduleTable(shift_data, request=request, title=shift, form_prefix=form_prefix))
 
-class ScheduleTable(RequestComponent):
+
+class ScheduleTable(Component):
     WEEK_DAYS = DAY_NAMES
 
-    def __init__(self, request, title, icon=None):
+    def __init__(self, data=(), request=None, title=None, icon=None, form_prefix=None):
         super().__init__(title, request)
         self.title = title
         self.icon = icon
         self.rows = []
-        self.form_prefix = None
+        self.form_prefix = form_prefix
+        self.has_item = False
+
+        if data:
+            intervals, scheduled_times = data
+            for interval in intervals:
+                self.add_interval(str(interval))
+            for scheduled_time in scheduled_times:
+                self.add(*scheduled_time)
 
     def add_interval(self, interval):
         self.rows.append((str(interval), [], [], [], [], [], [], []))
@@ -359,4 +454,13 @@ class ScheduleTable(RequestComponent):
             for row in self.rows:
                 if row[0] == str(interval):
                     row[week_day_index].append(value)
+                    self.has_item = True
                     break
+
+
+class ColorBox(Component):
+
+    def __init__(self, color):
+        super().__init__()
+        self.color = color
+

@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from djangoplus.utils.formatter import format_value
 from djangoplus.utils.dateutils import DAY_INITIALS, MONTH_NAMES
 
-LOCALE = dict(format='DD/MM/YYYY', applyLabel='Aplicar', cancelLabel='Cancelar', fromLabel='De', toLabel='Até', customRangeLabel='Customizar', weekLabel='S', daysOfWeek=DAY_INITIALS, monthNames=MONTH_NAMES)
+LOCALE = dict(format='DD/MM/YYYY', applyLabel='Aplicar', cancelLabel='Cancelar', fromLabel='De', toLabel='Até', customRangeLabel='Customizar', weekLabel='S', daysOfWeek=DAY_INITIALS[-1:]+DAY_INITIALS[0:-1], monthNames=MONTH_NAMES)
 
 
 class DateWidget(widgets.DateInput):

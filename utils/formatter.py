@@ -54,7 +54,10 @@ def format_value(value, html=True):
     if value in (None, '', ()):
         return '-'
     elif isinstance(value, str) or type(value).__name__ == '__proxy__':  # lazy i18n
-        return value
+        if html:
+            return mark_safe(value.replace('\n', '<br>'))
+        else:
+            return value
     elif isinstance(value, bool):
         return value and 'Sim' or 'Não'
     elif isinstance(value, datetime.datetime):
@@ -92,6 +95,18 @@ def format_value(value, html=True):
                 return mark_safe('<a target="_blank" href="{}">{}</a>'.format(value.url, file_name))
             else:
                 return value.url
+    elif isinstance(value, dict):
+        if html:
+            ul = ['<ul style="display: inline-block; padding-left:0px">']
+            for key, info in value.items():
+                ul.append('<li style="list-style-type:none">{}: {}</li>'.format(key, format_value(info, html=html)))
+            ul.append('</ul>')
+            return mark_safe(''.join(ul))
+        else:
+            items = []
+            for key, info in value.items():
+                items.append('{}: {}'.format(key, format_value(info, html=html)))
+            return ', '.join(items)
     elif isinstance(value, Iterable):
         if html:
             ul = ['<ul style="display: inline-block; padding-left:20px">']

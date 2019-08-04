@@ -4,14 +4,14 @@ import copy
 from datetime import datetime
 from djangoplus.utils import http
 from collections import OrderedDict
-from djangoplus.ui import RequestComponent
+from djangoplus.ui.components import Component
 from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import check_condition
 from djangoplus.utils import permissions, should_add_action
 from djangoplus.utils.metadata import get_metadata, get_can_execute, count_parameters_names
 
 
-class GroupDropDown(RequestComponent):
+class GroupDropDown(Component):
     def __init__(self, request, style=None):
         super(GroupDropDown, self).__init__('groupdropdown', request)
         self.actions = OrderedDict()
@@ -51,15 +51,15 @@ class ModelDropDown(GroupDropDown):
         self.load_actions()
 
     def load_actions(self):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         if self.action_names and len(self.action_names) > 0:
             self.has_inline_action = True
 
-        for category in loader.instance_actions[self.model]:
+        for category in CACHE['INSTANCE_ACTIONS'][self.model]:
             if category not in self.actions:
                 self.actions[category] = []
-            for view_name in loader.instance_actions[self.model][category]:
-                form_action = loader.instance_actions[self.model][category][view_name]
+            for view_name in CACHE['INSTANCE_ACTIONS'][self.model][category]:
+                form_action = CACHE['INSTANCE_ACTIONS'][self.model][category][view_name]
                 if not self.has_inline_action:
                     self.has_inline_action = form_action.get('inline') or form_action.get('subsets')
 
@@ -76,7 +76,7 @@ class ModelDropDown(GroupDropDown):
         super(ModelDropDown, self).add_action(label, url, css, icon, category)
 
     def add_actions(self, obj, fieldset=None, subset_name=None, category=None, action_names=None):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         obj.request = self.request
         if not self.actions_cache:
             self.actions_cache = self.actions
@@ -86,10 +86,10 @@ class ModelDropDown(GroupDropDown):
         self.actions = copy.deepcopy(self.actions_cache)
         self.obj = obj
 
-        for action_category in loader.instance_actions[self.model]:
+        for action_category in CACHE['INSTANCE_ACTIONS'][self.model]:
 
-            for view_name in loader.instance_actions[self.model][action_category]:
-                action = loader.instance_actions[self.model][action_category][view_name]
+            for view_name in CACHE['INSTANCE_ACTIONS'][self.model][action_category]:
+                action = CACHE['INSTANCE_ACTIONS'][self.model][action_category][view_name]
                 action_function = action.get('function')
                 action_verbose_name = action['verbose_name']
                 action_can_execute = get_can_execute(action)
@@ -113,13 +113,13 @@ class ModelDropDown(GroupDropDown):
                 # it is a dropdown in a model panel
                 if fieldset is not None:
                     if fieldset:
-                        if action_name not in loader.fieldset_actions[self.model][fieldset]:
+                        if action_name not in CACHE['FIELDSET_ACTIONS'][self.model][fieldset]:
                             continue
                     else:
                         # if the action was included in any fieldset,
                         # it can not be displayed in page's action panel
                         add_action = True
-                        for title, action_names in list(loader.fieldset_actions[self.model].items()):
+                        for title, action_names in list(CACHE['FIELDSET_ACTIONS'][self.model].items()):
                             if action_name in action_names:
                                 add_action = False
                                 break

@@ -1,31 +1,31 @@
 <div class="image-cards responsive-container">
-    {% for obj in self.get_queryset %}
+    {% for obj in component.get_queryset() %}
         <div class="l3 m2 s1">
         <div class="image-cards-row" align="center">
             <div class="image-cards-container">
                 <div>
-                    {% for list_display in self.list_display %}
-                        {% if forloop.first %}
+                    {% for list_display in component.list_display %}
+                        {% if loop.first %}
                             <div class="image-wrapper">
-                                {{ obj|getattr:list_display|image:"width='100%'" }}
+                                {{ obj|getattr(list_display)|image("width='100%'") }}
                             </div>
                         {% else %}
-                            {% if forloop.counter == 2 %}
+                            {% if loop.index == 2 %}
                                 <div>
                                     <p class="image-cards-title">
-                                        {% paginator_checkboxes self obj False %}
-                                        {{ obj|getattr:list_display|format }}
+                                        {{ paginator_checkboxes(component, obj, False) }}
+                                        {{ obj|getattr(list_display)|format }}
                                     </p>
                                 </div>
                             {% else %}
-                                <div><p>{{ obj|getattr:list_display|format }}</p></div>
+                                <div><p>{{ obj|getattr(list_display)|format }}</p></div>
                             {% endif %}
 
-                            {% if forloop.last %}
+                            {% if loop.last %}
                                 <div class="paginator-actions">
-                                    {% paginator_icons self obj True %}
-                                    {% add_grouped_actions self obj %}
-                                    {{ self.drop_down }}
+                                    {{ paginator_icons(component, obj, True) }}
+                                    {{ add_grouped_actions(component, obj) }}
+                                    {{ component.drop_down|safe }}
                                 </div>
                             {% endif %}
                         {% endif %}

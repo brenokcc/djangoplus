@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-import json
 import traceback
 from django.apps import apps
 from django.conf import settings
 from django.shortcuts import render
-from djangoplus.cache import loader
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse
 from django.views.static import serve
-from djangoplus.utils import permissions, format_value
+from djangoplus.cache import CACHE
+from djangoplus.utils import permissions
 from django.http import HttpResponseRedirect
 from djangoplus.utils.http import return_response
 from djangoplus.utils.serialization import json_serialize
 from djangoplus.utils.storage import dropbox
-from django.template import Template, Context
+from jinja2 import Template
 from django.views.defaults import page_not_found
 from django.utils.translation import ugettext as _
 from django.core.exceptions import ValidationError
@@ -20,7 +19,7 @@ from djangoplus.ui.components.forms import factory
 from django.views.decorators.csrf import csrf_exempt
 from djangoplus.ui.components.panel import ModelDashboard
 from django.http.response import HttpResponseForbidden
-from djangoplus.ui import ComponentHasResponseException
+from djangoplus.ui.components import ComponentHasResponseException
 from djangoplus.ui.components.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
@@ -30,6 +29,9 @@ from djangoplus.utils.metadata import list_related_objects, is_many_to_many, is_
 
 
 def listt(request, app, cls, subset=None):
+
+    if not request.user.is_authenticated:
+        return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     try:
         _model = apps.get_model(app, cls)
@@ -209,16 +211,19 @@ def view(request, app, cls, pk, tab=None):
 
 def action(request, app, cls, action_name, pk=None):
 
+    if not request.user.is_authenticated:
+        return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
+
     try:
         _model = apps.get_model(app, cls)
     except LookupError as e:
         return page_not_found(request, e, 'error404.html')
 
-    for group in loader.instance_actions[_model]:
-        if action_name in loader.instance_actions[_model][group]:
+    for group in CACHE['INSTANCE_ACTIONS'][_model]:
+        if action_name in CACHE['INSTANCE_ACTIONS'][_model][group]:
             break
 
-    form_action = loader.instance_actions[_model][group][action_name]
+    form_action = CACHE['INSTANCE_ACTIONS'][_model][group][action_name]
     action_verbose_name = form_action['verbose_name']
     action_can_execute = form_action['can_execute']
     action_condition = form_action['condition']
@@ -260,11 +265,13 @@ def action(request, app, cls, action_name, pk=None):
                     else:
                         redirect_to = '.'
                 else:
-                    redirect_to = Template(action_redirect).render(Context({'self': obj}))
+                    redirect_to = Template(action_redirect).render(obj=obj)
             except ValidationError as e:
                 if form.fields:
                     form.add_error(None, e.message)
-                redirect_to = None
+                    redirect_to = None
+                else:
+                    return httprr(request, '.', e.message, error=True)
 
         if f_return:
             template_name = '{}.html'.format(action_function.__name__)
@@ -283,6 +290,9 @@ def action(request, app, cls, action_name, pk=None):
 
 
 def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
+
+    if not request.user.is_authenticated:
+        return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     try:
         _model = apps.get_model(app, cls)
@@ -309,6 +319,10 @@ def delete(request, app, cls, pk, related_field_name=None, related_pk=None):
 
 
 def log(request, app, cls, pk=None):
+
+    if not request.user.is_authenticated:
+        return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
+
     try:
         _model = apps.get_model(app, cls)
     except LookupError as e:
@@ -391,22 +405,22 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                         if arg2:
                             # @action
                             group = None
-                            for group in loader.instance_actions[model]:
-                                if arg2 in loader.instance_actions[model][group]:
-                                    action_dict = loader.instance_actions[model][group][arg2]
+                            for group in CACHE['INSTANCE_ACTIONS'][model]:
+                                if arg2 in CACHE['INSTANCE_ACTIONS'][model][group]:
+                                    action_dict = CACHE['INSTANCE_ACTIONS'][model][group][arg2]
                                     message = action_dict.get('message')
                                     func_name = arg2
                                     break
                             if func_name:
                                 func = getattr(obj, func_name)
-                                form_action = loader.instance_actions[model][group][arg2]
+                                form_action = CACHE['INSTANCE_ACTIONS'][model][group][arg2]
                                 # with input
                                 if count_parameters_names(func) > 0:
                                     form = factory.get_action_form(request, obj, form_action)
                             # it is not @action
                             else:
                                 # @meta
-                                for method in loader.instance_methods.get(model, []):
+                                for method in CACHE['INSTANCE_METHODS'].get(model, []):
                                     if method['function'] == arg2:
                                         func_name = arg2
                                         func = getattr(obj, func_name)
@@ -419,22 +433,22 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                             obj = obj.filter(pk__in=pks)
                         group = None
                         # @action
-                        for group in loader.queryset_actions[model]:
-                            if arg2 in loader.queryset_actions[model][group]:
-                                action_dict = loader.queryset_actions[model][group][arg2]
+                        for group in CACHE['QUERYSET_ACTIONS'][model]:
+                            if arg2 in CACHE['QUERYSET_ACTIONS'][model][group]:
+                                action_dict = CACHE['QUERYSET_ACTIONS'][model][group][arg2]
                                 message = action_dict.get('message')
                                 func_name = arg2
                                 break
                         if func_name:
                             func = getattr(obj, func_name)
-                            form_action = loader.queryset_actions[model][group][arg2]
+                            form_action = CACHE['QUERYSET_ACTIONS'][model][group][arg2]
                             # with input
                             if count_parameters_names(func) > 0:
                                 form = factory.get_class_action_form(request, obj.model, form_action, func)
                         # it is not @action
                         else:
                             # @meta
-                            for method in loader.manager_methods.get(model, []):
+                            for method in CACHE['MANAGER_METHODS'].get(model, []):
                                 if method['function'] == arg1:
                                     func_name = arg2
                                     func = getattr(obj, func_name)
@@ -463,17 +477,17 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                         # @action
                         func = None
                         action_dict = None
-                        for group in loader.queryset_actions[model]:
-                            if arg1 in loader.queryset_actions[model][group]:
-                                action_dict = loader.queryset_actions[model][group][arg1]
+                        for group in CACHE['QUERYSET_ACTIONS'][model]:
+                            if arg1 in CACHE['QUERYSET_ACTIONS'][model][group]:
+                                action_dict = CACHE['QUERYSET_ACTIONS'][model][group][arg1]
                                 message = action_dict.get('message')
                                 func = getattr(obj, arg1)
                                 func_name = arg1
                                 break
                         if not func_name:
-                            for group in loader.class_actions[model]:
-                                if arg1 in loader.class_actions[model][group]:
-                                    action_dict = loader.class_actions[model][group][arg1]
+                            for group in CACHE['CLASS_ACTIONS'][model]:
+                                if arg1 in CACHE['CLASS_ACTIONS'][model][group]:
+                                    action_dict = CACHE['CLASS_ACTIONS'][model][group][arg1]
                                     message = action_dict.get('message')
                                     func = getattr(obj, arg1)
                                     func_name = arg1
@@ -485,7 +499,7 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                         # it is not @action
                         else:
                             # @subset or @meta
-                            for subset in loader.subsets[model]:
+                            for subset in CACHE['SUBSETS'][model]:
                                 if arg1 == subset['name']:
                                     func_name = arg1
                                     break
@@ -494,7 +508,7 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                             # it is not @subset
                             else:
                                 # @meta
-                                for method in loader.manager_methods.get(model, []):
+                                for method in CACHE['MANAGER_METHODS'].get(model, []):
                                     if method['function'] == arg1:
                                         func_name = arg1
                                         func = getattr(obj, func_name)

@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from djangoplus.ui.components.select import widgets as select_widgets
 from djangoplus.ui.components.editor import widgets as editor_widgets
 from djangoplus.ui.components.calendar import widgets as calendar_widgets
+from djangoplus.utils.metadata import get_metadata, get_fiendly_name
 
 # Date Widgets
 DateFilterWidget = calendar_widgets.DateFilterWidget
@@ -208,9 +209,15 @@ class PickWidget(widgets.Select):
             "for(var i=0; i<is.length; i++) is[i].checked = {}".format(
                 self.allow_multiple_selected and 'this.checked' or 'false')
         widget = widget_cls({'onclick': onclick}, check_test=lambda v: False).render(None, '')
-
+        extra_display = []
         if self.choices:
             qs = hasattr(self.choices.queryset, 'all') and self.choices.queryset.all() or self.choices.queryset
+            select_display = get_metadata(qs.model, 'select_display')
+            if select_display:
+                for lookup in get_metadata(qs.model, 'select_display', []):
+                    extra_display.append((get_fiendly_name(qs.model, lookup, as_tuple=False), lookup))
+            else:
+                extra_display.append((None, '__str__'))
             if self.grouper:
                 groupers = qs.values_list(self.grouper, flat=True).order_by(self.grouper).distinct()
             else:
@@ -235,7 +242,7 @@ class PickWidget(widgets.Select):
 
         return mark_safe(
             render_to_string(
-                self.template_name, dict(grouped_objects=grouped_objects, widget=widget, name=name.replace('-', '_'))
+                self.template_name, dict(grouped_objects=grouped_objects, widget=widget, extra_display=extra_display, name=name.replace('-', '_'))
             )
         )
 

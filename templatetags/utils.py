@@ -7,7 +7,10 @@ modules = list()
 
 modules.append(import_module('django.template.defaultfilters'))
 for item in settings.TEMPLATES:
-    for builtins in item['OPTIONS']['builtins']:
+    for builtins in [
+                'djangoplus.templatetags',
+                'djangoplus.ui.components.paginator.templatetags'
+            ]:
         modules.append(import_module(builtins))
 
 

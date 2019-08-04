@@ -1,4 +1,4 @@
-{% if self.as_pdf %}{% else %}
+{% if component.as_pdf %}{% else %}
 <!-- Full Calender -->
 <script src='/static/js/moment.min.js'></script>
 <script src='/static/js/fullcalendar.min-3.3.1.js'></script>
@@ -6,51 +6,51 @@
 <!-- Full Calendar -->
 <link href='/static/css/fullcalendar.min-3.3.1.css' rel='stylesheet'/>
 <div class="panel panel-default">
-    {% if self.title %}
+    {% if component.title %}
     <div class="panel-heading">
-        {% if self.url %}
-            <a class="ajax" href="{{ self.url }}">
+        {% if component.url %}
+            <a class="ajax" href="{{ component.url }}">
                 <i class="fa fa-calendar fa-lg"></i>
-                {{ self.title }}
+                {{ component.title }}
             </a>
         {% else %}
             <i class="fa fa-calendar fa-lg"></i>
-            {{ self.title }}
+            {{ component.title }}
         {% endif %}
     </div>
     {% endif %}
     <div class="panel-body">
-        <div id="{{ self.id }}" class="fc fc-ltr"></div>
+        <div id="{{ component.id }}" class="fc fc-ltr"></div>
     </div>
 </div>
 <script>
     $(function() {
 
-        var calendar = $('#{{ self.id }}').fullCalendar({
+        var calendar = $('#{{ component.id }}').fullCalendar({
             header : {
-                left : '{% if self.title %}prev{% endif %}',
+                left : '{% if component.title %}prev{% endif %}',
                 center : 'title',
-                right : '{% if self.title %}next{% endif %}'
+                right : '{% if component.title %}next{% endif %}'
             },
-            defaultDate : '{{ self.initial_date|date:"Y-m-d" }}',
+            defaultDate : '{{ component.initial_date|date("Y-m-d") }}',
             lang : 'pt',
             timeFormat: 'h:mm',
             selectable : true,
             selectHelper : true,
             editable : false,
-            {% if not self.display_time %}
+            {% if not component.display_time %}
             displayEventTime: false,
             {% endif %}
-            {% if self.lazy %}
+            {% if component.lazy %}
                 eventSources: [
-                    {% for item in self.items %}
+                    {% for item in component.items %}
                     {
                         url: '/calendar/populate/',
                         type: 'POST',
                         data: {
                             queryset: '{{ item.queryset }}',
                             start_field: '{{ item.start_field }}',
-                            end_field: '{{ item.end_field|default:"" }}',
+                            end_field: '{{ item.end_field|default("") }}',
                             action_names: '{{ item.action_names }}',
                         },
                         error: function() {
@@ -83,7 +83,7 @@
                     });
                     $(element).popover("show");
                 },
-                {% if self.links %}
+                {% if component.links %}
                 dayClick: function(date, jsEvent, view) {
                     $(this).popover({
                         html: true,
@@ -93,7 +93,7 @@
                         content: function() {
                             var formatedDate = date.format('DD/MM/YYYY');
                             var html = '';
-                            {% for link in self.links %}
+                            {% for link in component.links %}
                             html+= '<p><a href="javascript:" onclick="popup(\'{{ link.url }}'+formatedDate+'\');">{{ link.label }}</a></p>';
                             {% endfor %}
                             return html;
@@ -105,7 +105,7 @@
 
             {% else %}
                 events : [
-                    {% for item in self.items %}
+                    {% for item in component.items %}
                          {
                             title : '{{ item.description }}',
                             start : new Date({{ item.start.year }}, {{ item.start.month }}-1, {{ item.start.day }}),

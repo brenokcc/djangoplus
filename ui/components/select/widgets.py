@@ -150,7 +150,7 @@ class SelectWidget(widgets.Select):
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset:
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
-                        templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
+                        templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '').replace('\'', '\\\'')))
                     templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
 
             if hasattr(self, 'user'):
@@ -191,7 +191,7 @@ class SelectWidget(widgets.Select):
                 function_name = name.replace('-', '__')
                 popup = 'popup' in function_name and 'popup-' or ''
                 reload_script = RELOAD_SCRIPT.format(
-                    function_name=function_name, field_name=field_name, app_label=app_label, model_name=model_name,
+                    function_name=function_name, field_name=field_name.replace('popup-', ''), app_label=app_label, model_name=model_name,
                     value=value, lookup=lookup, lazy=lazy, name=name, popup=popup, links=''.join(links)
                 )
                 html = '{} {}'.format(html, reload_script)
@@ -235,7 +235,7 @@ class SelectMultipleWidget(widgets.SelectMultiple):
                             self.choices.queryset = self.choices.queryset.order_by(tree_index_field.name)
                     for obj in self.choices.queryset.all():
                         obj_html = render_to_string(select_template or 'select_template.html', dict(obj=obj, select_display=select_display)) or str(obj)
-                        templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '')))
+                        templates.append('{}_templates[{}] = \'{}\';'.format(templates_var_name, obj.pk, obj_html.replace('\n', '').replace('\'', '\\\'')))
                     templates.append('return {}_templates[item.id];}},'.format(templates_var_name))
         html = super(SelectMultipleWidget, self).render(name, value, attrs)
         links = []

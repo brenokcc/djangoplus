@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 import datetime
 from decimal import Decimal
-from django import template
-from djangoplus.cache import loader
 from djangoplus.utils import permissions
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import get_metadata
 from django.template.defaultfilters import slugify
 from django.template.loader import render_to_string
+from djangoplus.cache import CACHE
 
 
-register = template.Library()
+from django_jinja import library as register
 
 
-@register.simple_tag()
+@register.global_function
 def tree_info(obj, queryset):
     if hasattr(obj, 'get_parent_field'):
         parent_field = obj.get_parent_field()
@@ -30,22 +29,22 @@ def tree_info(obj, queryset):
         return ''
 
 
-@register.simple_tag()
+@register.global_function
 def paginator_checkboxes(paginator, obj, as_row=False):
     l = []
     if paginator.display_checkboxes:
         if as_row:
             l.append('<td style="vertical-align: middle" width="5px">')
         if obj:
-            l.append('<label class="label-checkbox"><input type="checkbox" name="pk" value="{}" onclick="check{}();"><span class="custom-checkbox"></span></label>'.format(obj.pk, paginator.id))
+            l.append('<input type="checkbox" name="pk" value="{}" onclick="check{}();"><span class="custom-checkbox"></span>'.format(obj.pk, paginator.id))
         else:
-            l.append("""<label class="label-checkbox"><input name="pk" type="checkbox" value="0" onclick="$('input[name=\\\'pk\\\']').prop('checked', this.checked);check{}();"><span class="custom-checkbox"></span></label>""".format(paginator.id))
+            l.append("""<input name="pk" type="checkbox" value="0" onclick="$('input[name=\\\'pk\\\']').prop('checked', this.checked);check{}();"><span class="custom-checkbox"></span>""".format(paginator.id))
         if as_row:
             l.append('</td>')
     return mark_safe(''.join(l))
 
 
-@register.simple_tag()
+@register.global_function
 def paginator_icons(paginator, obj, as_button=False):
     relation = paginator.relation
     edit = not paginator.readonly
@@ -53,7 +52,7 @@ def paginator_icons(paginator, obj, as_button=False):
     return obj_icons(paginator.request, obj, relation=relation, edit=edit, delete=delete, as_button=as_button)
 
 
-@register.simple_tag()
+@register.global_function
 def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_button=False):
     outuput = []
 
@@ -63,7 +62,7 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_
         css = 'hide-label {}'.format(css or '{}')
 
     if relation:
-        if type(obj) not in loader.simple_models:
+        if type(obj) not in CACHE['SIMPLE_MODELS']:
             view_url = relation.view_url.format(obj.pk)
             btn = '<a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-search fa-lg"></i><span>  {}</span></a>'
             outuput.append(btn.format(slugify(view_url), css.format('ajax'), view_url, _('View'), _('View')))
@@ -137,15 +136,15 @@ def column_name(paginator, i):
 
 @register.filter
 def paginate(paginator):
-    return render_to_string(paginator.template, {'self': paginator})
+    return render_to_string(paginator.template, {'component': paginator})
 
 
-@register.simple_tag()
+@register.global_function
 def add_grouped_actions(paginator, obj):
     return add_actions(paginator, obj, category=_('Actions'))
 
 
-@register.simple_tag()
+@register.global_function
 def add_actions(paginator, obj, category=None):
     paginator.drop_down.add_actions(
         obj, subset_name=paginator.get_current_tab_name() or None, category=category,

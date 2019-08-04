@@ -1,5 +1,5 @@
 {% extends "admin.html" %}
-{% load i18n %}
+
 {% block body %}
 <body>
 
@@ -10,7 +10,7 @@
         {% if groups %}
         <div class="panel panel-default">
             <div class="panel-heading">
-                {% trans "Systemic Users" %}
+                {{ _("Systemic Users") }}
             </div>
             <div class="panel-body no-padding">
                 <div class="padding-md">
@@ -23,17 +23,17 @@
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
                         <tr>
-                            <th>{% trans "Group" %}</th>
-                            <th>{% trans "Username" %}</th>
+                            <th>{{ _("Group") }}</th>
+                            <th>{{ _("Username") }}</th>
                         </tr>
                         </thead>
                         <tbody>
                         {% for group in groups %}
-                            {% if group.user_set.exists %}
+                            {% if group.user_set.exists() %}
                                 <tr>
                                     <td>{{ group }}</td>
                                     <td>
-                                        {% for user in group.user_set.all %}
+                                        {% for user in group.user_set.all() %}
                                             <a target="_blank"
                                                href="/admin/login/?username={{ user.username }}">{{ user.username }}
                                             </a> &nbsp;
@@ -55,7 +55,7 @@
             {% if organization.users %}
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        {% trans "Organization's Users" %}
+                        {{ _("Organization's Users") }}
                     </div>
                     <div class="panel-body no-padding">
                         <div class="padding-md">
@@ -71,7 +71,7 @@
                                 <tr>
                                     {% for user_set in organization.users %}
                                         <td>
-                                            {% for user in user_set.all %}
+                                            {% for user in user_set.all() %}
                                                 <a target="_blank"
                                                    href="/admin/login/organization/{{ organization.pk }}/?username={{ user.username }}">{{ user.username }}</a>
                                                 &nbsp;&nbsp;&nbsp;
@@ -98,7 +98,7 @@
                                         <tr>
                                             {% for user_set in unit.users %}
                                                 <td>
-                                                    {% for user in user_set.all %}
+                                                    {% for user in user_set.all() %}
                                                         <a target="_blank"
                                                            href="/admin/login/unit/{{ organization.pk }}/{{ unit.pk }}/?username={{ user.username }}">{{ user.username }}</a>
                                                         &nbsp;&nbsp;&nbsp;

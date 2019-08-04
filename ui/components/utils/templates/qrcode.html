@@ -1,5 +1,5 @@
-{% if self.as_pdf %}<img width="100" src="data:image/jpeg;base64, {{ self.base64 }}"/>{% else %}
+{% if component.as_pdf %}<img width="100" src="data:image/jpeg;base64, {{ component.base64 }}"/>{% else %}
 <script type="text/javascript" src="/static/js/jquery.qrcode.min.js"></script>
-<div id="{{ self.text|slugify }}"></div>
-<script>jQuery('#{{ self.text|slugify }}').qrcode({width: 100, height: 100, text: "{{ self.text }}"});</script>
+<div id="{{ component.text|slugify }}"></div>
+<script>jQuery('#{{ component.text|slugify }}').qrcode({width: 100, height: 100, text: "{{ component.text }}"});</script>
 {% endif %}

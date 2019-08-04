@@ -9,6 +9,8 @@ from djangoplus.db.models.fields import *
 import django.db.models.options as options
 from django.db.models.aggregates import Sum, Avg
 from django.db.models.deletion import Collector
+
+from djangoplus.utils import list_one_to_one_field_names, list_field_names, format_value
 from djangoplus.utils.metadata import get_metadata, find_model, get_field, check_role
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
@@ -81,15 +83,15 @@ class QueryStatistics(object):
     def as_table(self, request=None):
         from djangoplus.ui.components.utils import QueryStatisticsTable
         self._totalize()
-        return QueryStatisticsTable(request, self)
+        return QueryStatisticsTable(self, request=request)
 
     def as_chart(self, request=None):
         from djangoplus.ui.components.utils import QueryStatisticsChart
         if not self.groups:
-            chart = QueryStatisticsChart(request, self)
+            chart = QueryStatisticsChart(self, request=request)
             return chart.donut()
         else:
-            chart = QueryStatisticsChart(request, self)
+            chart = QueryStatisticsChart(self, request=request)
             if self.labels and self.labels[0] == 'Jan':
                 return chart.line()
             else:
@@ -164,6 +166,7 @@ class QuerySet(query.QuerySet):
             has_perm = True
         if has_perm:
             if user and not user.is_superuser:
+                queryset = user.apply_current_scope(queryset)
                 permission_mapping = user.get_permission_mapping(self.model, obj)
                 if 'list_lookups' in permission_mapping and permission_mapping['list_lookups']:
                     lookups = []
@@ -466,10 +469,15 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
         log_data = get_metadata(self.__class__, 'log', False)
         log_index = get_metadata(self.__class__, 'logging', (), iterable=True)
 
+        log_index = [index for index in log_index]
+        if log_data or settings.LOG_MODELS:
+            for field_name in list_one_to_one_field_names(type(self)):
+                log_index.append(field_name)
+
         # edited changes logging
-        if (log_data or log_index) and self.pk and self._user:
+        if (log_data or log_index or settings.LOG_MODELS) and self.pk and self._user:
             log_indexes = list(log_index)
-            qs = self.__class__.objects.filter(pk=self.pk).select_related(*log_indexes)
+            qs = type(self).objects.filter(pk=self.pk).select_related(*log_indexes)
 
             self._diff = False
             if qs.exists():
@@ -483,18 +491,19 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                 log.object_description = str(self)
                 diff = []
 
-                for field in get_metadata(self, 'fields'):
+                for field in get_metadata(type(self), 'fields'):
                     o1 = getattr(old, field.name)
                     o2 = getattr(self, field.name)
-                    v1 = str(o1)
-                    v2 = str(o2)
-                    if not hasattr(o2, '__iter__') and v1 != v2:
+                    v1 = format_value(o1)
+                    v2 = format_value(o2)
+
+                    if v1 != v2:
                         self._diff = True
                         diff.append((field.verbose_name, v1, v2))
-
-                log.content = json.dumps(diff)
-                log.save()
-                log.create_indexes(old)
+                if diff or log_index:
+                    log.content = json.dumps(diff)
+                    log.save()
+                    log.create_indexes(old)
 
         # tree model
         tree_index_field = self.get_tree_index_field()
@@ -538,7 +547,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                 obj.save(*args, **kwargs)
 
         # registration logging
-        if (log_data or log_index) and not hasattr(self, '_diff') and self._user:
+        if (log_data or log_index or settings.LOG_MODELS) and not hasattr(self, '_diff') and self._user:
             from djangoplus.admin.models import Log
             log = Log()
             log.operation = Log.ADD
@@ -562,7 +571,7 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
         log_data = get_metadata(self.__class__, 'log', False)
         log_index = get_metadata(self.__class__, 'logging', ())
 
-        if (log_data or log_index) and self._user:
+        if (log_data or log_index or settings.LOG_MODELS) and self._user:
             from djangoplus.admin.models import Log
 
             collector = Collector(using='default')
@@ -579,9 +588,12 @@ class Model(six.with_metaclass(ModelBase, models.Model)):
                     diff = []
                     for field in get_metadata(obj.__class__, 'fields'):
                         if not isinstance(field, models.FileField):
-                            o1 = getattr(obj, field.name)
-                            v1 = str(o1)
-                            diff.append((field.verbose_name, v1))
+                            try:
+                                o1 = getattr(obj, field.name)
+                                v1 = format_value(o1)
+                                diff.append((field.verbose_name, v1, None))
+                            except Exception:
+                                pass
 
                     log.content = json.dumps(diff)
                     log.save()

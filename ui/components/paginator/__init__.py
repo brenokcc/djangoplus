@@ -11,14 +11,14 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import ugettext as _
 from djangoplus.utils import permissions, should_add_action, get_role_values_for_condition
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
-from djangoplus.ui import RequestComponent, ComponentHasResponseException
+from djangoplus.ui.components import Component, ComponentHasResponseException
 from djangoplus.utils.http import CsvResponse, XlsResponse, ReportResponse, return_response
 from djangoplus.ui.components.navigation.dropdown import ModelDropDown, GroupDropDown
 from djangoplus.utils.metadata import get_metadata, get_field, get_fiendly_name, should_filter_or_display, getattr2, \
     get_parameters_names, count_parameters_names
 
 
-class Paginator(RequestComponent):
+class Paginator(Component):
     def __init__(self, request, qs, title=None, list_display=None, list_filter=None, search_fields=None,
                  list_per_page=25, list_subsets=None, exclude=None, relation=None, readonly=False, is_list_view=False,
                  help_text=None, url=None, template=None, uid=None):
@@ -188,7 +188,7 @@ class Paginator(RequestComponent):
 
     def load_actions(self, action_names=None):
 
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         export_url = self.request.get_full_path()
         list_csv = get_metadata(self.qs.model, 'list_csv')
         list_xls = get_metadata(self.qs.model, 'list_xls')
@@ -198,18 +198,14 @@ class Paginator(RequestComponent):
         self.action_names = action_names or []
 
         subset = self.subsets and list(self.subsets.keys())[0] or None
-        if subset:
-            subsetp = None
-        else:
-            tid = self.request.GET.get('tid')
-            subsetp = self.request.GET.get('tab{}'.format(tid))
-        subset_name = subsetp or subset or None
+        subsetp = self.request.GET.get('tab{}'.format(self.request.GET.get('tid')))
+        subset_name = subsetp or subset
 
         # class actions defined in the manager
-        if self.qs.model in loader.class_actions:
-            for group in loader.class_actions[self.qs.model]:
-                for view_name in loader.class_actions[self.qs.model][group]:
-                    _action = loader.class_actions[self.qs.model][group][view_name]
+        if self.qs.model in CACHE['CLASS_ACTIONS']:
+            for group in CACHE['CLASS_ACTIONS'][self.qs.model]:
+                for view_name in CACHE['CLASS_ACTIONS'][self.qs.model][group]:
+                    _action = CACHE['CLASS_ACTIONS'][self.qs.model][group][view_name]
                     action_verbose_name = _action['verbose_name']
                     action_inline = _action['inline']
                     action_subsets = _action['subsets']
@@ -235,13 +231,14 @@ class Paginator(RequestComponent):
                                 self._proccess_request(func, _action, ignore_pdf)
 
         # subset actions defined in the manager
-        if self.qs.model in loader.queryset_actions:
-            for group in loader.queryset_actions[self.qs.model]:
-                for view_name in loader.queryset_actions[self.qs.model][group]:
-                    _action = loader.queryset_actions[self.qs.model][group][view_name]
+        if self.qs.model in CACHE['QUERYSET_ACTIONS']:
+            for group in CACHE['QUERYSET_ACTIONS'][self.qs.model]:
+                for view_name in CACHE['QUERYSET_ACTIONS'][self.qs.model][group]:
+                    _action = CACHE['QUERYSET_ACTIONS'][self.qs.model][group][view_name]
                     action_verbose_name = _action['verbose_name']
                     action_can_execute = _action['can_execute']
                     action_inline = _action['inline']
+                    action_icon = _action['icon']
                     action_subsets = _action['subsets']
                     action_condition = _action['condition']
                     action_source = _action['source']
@@ -250,7 +247,7 @@ class Paginator(RequestComponent):
                     action_style = _action['style'] or 'popup'
                     if 'popup' not in action_style:
                         action_style = '{} popup'.format(action_style)
-                    if self.is_list_view or view_name in self.action_names:
+                    if view_name in self.action_names or (self.is_list_view and action_inline) or (self.current_tab in action_subsets):
                         add_action = should_add_action(action_inline, action_subsets, subset_name)
                         add_action = add_action and (True in action_expose or 'web' in action_expose)
                         if add_action and permissions.check_group_or_permission(self.request, action_can_execute):
@@ -263,7 +260,7 @@ class Paginator(RequestComponent):
                                 ignore_pdf = True
                                 action_style = action_style.replace('pdf', '')
                             self.add_queryset_action(
-                                action_verbose_name, url, action_style, None, action_category, action_condition
+                                action_verbose_name, url, action_style, action_icon, action_category, action_condition
                             )
 
                             if view_name in self.request.GET:
@@ -276,10 +273,10 @@ class Paginator(RequestComponent):
                                 self._proccess_request(func, _action, ignore_pdf)
 
         # class actions defined in views module
-        if self.qs.model in loader.class_view_actions:
-            for group in loader.class_view_actions[self.qs.model]:
-                for view_name in loader.class_view_actions[self.qs.model][group]:
-                    _action = loader.class_view_actions[self.qs.model][group][view_name]
+        if self.qs.model in CACHE['CLASS_VIEW_ACTIONS']:
+            for group in CACHE['CLASS_VIEW_ACTIONS'][self.qs.model]:
+                for view_name in CACHE['CLASS_VIEW_ACTIONS'][self.qs.model][group]:
+                    _action = CACHE['CLASS_VIEW_ACTIONS'][self.qs.model][group][view_name]
                     action_verbose_name = _action['verbose_name']
                     action_inline = _action['inline']
                     action_subsets = _action['subsets']
@@ -318,7 +315,7 @@ class Paginator(RequestComponent):
             subclasses = self.qs.model.__subclasses__()
             if not subclasses and not self.subsets and permissions.has_add_permission(self.request, self.qs.model):
                 instance = self.qs.model()
-                instance.user = self.request.user
+                instance._user = self.request.user
                 if not hasattr(instance, 'can_add') or instance.can_add():
                     if self.relation:
                         verbose_name = get_metadata(self.qs.model, 'verbose_name')
@@ -485,14 +482,14 @@ class Paginator(RequestComponent):
                 self.column_names.append(get_fiendly_name(self.qs.model, lookup, as_tuple=True))
 
     def _load_tabs(self):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
 
         subsets = []
         if self.subsets is None:
-            subsets = loader.subsets[self.qs.model]
+            subsets = CACHE['SUBSETS'][self.qs.model]
         elif self.subsets:
             for subset_name in self.subsets.keys():
-                for subset in loader.subsets[self.qs.model]:
+                for subset in CACHE['SUBSETS'][self.qs.model]:
                     if subset['name'] == subset_name:
                         subsets.append(subset)
 

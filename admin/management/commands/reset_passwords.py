@@ -6,7 +6,6 @@ from djangoplus.admin.models import User
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        User.objects.all()
-        for user in User.objects.all():
-            user.set_password(settings.DEFAULT_PASSWORD)
-            user.save()
+        user = User.objects.first()
+        user.set_password(settings.DEFAULT_PASSWORD)
+        User.objects.update(password=user.password)

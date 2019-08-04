@@ -1,13 +1,14 @@
+{% if component.has_item or component.form_prefix %}
 <div class="panel panel-default">
-    {% if self.title %}
+    {% if component.title %}
         <div class="panel-heading clearfix">
             <span class="pull-left">
-                {% if self.icon %}<i class="fa {{ self.icon }}"></i>{% endif %} {{ self.title }}
+                {% if component.icon %}<i class="fa {{ component.icon }}"></i>{% endif %} {{ component.title }}
             </span>
         </div>
     {% endif %}
     <div class="panel-body no-padding">
-        {% if self.mobile %}
+        {% if component.mobile %}
             <div class="alert alert-info">
                 Clique no ícone <i class="fa fa-check"></i> para detalhar a informação.
             </div>
@@ -16,25 +17,25 @@
             <thead>
                 <tr>
                     <th style="height: 40px; border: solid 1px #CCC; background-color: #DDD"></th>
-                    {% for week_day in self.WEEK_DAYS %}
-                        <th style="height: 40px; border: solid 1px #CCC; background-color: #DDD;text-align: center" valign="center">{% if self.mobile %}{{ week_day.0 }}{% else %}{{ week_day }}{% endif %}</th>
+                    {% for week_day in component.WEEK_DAYS %}
+                        <th style="height: 40px; border: solid 1px #CCC; background-color: #DDD;text-align: center" valign="center">{% if component.mobile %}{{ week_day.0 }}{% else %}{{ week_day }}{% endif %}</th>
                     {% endfor %}
                 </tr>
             </thead>
             <tbody>
-                {% for row in self.rows %}
+                {% for row in component.rows %}
                     <tr>
                         {% for value in row %}
-                            {% if forloop.first %}
+                            {% if loop.first %}
                                 <th style="height: 40px; border: solid 1px #CCC; background-color:#EEE;text-align: center" valign="center">{{ value }}</th>
                             {% else %}
                                 <td style="height: 40px; width: 11%; border: solid 1px #DDD;text-align: center" valign="center">
-                                    {% if self.form_prefix %}
-                                        <input class="schedule-time" type="checkbox" value="{{ forloop.counter0 }}::{{ row.0 }}" {% if value %}checked{% endif %} onclick="checkTimes('{{ self.form_prefix }}')">
+                                    {% if component.form_prefix %}
+                                        <input class="schedule-time" type="checkbox" value="{{ loop.index0 }}::{{ row.0 }}" {% if value %}checked{% endif %} onclick="checkTimes('{{ component.form_prefix }}')">
                                         <span class="custom-checkbox"></span>
                                     {% else %}
                                         {% for item in value %}
-                                            {% if self.mobile %}<div data-toggle="tooltip" title="{{ item }}"><i class="fa fa-check"></i> </div>{% else %}{{ item|format }}{% endif %}
+                                            {% if component.mobile %}<div data-toggle="tooltip" title="{{ item }}"><i class="fa fa-check"></i> </div>{% else %}{{ item|format }}{% endif %}
                                         {% endfor %}
                                     {% endif %}
                                 </td>
@@ -47,12 +48,13 @@
     </div>
 </div>
 
-{% if self.form_prefix %}
+{% if component.form_prefix %}
 <script>
     function checkTimes(prefix){
         var widget = $('#id_'+prefix+'values');
         widget.val($('.schedule-time:checked').map(function () { return $(this).val(); }).get().join('|'));
     }
-    checkTimes('{{ self.form_prefix }}');
+    checkTimes('{{ component.form_prefix }}');
 </script>
+{% endif %}
 {% endif %}

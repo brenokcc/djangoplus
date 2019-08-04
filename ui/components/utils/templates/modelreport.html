@@ -1,13 +1,13 @@
-{% load i18n %}
 
-{% if not self.as_pdf %}
-<h2><i class="fa fa-file-text-o"></i> {{ self.title }}</h2>
 
-{{ self.form }}
+{% if not component.as_pdf %}
+<h2><i class="fa fa-file-text-o"></i> {{ component.title }}</h2>
+
+{{ component.form }}
 
 <div class="seperator"></div>
 
-{% if self.components %}
+{% if component.components %}
     <ul class="nav nav-tabs">
         <li class="active"
             onclick="$('.tab-statistics, .tab-data').toggle(); $('.nav-tabs > li').toggleClass('active')"><a href="javascript:">Estatística</a></li>
@@ -19,20 +19,20 @@
 
 {% endif %}
 
-<div class="tab-data" style="{% if self.components %}display: none{% endif %}">
-    {% if not self.as_pdf %}
+<div class="tab-data" style="{% if component.components %}display: none{% endif %}">
+    {% if not component.as_pdf %}
     <div align="right">
-        <a target="_blank" href="{{ self.request.get_full_path }}{% if self.request.META.QUERY_STRING %}&{% else %}?{% endif %}pdf={{ self.id }}">
+        <a target="_blank" href="{{ component.request.get_full_path()}}{% if component.request.META.QUERY_STRING %}&{% else %}?{% endif %}pdf={{ component.id }}">
             <i class="fa fa-file"></i> <span>Exportar PDF</span>
         </a>
     </div>
     {% endif %}
-    {{ self.table }}
+    {{ component.table|safe }}
 </div>
 
 <div class="tab-statistics" style="display: block">
-    {% for component in self.components %}
-        {{ component }}
+    {% for component in component.components %}
+        {{ component|safe }}
         <div class="seperator"></div>
     {% endfor %}
 </div>

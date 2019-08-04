@@ -1,17 +1,17 @@
-{% load i18n %}
-{% if self.as_pdf %}{% else %}
-{% if self.type == "box" %}
+
+{% if component.as_pdf %}{% else %}
+{% if component.type == "box" %}
 <div class="panel panel-default">
     <div class="panel-heading">
-        <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
+        <i class="fa fa-bar-chart-o fa-fw"></i> {{ component.title }}
     </div>
     <div class="panel-body">
-        {% if self.display %}
+        {% if component.display %}
         <table width="100%">
             <tr>
-            {% for label, value, percentage in self.get_box_series %}
+            {% for label, value, percentage in component.get_box_series() %}
                 <td align="center">
-                <div data-meta="{{ label }}:{{ value }}::0x{{ forloop.counter0 }}" class="ct-chart{{ self.id }}" data-toggle="tooltip" title="{{ value }} {{ label }}, {{ percentage }}%" style="background-color: {{ self.next_color }}; min-width: 100px; margin: 5px; color:white; border-radius: 15px;">
+                <div data-meta="{{ label }}:{{ value }}::0x{{ loop.index0 }}" class="ct-chart{{ component.id }}" data-toggle="tooltip" title="{{ value }} {{ label }}, {{ percentage }}%" style="background-color: {{ component.next_color() }}; min-width: 100px; margin: 5px; color:white; border-radius: 15px;">
                     <div style="font-size: 700%">{{ value }}</div>
                     <div style="font-size: 150%">{{ label }}</div>
                     <div>{{ percentage }}%</div>
@@ -22,7 +22,7 @@
             </tr>
         </table>
         {% else %}
-            <div class="alert alert-warning">{% trans "No records found" %}.</div>
+            <div class="alert alert-warning">{{ _("No records found") }}.</div>
         {% endif %}
     </div>
 </div>
@@ -30,39 +30,39 @@
 <link href="/static/css/chartist.min.css" rel="stylesheet">
 <script src="/static/js/chartist.min.js"></script>
 <style>
-    .ct-chart{{ self.id }} { height: 300px; padding: 0px }
+    .ct-chart{{ component.id }} { height: 300px; padding: 0px }
     .ct-label { font-size: 1.25rem }
     {% include "chart_colors.css" %}
 </style>
 <div class="panel panel-default">
     <div class="panel-heading">
-        <i class="fa fa-bar-chart-o fa-fw"></i> {{ self.title }}
+        <i class="fa fa-bar-chart-o fa-fw"></i> {{ component.title }}
     </div>
     <div class="panel-body">
-        {% if self.display %}
-            <div class="ct-chart{{ self.id }}" style="width: 100%; position: relative"></div>
+        {% if component.display %}
+            <div class="ct-chart{{ component.id }}" style="width: 100%; position: relative"></div>
         {% else %}
-            <div class="alert alert-warning">{% trans "No records found" %}.</div>
+            <div class="alert alert-warning">{{ _("No records found") }}.</div>
         {% endif %}
     </div>
 </div>
-{% if self.display %}
+{% if component.display %}
 <script>
     var charts = {pie : Chartist.Pie, donut: Chartist.Pie, bar:Chartist.Bar, horizontalbar: Chartist.Bar, stack:Chartist.Bar, horizontalstack: Chartist.Bar, line:Chartist.Line, area:Chartist.Line}
 
-    var type{{ self.id }} = '{{ self.type }}';
-    var labels{{ self.id }} = {{ self.labels|tojson|safe }};
-    var series{{ self.id }} = {{ self.series|tojson|safe }};
-    var groups{{ self.id }} = {{ self.groups|tojson|safe }};
-    var symbol{{ self.id }} = '{{ self.symbol }}';
+    var type{{ component.id }} = '{{ component.type }}';
+    var labels{{ component.id }} = {{ component.labels|tojson|safe }};
+    var series{{ component.id }} = {{ component.series|tojson|safe }};
+    var groups{{ component.id }} = {{ component.groups|tojson|safe }};
+    var symbol{{ component.id }} = '{{ component.symbol }}';
 
-    var low{{ self.id }} = 0;
-    var heigh{{ self.id }} = null;
+    var low{{ component.id }} = 0;
+    var heigh{{ component.id }} = null;
 
     var sum = function (a, b) {
         return a + b
     };
-    function toSeries{{ self.id }}(matrix) {
+    function toSeries{{ component.id }}(matrix) {
         var data = [];
         for (var i = 0; i < matrix.length; i++) {
             var serie = [];
@@ -70,28 +70,28 @@
                 var value = matrix[i][j];
                 var formated = value;
                 if(Number(value) === value && value % 1 !== 0) formated = value.toFixed(2).replace('.', ',');
-                var meta = labels{{ self.id }}[j] + ': ' + formated;
-                if(groups{{ self.id }}.length > 0){
-                    meta = groups{{ self.id }}[i] + ': ' + formated;
+                var meta = labels{{ component.id }}[j] + ': ' + formated;
+                if(groups{{ component.id }}.length > 0){
+                    meta = groups{{ component.id }}[i] + ': ' + formated;
                 }
                 serie.push({value: value, meta: meta+'::'+i+'x'+j})
-                if (value < low{{ self.id }}) low{{ self.id }} = value;
-                if (heigh{{ self.id }} == null || value > heigh{{ self.id }}) heigh{{ self.id }} = value;
+                if (value < low{{ component.id }}) low{{ component.id }} = value;
+                if (heigh{{ component.id }} == null || value > heigh{{ component.id }}) heigh{{ component.id }} = value;
             }
             data.push(serie)
         }
-        if(type{{ self.id }}=='pie' || type{{ self.id }}=='donut') return data[0];
+        if(type{{ component.id }}=='pie' || type{{ component.id }}=='donut') return data[0];
         else return data;
     }
     var options = [];
-    if(type{{ self.id }}=='area') options['showArea'] = true;
-    if(type{{ self.id }}=='stack' || type{{ self.id }}=='horizontalstack') {
+    if(type{{ component.id }}=='area') options['showArea'] = true;
+    if(type{{ component.id }}=='stack' || type{{ component.id }}=='horizontalstack') {
         options['seriesBarDistance'] = 30;
         options['stackBars'] = true;
     }
     options['reverseData'] = false;
-    if(type{{ self.id }}=='line' || type{{ self.id }}=='area') options['fullWidth'] = true;
-    if(type{{ self.id }}.indexOf('horizontal')>-1) options['horizontalBars'] = true;
+    if(type{{ component.id }}=='line' || type{{ component.id }}=='area') options['fullWidth'] = true;
+    if(type{{ component.id }}.indexOf('horizontal')>-1) options['horizontalBars'] = true;
     options['axisX'] = {
         offset: 50,
         labelInterpolationFnc: function (value) {
@@ -100,10 +100,10 @@
         }
     };
     options['axisY'] = {
-        offset: type{{ self.id }}.indexOf('horizontal') > -1 ? 100 : 25,
+        offset: type{{ component.id }}.indexOf('horizontal') > -1 ? 100 : 25,
         labelInterpolationFnc: function (value) {
             if(Number(value) === value && value % 1 !== 0) value = value.toFixed(2).replace('.', ',');
-            if(symbol{{ self.id }}) return value + ' '+ symbol{{ self.id }};
+            if(symbol{{ component.id }}) return value + ' '+ symbol{{ component.id }};
             else return value;
         },
         scaleMinSpace: 50,
@@ -119,15 +119,15 @@
         })
     ];
 
-    var data = {labels: labels{{ self.id }},  series: toSeries{{ self.id }}(series{{ self.id }}) };
+    var data = {labels: labels{{ component.id }},  series: toSeries{{ component.id }}(series{{ component.id }}) };
 
-    options['low{{ self.id }}'] = low{{ self.id }};
-    if(type{{ self.id }}.indexOf('stack')==-1) {
-        options['high'] = heigh{{ self.id }};
+    options['low{{ component.id }}'] = low{{ component.id }};
+    if(type{{ component.id }}.indexOf('stack')==-1) {
+        options['high'] = heigh{{ component.id }};
     }
     options['divisor'] = 2;
-    if(type{{ self.id }}=='donut' || type{{ self.id }}=='pie') {
-        if(type{{ self.id }}=='donut') {
+    if(type{{ component.id }}=='donut' || type{{ component.id }}=='pie') {
+        if(type{{ component.id }}=='donut') {
             options['donut'] = true;
             options['chartPadding'] = 10;
             options['labelOffset'] = 35;
@@ -138,11 +138,11 @@
         options['showLabel'] = true;
         options['labelDirection'] = 'explode';
         options['labelInterpolationFnc'] = function (value, i) {
-            return Math.round(series{{ self.id }}[0][i] / series{{ self.id }}[0].reduce(sum) * 100) + '%';
+            return Math.round(series{{ component.id }}[0][i] / series{{ component.id }}[0].reduce(sum) * 100) + '%';
         };
     }
-    new charts[type{{ self.id }}]('.ct-chart{{ self.id }}', data, options).on('draw', function (data) {
-        if (data.type === 'bar' && type{{ self.id }}.indexOf('stack') > -1) {
+    new charts[type{{ component.id }}]('.ct-chart{{ component.id }}', data, options).on('draw', function (data) {
+        if (data.type === 'bar' && type{{ component.id }}.indexOf('stack') > -1) {
             data.element.attr({
                 style: 'stroke-width: 25px'
             });
@@ -151,16 +151,16 @@
 </script>
 {% endif %}
 {% endif %}
-{% if self.clickable %}
+{% if component.clickable %}
     <script>
-        $('.ct-chart{{ self.id }}').css('cursor', 'pointer');
-        $('.ct-chart{{ self.id }}').click(function(e){
+        $('.ct-chart{{ component.id }}').css('cursor', 'pointer');
+        $('.ct-chart{{ component.id }}').click(function(e){
             var position = null;
             if(e.target.hasAttribute('ct:meta')) position = e.target.getAttribute('ct:meta').split('::')[1];
-            else position = $(e.target).closest('.ct-chart{{ self.id }}')[0].getAttribute('data-meta').split('::')[1];
+            else position = $(e.target).closest('.ct-chart{{ component.id }}')[0].getAttribute('data-meta').split('::')[1];
             var url = document.location.href;
             if(url.indexOf('?')>0) url+='&uuid=1&position='+position;
-            else url+='?uuid={{ self.title }}&position='+position;
+            else url+='?uuid={{ component.title }}&position='+position;
             popup(url, false)
         });
     </script>

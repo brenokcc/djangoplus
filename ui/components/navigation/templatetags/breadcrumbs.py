@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from django import template
 from djangoplus.ui.components.navigation.breadcrumbs import Breadcrumbs
+from django_jinja import library as register
 
-register = template.Library()
 
-
-@register.simple_tag()
+@register.global_function
 def breadcrumbs(request, view_title):
     return str(Breadcrumbs(request, view_title))

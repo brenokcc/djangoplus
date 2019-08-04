@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% load breadcrumbs %}
-{% load i18n %}
+
 {% if not request.GET.popup %}
 {% block extra_head %}
     <!-- Fancybox -->
@@ -59,14 +58,14 @@
         <h1 class="navbar-header">
             <a href="/admin/" class="navbar-brand ajax" title="{{ settings.initials }}">
                 {% if settings.logo %}
-                    <img height="50px" src="/media/{{ settings.logo }}" alt="{% trans "Logo of" %} {{ settings.initials }}" />
+                    <img height="50px" src="/media/{{ settings.logo }}" alt="{{ _("Logo of") }} {{ settings.initials }}" />
                 {% else %}
-                    <span>{{ settings.initials|truncatechars:17 }}</span>
+                    <span>{{ settings.initials|truncatechars(17) }}</span>
                 {% endif %}
-                {% if request.session.scope %}
+                {% if request.user.scope %}
                     <div class="hide-mobile" style="float: right; margin-left: 10px">
                         {% if not settings.logo %} - {% endif %}
-                        {{ request.session.scope }}
+                        {{ request.user.scope }}
                     </div>
                 {% endif %}
             </a>
@@ -75,21 +74,8 @@
         <!-- Top Navigation: Left Menu -->
         {% if request.user.is_authenticated %}
         <ul class="nav navbar-nav navbar-left navbar-top-links">
-            <li><a class="ajax" href="/admin/" title="{% trans "Main" %}"><i class="fa fa-home fa-fw"></i></a></li>
-            <li><a class="ajax referrer-link" href="javascript:" title="{% trans "Back" %}"><i class="fa fa-arrow-left fa-fw"></i></a>
-            {% if debug %}
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="fa fa-wrench fa-fw"></i> <b class="caret"></b>
-                </a>
-                <ul class="dropdown-menu dropdown-alerts">
-                    <li><a target="_blank" href="/admin/icons/" title="{% trans "Icons" %}"><i class="fa fa-wrench fa-fw"></i> {% trans "Icons" %}</a>
-                    <li><a target="_blank" href="/docs/doc/" title="{% trans "Documentation" %}"><i class="fa fa-copy fa-fw"></i> {% trans "Documentation" %}</a>
-                    <li><a target="_blank" href="/docs/tutorial/" title="{% trans "Videos" %}"><i class="fa fa-desktop fa-fw"></i> {% trans "Videos" %}</a>
-                    <li><a target="_blank" href="/docs/homologate/" title="{% trans "Homologate" %}"><i class="fa fa-thumbs-o-up fa-fw"></i> {% trans "Homologate" %}</a>
-                </ul>
-            </li>
-            {% endif %}
+            <li><a class="ajax" href="/admin/" title="{{ _("Main") }}"><i class="fa fa-home fa-fw"></i></a></li>
+            <li><a class="ajax referrer-link" href="javascript:" title="{{ _("Back") }}"><i class="fa fa-arrow-left fa-fw"></i></a>
         </ul>
         {% endif %}
 
@@ -116,7 +102,7 @@
             </li>
             {% endif %}
             <li class="dropdown">
-                <a class="dropdown-toggle" href="javascript:" title="{% trans "Settings" %}" onclick="$('#user-drop-down').toggle()">
+                <a class="dropdown-toggle" href="javascript:" title="{{ _("Settings") }}" onclick="$('#user-drop-down').toggle()">
                     <span class="hide-mobile">{{ request.user.name }}</span> <i class="fa fa-ellipsis-v fa-fw"></i></b>
                 </a>
                 <div id="user-drop-down" class="dropdown-menu" onmouseleave="$(this).toggle()">
@@ -124,19 +110,24 @@
                     <div class="padding-md">
                             {% if not request.session.side_menu_size %}
                             <div style="text-align: center">
-                                <img src="{{ request.user|photo }}" alt='{% trans "Photo" %} {% trans "of" %} {{ self.request.user.name }}' class="img-circle" width="100" height="100">
+                                <img src="{{ request.user|photo }}" alt='{{ _("Photo") }} {{ _("of") }} {{ request.user.name }}' class="img-circle" width="100" height="100">
                             </div>
                             {% endif %}
                             <div>
                                 <ul class="dropdown-user">
-                                    <li><a class="popup" href="/admin/profile/"><i class="fa fa-user fa-fw"></i> {% trans "Edit Profile" %}</a></li>
+                                    <li><a class="popup" href="/admin/profile/"><i class="fa fa-user fa-fw"></i> {{ _("Edit Profile") }}</a></li>
                                     {% if request.user.is_superuser %}
-                                        <li><a class="ajax" href="/admin/configure/"><i class="fa fa-gear fa-fw"></i> {% trans "Settings" %}</a></li>
+                                        <li><a class="ajax" href="/admin/configure/"><i class="fa fa-gear fa-fw"></i> {{ _("Settings") }}</a></li>
                                         <li class="divider"></li>
-                                        <li><a href="/list/admin/group/" title="{% trans "Groups" %}" class="ajax"><i class="fa fa-users fa-fw"></i> {% trans "Groups" %}</a></li>
-                                        <li><a href="/list/admin/permission/" title="{% trans "Permissions" %}" class="ajax"><i class="fa fa-check fa-fw"></i> {% trans "Permissions" %}</a></li>
-                                        <li><a href="/list/admin/user/" title="{% trans "Users" %}" class="ajax"><i class="fa fa-user-plus fa-fw"></i> {% trans "Users" %}</a></li>
-                                        <li><a class="ajax" href="/list/admin/log/" title="{% trans "Logs" %}"><i class="fa fa-history fa-fw"></i> {% trans "Logs" %}</a></li>
+                                        <li><a href="/list/admin/group/" title="{{ _("Groups") }}" class="ajax"><i class="fa fa-users fa-fw"></i> {{ _("Groups") }}</a></li>
+                                        <li><a href="/list/admin/permission/" title="{{ _("Permissions") }}" class="ajax"><i class="fa fa-check fa-fw"></i> {{ _("Permissions") }}</a></li>
+                                        <li><a href="/list/admin/user/" title="{{ _("Users") }}" class="ajax"><i class="fa fa-user-plus fa-fw"></i> {{ _("Users") }}</a></li>
+                                        <li><a class="ajax" href="/list/admin/log/" title="{{ _("Logs") }}"><i class="fa fa-history fa-fw"></i> {{ _("Logs") }}</a></li>
+                                        <li class="divider"></li>
+                                        <li><a target="_blank" href="/admin/icons/" title="{{ _("Icons") }}"><i class="fa fa-wrench fa-fw"></i> {{ _("Icons") }}</a>
+                                        <li><a target="_blank" href="/docs/doc/" title="{{ _("Documentation") }}"><i class="fa fa-copy fa-fw"></i> {{ _("Documentation") }}</a>
+                                        <li><a target="_blank" href="/docs/tutorial/" title="{{ _("Videos") }}"><i class="fa fa-desktop fa-fw"></i> {{ _("Videos") }}</a>
+                                        <li><a target="_blank" href="/docs/homologate/" title="{{ _("Homologate") }}"><i class="fa fa-thumbs-o-up fa-fw"></i> {{ _("Homologate") }}</a>
                                         <li class="divider"></li>
                                     {% endif %}
                                     </li>
@@ -145,14 +136,14 @@
                     </div>
                     {% if role_selector.groups %}
                     <div class="padding-md" style="min-height:100px; border-top: 1px solid #e5e5e5">
-                        {{ role_selector }}
+                        {{ role_selector|safe }}
                     </div>
                     {% endif %}
                     <div class="padding-md">
                         <div align="center">
                             <ul class="dropdown-user">
                                 <li>
-                                    <a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {% trans "Logout" %}</a>
+                                    <a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {{ _("Logout") }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -165,12 +156,12 @@
 
     <!-- Sidebar -->
     {% if request.user.is_authenticated %}
-        {{ menu }}
+        {{ menu|safe }}
     {% endif %}
     <!-- Page Content -->
     <main id="page-wrapper">
             {% if request.user.is_authenticated %}
-                {% breadcrumbs request title %}
+                {{  breadcrumbs(request, title) }}
             {% else %}
                 <br>
             {% endif %}
@@ -207,7 +198,7 @@
                     {% if settings.email %}
                         {{ settings.email }} |
                     {% endif %}
-                    {% trans "Version" %} {{ settings.version }}
+                    {{ _("Version") }} {{ settings.version }}
                 </div>
         </div>
     </main>

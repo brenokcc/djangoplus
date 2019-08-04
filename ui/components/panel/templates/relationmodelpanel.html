@@ -1,42 +1,42 @@
-{% load i18n %}
-{% if self.as_pdf %}
+
+{% if component.as_pdf %}
 
 {% else %}
     <div class="panel panel-default">
 
         <div class="panel-heading clearfix">
             <span class="pull-left">
-                {{ self.title }}
+                {{ component.title }}
             </span>
         </div>
 
         <div class="panel-body no-padding">
-            {% if not self.request.GET.popup %}
+            {% if not component.request.GET.popup %}
                 <div class="action-bar">
                     <div class="pull-right">
-                        {{ self.drop_down }}
+                        {{ component.drop_down|safe }}
                     </div>
                 </div>
             {% endif %}
 
-            {% if self.items %}
+            {% if component.items %}
 
-                {% for obj, paginator in self.items %}
-                    <div id="{% uuid %}" class="action-bar">
+                {% for obj, paginator in component.items %}
+                    <div id="{{ uuid() }}" class="action-bar">
                         <div class="pull-left">
-                            <h4>{% obj_icons self.request obj %} {{ obj }}</h4>
+                            <h4>{{ obj_icons(component.request, obj) }} {{ obj }}</h4>
                         </div>
                     </div>
 
                     <div class="panel-body">
-                        {{ paginator }}
+                        {{ paginator|safe }}
                     </div>
 
                     <br>
                 {% endfor %}
             {% else %}
                 <div class="alert alert-warning">
-                    {% trans "No records found" %}
+                    {{ _("No records found") }}
                 </div>
             {% endif %}
         </div>

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-import os
 import json
 from os import path, listdir
 from django.conf import settings
-from djangoplus.cache import loader
+from djangoplus.cache import CACHE
 from djangoplus.admin.models import Group
 from djangoplus.docs import Documentation, ApiDocumentation
 from djangoplus.decorators.views import view, action
@@ -35,16 +34,16 @@ def homologate(request):
     groups = Group.objects.filter(role__scope__isnull=True).order_by('name').distinct()
 
     http_host = request.META['HTTP_HOST']
-    if loader.organization_model:
-        organization_model_name = loader.organization_model.__name__.lower()
-    if loader.unit_model:
-        unit_model_name = loader.unit_model.__name__.lower()
+    if CACHE['ORGANIZATION_MODEL']:
+        organization_model_name = CACHE['ORGANIZATION_MODEL'].__name__.lower()
+    if CACHE['UNIT_MODEL']:
+        unit_model_name = CACHE['UNIT_MODEL'].__name__.lower()
 
     organization_group_names = []
     unit_group_names = []
-    for model in loader.role_models:
-        name = loader.role_models[model]['name']
-        scope = loader.role_models[model]['scope']
+    for model in CACHE['ROLE_MODELS']:
+        name = CACHE['ROLE_MODELS'][model]['name']
+        scope = CACHE['ROLE_MODELS'][model]['scope']
         if scope == 'organization':
             organization_group_names.append(name)
         if scope == 'unit':
@@ -74,7 +73,7 @@ def homologate(request):
 @view('Documentation', login_required=False)
 def doc(request):
     documentation = Documentation()
-    workflow_data = json.dumps(loader.workflows)
+    workflow_data = json.dumps(CACHE['WORKFLOWS'])
     return locals()
 
 

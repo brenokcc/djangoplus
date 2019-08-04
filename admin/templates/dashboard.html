@@ -1,4 +1,4 @@
-{{ widget }}
+{% if widget %}{{ widget|safe }}{% endif %}
 {% for widget in widgets %}
-    {{ widget }}
+    {{ widget|format }}
 {% endfor %}

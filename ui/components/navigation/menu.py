@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from django.conf import settings
+from djangoplus.cache import CACHE
 from djangoplus.utils import permissions
-from djangoplus.ui import RequestComponent
-from django.utils.safestring import mark_safe
+from djangoplus.ui.components import Component
 
 
-class Menu(RequestComponent):
+class Menu(Component):
     def __init__(self, request, app_settings=None):
         super(Menu, self).__init__('menu', request)
         self.subitems = dict()
@@ -48,8 +48,7 @@ class Menu(RequestComponent):
 
     def _load(self):
         if settings.DEBUG or 'side_menu' not in self.request.session:
-            from djangoplus.cache import loader
-            for item in loader.views:
+            for item in CACHE['VIEWS']:
                 if item['menu']:
                     can_view = permissions.check_group_or_permission(
                         self.request, item['can_view']
@@ -68,4 +67,4 @@ class Menu(RequestComponent):
             self.request.session.save()
 
     def __str__(self):
-        return mark_safe(self.request.session['side_menu'])
+        return self.request.session['side_menu']

@@ -7,7 +7,7 @@ import qrcode
 import base64
 import tempfile
 from uuid import uuid4
-from django import template
+
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -17,7 +17,7 @@ from djangoplus.utils import formatter
 from djangoplus.utils.metadata import get_metadata, getattr2
 
 
-register = template.Library()
+from django_jinja import library as register
 
 
 @register.filter
@@ -40,7 +40,7 @@ def get_item(dictionary, key):
     return dictionary.get(key)
 
 
-@register.simple_tag(name='uuid')
+@register.global_function(name='uuid')
 def do_uuid4():
     return uuid4()
 
@@ -51,14 +51,14 @@ def full_date_format(value):
     return value.strftime('%d de %B de %Y')
 
 
-@register.filter(name='format')
+@register.filter(name='format', )
 def format2(value, request=None):
     if value and hasattr(value, 'id') and hasattr(value, '_meta') and hasattr(value, 'fieldsets'):
         app = get_metadata(value.__class__, 'app_label')
         cls = value.__class__.__name__.lower()
         if request and request.user.has_perm('{}.{}'.format(app, cls)):
             return link(value)
-    return mark_safe(formatter.format_value(value).replace('\n', '<br />'))
+    return formatter.format_value(value)
 
 
 @register.filter
@@ -75,7 +75,7 @@ def ordered_list(value):
     return mark_safe(''.join(ol))
 
 
-@register.simple_tag()
+@register.global_function
 def value_at(col_value, col_index, template_filters):
     from . import utils
     value = col_value
@@ -176,7 +176,7 @@ def toast(m):
     return mark_safe("<script>$.toast({});</script>".format(params))
 
 
-@register.simple_tag()
+@register.global_function
 def set_request(obj, request):
     obj.request = request
     return ''
@@ -219,7 +219,7 @@ def qrcode64(text):
     return mark_safe('<img width="100" src="data:image/jpeg;base64, {}"/>'.format(img_str))
 
 
-@register.simple_tag()
+@register.global_function
 def captcha(form):
     return form.captcha and mark_safe('''
         <div align="center">
@@ -232,4 +232,29 @@ def captcha(form):
 
 @register.filter
 def snippet(obj, template_name):
-    return render_to_string('{}.html'.format(template_name), dict(self=obj))
+    return render_to_string('{}.html'.format(template_name), dict(obj=obj))
+
+
+@register.filter
+def in_group(user, group_names):
+    if user:
+        return user.groups.filter(name__in=[name.strip() for name in group_names.split(',') if name]).exists()
+    return False
+
+
+@register.filter
+def in_scope(obj, scope):
+    from djangoplus.admin.models import User
+    username_attr = get_metadata(obj, 'role_username')
+    if username_attr:
+        user = User.objects.get({username_attr: getattr(obj, username_attr)})
+        return user.role_set.filter(scope=scope).exists()
+    return False
+
+
+@register.filter
+def is_user(obj, request):
+    username_attr = get_metadata(obj, 'role_username')
+    if username_attr:
+        return getattr(obj, username_attr) == request.user.username
+    return False

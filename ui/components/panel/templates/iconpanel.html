@@ -1,20 +1,22 @@
-{% load i18n %}
-{% if self.as_pdf %}{% else %}
+
+{% if component.as_pdf %}{% else %}
 <div class="panel panel-default info-panel" id="panel-dados-gerais">
     <div class="panel-heading">
-        {{ self.title }}
+        {{ component.title }}
     </div>
     <div class="panel-body">
-        {% for item in self.items %}
+        {% if component.items %}
+            {% for item in component.items %}
             <div style="text-align: center; float: left; margin: 15px">
                 <i class="fa {{ item.icon }}" style="font-size: 50px;"></i>
                 <p>
                     <a class="ajax" href="{{ item.url }}">{{ item.label }}</a>
                 </p>
             </div>
-        {% empty %}
-            <div class="alert alert-warning">{% trans "No records found" %}.</div>
-        {% endfor %}
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-warning">{{ _("No records found") }}.</div>
+        {% endif %}
     </div>
 </div>
 {% endif %}

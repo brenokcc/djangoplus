@@ -1,5 +1,5 @@
 {% extends "login/base.html" %}
-{% load i18n %}
+
 
 {% block form %}
 
@@ -9,16 +9,16 @@
 
                             <div class="form-group">
                                 <label>E-mail</label>
-                                <input type="text" id="id_email" name="email" placeholder="E-mail" class="form-control input-sm bounceIn animation-delay4" value="{{ form.data.email|default:"" }}">
+                                <input type="text" id="id_email" name="email" placeholder="E-mail" class="form-control input-sm bounceIn animation-delay4" value="{{ form.data.email|default("") }}">
                                 {{ form.email.errors }}
                             </div>
 
                             <div class="seperator"></div>
                             <hr/>
 
-                            {% captcha form %}
+                            {{ captcha(form) }}
 
-                            <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-mail-forward"></i> {% trans "Send E-mail" %}</button>
+                            <button class="btn btn-default btn-md bounceIn animation-delay5 pull-right" type="submit"><i class="fa fa-mail-forward"></i> {{ _("Send E-mail") }}</button>
 
                         </form>
 

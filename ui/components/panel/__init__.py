@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from decimal import Decimal
-from djangoplus.ui import RequestComponent
+from djangoplus.ui.components import Component
 from django.utils.text import slugify
 from djangoplus.utils import permissions, execute_and_format
 from django.template.loader import render_to_string
@@ -11,7 +11,7 @@ from djangoplus.utils.metadata import get_metadata, get_fieldsets, find_field_by
     check_condition, is_one_to_one, is_many_to_one, should_filter_or_display
 
 
-class Panel(RequestComponent):
+class Panel(Component):
 
     def __init__(self, request, title=None, text=None, icon=None):
         super(Panel, self).__init__(title, request)
@@ -20,15 +20,20 @@ class Panel(RequestComponent):
         self.icon = icon
 
 
-class ImagePanel(RequestComponent):
-    def __init__(self, request, title=None, images=(), icon=None):
+class ImagePanel(Component):
+    def __init__(self, images=(), request=None, title=None, icon=None):
         super(ImagePanel, self).__init__(title, request)
         self.title = title
         self.icon = icon
-        self.images = images
+        self.images = []
+        for image in images:
+            if type(image) in (tuple, list):
+                self.images.append(image)
+            else:
+                self.images.append((image, None))
 
 
-class ModelPanel(RequestComponent):
+class ModelPanel(Component):
     def __init__(self, request, obj, current_tab=None, parent=None,
                  fieldsets=None, complete=True, readonly=False, printable=True):
 
@@ -169,7 +174,7 @@ class ModelPanel(RequestComponent):
         self.dropdown.add_action(label, url, 'class-action {}'.format(css), icon, category)
 
 
-class IconPanel(RequestComponent):
+class IconPanel(Component):
 
     def __init__(self, request, title, icon=None):
         super(IconPanel, self).__init__('iconpanel', request)
@@ -182,14 +187,14 @@ class IconPanel(RequestComponent):
         self.items.append(item)
 
 
-class ShortcutPanel(RequestComponent):
+class ShortcutPanel(Component):
 
     def __init__(self, request):
-        from djangoplus.cache import loader
+        from djangoplus.cache import CACHE
         super(ShortcutPanel, self).__init__('shortcutpanel', request)
         self.items = []
 
-        for model, add_shortcut in loader.icon_panel_models:
+        for model, add_shortcut in CACHE['ICON_PANEL_MODELS']:
 
             if type(add_shortcut) == bool:
                 add_model = add_shortcut
@@ -201,7 +206,7 @@ class ShortcutPanel(RequestComponent):
             if add_model or request.user.is_superuser:
                 if permissions.has_add_permission(request, model):
                     self.add_model(model)
-        for item in loader.views:
+        for item in CACHE['VIEWS']:
             if item['add_shortcut']:
                 if permissions.check_group_or_permission(request, item['can_view']):
                     self.add(
@@ -227,15 +232,15 @@ class ShortcutPanel(RequestComponent):
             self.add_model(model)
 
 
-class CardPanel(RequestComponent):
+class CardPanel(Component):
 
     def __init__(self, request):
         super(CardPanel, self).__init__('cardpanel', request)
 
         self.items = []
 
-        from djangoplus.cache import loader
-        for model, list_shortcut in loader.card_panel_models:
+        from djangoplus.cache import CACHE
+        for model, list_shortcut in CACHE['CARD_PANEL_MODELS']:
 
             if type(list_shortcut) == bool:
                 add_model = list_shortcut
@@ -248,12 +253,12 @@ class CardPanel(RequestComponent):
                 if permissions.has_list_permission(request, model):
                     self.add_model(model)
 
-                if model in loader.subsets:
+                if model in CACHE['SUBSETS']:
                     icon = get_metadata(model, 'icon')
                     title = get_metadata(model, 'verbose_name_plural')
                     app_label = get_metadata(model, 'app_label')
                     model_name = model.__name__.lower()
-                    for item in loader.subsets[model]:
+                    for item in CACHE['SUBSETS'][model]:
                         can_view = item['can_view']
                         # TODO False
                         if False and permissions.check_group_or_permission(self.request, can_view):
@@ -284,7 +289,7 @@ class CardPanel(RequestComponent):
             self.add(icon, title, None, url, '', permission)
 
 
-class RelationModelPanel(RequestComponent):
+class RelationModelPanel(Component):
     def __init__(self, request, qs, title, relation_name):
         from djangoplus.utils.relations import Relation
         super(RelationModelPanel, self).__init__('qmp', request)
@@ -299,7 +304,7 @@ class RelationModelPanel(RequestComponent):
         self.drop_down.add_action(label, url, 'class-action {}'.format(css), icon, category)
 
 
-class DashboardPanel(RequestComponent):
+class DashboardPanel(Component):
 
     def __init__(self, request):
 
@@ -343,7 +348,8 @@ class DashboardPanel(RequestComponent):
                 if permissions.check_group_or_permission(self.request, group_names, ignore_superuser=True):
                     func = getattr(obj, func_name)
                     f_return = execute_and_format(self.request, func)
-                    if f_return:
+
+                    if f_return is not None:
                         if type(f_return) in (int, Decimal):
                             verbose_name = get_metadata(model, 'verbose_name_plural')
                             icon = get_metadata(model, 'icon')
@@ -380,18 +386,20 @@ class DashboardPanel(RequestComponent):
 
 class AppDashboard(DashboardPanel):
 
+    template_name = 'dashboardpanel.html'
+
     def __init__(self, request):
         super(AppDashboard, self).__init__(request)
         self.load_widgets()
 
     def load_widgets(self):
-        from djangoplus.cache import loader
-        for model in loader.subsets:
+        from djangoplus.cache import CACHE
+        for model in CACHE['SUBSETS']:
             icon = get_metadata(model, 'icon', 'fa-bell-o')
             title = get_metadata(model, 'verbose_name_plural')
             app_label = get_metadata(model, 'app_label')
             model_name = model.__name__.lower()
-            for item in loader.subsets[model]:
+            for item in CACHE['SUBSETS'][model]:
                 description = item['verbose_name']
                 notify = item['notify']
                 if notify is True or notify and permissions.check_group_or_permission(self.request, notify):
@@ -405,7 +413,7 @@ class AppDashboard(DashboardPanel):
                             self.request, title, count, url, description, icon
                         )
                         self.right.append(notification_panel)
-        for model in loader.list_dashboard:
+        for model in CACHE['LIST_DASHBOARD']:
             title = get_metadata(model, 'verbose_name_plural')
             position = get_metadata(model, 'dashboard')
             paginator = Paginator(self.request, model.objects.all(self.request.user), title)
@@ -417,10 +425,10 @@ class AppDashboard(DashboardPanel):
         self.top.append(icon_panel)
         self.center.append(card_panel)
 
-        for item in loader.subset_widgets:
+        for item in CACHE['SUBSET_WIDGETS']:
             self.add_widget(item['model'].objects.all(self.request.user), item)
 
-        for item in loader.widgets:
+        for item in CACHE['WIDGETS']:
             if permissions.check_group_or_permission(self.request, item['can_view'], ignore_superuser=True):
                 func = item['function']
                 position = item['position']
@@ -445,12 +453,12 @@ class ModelDashboard(DashboardPanel):
         self.load_widgets()
 
     def load_widgets(self):
-        from djangoplus.cache import loader
-        for item in loader.model_widgets.get(type(self.obj), ()):
+        from djangoplus.cache import CACHE
+        for item in CACHE['MODEL_WIDGETS'].get(type(self.obj), ()):
             self.add_widget(self.obj, item)
 
 
-class NumberPanel(RequestComponent):
+class NumberPanel(Component):
 
     def __init__(self, request, title, number, description, icon=None):
         super(NumberPanel, self).__init__(title, request)
@@ -460,7 +468,7 @@ class NumberPanel(RequestComponent):
         self.icon = icon or 'fa-comment-o'
 
 
-class NotificationPanel(RequestComponent):
+class NotificationPanel(Component):
 
     def __init__(self, request, title, count, url, description, icon=None):
         super(NotificationPanel, self).__init__(title, request)

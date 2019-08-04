@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from tempfile import mktemp
 from django.template.loader import render_to_string
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.conf import settings
 import tempfile
 import json
 import os
 import datetime
-
+from django.contrib import messages
 from djangoplus.utils.formatter import to_ascii
 
 
@@ -17,6 +17,33 @@ def mobile(request):
             if device in request.META.get('HTTP_USER_AGENT', '').lower():
                 return True
     return False
+
+def httprr(request, url, message='', error=False):
+    if message:
+        if error:
+            messages.error(request, message, extra_tags='danger')
+        else:
+            messages.success(request, message, extra_tags='success')
+
+    if 'popup' in request.GET:
+        return HttpResponse(url)
+
+    if url in ('.', '..'):
+        back = abs(url == '..' and -1 or 0)
+        stack = request.session.get('stack', [])
+        if len(stack) >= back:
+            while back:
+                stack.pop()
+                back -= 1
+            request.session.save()
+            if stack:
+                title, url = stack[-1]
+        else:
+            url = request.get_full_path()
+    if request.is_ajax():
+        return HttpResponse(url)
+    else:
+        return HttpResponseRedirect(url)
 
 
 class XlsResponse(HttpResponse):
@@ -103,8 +130,10 @@ def return_response(f_return, request, title, style, template_name, raise_respon
     from datetime import datetime
     from django.shortcuts import render
     from djangoplus.admin.models import Settings
-    from djangoplus.ui import ComponentHasResponseException
+    from djangoplus.ui.components import ComponentHasResponseException
     if type(f_return) == dict:
+        if 'self' in f_return:
+            f_return['obj'] = f_return['self']
         if title and 'title' not in f_return:
             f_return['title'] = title
         for key in f_return:

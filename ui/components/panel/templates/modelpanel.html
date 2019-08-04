@@ -1,6 +1,6 @@
-{% load i18n %}
-{% if self.as_pdf %}
-    {% for fieldset in self.get_active_fieldsets %}
+
+{% if component.as_pdf %}
+    {% for fieldset in component.get_active_fieldsets() %}
         {% if fieldset.paginators|length > 1 and fieldset.fields %}
             <h2>{{ fieldset.title }}</h2>
         {% endif %}
@@ -12,55 +12,55 @@
                         {% for field in fields %}
                             <td colspan="{{ fields|length|colspan }}">
                                 <dt>{{ field.verbose_name }}</dt>
-                                <dd>{{ self.obj|getattr:field.name|print_format|safe }}</dd>
+                                <dd>{{ component.obj|getattr(field.name)|print_format|safe }}</dd>
                             </td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
             </table>
         {% endif %}
-        {% if self.complete %}
+        {% if component.complete %}
             {% for paginator in fieldset.paginators %}
                 {{ paginator }}
             {% endfor %}
             {% for info in fieldset.extra %}
-                {{ self.obj|getattr:info }}
+                {{ component.obj|getattr(info) }}
             {% endfor %}
         {% endif %}
     {% endfor %}
 {% else %}
 <div class="model-panel">
-    {% if self.complete or self.drop_down.has_items %}
-    <div id="{% uuid %}" class="action-bar">
-        {% if self.complete %}
+    {% if component.complete or component.drop_down.has_items() %}
+    <div id="{{ uuid() }}" class="action-bar">
+        {% if component.complete %}
         <div class="pull-left">
-            <h2>{{ self.title }}</h2>
+            <h2>{{ component.title }}</h2>
         </div>
         {% endif %}
-        {% if not self.request.GET.popup %}
+        {% if not component.request.GET.popup %}
         <div class="pull-right">
-            {{ self.drop_down }}
+            {{ component.drop_down|safe }}
         </div>
         {% endif %}
     </div>
     {% endif %}
-    {% for fieldset in self.get_active_fieldsets %}
+    {% for fieldset in component.get_active_fieldsets() %}
 
 
-        {% if self.tabs and forloop.counter0 == self.fieldsets_without_tab_name|length %}
-            <div id="tab-{{ self.obj.id }}">
+        {% if component.tabs and loop.index0 == component.fieldsets_without_tab_name|length %}
+            <div id="tab-{{ component.obj.id }}">
                 <ul class="nav nav-tabs">
-                {% for tab_name, url in self.tabs %}
-                  <li class="{% if self.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax dontScrool" data-context="#tab-{{ self.obj.id }}" href="{{ url }}">{{ tab_name }}</a></li>
+                {% for tab_name, url in component.tabs %}
+                  <li class="{% if component.current_tab|slugify == tab_name|slugify %}active{% endif %}"><a class="ajax dontScrool" data-context="#tab-{{ component.obj.id }}" href="{{ url }}">{{ tab_name }}</a></li>
                 {% endfor %}
                 </ul>
         {% endif %}
 
-        {% if fieldset.drop_down.has_items %}
+        {% if fieldset.drop_down.has_items() %}
             <div id="panel-{{ fieldset.title|slugify }}">
-                {% if not self.request.GET.popup %}
+                {% if not component.request.GET.popup %}
                     <div class="pull-right action-bar">
-                        {{ fieldset.drop_down }}
+                        {{ fieldset.drop_down|safe }}
                     </div>
                 {% endif %}
             </div>
@@ -75,7 +75,7 @@
                     <div class="responsive-container">
                         {% if fieldset.image %}
                             <div class="model-panel-image">
-                                {{ self.obj|getattr:fieldset.image|zoom_image:"width=100%" }}
+                                {{ component.obj|getattr(fieldset.image)|zoom_image("width=100%") }}
                             </div>
                         {% endif %}
                         <div class="model-panel-fields">
@@ -84,7 +84,7 @@
                                     {% for field in fields %}
                                         <div>
                                             <label>{{ field.verbose_name }}</label>
-                                            <div>{{ self.obj|getattr:field.name|format:self.request|safe }}</div>
+                                            <div>{{ component.obj|getattr(field.name)|format(component.request)|safe }}</div>
                                         </div>
                                     {% endfor %}
                                 </div>
@@ -94,30 +94,30 @@
 
                     {% if fieldset.extra  %}
                         {% for info in fieldset.extra %}
-                            {{ self.obj|getattr:info }}
+                            {{ component.obj|getattr(info)|safe }}
                         {% endfor %}
                     {% endif %}
 
                 </div>
             </div>
         {% else %}
-            {% if self.complete %}
+            {% if component.complete %}
                 {% for info in fieldset.extra %}
-                    {{ self.obj|getattr:info }}
+                    {{ component.obj|getattr(info) }}
                 {% endfor %}
                 {% if fieldset.snippet %}
-                    {{ self.obj|snippet:fieldset.snippet }}
+                    {{ component.obj|snippet(fieldset.snippet) }}
                 {% endif %}
             {% endif %}
         {% endif %}
 
-        {% if self.complete %}
+        {% if component.complete %}
             {% for paginator in fieldset.paginators %}
-                {{ paginator }}
+                {{ paginator|safe }}
             {% endfor %}
         {% endif %}
 
-        {% if self.tabs and forloop.last %}
+        {% if component.tabs and loop.last %}
             </div>
         {% endif %}
 

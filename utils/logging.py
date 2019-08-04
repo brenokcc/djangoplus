@@ -17,4 +17,4 @@ class CustomStreamHandler(StreamHandler):
             sql = None
 
         if sql:
-            print(time, sql)
+            print(time, sql)  # .split('WHERE')[0]

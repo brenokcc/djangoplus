@@ -441,22 +441,23 @@ class ImageField(models.ImageField, FieldPlus):
         self.width_field = width_field
         self.height_field = height_field
         self.sizes = sizes
-        default = kwargs.pop('default', '/static/images/blank.png')
-        if type(default) == bytes:
-            default = default.decode()
-        if default.startswith('/static'):
-            image_name = default.split('/')[-1]
-            media_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
-            if not os.path.exists(media_image_path):
-                if not os.path.exists(settings.MEDIA_ROOT):
-                    os.mkdir(settings.MEDIA_ROOT)
-                for app_label in settings.INSTALLED_APPS:
-                    app_dir = os.path.dirname(__import__(app_label, fromlist=app_label.split('.')).__file__)
-                    static_image_path = os.path.join(app_dir, default[1:])
-                    if os.path.exists(static_image_path):
-                        if not os.path.exists(media_image_path):
-                            shutil.copy(static_image_path, media_image_path)
-            default = image_name
+        default = kwargs.pop('default', None) #  '/static/images/blank.png'
+        if default:
+            if type(default) == bytes:
+                default = default.decode()
+            if default.startswith('/static'):
+                image_name = default.split('/')[-1]
+                media_image_path = os.path.join(settings.MEDIA_ROOT, image_name)
+                if not os.path.exists(media_image_path):
+                    if not os.path.exists(settings.MEDIA_ROOT):
+                        os.mkdir(settings.MEDIA_ROOT)
+                    for app_label in settings.INSTALLED_APPS:
+                        app_dir = os.path.dirname(__import__(app_label, fromlist=app_label.split('.')).__file__)
+                        static_image_path = os.path.join(app_dir, default[1:])
+                        if os.path.exists(static_image_path):
+                            if not os.path.exists(media_image_path):
+                                shutil.copy(static_image_path, media_image_path)
+                default = image_name
         upload_to = kwargs.get('upload_to', None)
         if upload_to and type(upload_to) == str and 'dropbox:' in upload_to:
             kwargs['storage'] = dropbox.DropboxStorage()

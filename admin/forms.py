@@ -2,12 +2,11 @@
 
 import sys
 import datetime
+from django.core import signing
 from django.contrib import auth
 from django.conf import settings
-from django.utils.text import slugify
-from djangoplus.cache import loader
+from djangoplus.cache import CACHE
 from djangoplus.ui.components import forms
-from djangoplus.utils.aescipher import encrypt
 from django.utils.translation import ugettext as _
 from django.contrib.auth.hashers import make_password
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
@@ -28,14 +27,14 @@ class LoginForm(forms.Form):
         self.fields['username'].widget.attrs['class'] = 'input-sm bounceIn animation-delay2'
         if scope:
             if scope == LoginForm.ORGANIZATION or scope == (
-                    loader.organization_model and loader.organization_model.__name__.lower()):
+                    CACHE['ORGANIZATION_MODEL'] and CACHE['ORGANIZATION_MODEL'].__name__.lower()):
                 if organization:
                     self.scope_display = organization
                 else:
                     organizations = Organization.objects.all()
                     self.fields['login_scope'] = forms.ModelChoiceField(organizations)
                 self.scope = LoginForm.ORGANIZATION
-            elif scope == LoginForm.UNIT or scope == (loader.unit_model and loader.unit_model.__name__.lower()):
+            elif scope == LoginForm.UNIT or scope == (CACHE['UNIT_MODEL'] and CACHE['UNIT_MODEL'].__name__.lower()):
                 if unit:
                     self.scope_display = unit
                 else:
@@ -69,7 +68,7 @@ class LoginForm(forms.Form):
                 elif self.scope == LoginForm.UNIT:
                     user.unit = cleaned_data.get('login_scope', self.unit)
                     is_unit_user = user.role_set.filter(units__in=(user.unit, 0)).exists()
-                    is_organization_user = loader.organization_model and user.role_set.filter(
+                    is_organization_user = CACHE['ORGANIZATION_MODEL'] and user.role_set.filter(
                         scope__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:
                         raise forms.ValidationError('{} {} {}'.format(username, _('is not user of'), user.unit))
@@ -78,8 +77,7 @@ class LoginForm(forms.Form):
                     if roles.count() == 1:
                         role = roles.first()
                         if role.scope:
-                            self.request.session['scope'] = str(role.scope)
-                            self.request.session.save()
+                            user.scope = role.scope
                 user.save()
                 auth.login(self.request, user)
                 return cleaned_data
@@ -175,7 +173,7 @@ class RegisterForm(forms.Form):
             user.save()
             return user
         else:
-            token = encrypt('{};{};{}'.format(user.name, user.email, password))
+            token = signing.dumps('{};{};{}'.format(user.name, user.email, password))
             url = '{}/admin/create_user/{}/'.format(settings.SERVER_ADDRESS, token)
             msg = '{}: {}'.format(_('Click on the link to activate your account'), url), settings.SYSTEM_EMAIL_ADDRESS
             user.email_user(_('Account Activation'), msg)
@@ -266,8 +264,8 @@ class ProfileForm(forms.ModelForm):
         auth.login(self.request, user)
 
         if self.username != user.username:
-            for model in loader.role_models:
-                attr = loader.role_models[model]['username_field']
+            for model in CACHE['ROLE_MODELS']:
+                attr = CACHE['ROLE_MODELS'][model]['username_field']
                 model.objects.filter(**{attr: self.username}).update(**{attr: self.request.user.username})
 
 

@@ -1167,7 +1167,7 @@ input::placeholder, .select2-selection__placeholder {
         flex-basis: 33%;
     }
 
-    .table td:nth-child(n+5), .table th:nth-child(n+5) {
+    .table:not(.full) td:nth-child(n+5), .table:not(.full) th:nth-child(n+5) {
         display: none;
     }
 
@@ -1231,7 +1231,7 @@ input::placeholder, .select2-selection__placeholder {
         padding-left: 7px;
     }
 
-    .table td:nth-child(n+4), .table th:nth-child(n+4) {
+    .table:not(.full) td:nth-child(n+4), .table:not(.full) th:nth-child(n+4) {
         display: none;
     }
 }
@@ -1283,7 +1283,7 @@ input::placeholder, .select2-selection__placeholder {
         display: none;
     }
 
-    .table td:nth-child(n+3), .table th:nth-child(n+3) {
+    .table:not(.full) td:nth-child(n+3), .table:not(.full) th:nth-child(n+3) {
         display: none;
     }
 

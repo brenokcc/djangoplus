@@ -1,36 +1,36 @@
-{% if self.as_pdf %}{% else %}
-<div class="dashboard-wrapper">
-{% if self.top %}
+{% if component.as_pdf %}{% else %}
+<div class="{% if component.left or component.right %}dashboard-wrapper{% endif %}">
+{% if component.top %}
   <div class="dashboard-header">
-      {% for item in self.top %}
+      {% for item in component.top %}
             {{ item|safe }}
       {% endfor %}
   </div>
 {% endif %}
-{% if self.center %}
+{% if component.center %}
   <div class="dashboard-main">
-      {% for item in self.center %}
+      {% for item in component.center %}
             {{ item|safe }}
       {% endfor %}
   </div>
 {% endif %}
-{% if self.left %}
+{% if component.left %}
   <div class="dashboard-aside dashboard-aside-1">
-      {% for item in self.left %}
+      {% for item in component.left %}
             {{ item|safe }}
       {% endfor %}
   </div>
 {% endif %}
-{% if self.right %}
+{% if component.right %}
   <div class="dashboard-aside dashboard-aside-2">
-      {% for item in self.right %}
+      {% for item in component.right %}
             {{ item|safe }}
       {% endfor %}
   </div>
 {% endif %}
-{% if self.bottom %}
+{% if component.bottom %}
   <div class="dashboard-footer">
-      {% for item in self.bottom %}
+      {% for item in component.bottom %}
             {{ item|safe }}
       {% endfor %}
   </div>
