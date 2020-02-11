@@ -1,4 +1,4 @@
-Django==2.1.7
+Django==2.2.10
 pdfkit==0.6.1
 python-dateutil==2.7.3
 selenium==3.14.0
