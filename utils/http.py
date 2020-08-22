@@ -75,7 +75,7 @@ class CsvResponse(HttpResponse):
 
 class ZipResponse(HttpResponse):
     def __init__(self, file_path):
-        content = open(file_path)
+        content = open(file_path, 'r+b')
         HttpResponse.__init__(self, content=content, content_type='application/zip')
         self['Content-Disposition'] = 'attachment; filename={}'.format(to_ascii(file_path.split(os.sep)[-1]))
 
@@ -97,6 +97,8 @@ class PdfResponse(HttpResponse):
         html = html.replace('/media', settings.MEDIA_ROOT)
         html = html.replace('/static', '{}/{}/static'.format(settings.BASE_DIR, settings.PROJECT_NAME))
         pdfkit.from_string(html, file_name)
+        #from weasyprint import HTML, CSS
+        #HTML(string=html).write_pdf(file_name)
         str_bytes = open(file_name, "rb").read()
         os.unlink(file_name)
         HttpResponse.__init__(self, str_bytes, content_type='application/pdf')

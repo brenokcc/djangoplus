@@ -184,7 +184,7 @@ class ApiDocumentation(object):
         )
         self.endpoints.append(endpoint)
 
-    def form_cls(self, endpoint, token):
+    def form_cls(self, endpoint, token, host):
 
         class ApiForm(forms.Form):
 
@@ -230,7 +230,7 @@ class ApiDocumentation(object):
                     query_params.append('{}={}'.format(field_name, self.cleaned_data[field_name]))
                 if query_params:
                     url = '{}?{}'.format(url, '&'.join(query_params))
-                url = 'http://localhost:8000{}'.format(url)
+                url = 'http://{}{}'.format(host, url)
                 headers = {'Authorization': 'Token {}'.format(token)}
                 if endpoint['method'] == 'post':
                     call_func = requests.post
@@ -242,7 +242,7 @@ class ApiDocumentation(object):
                     call_func = requests.get
                 response = call_func(url, data=self.cleaned_data, headers=headers)
                 extra = input_params and '-d "{}"'.format('&'.join(input_params)) or ''
-                cmd = 'curl -X {} -H "Authorization: Token {}" {} {}'.format(endpoint['method'], token, extra, url)
+                cmd = 'curl -X {} -H "Authorization: Token {}" {} {}'.format(endpoint['method'].upper(), token, extra, url)
                 return cmd, response.content.decode()
 
         return ApiForm

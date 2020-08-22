@@ -21,8 +21,8 @@ class Calendar(Component):
 
         self.set_initial_date(datetime.date.today())
 
-    def add(self, description, start, end=None, url=None, allday=True):
-        item = dict(description=description, start=start, end=end, allday=allday)
+    def add(self, description, start, end=None, url=None, allday=True, color=None):
+        item = dict(description=description, start=start, end=end, allday=allday, color=color)
         self.items.append(item)
     
     def set_initial_date(self, initial_date):
@@ -44,7 +44,7 @@ class AnnualCalendar(Component):
         self.items = []
         self.caption = OrderedDict()
 
-        for values in data:
+        for values in data or []:
             self.add(*values)
 
     def add(self, description, start, end=None, color='#FFF', detail=None):

@@ -5,7 +5,7 @@ from django.utils.translation import ugettext as _
 from djangoplus.utils.metadata import set_metadata, iterable
 
 
-def meta(verbose_name, help_text=None, formatter=None, dashboard=None, can_view=(), expose=True, icon=None):
+def meta(verbose_name, help_text=None, formatter=None, dashboard=None, shortcut=False, can_view=(), expose=True, icon=None):
     def decorate(func):
         set_metadata(func, 'type', 'attr')
         set_metadata(func, 'verbose_name', verbose_name)
@@ -13,6 +13,7 @@ def meta(verbose_name, help_text=None, formatter=None, dashboard=None, can_view=
         set_metadata(func, 'help_text', help_text)
         set_metadata(func, 'formatter', formatter)
         set_metadata(func, 'dashboard', dashboard)
+        set_metadata(func, 'shortcut', shortcut)
         set_metadata(func, 'icon', icon)
         set_metadata(func, 'expose', iterable(expose))
         return func

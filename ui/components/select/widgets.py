@@ -291,5 +291,6 @@ class NullBooleanSelect(widgets.NullBooleanSelect):
             attrs['data-placeholder'] = ' '
         function_name = name.replace('-', '__')
         html = super(NullBooleanSelect, self).render(name, value, attrs)
+        html = html.replace('>Desconhecido<', '>&nbsp<')
         html = INIT_SCRIPT.format(html=html, name=name, function_name=function_name, templates='', links='')
         return mark_safe(html)

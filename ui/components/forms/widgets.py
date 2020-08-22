@@ -317,6 +317,11 @@ class CarPlateWidget(MaskWidget):
         super(CarPlateWidget, self).__init__('AAA-0000')
 
 
+class MercosulCarPlateWidget(MaskWidget):
+    def __init__(self):
+        super(MercosulCarPlateWidget, self).__init__('AAA-0A00')
+
+
 class PhoneWidget(TextInput):
 
     class Media:

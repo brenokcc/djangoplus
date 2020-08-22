@@ -67,7 +67,7 @@ class LoginForm(forms.Form):
                         raise forms.ValidationError('{} {} {}'.format(username, _('is not user of'), user.organization))
                 elif self.scope == LoginForm.UNIT:
                     user.unit = cleaned_data.get('login_scope', self.unit)
-                    is_unit_user = user.role_set.filter(units__in=(user.unit, 0)).exists()
+                    is_unit_user = user.role_set.filter(scope__in=(user.unit, 0)).exists()
                     is_organization_user = CACHE['ORGANIZATION_MODEL'] and user.role_set.filter(
                         scope__in=(user.unit.get_organization(), 0)).exists()
                     if not is_unit_user and not is_organization_user:

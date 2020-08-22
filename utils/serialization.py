@@ -61,7 +61,7 @@ def serialize(attr_value, recursive=False):
 
 def json_serialize(value, query_params, **extras):
     if isinstance(value, Model):
-        serialized_value = dict()
+        serialized_value = dict(id=value.id)
         model = type(value)
         only = query_params.get('fields', [])
         fieldsets = get_metadata(model, 'fieldsets', get_fieldsets(model))

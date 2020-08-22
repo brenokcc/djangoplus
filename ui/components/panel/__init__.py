@@ -269,6 +269,13 @@ class CardPanel(Component):
                             if count:
                                 url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
                                 self.add(icon, title, count, url, '', None, item['verbose_name'])
+        for item in CACHE['SUBSET_WIDGETS']:
+            if item.get('shortcut'):
+                if permissions.check_group_or_permission(request, item['can_view']):
+                    icon = item.get('icon', get_metadata(model, 'icon'))
+                    self.add(
+                        item['icon'], item['verbose_name'], None, item['url'], item['can_view'], ''
+                    )
 
     def add(self, icon, title, count=None, url=None, css='', perm_or_group=None, description=''):
         if permissions.check_group_or_permission(self.request, perm_or_group):
@@ -395,6 +402,7 @@ class AppDashboard(DashboardPanel):
     def load_widgets(self):
         from djangoplus.cache import CACHE
         for model in CACHE['SUBSETS']:
+            notification_panels = {}
             icon = get_metadata(model, 'icon', 'fa-bell-o')
             title = get_metadata(model, 'verbose_name_plural')
             app_label = get_metadata(model, 'app_label')
@@ -409,10 +417,14 @@ class AppDashboard(DashboardPanel):
                     count = qs.count()
                     if count:
                         url = '/list/{}/{}/{}/'.format(app_label, model_name, attr_name)
-                        notification_panel = NotificationPanel(
-                            self.request, title, count, url, description, icon
-                        )
-                        self.right.append(notification_panel)
+                        if model_name in notification_panels:
+                            notification_panel = notification_panels[model_name]
+                        else:
+                            notification_panel = NotificationPanel(self.request, title, icon)
+                            self.right.append(notification_panel)
+                            notification_panels[model_name] = notification_panel
+                        notification_panel.add(count, url, description)
+                        
         for model in CACHE['LIST_DASHBOARD']:
             title = get_metadata(model, 'verbose_name_plural')
             position = get_metadata(model, 'dashboard')
@@ -470,10 +482,12 @@ class NumberPanel(Component):
 
 class NotificationPanel(Component):
 
-    def __init__(self, request, title, count, url, description, icon=None):
+    def __init__(self, request, title, icon=None):
         super(NotificationPanel, self).__init__(title, request)
         self.title = title
-        self.count = count
-        self.url = url
-        self.description = description
+        self.items = []
         self.icon = icon or 'fa-bell-o'
+    
+    def add(self, count, url, description):
+        item = dict(count=count, url=url, description=description)
+        self.items.append(item)

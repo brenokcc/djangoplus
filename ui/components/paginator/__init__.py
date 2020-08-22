@@ -158,7 +158,7 @@ class Paginator(Component):
                             qs = field.remote_field.model.objects.get_queryset().filter(pk__in=pks)
                         empty_label = ''
 
-                        form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False, lazy=True, ignore_lookup=True, minimum_input_length=0)
+                        form.fields[form_field_name] = forms.ModelChoiceField(qs, label=normalyze(field.verbose_name), initial=initial, empty_label=empty_label, required=False, lazy=False, ignore_lookup=True, minimum_input_length=0)
                     form.fields[form_field_name].widget.attrs['data-placeholder'] = field.verbose_name
                     if initial:
                         label = form.fields[form_field_name].label

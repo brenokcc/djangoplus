@@ -13,6 +13,7 @@
         <div class="dashboard-main">
 
             {% if endpoint %}
+                {% if token %}
                 <div class="panel panel-default">
                     <div class="panel-heading clearfix">
                 <span class="pull-left">
@@ -27,6 +28,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="panel panel-default">
                     <div class="panel-heading clearfix">
@@ -81,9 +83,11 @@
                             </table>
                             {% endif %}
 
+                            {% if token %}
                             {{ form }}
+                            {% endif %}
 
-                            {% if result is not None %}
+                            {% if result %}
                                 <h5>Command</h5>
                                 <strong>{{ cmd }}</strong>
                                 <h5>Output</h5>

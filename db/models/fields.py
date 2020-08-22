@@ -512,6 +512,15 @@ class CarPlateField(CharField, FieldPlus):
         return super(CarPlateField, self).formfield(**kwargs)
 
 
+class MercosulCarPlateField(CharField, FieldPlus):
+    def __init__(self, **kwargs):
+        super(MercosulCarPlateField, self).__init__(**kwargs)
+
+    def formfield(self, **kwargs):
+        kwargs.setdefault('form_class', form_fields.MercosulCarPlateField)
+        return super(MercosulCarPlateField, self).formfield(**kwargs)
+
+
 class PhoneField(CharField, FieldPlus):
     def formfield(self, **kwargs):
         kwargs.setdefault('form_class', form_fields.PhoneField)

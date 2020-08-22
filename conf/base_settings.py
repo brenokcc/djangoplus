@@ -149,7 +149,8 @@ LOGGING_ = {
     }
 }
 
-EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'
+# EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 EXTRA_JS = []
 EXTRA_CSS = []

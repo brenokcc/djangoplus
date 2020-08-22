@@ -62,7 +62,7 @@ class AdminTestCase(TestCase):
         self.open('/admin/login/')
         self.click_link(_('Reset Password'))
         self.enter('E-mail', 'brenokcc@yahoo.com.br')
-        settings.EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'
+        # settings.EMAIL_BACKEND = 'djangoplus.mail.backends.EmailDebugBackend'
         self.click_button(_('Send E-mail'))
         emails = load_emails()
         url = re.findall('/admin/password/.*/"', '\n'.join(emails[0]['alternatives'][0]))[0][0:-1]

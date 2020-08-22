@@ -46,7 +46,7 @@ class Log(models.Model):
     date = models.DateTimeField(verbose_name=_('Date/Time'), auto_now=True, filter=True)
     object_id = models.IntegerField(verbose_name=_('Identifier'), search=True)
     object_description = models.CharField(verbose_name=_('Object Description'))
-    content = models.TextField(verbose_name=_('Content'), null=True)
+    content = models.TextField(verbose_name=_('Content'), null=True, search=True)
 
     fieldsets = (
         (_('General Data'), {'fields': (
@@ -149,10 +149,10 @@ class Scope(models.AsciiModel):
         verbose_name_plural = _('Scopes')
 
     def is_organization(self):
-        return Organization.objects.filter(pk=self.pk).exists()
+        return Organization.objects.filter(pk=self.pk).first()
 
     def is_unit(self):
-        return Unit.objects.filter(pk=self.pk).exists()
+        return Unit.objects.filter(pk=self.pk).first()
 
 
 class Organization(Scope):
@@ -281,7 +281,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if not self.token:
             self.token = binascii.hexlify(os.urandom(20)).decode()
         if not self.password:
-            if settings.DEBUG or 'test' in sys.argv:
+            if settings.DEBUG or 'test' in sys.argv or True:
                 password = settings.DEFAULT_PASSWORD
             else:
                 password = uuid.uuid4().hex
@@ -337,7 +337,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         qs = self.role_set.all()
         if group_name:
             qs = qs.filter(group__name=group_name)
-        return qs.values_list('units', flat=True)
+        return qs.values_list('scope', flat=True)
 
     def in_group(self, *group_names):
         return self.role_set.filter(group__name__in=group_names).exists()

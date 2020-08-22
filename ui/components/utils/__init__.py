@@ -237,6 +237,8 @@ class RoleSelector(Component):
         super(RoleSelector, self).__init__('roleselector', request)
         self.groups = []
         self.process_request()
+        self.display_button = False
+        self.scopes = request.user.is_authenticated and request.user.get_appliable_scopes() or []
         self._load()
 
     def _load(self):
@@ -244,25 +246,35 @@ class RoleSelector(Component):
             from djangoplus.admin.models import Group, Role
             pks = self.request.user.role_set.values_list('group', flat=True).distinct()
             for group in Group.objects.filter(pk__in=pks).distinct():
-                group.roles = Role.objects.filter(group=group, user=self.request.user).distinct()
-                group.scopes = group.roles.filter(scope__isnull=False).count()
+                group.has_active_roles = self.request.user.role_set.filter(group=group, active=True).exists()
+                group.scope_roles = self.request.user.role_set.filter(group=group, scope__isnull=False)
                 self.groups.append(group)
 
     def process_request(self):
         if 'scope' in self.request.GET:
-            scope = self.request.GET['scope'] or None
-            self.request.user.scope_id = scope
-            self.request.user.save()
-        if 'data[]' in self.request.GET:
-            pks = []
-            for value in self.request.GET.getlist('data[]'):
-                if value.strip():
-                    pks.append(value)
-            self.request.user.permission_mapping = '{}'
-            self.request.user.save()
+            from djangoplus.admin.models import Group
             self.request.user.role_set.update(active=False)
-            self.request.user.role_set.filter(pk__in=pks).update(active=True)
+            self.request.user.permission_mapping = {}
+            self.request.user.scope_id = self.request.GET['scope'] or None
+            self.request.user.save()
+
+            for group in Group.objects.filter(pk__in=self.request.GET.getlist('groups[]')):
+                group.active_scope_roles = []
+                for role in self.request.user.role_set.filter(group=group):
+                    if role.scope and self.request.user.scope:
+                        active = role.scope == self.request.user.scope
+                        if not active:
+                            organization = role.scope.is_organization()
+                            if organization:
+                                active = organization.get_units().filter(pk=self.request.user.scope.id).exists()
+                        role.active = active
+                    else:
+                        role.active = True
+                    role.save()
+            
             self.request.user.check_role_groups()
+            # if self.request.user.is_authenticated:
+            #     print(self.request.user.permission_mapping.get('Diario:Diario'))
             raise ComponentHasResponseException(HttpResponse())
 
 
@@ -336,14 +348,17 @@ class QueryStatisticsTable(Table):
             rows = []
             footer = []
             if queryset_statistics.series:
+                add_xtotal = False
                 for i, group in enumerate(queryset_statistics.groups):
                     row = [group]
                     for value in queryset_statistics.series[i]:
                         row.append(value)
                     if len(queryset_statistics.series) > 1:
-                        row.append(queryset_statistics.xtotal[i])
+                        if i < len(queryset_statistics.xtotal):
+                            row.append(queryset_statistics.xtotal[i])
+                            add_xtotal = True
                     rows.append(row)
-                if len(queryset_statistics.series) > 1:
+                if add_xtotal:
                     footer = [' '] + queryset_statistics.ytotal + [queryset_statistics.total()]
                     header = [' '] + queryset_statistics.labels + [' ']
                 else:

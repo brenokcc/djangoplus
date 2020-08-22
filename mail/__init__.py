@@ -15,7 +15,7 @@ def send_mail(subject, message, send_to, reply_to=None, actions=()):
     context['project_name'] = app_settings.initials
     context['project_description'] = app_settings.name
     context['project_logo'] = app_settings.logo and \
-        '{}/media/{}'.format(url, app_settings.logo) or '{}/static/images/mail.png'.format(url)
+        '{}/media/{}'.format(url, app_settings.logo) or '{}static/images/mail.png'.format(url)
     context['actions'] = actions
     context['message'] = message.replace('\n', '<br>').replace('\t', '&nbsp;'*4)
     reply_to = reply_to and [reply_to] or None

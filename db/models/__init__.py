@@ -20,7 +20,7 @@ setattr(options, 'DEFAULT_NAMES', options.DEFAULT_NAMES + (
     'icon', 'verbose_female', 'order_by', 'pdf', 'menu',
     'list_display', 'list_per_page', 'list_template', 'list_total', 'list_shortcut',
     'list_csv', 'list_xls', 'list_menu', 'list_lookups', 'list_pdf',
-    'add_label', 'add_form', 'add_message', 'add_shortcut',
+    'add_label', 'add_form', 'add_message', 'add_shortcut', 'add_style',
     'select_template', 'select_display', 'select_related', 'log', 'logging',
     'can_add', 'can_edit', 'can_delete', 'can_list', 'can_view', 'can_admin',
     'can_list_by_role', 'can_view_by_role', 'can_add_by_role', 'can_edit_by_role', 'can_admin_by_role',
@@ -351,7 +351,7 @@ class Manager(models.Manager):
 
     def all(self, user=None):
         if self.queryset_class != self.model.objects.queryset_class:
-            return self.model.objects.none().union(self.get_queryset().all(user))
+            return self.model.objects.filter(pk=0)|self.get_queryset().all(user)
         return self.get_queryset().all(user)
 
     def count(self, vertical_key=None, horizontal_key=None):

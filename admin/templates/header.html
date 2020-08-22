@@ -1,0 +1,115 @@
+<header class="navbar navbar-fixed-top">
+    {% if request.session.side_menu_size %}
+    <button id="menu-toggle" type="button" class="navbar-toggle" onclick="$('#wrapper').toggleClass('hidden-menu')">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </button>
+
+    <button id="menu-toggle-compact" type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </button>
+    {% endif %}
+    <h1 class="navbar-header">
+        <a href="/admin/" class="navbar-brand ajax" title="{{ settings.initials }}">
+            {% if settings.logo %}
+                <img height="50px" src="/media/{{ settings.logo }}" alt="{{ _("Logo of") }} {{ settings.initials }}" />
+            {% else %}
+                <span>{{ settings.initials|truncatechars(17) }}</span>
+            {% endif %}
+            {% if request.user.scope %}
+                <div class="hide-mobile" style="float: right; margin-left: 10px">
+                    {% if not settings.logo %} - {% endif %}
+                    {{ request.user.scope }}
+                </div>
+            {% endif %}
+        </a>
+    </h1>
+
+    <!-- Top Navigation: Left Menu -->
+    {% if request.user.is_authenticated %}
+    <ul class="nav navbar-nav navbar-left navbar-top-links">
+        <li><a class="ajax" href="/admin/" title="{{ _("Main") }}"><i class="fa fa-home fa-fw"></i></a></li>
+        <li><a class="ajax referrer-link" href="javascript:" title="{{ _("Back") }}"><i class="fa fa-arrow-left fa-fw"></i></a>
+    </ul>
+    {% endif %}
+
+    <!-- Top Navigation: Right Menu -->
+    {% if request.user.is_authenticated %}
+    <ul class="nav navbar-right navbar-top-links">
+        {% if alerts %}
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                <i class="fa fa-bell fa-fw"></i> <b class="caret"></b>
+                <span class="notification-label">{{ alerts|length }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-alerts">
+                {% for item in alerts %}
+                <li>
+                    <a href="{{ item.url }}" class="ajax">
+                        <div>
+                            <i class="fa fa-comment {{ item.icon }}"></i> {{ item.title }}
+                            <span class="pull-right text-muted small">{{ item.description }}</span>
+                        </div>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+        {% endif %}
+        <li class="dropdown">
+            <a class="dropdown-toggle" href="javascript:" title="{{ _("Settings") }}" onclick="$('#user-drop-down').toggle()">
+                <span class="hide-mobile">{{ request.user.name }}</span> <i class="fa fa-ellipsis-v fa-fw"></i></b>
+            </a>
+            <div id="user-drop-down" class="dropdown-menu" onmouseleave="$(this).toggle()">
+
+                <div class="padding-md">
+                        {% if not request.session.side_menu_size %}
+                        <div style="text-align: center">
+                            <img src="{{ request.user|photo }}" alt='{{ _("Photo") }} {{ _("of") }} {{ request.user.name }}' class="img-circle" width="100" height="100">
+                        </div>
+                        {% endif %}
+                        <div>
+                            <ul class="dropdown-user">
+                                <li><a class="popup" href="/admin/profile/"><i class="fa fa-user fa-fw"></i> {{ _("Edit Profile") }}</a></li>
+                                {% if request.user.is_superuser %}
+                                    <li><a class="ajax" href="/admin/configure/"><i class="fa fa-gear fa-fw"></i> {{ _("Settings") }}</a></li>
+                                    <li class="divider"></li>
+                                    <li><a href="/list/admin/group/" title="{{ _("Groups") }}" class="ajax"><i class="fa fa-users fa-fw"></i> {{ _("Groups") }}</a></li>
+                                    <li><a href="/list/admin/permission/" title="{{ _("Permissions") }}" class="ajax"><i class="fa fa-check fa-fw"></i> {{ _("Permissions") }}</a></li>
+                                    <li><a href="/list/admin/user/" title="{{ _("Users") }}" class="ajax"><i class="fa fa-user-plus fa-fw"></i> {{ _("Users") }}</a></li>
+                                    <li><a class="ajax" href="/list/admin/log/" title="{{ _("Logs") }}"><i class="fa fa-history fa-fw"></i> {{ _("Logs") }}</a></li>
+                                    <li class="divider"></li>
+                                    <li><a target="_blank" href="/admin/icons/" title="{{ _("Icons") }}"><i class="fa fa-wrench fa-fw"></i> {{ _("Icons") }}</a>
+                                    <li><a target="_blank" href="/docs/doc/" title="{{ _("Documentation") }}"><i class="fa fa-copy fa-fw"></i> {{ _("Documentation") }}</a>
+                                    <li><a target="_blank" href="/docs/tutorial/" title="{{ _("Videos") }}"><i class="fa fa-desktop fa-fw"></i> {{ _("Videos") }}</a>
+                                    <li><a target="_blank" href="/docs/homologate/" title="{{ _("Homologate") }}"><i class="fa fa-thumbs-o-up fa-fw"></i> {{ _("Homologate") }}</a>
+                                    <li class="divider"></li>
+                                {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                </div>
+                {% if role_selector.groups or role_selector.scopes %}
+                <div class="padding-md" style="min-height:100px; border-top: 1px solid #e5e5e5">
+                    {{ role_selector|safe }}
+                </div>
+                {% endif %}
+                <div class="padding-md">
+                    <div align="center">
+                        <ul class="dropdown-user">
+                            <li>
+                                <a href="/admin/logout/"><i class="fa fa-sign-out fa-fw"></i> {{ _("Logout") }}</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>
+    {% endif %}
+</header>

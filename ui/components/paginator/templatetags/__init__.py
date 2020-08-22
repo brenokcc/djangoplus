@@ -75,7 +75,7 @@ def obj_icons(request, obj, relation=None, edit=True, delete=True, css=None, as_
             if has_edit_permission and (not hasattr(obj, 'can_edit') or obj.can_edit()):
                 edit_url = relation.edit_url.format(obj.pk)
                 btn = ' <a id="{}" class="{}" href="{}" title="{}"><i class="fa fa-edit fa-lg"></i><span> {}</span></a>'
-                outuput.append(btn.format(slugify(edit_url), css.format('popup'), edit_url, _('Edit'), _('Edit')))
+                outuput.append(btn.format(slugify(edit_url), css.format(get_metadata(relation.relation_model, 'add_style', 'popup')), edit_url, _('Edit'), _('Edit')))
 
         if relation.delete_url:
             if relation.is_one_to_many or relation.is_many_to_many:

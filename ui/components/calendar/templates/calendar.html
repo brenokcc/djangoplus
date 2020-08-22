@@ -123,6 +123,11 @@
                             {% if item.url %}
                                 url : '{{ item.url }}',
                             {% endif %}
+
+                            {% if item.color %}
+                                color: '{{ item.color }}',   // a non-ajax option
+                                textColor: 'white' // a non-ajax option
+                            {% endif %}
                         },
                     {% endfor %}
                 ],

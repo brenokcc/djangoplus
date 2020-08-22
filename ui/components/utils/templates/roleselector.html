@@ -1,68 +1,48 @@
-{% with scopes=component.request.user.get_appliable_scopes() %}
-{% if scopes|length > 1 %}
+{% if component.scopes|length > 1 %}
 <h4 align="center">Escopo</h4>
 <select id="scopeSelector" style="width:100%">
-    <option {% if component.request.user.scope_id == None %} selected {% endif %} value=""></option>
-    {% for scope in scopes %}
-    <option {% if component.request.user.scope_id == scope.pk %} selected {% endif %} value="{{ scope.pk }}">{{ scope }}</option>
+    <option {% if component.request.user.scope_id == None %} selected {% endif %} value="">---------</option>
+    {% for scope in component.scopes %}
+        <option {% if component.request.user.scope_id == scope.pk %} selected {% endif %} value="{{ scope.pk }}">{{ scope }}</option>
     {% endfor %}
 </select>
 {% endif %}
-{% endwith %}
 
-<h4 align="center">Vínculo{% if component.groups|length > 1 %}s{% endif %}</h4>
-
-{% for group in component.groups %}
-    <div>
-        {% if group.scopes > 1 %}
-        <input  id="{{ group }}Checkbox" class="roles" type="checkbox" value="" onclick="configureCheckBoxes(this)"/>
-        <span class="custom-checkbox"></span>
-        <label style="display: initial">{{ group }}</label><br>
-        {% endif %}
-        <div id="{{ group }}Checkboxes" style="{% if component.groups|length > 1 %}padding-left: 10px{% else %}text-align: center{% endif %}">
-            {% for role in group.roles %}
-                <div style="{% if group.scopes > 1 %}padding-left: 20px{% endif %}">
-                    {% if component.groups|length > 1 %}
-                    <input class="roles" type="checkbox" value="{{ role.pk }}" onchange="configureCheckBox('{{ group }}')" {% if role.active %}checked{% endif %}/>
-                    <span class="custom-checkbox"></span>
-                    {% endif %}
-                    <label style="display: initial">
-                        {% if group.scopes < 2 %}
-                            {{ group }} {% if role.scope %} - {{ role.scope }}{% endif %}
-                        {% else %}
-                            {{ role.scope }}
-                        {% endif %}
-                    </label>
-                </div>
-            {% endfor %}
+{% if component.groups %}
+    <h4 align="center">Vínculo{% if component.groups|length > 1 %}s{% endif %}</h4>
+    {% for group in component.groups %}
+        <div>
+            <input  id="{{ group }}Checkbox" class="groups" type="checkbox" value="{{ group.pk }}" {% if group.has_active_roles %}checked{% endif %} onclick="configureReloadScopeButton()"/>
+            <span class="custom-checkbox"></span>
+            <label style="display: initial">{{ group }}</label><br>
+                {% if group.scope_roles %}
+                    <ul>
+                        {% for role in group.scope_roles %}
+                            <li>• {{ role.scope }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
         </div>
-    </div>
-{% endfor %}
-{% if component.groups|length > 1 %}
-<div style="margin: 10px; text-align: center"><button id="reloadScopeButton" class="btn btn-default" onclick="reloadScope()">Aplicar</button></div>
+    {% endfor %}
+    <div style="margin: 10px; text-align: center"><button id="reloadScopeButton" class="btn btn-default" onclick="reloadScope()">Aplicar</button></div>
+{% endif %}
+
 <script>
     function reloadScope(){
-        var data = $('.roles:checked').map(function(){return this.value}).get();
         var scope = $('#scopeSelector').val()
-        $.get(document.location.href, {data: data, scope:scope}, function(){loadUrl('/admin/')});
-    }
-    function configureCheckBox(group){
-        $('#'+group+'Checkbox').prop('checked', $('#'+group+'Checkboxes').find('.roles:checked').length>0);
-        configureReloadScopeButton()
-    }
-    function configureCheckBoxes(checkbox){
-        $(checkbox).parent().find('.roles').prop('checked', checkbox.checked);
-        configureReloadScopeButton()
+        var groups = $('.groups:checked').map(function(){return this.value}).get();
+        $.get(document.location.href, {scope:scope, groups:groups}, function(){loadUrl('/admin/')});
     }
     function configureReloadScopeButton(){
-        if($('.roles:checked').length > 0) $('#reloadScopeButton').removeClass('disabled');
-        else $('#reloadScopeButton').addClass('disabled')
+        if($('.groups:checked').length > 0){
+            $('#reloadScopeButton').removeClass('disabled');
+            $('#scopeSelector').prop('disabled', false);
+        }
+        else{
+            $('#reloadScopeButton').addClass('disabled');
+            $('#scopeSelector').prop('disabled', true);
+        }
     }
-    $('#scopeSelector').on('change', function(){
-        reloadScope();
-    });
-    {% for group in component.groups %}
-        configureCheckBox('{{ group }}');
-    {% endfor %}
+    $('#scopeSelector').on('change', function(){reloadScope();});
 </script>
-{% endif %}
+

@@ -5,10 +5,12 @@
             <span>{{ component.title }}</span>
         </div>
     <div class="panel-body">
-        <a class="ajax" href="{{ component.url }}">
-            <span>{{ component.count }}</span>
-            <span>{{ component.description }}</span>
+        {% for item in component.items %}
+        <a class="ajax" href="{{ item.url }}">
+            <span>{{ item.count }} {{ item.description }}</span>
         </a>
+        {% if not loop.last %}<br>{% endif %}
+        {% endfor %}
     </div>
 </div>
 {% endif %}

@@ -51,6 +51,8 @@ def format_bool(value):
 def format_value(value, html=True):
     from djangoplus.db.models.fields import ImageFieldFile
     from django.db.models.fields.files import FieldFile, ImageFieldFile as DjangoImageFieldFile
+    if 'ManyRelatedManager' in type(value).__name__:
+        value = value.all()
     if value in (None, '', ()):
         return '-'
     elif isinstance(value, str) or type(value).__name__ == '__proxy__':  # lazy i18n

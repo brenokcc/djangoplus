@@ -858,12 +858,11 @@ input::placeholder, .select2-selection__placeholder {
 }
 
 .panel.notification-panel .panel-body span:first-child {
-    font-size: 1000%;
+    font-size: 100%;
 }
 
 .panel.notification-panel .panel-body span:last-child {
-    font-size: 150%;
-    margin-top: -30px;
+    font-size: 100%;
 }
 
 /* tree grid */

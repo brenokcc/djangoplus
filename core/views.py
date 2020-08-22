@@ -22,11 +22,12 @@ from django.http.response import HttpResponseForbidden
 from djangoplus.ui.components import ComponentHasResponseException
 from djangoplus.ui.components.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
+from djangoplus.db.models import QuerySet
 from djangoplus.ui.components.navigation.breadcrumbs import httprr
 from djangoplus.utils.metadata import list_related_objects, is_many_to_many, is_one_to_one, get_metadata, \
     check_condition, is_one_to_many, getattr2, is_one_to_many_reverse, get_parameters_names, count_parameters_names, \
-    get_role_value_for_action
-
+    get_role_value_for_action, get_role_values_for_condition
+from django.contrib import auth
 
 def listt(request, app, cls, subset=None):
 
@@ -65,6 +66,10 @@ def listt(request, app, cls, subset=None):
                 return httprr(request, '/admin/login/?next={}'.format(request.get_full_path()))
 
     qs = _model.objects.all(request.user)
+    if subset:
+        subset_func = getattr(qs, subset)
+        parameters = get_role_values_for_condition(subset_func, request.user)
+        qs = subset_func(*parameters)
     list_subsets = subset and [subset] or None
 
     paginator = Paginator(request, qs, title, list_subsets=list_subsets, is_list_view=True,
@@ -273,12 +278,12 @@ def action(request, app, cls, action_name, pk=None):
                 else:
                     return httprr(request, '.', e.message, error=True)
 
-        if f_return:
+        if f_return and type(f_return) != str:
             template_name = '{}.html'.format(action_function.__name__)
             return return_response(f_return, request, title, action_style, template_name)
 
         elif redirect_to:
-            return httprr(request, redirect_to, action_message)
+            return httprr(request, redirect_to, f_return or action_message)
 
         if form.title == _('Form'):
             form.title = action_verbose_name
@@ -390,15 +395,19 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
 
     http_authorization = request.META.get('HTTP_AUTHORIZATION')
     if http_authorization and 'Token' in http_authorization:
-        try:
+            page= int(request.GET.get('page', '') or 0)
             token = http_authorization[5:].strip()
             user = User.objects.get(token=token)
             request.user = user
             if app_label and model_name:
                 model = apps.get_model(app_label, model_name)
-
+                if model == User and str(user.pk) == arg1:
+                    data = dict(name=user.name, username=user.username, photo=user.photo.url, email=user.email)
+                    return HttpResponse(
+                        json_serialize(result, request.GET, errors=[], message=_('Action successfully performed.'), exception=None, result=data)
+                    )
                 # model @action or @meta | manager @subset [@action or @meta]
-                if arg1 and arg2:
+                elif arg1 and arg2:
                     # model
                     if arg1.isdigit():
                         obj = model.objects.all(user).get(pk=arg1)
@@ -534,6 +543,9 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                                 params.append(get_role_value_for_action(func, request.user, param))
                         try:
                             result = func(*params)
+                            if hasattr(result, 'all'):
+                                result = result[page*10:(page*10)+10]
+                            
                         except ValidationError as e:
                             message = None
                             form.add_error(None, e.message)
@@ -541,7 +553,11 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                         errors = form.errors
                 elif obj:
                     try:
-                        result = getattr(obj, func_name)(**args)
+                        func = getattr(obj, func_name)
+                        args = get_role_values_for_condition(func, request.user)
+                        result = func(*args)
+                        if hasattr(result, 'all'):
+                            result = result[page*10:(page*10)+10]
                     except ValidationError as e:
                         errors = {'__all__': e.message}
                         message = None
@@ -563,9 +579,11 @@ def api(request, app_label, model_name, arg1=None, arg2=None):
                 return HttpResponse(
                     json_serialize(result, request.GET, errors=errors, message=message, exception=None)
                 )
-        except Exception as e:
-            if settings.DEBUG:
-                traceback.print_exc()
-            return HttpResponse(json_serialize(result, request.GET, errors=errors, message=message, exception=str(e)))
     else:
-        return HttpResponseForbidden()
+        user = auth.authenticate(username=request.POST['username'], password=request.POST['password'])
+        if user is not None:
+            return HttpResponse(
+                json_serialize(result, request.GET, errors=[], message=_('Action successfully performed.'), exception=None, result=dict(token=user.token, id=user.id))
+            )
+        else:
+            return HttpResponseForbidden()

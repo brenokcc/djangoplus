@@ -23,7 +23,7 @@
                         {% endif %}
                     </label>
 
-                    <span class="timeline__step-title">{{ item.0 }}</span>
+                    <span class="timeline__step-title">{% if item.1 %}{{ item.1|format }}<br>{% endif %}{{ item.0 }}</span>
 
                     <i class="timeline__step-marker">{{ loop.index }}</i>
                 </li>

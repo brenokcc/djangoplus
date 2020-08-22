@@ -272,7 +272,7 @@ class Relation(object):
                     relation_verbose_name = get_metadata(self.relation_model, 'verbose_name')
                     if form_name:
                         fromlist = list(map(str, [get_metadata(self.relation_model, 'app_label')]))
-                        module = __import__('{}.forms'.format(fromlist), fromlist=fromlist)
+                        module = __import__('{}.forms'.format(fromlist[0]), fromlist=fromlist)
                         form_cls = getattr(module, form_name)
                     else:
                         class Form(ModelForm):
@@ -297,8 +297,9 @@ class Relation(object):
                                 form.add_error(None, str(e.message))
                 else:
                     add_label = self.add_label or get_metadata(self.relation_model, 'add_label')
+                    add_style = self.add_label or get_metadata(self.relation_model, 'add_style', 'popup')
                     label = add_label or 'Adicionar {}'.format(verbose_name)
-                    component.add_action(label, self.add_url, 'popup', 'fa-plus')
+                    component.add_action(label, self.add_url, add_style, 'fa-plus')
 
         component.as_pdf = as_pdf
 

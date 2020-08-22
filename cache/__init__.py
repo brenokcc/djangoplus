@@ -129,7 +129,8 @@ if not CACHE['INITIALIZED']:
                 url=url, can_view=permission, menu=description, icon=icon, add_shortcut=False, groups=menu_groups
             )
             CACHE['VIEWS'].append(item)
-
+        if get_metadata(model, 'proxy'):
+            continue
         # indexing the @subset and @meta methods defined in the manager classes
 
         for attr_name in dir(model.objects.get_queryset()):
@@ -185,10 +186,13 @@ if not CACHE['INITIALIZED']:
                     widget_can_view = get_metadata(attr, 'can_view')
                     widget_dashboard = get_metadata(attr, 'dashboard')
                     widget_formatter = get_metadata(attr, 'formatter')
+                    widget_shortcut = get_metadata(attr, 'shortcut')
                     widget_icon = get_metadata(attr, 'icon')
+                    widget_url = '{}{}/'.format(url, attr.__func__.__name__)
                     widget = dict(
                         verbose_name=widget_verbose_name, model=model, function=attr_name, can_view=widget_can_view,
-                        dashboard=widget_dashboard, formatter=widget_formatter, link=False, icon=widget_icon
+                        dashboard=widget_dashboard, formatter=widget_formatter, link=False, icon=widget_icon,
+                        shortcut=widget_shortcut, url=widget_url
                     )
                     CACHE['SUBSET_WIDGETS'].append(widget)
                     if model not in CACHE['MANAGER_METHODS']:
@@ -523,3 +527,4 @@ if not CACHE['INITIALIZED']:
             from djangoplus.utils.storage.dropbox import DropboxStorage
             DropboxStorage().sync()
         Thread(target=sync_storage).start()
+

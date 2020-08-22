@@ -1,0 +1,18 @@
+<div align="right" class="copyright">
+    {% if settings.company %}
+        &copy; {{ settings.company }} |
+    {% endif %}
+    {% if settings.address %}
+        {{ settings.address }} |
+    {% endif %}
+    {% if settings.phone_1 %}
+        {{ settings.phone_1 }} |
+    {% endif %}
+    {% if settings.phone_2 %}
+        {{ settings.phone_2 }} |
+    {% endif %}
+    {% if settings.email %}
+        {{ settings.email }} |
+    {% endif %}
+    {{ _("Version") }} {{ settings.version }}
+</div>

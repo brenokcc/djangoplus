@@ -355,6 +355,13 @@ class CarPlateField(CharField):
         super(CarPlateField, self).__init__(min_length=8, *args, **kwargs)
 
 
+class MercosulCarPlateField(CharField):
+    widget = widgets.MercosulCarPlateWidget
+
+    def __init__(self, *args, **kwargs):
+        super(MercosulCarPlateField, self).__init__(min_length=8, *args, **kwargs)
+
+
 class PhoneField(CharField):
     PHONE_DIGITS_RE = re.compile(r'^(\d{2})[-\.]?(\d{4,5})[-\.]?(\d{4})$')
 

@@ -46,6 +46,16 @@ def do_uuid4():
 
 
 @register.filter
+def fieldset(obj, title, fields, actions=None, lookups=None):
+    return mark_safe('{}|{}|{}|{}<br>'.format(title, fields, actions, lookups))
+
+
+@register.filter
+def actions(obj, action_list):
+    return mark_safe('{}<br>'.format(action_list))
+
+
+@register.filter
 def full_date_format(value):
     locale.setlocale(locale.LC_ALL, "pt_BR")
     return value.strftime('%d de %B de %Y')

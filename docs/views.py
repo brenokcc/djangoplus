@@ -31,22 +31,24 @@ def source(request, module=None):
 @view('Homologação', login_required=False)
 def homologate(request):
     title = 'Homologação'
-    groups = Group.objects.filter(role__scope__isnull=True).order_by('name').distinct()
+    organization_model_name = None
+    unit_model_name = None
+    groups = Group.objects.exclude(name__in=('Usuário', 'User')).filter(role__scope__isnull=True).order_by('name').distinct()
 
     http_host = request.META['HTTP_HOST']
     if CACHE['ORGANIZATION_MODEL']:
-        organization_model_name = CACHE['ORGANIZATION_MODEL'].__name__.lower()
+        organization_model_name = CACHE['ORGANIZATION_MODEL']._meta.verbose_name
     if CACHE['UNIT_MODEL']:
-        unit_model_name = CACHE['UNIT_MODEL'].__name__.lower()
+        unit_model_name = CACHE['UNIT_MODEL']._meta.verbose_name
 
     organization_group_names = []
     unit_group_names = []
     for model in CACHE['ROLE_MODELS']:
         name = CACHE['ROLE_MODELS'][model]['name']
         scope = CACHE['ROLE_MODELS'][model]['scope']
-        if scope == 'organization':
+        if scope == organization_model_name:
             organization_group_names.append(name)
-        if scope == 'unit':
+        if scope == unit_model_name:
             unit_group_names.append(name)
 
     organization_groups = Group.objects.filter(name__in=organization_group_names).order_by('name').distinct()
@@ -57,14 +59,14 @@ def homologate(request):
 
         organization.users = []
         for group in organization_groups:
-            organization.users.append(User.objects.filter(role__group=group, role__organizations=organization))
+            organization.users.append(User.objects.filter(role__group=group, role__scope=organization))
 
         organization.units = []
         for unit in organization.get_units():
             organization.units.append(unit)
             unit.users = []
             for group in unit_groups:
-                unit.users.append(User.objects.filter(role__group=group, role__units=unit))
+                unit.users.append(User.objects.filter(role__group=group, role__scope=unit))
 
         organizations.append(organization)
     return locals()
@@ -84,18 +86,20 @@ def tutorial(request):
     return locals()
 
 
-@view('API')
+@view('API', login_required=False)
 def api(request, app_label=None, model_name=None, endpoint_name=None):
     documentation = ApiDocumentation()
     endpoint = None
+    token = None
     if app_label and model_name:
         endpoint = documentation.load_model(app_label, model_name, endpoint_name)
     else:
         documentation.load_models()
-    token = request.user.token
+    if request.user.is_authenticated:
+        token = request.user.token
 
     if endpoint:
-        form_cls = documentation.form_cls(endpoint, token)
+        form_cls = documentation.form_cls(endpoint, token, request.META['HTTP_HOST'])
         form = form_cls(request)
         if form.is_valid():
             cmd, result = form.process()
