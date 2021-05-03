@@ -16,4 +16,4 @@ oauth2client
 requests
 python-resize-image
 django-jinja
-psycopg2-binary==2.7.7
+psycopg2
