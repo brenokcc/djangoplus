@@ -68,10 +68,10 @@ RUN apt-get -y install libgtk-3-dev
 
 RUN curl https://ftp.mozilla.org/pub/firefox/releases/60.0b3/linux-x86_64/en-US/firefox-60.0b3.tar.bz2 --output firefox.tar.bz2
 RUN tar xjf firefox.tar.bz2 --directory /usr/lib/
-RUN ln -s /usr/lib/firefox/firefox /usr/local/bin/firefox
+RUN ln -sfn /usr/lib/firefox/firefox /usr/local/bin/firefox
 RUN rm firefox.tar.bz2
 
-RUN curl http://djangoplus.net/geckodriver-v0.21.0-linux64.tar.gz --output geckodriver.tar.gz
+RUN curl -L http://djangoplus.net/geckodriver-v0.25.0-linux64.tar.gz --output geckodriver.tar.gz
 RUN gunzip geckodriver.tar.gz
 RUN tar -xf geckodriver.tar
 RUN mv geckodriver /usr/local/bin/

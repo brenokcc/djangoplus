@@ -137,7 +137,7 @@ class Paginator(Component):
                     elif hasattr(field, 'choices') and field.choices:
                         form.fields[form_field_name] = forms.ChoiceField(choices=[['', '']] + field.choices, label=normalyze(field.verbose_name), initial=initial, required=False)
                     else:
-                        if hasattr(field.remote_field.model, 'unit_ptr_id') and self.request.user.role_set.filter(scope__unit__isnull=False).values_list('scope__unit', flat=True).count() == 1:
+                        if self.request.user.is_authenticated and hasattr(field.remote_field.model, 'unit_ptr_id') and self.request.user.role_set.filter(scope__unit__isnull=False, active=True).values_list('scope__unit', flat=True).count() == 1:
                             continue
                         if hasattr(field.remote_field.model, 'organization_ptr_id') and self.request.user.role_set.filter(scope__organization__isnull=False).values_list('scope__organization', flat=True).count() == 1:
                             continue
@@ -312,7 +312,7 @@ class Paginator(Component):
                 self.add_action('Imprimir', pdf_url, 'ajax', 'fa-print')
 
             # registration action
-            subclasses = self.qs.model.__subclasses__()
+            subclasses = ()#self.qs.model.__subclasses__()
             if not subclasses and not self.subsets and permissions.has_add_permission(self.request, self.qs.model):
                 instance = self.qs.model()
                 instance._user = self.request.user
@@ -571,16 +571,22 @@ class Paginator(Component):
             queryset = qs
         for field_name in self.get_list_filter():
             field = get_field(queryset.model, field_name)
-            if type(field).__name__ == 'DateField':
+            if type(field).__name__ in ('DateField', 'DateTimeField'):
                 filter_value = self._get_from_request(field_name, None, '_0')
                 if filter_value:
                     date, month, year = filter_value.split('/')
-                    filter_value = '{}-{}-{}'.format(year, month, date)
+                    if type(field).__name__ == 'DateTimeField':
+                        filter_value = '{}-{}-{} 00:00:00'.format(year, month, date)
+                    else:
+                        filter_value = '{}-{}-{}'.format(year, month, date)
                     queryset = queryset.filter(**{'{}__gte'.format(field_name): filter_value})
                 filter_value = self._get_from_request(field_name, None, '_1')
                 if filter_value:
                     date, month, year = filter_value.split('/')
-                    filter_value = '{}-{}-{}'.format(year, month, date)
+                    if type(field).__name__ == 'DateTimeField':
+                        filter_value = '{}-{}-{} 23:59:59'.format(year, month, date)
+                    else:
+                        filter_value = '{}-{}-{}'.format(year, month, date)
                     queryset = queryset.filter(**{'{}__lte'.format(field_name): filter_value})
             elif type(field).__name__ in ['BooleanField', 'NullBooleanField']:
                 filter_value = self._get_from_request(field_name)
@@ -610,7 +616,7 @@ class Paginator(Component):
                     pass
         if distinct:
             queryset = queryset.distinct()
-        return queryset.all(self.request.user)
+        return queryset.all(self.request.user) if self.request.user.is_authenticated else queryset
 
     def process_request(self):
         export = self.request.GET.get('export', None)

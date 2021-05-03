@@ -287,7 +287,7 @@ class CpfCnpjWidget(TextInput):
     def render(self, name, value=None, attrs=None, renderer=None):
         html = super(CpfCnpjWidget, self).render(name, value, attrs)
         html = '''
-                <div class="input-group">
+                <div class="form-group">
                     {}
                 </div>
                 <script>
@@ -297,13 +297,13 @@ class CpfCnpjWidget(TextInput):
                     spOptions = {{
                       clearIfNotMatch: true,
                       onKeyPress: function(val, e, field, options) {{
-                          field.mask(CpfCnpjMaskBehavior.apply({}, arguments), options);
+                          field.mask(CpfCnpjMaskBehavior.apply(val, arguments), options);
                         }}
                     }};
 
                     $('#id_{}').mask(CpfCnpjMaskBehavior, spOptions);
                 </script>
-                '''.format(html, value, name)
+                '''.format(html, name)
         return mark_safe(html)
 
 
@@ -388,7 +388,7 @@ class OneDigitValidationInput(TextInput):
         attrs['class'] = 'form-control'
         html = super(OneDigitValidationInput, self).render(name, value, attrs)
         html = html.replace('type="number"', 'type="text"')
-        js = "<script>$('#id_{}').mask('#.##0-0', {{reverse: true, clearIfNotMatch: true}});</script>".format(name)
+        js = "<script>$('#id_{}').mask('###.##0-0', {{reverse: true, clearIfNotMatch: true}});</script>".format(name)
         return mark_safe('{}\n{}'.format(html, js))
 
 

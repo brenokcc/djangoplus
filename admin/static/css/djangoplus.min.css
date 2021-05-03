@@ -157,6 +157,8 @@ header .navbar-header a:hover{
 #user-drop-down{
     width: 220px !important;
     margin-left: -95px !important;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .sidebar .sidebar-nav.navbar-collapse {

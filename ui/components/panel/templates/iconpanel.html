@@ -7,7 +7,7 @@
     <div class="panel-body">
         {% if component.items %}
             {% for item in component.items %}
-            <div style="text-align: center; float: left; margin: 15px">
+            <div style="text-align: center; float: left; margin: 15px; width: 70px">
                 <i class="fa {{ item.icon }}" style="font-size: 50px;"></i>
                 <p>
                     <a class="ajax" href="{{ item.url }}">{{ item.label }}</a>

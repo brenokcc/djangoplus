@@ -251,11 +251,11 @@ class RoleSelector(Component):
                 self.groups.append(group)
 
     def process_request(self):
-        if 'scope' in self.request.GET:
+        if 'scope' in self.request.GET or 'groups[]' in self.request.GET:
             from djangoplus.admin.models import Group
             self.request.user.role_set.update(active=False)
             self.request.user.permission_mapping = {}
-            self.request.user.scope_id = self.request.GET['scope'] or None
+            self.request.user.scope_id = self.request.GET.get('scope')
             self.request.user.save()
 
             for group in Group.objects.filter(pk__in=self.request.GET.getlist('groups[]')):
@@ -271,10 +271,14 @@ class RoleSelector(Component):
                     else:
                         role.active = True
                     role.save()
+                self.request.user.permission_mapping = {}
             
             self.request.user.check_role_groups()
             # if self.request.user.is_authenticated:
             #     print(self.request.user.permission_mapping.get('Diario:Diario'))
+            del self.request.session['side_menu']
+            del self.request.session['side_menu_size']
+            self.request.session.save()
             raise ComponentHasResponseException(HttpResponse())
 
 

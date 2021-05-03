@@ -330,7 +330,7 @@ class DashboardPanel(Component):
         elif position == 'left':
             self.left.append(component)
         elif position == 'right':
-            self.right.append(component)
+            self.right.insert(0, component)
         elif position == 'bottom':
             self.bottom.append(component)
 

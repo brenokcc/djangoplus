@@ -148,7 +148,7 @@ class QuerySet(query.QuerySet):
 
     def contextualize(self, user, obj=None):
         app_label = get_metadata(self.model, 'app_label')
-        if user:
+        if user and user.is_authenticated:
             role_username = get_metadata(user, 'role_username')
             if role_username:
                 user = get_user_model().objects.get(username=getattr(user, role_username))

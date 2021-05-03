@@ -98,8 +98,10 @@ class Form(django_forms.Form):
                 if hasattr(self, 'instance'):
                     obj = None
                     role_username = get_metadata(field.queryset.model, 'role_username')
-                    if role_username and self.request.user.groups.filter(name=field.queryset.model._meta.verbose_name):
-                        obj = field.queryset.model.objects.get(**{role_username: self.request.user.username})
+                    if role_username and self.request.user.groups.filter(name=field.queryset.model._meta.verbose_name).count()==1:
+                        role_qs = field.queryset.model.objects.filter(**{role_username: self.request.user.username})
+                        if role_qs.count() == 1:
+                            obj = role_qs.first()
                     for subclass in field.queryset.model.__subclasses__():
                         role_username = get_metadata(subclass, 'role_username')
                         if role_username and self.request.user.groups.filter(name=subclass._meta.verbose_name):

@@ -38,7 +38,7 @@ def action(model, verbose_name, help_text=None, condition=None, inline=False, su
     def decorate(func):
         def receive_function_args(request, *args, **kwargs):
             if can_execute and not permissions.check_group_or_permission(
-                    request, '{}.{}'.format(get_metadata(model, 'app_label'), func.__name__)):
+                    request, can_execute):
                 return HttpResponseRedirect('/admin/login/')
             f_return = func(request, *args, **kwargs)
             template_name = '{}.html'.format(func.__name__)

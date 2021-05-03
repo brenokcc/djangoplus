@@ -228,7 +228,7 @@ def get_metadata(model_or_func, attr, default=None, iterable=False):
     if attr in ('verbose_name', 'verbose_name_plural'):
         if str(_metadata) in (camel_case_to_spaces(model.__name__), '{}s'.format(camel_case_to_spaces(model.__name__))):
             check_recursively = True
-    if attr in ('list_menu', 'verbose_female', 'class_diagram'):
+    if attr in ('list_menu', 'verbose_female', 'class_diagram', 'menu'):
         check_recursively = False
 
     if check_recursively:
@@ -457,7 +457,7 @@ def should_filter_or_display(request, model, to):
             get_metadata(model, 'can_view_by_organization', (), iterable=True) +
             get_metadata(model, 'can_view_by_unit', (), iterable=True) +
             get_metadata(model, 'can_view_by_role', (), iterable=True))
-        if not request.user.is_superuser and can_view and not request.user.in_group(*can_view):
+        if not request.user.is_authenticated or not request.user.is_superuser and can_view and not request.user.in_group(*can_view):
             return False
     return True
 
