@@ -182,6 +182,13 @@ if not CACHE['INITIALIZED']:
 
                 # @meta
                 else:
+                    added = False
+                    for tmp in CACHE['SUBSET_WIDGETS']:
+                        if tmp['function'] == attr_name:
+                            added = True
+                            break
+                    if added:
+                        continue
                     widget_verbose_name = get_metadata(attr, 'verbose_name')
                     widget_can_view = get_metadata(attr, 'can_view')
                     widget_dashboard = get_metadata(attr, 'dashboard')
