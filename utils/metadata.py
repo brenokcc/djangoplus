@@ -144,6 +144,9 @@ def get_fiendly_name(model_or_field, lookup, as_tuple=False):
     l.reverse()
     verbose_name = ' '.join(l)
     verbose_name = l[0]
+    if verbose_name[0].islower():
+        words = verbose_name.replace('_', ' ').split()
+        verbose_name = ' '.join(word.capitalize() for word in words)
     return as_tuple and (verbose_name, lookup, sortable, to) or verbose_name
 
 # META DATA
